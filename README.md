@@ -7,7 +7,7 @@ In the meantime, here's a very brief tutorial:
 
 * A single script, `computeEpilogos.sh`, does all the processing.
 Before you run the script, you need to make the executable programs
-that the script calls.  This is done by running `./Makefile` from
+that the script calls.  This is done by running `make` from
 this directory.  This will make 3 programs, and place them into a
 parallel directory named `bin`.
 * After you have made these programs, and before you run the script,

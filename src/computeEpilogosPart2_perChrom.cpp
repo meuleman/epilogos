@@ -24,10 +24,10 @@ bool PairFloatInt_LT(const pair<float,int>& a, const pair<float,int>& b)
 class Model {
 public:
   virtual bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-		    const string& chrom, const int& firstBegPos, const int& regionWidth) = 0;
-  virtual int  size(void) const = 0;
-  virtual bool getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites) = 0;
-  virtual bool processInputValue(const int& val) = 0;
+		    const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth) = 0;
+  virtual unsigned int  size(void) const = 0;
+  virtual bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites) = 0;
+  virtual bool processInputValue(const unsigned int& val) = 0;
   virtual void computeAndWriteMetric(void) = 0;
 };
 
@@ -35,23 +35,23 @@ class KLModel : public Model {
 public:
   KLModel() {};
   bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-	    const string& chrom, const int& firstBegPos, const int& regionWidth);
-  int  size(void) const { return m_size; }
-  bool getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites);
-  bool processInputValue(const int& val);
+	    const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth);
+  unsigned int  size(void) const { return m_size; }
+  bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites);
+  bool processInputValue(const unsigned int& val);
   void computeAndWriteMetric(void);
 protected:
-  int m_numStates;
-  int m_size; // number of values required on each line of input
-  int m_group1size, m_group2size;
-  int m_numValsProcessedForGroup1, m_numValsProcessedForGroup2;
+  unsigned int m_numStates;
+  unsigned int m_size; // number of values required on each line of input
+  unsigned int m_group1size, m_group2size;
+  unsigned int m_numValsProcessedForGroup1, m_numValsProcessedForGroup2;
   bool m_writeNullMetric;
   ofstream m_ofsObs, m_ofsNullValues, m_ofsQcat;
   string m_chrom;
-  int m_curBegPos, m_curEndPos, m_regionWidth;
+  unsigned int m_curBegPos, m_curEndPos, m_regionWidth;
 private:
   KLModel(const KLModel&); // we have no need for a copy constructor, so disable it
-  vector<int> m_P1numerators, m_P2numerators; 
+  vector<unsigned int> m_P1numerators, m_P2numerators; 
   vector<float> m_Q1contrib, m_Q2contrib;
   vector<float> m_logsOfObservationTallies;
 };
@@ -59,32 +59,32 @@ private:
 class KLsModel : public KLModel {
 public:
   KLsModel() {};
-  bool getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites);
-  bool processInputValue(const int& val);
+  bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites);
+  bool processInputValue(const unsigned int& val);
   void computeAndWriteMetric(void);
 private:
   KLsModel(const KLsModel&); // we have no need for a copy constructor, so disable it
-  vector<int> m_Ps1numerators, m_Ps2numerators;
+  vector<unsigned int> m_Ps1numerators, m_Ps2numerators;
   vector<float> m_Qs1contrib, m_Qs2contrib;
   vector<float> m_logsOfObservationTallies;
-  vector<pair<int, int> > m_unorderedStatePairDecompositions;
+  vector<pair<unsigned int, unsigned int> > m_unorderedStatePairDecompositions;
 };
 
 class KLssModel : public KLModel {
 public:
   KLssModel() {};
-  bool getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites);
-  bool processInputValue(const int& val);
+  bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites);
+  bool processInputValue(const unsigned int& val);
   void computeAndWriteMetric(void);
 private:
   KLssModel(const KLssModel&); // we have no need for a copy constructor, so disable it
-  map<int, map<int,float> > m_Qss1contrib, m_Qss2contrib;
-  map<int, pair<map<int, set<int> >, map<int, set<int> > > > m_statePairGroupObservationsAtThisSite;
+  map<unsigned int, map<unsigned int,float> > m_Qss1contrib, m_Qss2contrib;
+  map<unsigned int, pair<map<unsigned int, set<unsigned int> >, map<unsigned int, set<unsigned int> > > > m_statePairGroupObservationsAtThisSite;
 };
 
 
 bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-		   const string& chrom, const int& firstBegPos, const int& regionWidth)
+		   const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth)
 {
   if (pObsFname != NULL)
     {
@@ -124,7 +124,7 @@ bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pN
   return true;
 }
 
-bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites)
+bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites)
 {
   const int BUFSIZE(100000);
   char buf[BUFSIZE], *p;
@@ -143,7 +143,7 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Ns
     m_Q1contrib.push_back(0 == thisNumTallies ? -999999. : LOG_Nsites - log(static_cast<float>(thisNumTallies)));
   else
     m_Q2contrib.push_back(0 == thisNumTallies ? -999999. : LOG_Nsites - log(static_cast<float>(thisNumTallies)));
-  while (p = strtok(NULL, "\t"))
+  while ((p = strtok(NULL, "\t")))
     {
       thisNumTallies = atol(p);
       totalNumTallies += thisNumTallies;
@@ -169,7 +169,7 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Ns
   else
     {
       // Perform a sanity check for safety's sake.
-      int thisNumStates = m_Q2contrib.size();
+      unsigned int thisNumStates = m_Q2contrib.size();
       if (thisNumStates != m_numStates)
 	{
 	  cerr << "Error:  The file containing tallies for Q for group 1 implies there are "
@@ -184,12 +184,12 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Ns
   // times the number of epigenomes
   if (0 == m_group1size)
     {
-      m_group1size = static_cast<int>(floor(static_cast<float>(totalNumTallies)/static_cast<float>(Nsites) + 0.01));
+      m_group1size = static_cast<unsigned int>(floor(static_cast<float>(totalNumTallies)/static_cast<float>(Nsites) + 0.01));
       m_P1numerators.assign(m_Q1contrib.size(), 0);
     }
   else
     {
-      m_group2size = static_cast<int>(floor(static_cast<float>(totalNumTallies)/static_cast<float>(Nsites) + 0.01));
+      m_group2size = static_cast<unsigned int>(floor(static_cast<float>(totalNumTallies)/static_cast<float>(Nsites) + 0.01));
       m_P2numerators.assign(m_Q2contrib.size(), 0);
     }
   // Note:  The factor of m_group1size in each element of Q
@@ -203,13 +203,13 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Ns
   if (0 == m_group2size)
     {
       m_logsOfObservationTallies.push_back(0); // unused
-      for (int i = 1; i <= m_group1size; i++)
+      for (unsigned int i = 1; i <= m_group1size; i++)
 	m_logsOfObservationTallies.push_back(log(static_cast<float>(i)));
     }
   else
     {
       if (m_group2size > m_logsOfObservationTallies.size() - 1)
-	for (int i = m_logsOfObservationTallies.size(); i <= m_group2size; i++)
+	for (unsigned int i = m_logsOfObservationTallies.size(); i <= m_group2size; i++)
 	  m_logsOfObservationTallies.push_back(log(static_cast<float>(i)));
     }
 
@@ -217,7 +217,7 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Ns
   return true;
 }
 
-bool KLModel::processInputValue(const int& thisTally)
+bool KLModel::processInputValue(const unsigned int& thisTally)
 {
   bool processingGroup1(true);
 
@@ -258,20 +258,20 @@ void KLModel::computeAndWriteMetric(void)
   static const float LOG2(0.6931471806);
   static const float denom1 = LOG2 * static_cast<float>(m_group1size);
   static const float denom2 = LOG2 * static_cast<float>(m_group2size);
-  static vector<pair<float, int> > contribOfEachState(m_numStates, make_pair(0,0));
+  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
   float retVal(0);
   
   if (!m_writeNullMetric)
     {
       // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (int i = 0; i < m_numStates; i++)
+      for (unsigned int i = 0; i < m_numStates; i++)
 	{
 	  contribOfEachState[i].first = 0;
 	  contribOfEachState[i].second = i+1;
 	}
     }
 
-  for (int i = 0; i < m_P1numerators.size(); i++)
+  for (unsigned int i = 0; i < m_P1numerators.size(); i++)
     {
       float term(0);
       if (m_P1numerators[i] != 0)
@@ -302,7 +302,7 @@ void KLModel::computeAndWriteMetric(void)
   if (!m_writeNullMetric)
     {
       float contribOfMaxTerm;
-      int stateWithMaxTerm_1based;
+      unsigned int stateWithMaxTerm_1based;
       bool signOfMaxTerm;
       char formattedQcatFloat[10];
       sort(contribOfEachState.begin(), contribOfEachState.end(), PairFloatInt_LT);
@@ -327,7 +327,7 @@ void KLModel::computeAndWriteMetric(void)
       sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
       m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
 		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (int i = 1; i < contribOfEachState.size(); i++)
+      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
 	{
 	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);	  
 	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
@@ -347,7 +347,7 @@ void KLModel::computeAndWriteMetric(void)
 }
 
 
-bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites)
+bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites)
 {
   const int BUFSIZE(100000);
   char buf[BUFSIZE], *p;
@@ -366,7 +366,7 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
     m_Qs1contrib.push_back(0 == thisNumTallies ? -999999. : LOG_Nsites - log(static_cast<float>(thisNumTallies)));
   else
     m_Qs2contrib.push_back(0 == thisNumTallies ? -999999. : LOG_Nsites - log(static_cast<float>(thisNumTallies)));
-  while (p = strtok(NULL, "\t"))
+  while ((p = strtok(NULL, "\t")))
     {
       thisNumTallies = atol(p);
       totalNumTallies += thisNumTallies;
@@ -388,11 +388,11 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
   // (yes, +1, not -1).  Thus if x is the number of elements in the Q* vector,
   // numStates satisfies numStates^2 + numStates - 2*x == 0.
   if (0 == m_group1size)
-    m_numStates = static_cast<int>(floor((sqrt(1. + 8.*static_cast<float>(m_Qs1contrib.size())) - 1.)/2. + 0.01));
+    m_numStates = static_cast<unsigned int>(floor((sqrt(1. + 8.*static_cast<float>(m_Qs1contrib.size())) - 1.)/2. + 0.01));
   else
     {
       // Perform a sanity check for safety's sake.
-      int thisNumStates = static_cast<int>(floor((sqrt(1. + 8.*static_cast<float>(m_Qs2contrib.size())) - 1.)/2. + 0.01));
+      unsigned int thisNumStates = static_cast<unsigned int>(floor((sqrt(1. + 8.*static_cast<float>(m_Qs2contrib.size())) - 1.)/2. + 0.01));
       if (thisNumStates != m_numStates)
 	{
 	  cerr << "Error:  The file containing tallies for Q* for group 1 implies there are "
@@ -407,12 +407,12 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
   // times the number of unique epigenome pairs (the latter of which equals numEpigenomes*(numEpigenomes-1)/2).
   if (0 == m_group1size)
     {
-      m_group1size = static_cast<int>(floor((sqrt(1. + 8.*static_cast<float>(totalNumTallies)/static_cast<float>(Nsites)) + 1.)/2. + 0.01));
+      m_group1size = static_cast<unsigned int>(floor((sqrt(1. + 8.*static_cast<float>(totalNumTallies)/static_cast<float>(Nsites)) + 1.)/2. + 0.01));
       m_Ps1numerators.assign(m_Qs1contrib.size(), 0);
     }
   else
     {
-      m_group2size = static_cast<int>(floor((sqrt(1. + 8.*static_cast<float>(totalNumTallies)/static_cast<float>(Nsites)) + 1.)/2. + 0.01));
+      m_group2size = static_cast<unsigned int>(floor((sqrt(1. + 8.*static_cast<float>(totalNumTallies)/static_cast<float>(Nsites)) + 1.)/2. + 0.01));
       m_Ps2numerators.assign(m_Qs2contrib.size(), 0);
     }
   // Note:  The factor of numEpiPairs*(numEpiPairs-1)/2 in each nonzero element of Q*
@@ -426,13 +426,13 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
   if (0 == m_group2size)
     {
       m_logsOfObservationTallies.push_back(0); // unused
-      for (int i = 1; i <= m_group1size*(m_group1size-1)/2; i++)
+      for (unsigned int i = 1; i <= m_group1size*(m_group1size-1)/2; i++)
 	m_logsOfObservationTallies.push_back(log(static_cast<float>(i)));
     }
   else
     {
       if (m_group2size*(m_group2size-1)/2 > m_logsOfObservationTallies.size() - 1)
-	for (int i = m_logsOfObservationTallies.size(); i <= m_group2size*(m_group2size-1)/2; i++)
+	for (unsigned int i = m_logsOfObservationTallies.size(); i <= m_group2size*(m_group2size-1)/2; i++)
 	  m_logsOfObservationTallies.push_back(log(static_cast<float>(i)));
     }
 
@@ -446,12 +446,12 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
   // from each row index of the matrix (delta_row) and each column index of the matrix (delta_column)
   // to transform the state pair (m_numStates,m_numStates) into
   // (row index, column index) = (state1, state2).
-  int maxUniqueStatePairID(m_numStates*(m_numStates+1)/2 - 1);
+  unsigned int maxUniqueStatePairID(m_numStates*(m_numStates+1)/2 - 1);
   m_unorderedStatePairDecompositions.assign(maxUniqueStatePairID+1, make_pair(0,0));
-  for (int delta = 0; delta <= maxUniqueStatePairID; delta++)
+  for (unsigned int delta = 0; delta <= maxUniqueStatePairID; delta++)
     {
-      int delta_row, delta_column;
-      delta_row = static_cast<int>(floor((-1. + sqrt(1. + 8.*static_cast<float>(delta)))/2. + 0.01));
+      unsigned int delta_row, delta_column;
+      delta_row = static_cast<unsigned int>(floor((-1. + sqrt(1. + 8.*static_cast<float>(delta)))/2. + 0.01));
       if (delta <= 2)
 	{
 	  // Edge cases for delta = 0, 1, 2
@@ -470,7 +470,7 @@ bool KLsModel::getQcontrib(ifstream& infile, const char *pFilename, const int& N
   return true;
 }
 
-bool KLsModel::processInputValue(const int& thisTally)
+bool KLsModel::processInputValue(const unsigned int& thisTally)
 {
   bool processingGroup1(true);
 
@@ -502,26 +502,26 @@ void KLsModel::computeAndWriteMetric(void)
   static const float LOG2(0.6931471806);
   static const float denom1 = LOG2 * static_cast<float>(m_group1size)*static_cast<float>(m_group1size - 1)/2.;
   static const float denom2 = LOG2 * static_cast<float>(m_group2size)*static_cast<float>(m_group2size - 1)/2.;
-  static vector<pair<float, int> > contribOfEachState(m_numStates, make_pair(0,0));
+  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
   float retVal(0), contribOfMaxStatePairTerm(0), contribOfMaxStateTerm(0);
-  int statePairWithMaxTerm_1based, stateWithMaxTerm_1based;
+  unsigned int statePairWithMaxTerm_1based(0), stateWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
   bool signOfMaxStatePairTerm, signOfMaxStateTerm;
 
   if (!m_writeNullMetric)
     {
       // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (int i = 0; i < m_numStates; i++)
+      for (unsigned int i = 0; i < m_numStates; i++)
 	{
 	  contribOfEachState[i].first = 0;
 	  contribOfEachState[i].second = i+1;
 	}
     }
 
-  for (int uniqueStatePairID = 0; uniqueStatePairID < m_Ps1numerators.size(); uniqueStatePairID++)
+  for (unsigned int uniqueStatePairID = 0; uniqueStatePairID < m_Ps1numerators.size(); uniqueStatePairID++)
     {
       float term = 0;
       float absTerm; // |term|
-      int stateOfEpi1_1based, stateOfEpi2_1based;
+      unsigned int stateOfEpi1_1based, stateOfEpi2_1based;
 
       if (!m_writeNullMetric) // no need to break down the metric by state if we're solely tasked with writing null metric values
 	{
@@ -567,7 +567,7 @@ void KLsModel::computeAndWriteMetric(void)
     {
       // extract the states (s1,s2) from the unique unordered state pair
       // that contributed the most to the metric
-      int s1 = m_unorderedStatePairDecompositions[statePairWithMaxTerm_1based - 1].first,
+      unsigned int s1 = m_unorderedStatePairDecompositions[statePairWithMaxTerm_1based - 1].first,
 	s2 = m_unorderedStatePairDecompositions[statePairWithMaxTerm_1based - 1].second;
       char formattedQcatFloat[10];
       sort(contribOfEachState.begin(), contribOfEachState.end(), PairFloatInt_LT);
@@ -595,7 +595,7 @@ void KLsModel::computeAndWriteMetric(void)
       sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
       m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
 		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (int i = 1; i < contribOfEachState.size(); i++)
+      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
 	{
 	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);
 	  m_ofsQcat << ", [" << contribOfEachState[i].first << ',' << contribOfEachState[i].second << ']';
@@ -615,16 +615,16 @@ void KLsModel::computeAndWriteMetric(void)
 }
 
 
-bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const int& Nsites)
+bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites)
 {
   const int BUFSIZE(100000);
   char buf[BUFSIZE], *p;
   const float LOG2(0.6931471806), LOG_Nsites(log(static_cast<float>(Nsites)));
   float denom;
-  vector<int> row, transposeRow;
-  vector<vector<int> > tallyMatrix, transposedTallyMatrix;
-  map<int, map<int,float> > tempMap;
-  int linenum(0), fieldnum, numCols(0);
+  vector<unsigned int> row, transposeRow;
+  vector<vector<unsigned int> > tallyMatrix, transposedTallyMatrix;
+  map<unsigned int, map<unsigned int,float> > tempMap;
+  unsigned int linenum(0), fieldnum, numCols(0);
 
   while (infile.getline(buf, BUFSIZE))
     {
@@ -640,12 +640,12 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const int& 
 	{
 	  row.push_back(atoi(p));
 	  numCols++;
-	  while (p = strtok(NULL, "\t"))
+	  while ((p = strtok(NULL, "\t")))
 	    {
 	      row.push_back(atoi(p));
 	      numCols++;
 	    }
-	  m_numStates = static_cast<int>(floor(sqrt(static_cast<float>(numCols)) + 0.01));
+	  m_numStates = static_cast<unsigned int>(floor(sqrt(static_cast<float>(numCols)) + 0.01));
 	}
       else
 	{
@@ -663,7 +663,7 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const int& 
 	    }
 	  else
 	    {
-	      if (p = strtok(NULL, "\t"))
+	      if ((p = strtok(NULL, "\t")))
 		{
 		  cerr << "Error:  Found " << numCols << " columns on line 1 of " << pFilename
 		       << " but at least " << numCols+1 << " columns on line " << linenum
@@ -680,24 +680,24 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const int& 
   // The number of rows (linenum) equals numEpigenomes*(numEpigenomes - 1)/2,
   // so the number of epigenomes satisfies numEpigenomes^2 - numEpigenomes - 2*linenum == 0.
   if (0 == m_group1size)
-    m_group1size = static_cast<int>(floor(1. + (sqrt(1. + 8.*static_cast<float>(linenum)))/2. + 0.001));
+    m_group1size = static_cast<unsigned int>(floor(1. + (sqrt(1. + 8.*static_cast<float>(linenum)))/2. + 0.001));
   else
-    m_group2size = static_cast<int>(floor(1. + (sqrt(1. + 8.*static_cast<float>(linenum)))/2. + 0.001));
+    m_group2size = static_cast<unsigned int>(floor(1. + (sqrt(1. + 8.*static_cast<float>(linenum)))/2. + 0.001));
   
   transposeRow.assign(tallyMatrix.size(), 0);
-  for (int c = 0; c < numCols; c++)
+  for (unsigned int c = 0; c < numCols; c++)
     {
-      for (int r = 0; r < tallyMatrix.size(); r++)
+      for (unsigned int r = 0; r < tallyMatrix.size(); r++)
 	transposeRow[r] = tallyMatrix[r][c];
       transposedTallyMatrix.push_back(transposeRow);
     }
   
   denom = LOG2 * static_cast<float>(tallyMatrix.size());
 
-  for (int statePairID = 0; statePairID < transposedTallyMatrix.size(); statePairID++)
+  for (unsigned int statePairID = 0; statePairID < transposedTallyMatrix.size(); statePairID++)
     {
-      map<int,float> epigenomePairID_to_QssContrib;
-      for (int epigenomePairID = 0; epigenomePairID < transposedTallyMatrix[0].size(); epigenomePairID++)
+      map<unsigned int,float> epigenomePairID_to_QssContrib;
+      for (unsigned int epigenomePairID = 0; epigenomePairID < transposedTallyMatrix[0].size(); epigenomePairID++)
 	{
 	  if (transposedTallyMatrix[statePairID][epigenomePairID] != 0)
 	    epigenomePairID_to_QssContrib[epigenomePairID] =
@@ -717,12 +717,12 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const int& 
   return true;
 }
 
-bool KLssModel::processInputValue(const int& statePairID)
+bool KLssModel::processInputValue(const unsigned int& statePairID)
 {
-  static map<int, set<int> > emptyMap;
-  static pair<map<int, set<int> >, map<int, set<int> > > pairOfEmptyMaps(emptyMap, emptyMap);
+  static map<unsigned int, set<unsigned int> > emptyMap;
+  static pair<map<unsigned int, set<unsigned int> >, map<unsigned int, set<unsigned int> > > pairOfEmptyMaps(emptyMap, emptyMap);
   bool processingGroup1(true);
-  int remainder = statePairID % m_numStates, statePairGroupID;
+  unsigned int remainder = statePairID % m_numStates, statePairGroupID;
 
   // Check these variables, in case excess columns appear in this line of input.
   // This is also how we determine, in the case of two groups of epigenomes being compared,
@@ -741,7 +741,7 @@ bool KLssModel::processInputValue(const int& statePairID)
 
   if (remainder != 0)
     {
-      int quotient = statePairID / m_numStates;
+      unsigned int quotient = statePairID / m_numStates;
       if (quotient + 1 > remainder) // reflect statePairID across the matrix diagonal, from the lower triangular matrix to the upper one
 	statePairGroupID = m_numStates*(remainder - 1) + (quotient + 1);
       else
@@ -749,11 +749,11 @@ bool KLssModel::processInputValue(const int& statePairID)
     }
   else
     statePairGroupID = statePairID;
-  map<int, pair<map<int, set<int> >, map<int, set<int> > > >::iterator it =
+  map<unsigned int, pair<map<unsigned int, set<unsigned int> >, map<unsigned int, set<unsigned int> > > >::iterator it =
     m_statePairGroupObservationsAtThisSite.find(statePairGroupID);
   if (m_statePairGroupObservationsAtThisSite.end() == it)
     {
-      set<int> thisEpigenomePairID;      
+      set<unsigned int> thisEpigenomePairID;      
       m_statePairGroupObservationsAtThisSite[statePairGroupID] = pairOfEmptyMaps;
       if (processingGroup1)
 	{
@@ -768,13 +768,13 @@ bool KLssModel::processInputValue(const int& statePairID)
     }
   else
     {
-      map<int, set<int> >::iterator it2;
+      map<unsigned int, set<unsigned int> >::iterator it2;
       if (processingGroup1)
 	{
 	  it2 = it->second.first.find(statePairID);
 	  if (it->second.first.end() == it2)
 	    {
-	      set<int> thisEpigenomePairID;
+	      set<unsigned int> thisEpigenomePairID;
 	      thisEpigenomePairID.insert(m_numValsProcessedForGroup1++);
 	      it->second.first[statePairID] = thisEpigenomePairID;
 	    }
@@ -786,7 +786,7 @@ bool KLssModel::processInputValue(const int& statePairID)
 	  it2 = it->second.second.find(statePairID);
 	  if (it->second.second.end() == it2)
 	    {
-	      set<int> thisEpigenomePairID;
+	      set<unsigned int> thisEpigenomePairID;
 	      thisEpigenomePairID.insert(m_numValsProcessedForGroup2++);
 	      it->second.second[statePairID] = thisEpigenomePairID;
 	    }
@@ -801,30 +801,30 @@ bool KLssModel::processInputValue(const int& statePairID)
 void KLssModel::computeAndWriteMetric(void)
 {
   float retVal(0);
-  static vector<pair<float, int> > contribOfEachState(m_numStates, make_pair(0,0));
+  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
   float contribOfMaxStatePairGroupTerm(0), contribOfMaxStateTerm(0);
-  int statePairGroupWithMaxTerm_1based, stateWithMaxTerm_1based;
+  unsigned int statePairGroupWithMaxTerm_1based(0), stateWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
   bool signOfMaxStatePairGroupTerm, signOfMaxStateTerm;
 
   if (!m_writeNullMetric)
     {
       // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (int i = 0; i < m_numStates; i++)
+      for (unsigned int i = 0; i < m_numStates; i++)
 	{
 	  contribOfEachState[i].first = 0;
 	  contribOfEachState[i].second = i+1;
 	}
     }
   
-  for (map<int, pair<map<int, set<int> >, map<int, set<int> > > >::const_iterator statePairGroup_it =
+  for (map<unsigned int, pair<map<unsigned int, set<unsigned int> >, map<unsigned int, set<unsigned int> > > >::const_iterator statePairGroup_it =
 	 m_statePairGroupObservationsAtThisSite.begin();
        statePairGroup_it != m_statePairGroupObservationsAtThisSite.end(); statePairGroup_it++)
     {
-      const int &statePairGroupID = statePairGroup_it->first;
+      const unsigned int &statePairGroupID = statePairGroup_it->first;
       float term = 0; // The contribution to D_KL from each state pair group.  Each encompasses state pairs (a,b) and (b,a), or (a,a) alone.
       float absTerm; // |term|
-      int row, column; // 1-based row and column numbers of the upper triangular matrix of state pair groups;
-                       // these are the states of the two epigenomes within an epigenome pair
+      unsigned int row, column; // 1-based row and column numbers of the upper triangular matrix of state pair groups;
+                                // these are the states of the two epigenomes within an epigenome pair
       if (!m_writeNullMetric) // no need to break down the metric by state if we're solely tasked with writing null metric values
 	{
 	  column = statePairGroupID % m_numStates;
@@ -836,26 +836,26 @@ void KLssModel::computeAndWriteMetric(void)
 	    }
 	}
 
-      for (map<int, set<int> >::const_iterator group1_it = statePairGroup_it->second.first.begin();
+      for (map<unsigned int, set<unsigned int> >::const_iterator group1_it = statePairGroup_it->second.first.begin();
 	   group1_it != statePairGroup_it->second.first.end(); group1_it++)
 	{
-	  const int &statePairID = group1_it->first;
-	  for (set<int>::const_iterator epigenomePair_it = group1_it->second.begin();
+	  const unsigned int &statePairID = group1_it->first;
+	  for (set<unsigned int>::const_iterator epigenomePair_it = group1_it->second.begin();
 	       epigenomePair_it != group1_it->second.end(); epigenomePair_it++)
 	    {
-	      const int &epigenomePairID = *epigenomePair_it;
+	      const unsigned int &epigenomePairID = *epigenomePair_it;
 	      term += (m_Qss1contrib.find(statePairID)->second).find(epigenomePairID)->second;
 	    }
 	}
       // The following loop will only be executed if a comparison between groups is being made.
-      for (map<int, set<int> >::const_iterator group2_it = statePairGroup_it->second.second.begin();
+      for (map<unsigned int, set<unsigned int> >::const_iterator group2_it = statePairGroup_it->second.second.begin();
 	   group2_it != statePairGroup_it->second.second.end(); group2_it++)
 	{
-	  const int &statePairID = group2_it->first;
-	  for (set<int>::const_iterator epigenomePair_it = group2_it->second.begin();
+	  const unsigned int &statePairID = group2_it->first;
+	  for (set<unsigned int>::const_iterator epigenomePair_it = group2_it->second.begin();
 	       epigenomePair_it != group2_it->second.end(); epigenomePair_it++)
 	    {
-	      const int &epigenomePairID = *epigenomePair_it;
+	      const unsigned int &epigenomePairID = *epigenomePair_it;
 	      term -= (m_Qss2contrib.find(statePairID)->second).find(epigenomePairID)->second;
 	    }
 	}
@@ -876,7 +876,7 @@ void KLssModel::computeAndWriteMetric(void)
 
   if (!m_writeNullMetric)
     {
-      int s1 = statePairGroupWithMaxTerm_1based / m_numStates + 1,
+      unsigned int s1 = statePairGroupWithMaxTerm_1based / m_numStates + 1,
 	s2 = statePairGroupWithMaxTerm_1based % m_numStates; // statePairGroupID = (s1,s2)
       char formattedQcatFloat[10];
       if (0 == s2)
@@ -909,7 +909,7 @@ void KLssModel::computeAndWriteMetric(void)
       sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
       m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
 		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (int i = 1; i < contribOfEachState.size(); i++)
+      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
 	{
 	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);
 	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
@@ -932,7 +932,7 @@ bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
 {
   const int BUFSIZE(100000);
   char buf[BUFSIZE], *p;
-  int linenum(0), numColsProcessed;
+  unsigned int linenum(0), numColsProcessed;
 
   while (ifs.getline(buf,BUFSIZE))
     {
@@ -941,7 +941,7 @@ bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
 
       p = strtok(buf, "\t");
       do {
-	int inputValue(atoi(p));
+	unsigned int inputValue(atoi(p));
 	numColsProcessed++;
 	if (!pModel->processInputValue(inputValue))
 	  {
@@ -1002,8 +1002,9 @@ int main(int argc, const char* argv[])
     *pInfilename(argv[1]), *pQ1filename(argv[4]), *pQ2filename(NULL);
   ifstream infile(pInfilename), infileQ1(pQ1filename), infileQ2;
   ofstream outfileObs, outfileQcat, outfileNulls;
-  const int measurementTypeInt(atoi(argv[2])), Nsites(atoi(argv[3]));
-  int firstBegPos, regionWidth;
+  const int measurementTypeInt(atoi(argv[2]));
+  const unsigned int Nsites(atoi(argv[3]));
+  unsigned int firstBegPos, regionWidth;
   string chrom;
   KLModel mKL;
   KLsModel mKLs;

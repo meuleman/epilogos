@@ -54,7 +54,7 @@ bool loadDataAndReport(ifstream& ifs, ofstream& ofs, const vector<NullData>& nul
   OutputValue ov;
   vector<OutputValue> outvec;
   long linenum(0);
-  int fieldnum, expectedFinalFieldNum;
+  int fieldnum, expectedFinalFieldNum(-1);
   
   while (ifs.getline(buf,BUFSIZE))
     {
@@ -87,8 +87,8 @@ bool loadDataAndReport(ifstream& ifs, ofstream& ofs, const vector<NullData>& nul
 
   sort(outvec.begin(), outvec.end(), Metric_GT);
   float pval(0);
-  int idxNull(0);
-  for (int idxObs = 0; idxObs < outvec.size(); idxObs++)
+  unsigned int idxNull(0);
+  for (unsigned int idxObs = 0; idxObs < outvec.size(); idxObs++)
     {
       while (idxNull < nullDistn.size() && nullDistn[idxNull].metricAsInt > outvec[idxObs].metricAsInt)
 	idxNull++;
@@ -99,7 +99,7 @@ bool loadDataAndReport(ifstream& ifs, ofstream& ofs, const vector<NullData>& nul
       outvec[idxObs].pvalue = pval;
     }
   sort(outvec.begin(), outvec.end(), OutputOrder_LT);
-  for (int idxObs = 0; idxObs < outvec.size(); idxObs++)
+  for (unsigned int idxObs = 0; idxObs < outvec.size(); idxObs++)
     ofs << outvec[idxObs].inputEntry << '\t' << outvec[idxObs].pvalue << endl;
 
   return true;
@@ -177,7 +177,6 @@ int main(int argc, const char* argv[])
 {
   if (4 != argc)
     {
-    Usage:
       cerr << "Usage:  " << argv[0] << " infile nullDistnFile outfile\n"
 	   << "where \"nullDistnFile\" contains random values that constitute a null distribution,\n"
 	   << "and the values in the final column of \"infile\" are to be compared with the null values\n"

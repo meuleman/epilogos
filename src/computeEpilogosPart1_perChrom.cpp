@@ -125,7 +125,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
   vector<int> allStatesAtThisSite, zeroes, shuffledStatesInThe2groupsAtThisSite;
   vector<int> P1, P2, Ps1, Ps2, Q1, Q2, Qs1, Qs2, randP1, randP2, randPs1, randPs2;
   vector<vector<int> > Qss1, Qss2;
-  int linenum(0), fieldnum, numFieldsOnLineOne, k;
+  unsigned int linenum(0), fieldnum, numFieldsOnLineOne, k(0);
 
   // Set up the variables which will hold the parsed state data.
   
@@ -214,7 +214,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 
       if (1 == linenum)
 	{
-	  while (p = strtok(NULL, "\t"))
+	  while ((p = strtok(NULL, "\t")))
 	    {
 	      const int thisState(atoi(p));
 	      if (thisState > numStates || thisState < 1)
@@ -233,7 +233,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	}
       else
 	{
-	  while (p = strtok(NULL, "\t"))
+	  while ((p = strtok(NULL, "\t")))
 	    {
 	      const int thisState(atoi(p));
 	      if (thisState > numStates || thisState < 1)
@@ -296,7 +296,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	  ofsP << P1[0];
 	  if (comparisonOfGroups)
 	    ofsRand << randP1[0];
-	  for (int i = 1; i < P1.size(); i++)
+	  for (unsigned int i = 1; i < P1.size(); i++)
 	    {
 	      ofsP << '\t' << P1[i];
 	      if (comparisonOfGroups)
@@ -312,7 +312,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 		  Q2[allStatesAtThisSite[*it - 1] - 1]++;
 		  randP2[shuffledStatesInThe2groupsAtThisSite[k++] - 1]++;
 		}
-	      for (int i = 0; i < P2.size(); i++)
+	      for (unsigned int i = 0; i < P2.size(); i++)
 		{
 		  ofsP << '\t' << P2[i];
 		  ofsRand << '\t' << randP2[i];
@@ -321,7 +321,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	}
       else
 	{
-	  int k2, j(0);
+	  unsigned int k2, j(0);
 	  if (KLs == KLtype)
 	    {
 	      Ps1.assign(numUniqueStatePairs, 0);
@@ -472,7 +472,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	      ofsP << Ps1[0];
 	      if (comparisonOfGroups)
 		ofsRand << randPs1[0];
-	      for (int i = 1; i < Ps1.size(); i++)
+	      for (unsigned int i = 1; i < Ps1.size(); i++)
 		{
 		  ofsP << '\t' << Ps1[i];
 		  if (comparisonOfGroups)
@@ -480,7 +480,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 		}
 	      if (comparisonOfGroups)
 		{
-		  for (int i = 0; i < Ps2.size(); i++)
+		  for (unsigned int i = 0; i < Ps2.size(); i++)
 		    {
 		      ofsP << '\t' << Ps2[i];
 		      ofsRand << '\t' << randPs2[i];
@@ -499,12 +499,12 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 
   case KL:
     ofsQ << Q1[0];
-    for (int i = 1; i < Q1.size(); i++)
+    for (unsigned int i = 1; i < Q1.size(); i++)
       ofsQ << '\t' << Q1[i];
     if (comparisonOfGroups)
       {
 	ofsQ2 << Q2[0];
-	for (int i = 1; i < Q2.size(); i++)
+	for (unsigned int i = 1; i < Q2.size(); i++)
 	  ofsQ2 << '\t' << Q2[i];
 	ofsQ2 << endl;
       }
@@ -513,12 +513,12 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 
   case KLs:
     ofsQ << Qs1[0];
-    for (int i = 1; i < Qs1.size(); i++)
+    for (unsigned int i = 1; i < Qs1.size(); i++)
       ofsQ << '\t' << Qs1[i];
     if (comparisonOfGroups)
       {
 	ofsQ2 << Qs2[0];
-	for (int i = 1; i < Qs2.size(); i++)
+	for (unsigned int i = 1; i < Qs2.size(); i++)
 	  ofsQ2 << '\t' << Qs2[i];
 	ofsQ2 << endl;
       }
@@ -526,19 +526,19 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
     break;
     
   case KLss:  
-    for (int i = 0; i < Qss1.size(); i++)
+    for (unsigned int i = 0; i < Qss1.size(); i++)
       {
 	ofsQ << Qss1[i][0];
-	for (int j = 1; j < Qss1[0].size(); j++)
+	for (unsigned int j = 1; j < Qss1[0].size(); j++)
 	  ofsQ << '\t' << Qss1[i][j];
 	ofsQ << endl;
       }
     if (comparisonOfGroups)
       {
-	for (int i = 0; i < Qss2.size(); i++)
+	for (unsigned int i = 0; i < Qss2.size(); i++)
 	  {
 	    ofsQ2 << Qss2[i][0];
-	    for (int j = 1; j < Qss2[0].size(); j++)
+	    for (unsigned int j = 1; j < Qss2[0].size(); j++)
 	      ofsQ2 << '\t' << Qss2[i][j];
 	    ofsQ2 << endl;
 	  }

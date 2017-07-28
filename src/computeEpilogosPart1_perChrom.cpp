@@ -122,9 +122,10 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
   const bool comparisonOfGroups(group2.empty() ? false : true);
   const int numStatePairs(numStates * numStates), numUniqueStatePairs(numStates*(numStates+1)/2);
   int numEpiPairs1, numEpiPairs2;
-  vector<int> allStatesAtThisSite, zeroes, shuffledStatesInThe2groupsAtThisSite;
-  vector<int> P1, P2, Ps1, Ps2, Q1, Q2, Qs1, Qs2, randP1, randP2, randPs1, randPs2;
-  vector<vector<int> > Qss1, Qss2;
+  vector<int> allStatesAtThisSite, shuffledStatesInThe2groupsAtThisSite;
+  vector<int> P1, P2, Ps1, Ps2, randP1, randP2, randPs1, randPs2;
+  vector<unsigned long>  Q1, Q2, Qs1, Qs2, zeroes;
+  vector<vector<unsigned long> > Qss1, Qss2;
   unsigned int linenum(0), fieldnum, numFieldsOnLineOne, k(0);
 
   // Set up the variables which will hold the parsed state data.
@@ -490,7 +491,8 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	} // end of if/else to handle choice of KL, KL*, or KL**
 
       ofsP << endl;
-      ofsRand << endl;
+      if (comparisonOfGroups)
+	ofsRand << endl;
     } // end of loop for reading and processing all input data
 
   // Write out the tallies over sites, for eventual use in Q, Q*, or Q**.

@@ -57,9 +57,9 @@ if [ ! -s "$fileOfFilenames" ]; then
     exit 2
 fi
 
-EXE1=computeEpilogosPart1_perChrom
-EXE2=computeEpilogosPart2_perChrom
-EXE3=computeEpilogosPart3_perChrom
+EXE1=`which computeEpilogosPart1_perChrom`
+EXE2=`which computeEpilogosPart2_perChrom`
+EXE3=`which computeEpilogosPart3_perChrom`
 
 if [ ! -x "$EXE1" ]; then
     echo -e "Error:  Required executable \"$EXE1\" not found, or it is not executable."
@@ -505,7 +505,9 @@ EOF
     fi
 done <<< "$(cat $fileOfFilenames)"
 
-echo -e "Collating and cleaning up..."
+# --------------------------------------
+# echo -e "Collating and cleaning up..."
+# --------------------------------------
 
 dependencyString="--dependency=$dependencies"
 finalJobName=finalStep

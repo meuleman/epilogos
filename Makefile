@@ -1,7 +1,7 @@
 BINDIR = bin
 SRCDIR = src
 CXX = g++
-CXXFLAGS = -O3 -pedantic -Wall -ansi -static
+CXXFLAGS = -O3 -pedantic -Wall -ansi
 
 TARGETS = computeEpilogosPart1_perChrom computeEpilogosPart2_perChrom computeEpilogosPart3_perChrom
 EXE = $(addprefix $(BINDIR)/,$(TARGETS))

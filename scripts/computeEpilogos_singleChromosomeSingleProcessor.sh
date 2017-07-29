@@ -26,13 +26,13 @@ if [[ $# != 5 ]] && [[ $# != 6 ]]; then # invalid number of arguments
 fi    
 
 # This script requires bgzip and starch (bedops).
-BGZIP_EXE=`which bgzip`
+BGZIP_EXE=`which bgzip 2> /dev/null`
 if [ ! -x "$BGZIP_EXE" ]; then
     echo -e "Error:  Required external program bgzip was not found, or it is not executable."
     echo -e "Make sure this program is in your \$PATH, then try again."
     exit 2
 fi
-STARCH_EXE=`which starch`
+STARCH_EXE=`which starch 2> /dev/null`
 if [ ! -x "$STARCH_EXE" ]; then
     echo -e "Error:  Required external program starch (part of bedops) was not found, or it is not executable."
     echo -e "Make sure this program is in your \$PATH, then try again."
@@ -70,20 +70,35 @@ if [ ! -s $singleChromInputFile ]; then
     exit 2
 fi
 
-EXE1=`which computeEpilogosPart1_perChrom`
-EXE2=`which computeEpilogosPart2_perChrom`
-EXE3=`which computeEpilogosPart3_perChrom`
+EXE1=`which computeEpilogosPart1_perChrom 2> /dev/null`
+EXE2=`which computeEpilogosPart2_perChrom 2> /dev/null`
+EXE3=`which computeEpilogosPart3_perChrom 2> /dev/null`
 
 if [ ! -x "$EXE1" ]; then
-    echo -e "Error:  Required executable \"$EXE1\" was not found, or it is not executable."
+    echo -e "Error:  Required executable \"computeEpilogosPart1_perChrom\" was not found, or it is not executable."
+    echo -e "Make sure you've run the \"make\" command from within the \"epilogos\" directory"
+    echo -e "and added the path to computeEpilogosPart1_perChrom to your \$PATH environment variable."
+    echo -e "The command \"which computeEpilogosPart1_perChrom\" (executed from any directory)"
+    echo -e "will confirm that computeEpilogosPart1_perChrom is in your \$PATH by showing you its location,"
+    echo -e "or return a message stating it could not be found if it has not been successfully added to your \$PATH."
     exit 2
 fi
 if [ ! -x "$EXE2" ]; then
-    echo -e "Error:  Required executable \"$EXE2\" was not found, or it is not executable."
+    echo -e "Error:  Required executable \"computeEpilogosPart2_perChrom\" was not found, or it is not executable."
+    echo -e "Make sure you've run the \"make\" command from within the \"epilogos\" directory"
+    echo -e "and added the path to computeEpilogosPart2_perChrom to your \$PATH environment variable."
+    echo -e "The command \"which computeEpilogosPart2_perChrom\" (executed from any directory)"
+    echo -e "will confirm that computeEpilogosPart2_perChrom is in your \$PATH by showing you its location,"
+    echo -e "or return a message stating it could not be found if it has not been successfully added to your \$PATH."
     exit 2
 fi
 if [ ! -x "$EXE3" ]; then
-    echo -e "Error:  Required executable \"$EXE3\" was not found, or it is not executable."
+    echo -e "Error:  Required executable \"computeEpilogosPart3_perChrom\" was not found, or it is not executable."
+    echo -e "Make sure you've run the \"make\" command from within the \"epilogos\" directory"
+    echo -e "and added the path to computeEpilogosPart3_perChrom to your \$PATH environment variable."
+    echo -e "The command \"which computeEpilogosPart3_perChrom\" (executed from any directory)"
+    echo -e "will confirm that computeEpilogosPart3_perChrom is in your \$PATH by showing you its location,"
+    echo -e "or return a message stating it could not be found if it has not been successfully added to your \$PATH."
     exit 2
 fi
 

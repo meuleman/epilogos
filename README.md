@@ -38,12 +38,14 @@ and access to a computer cluster managed by SLURM software.
 Sample input data has been provided. If you set up epilogos correctly,
 you should be able to use the input data, write results into new
 directories of your choosing, and then ensure that those results
-match the results provided alongside the input data.
+match the results provided alongside the input data. NOTE: You must
+use gunzip to decompress the input data file before using it.
 
 
 The file `Blood_T-cellGroupSpec.txt` contains the column specifications
 for a group of blood and T-cell samples in the input data. To compute KL
-from this subset of the input data, run the following command:
+from this subset of the input data, cd to the epilogos `data` subdirectory,
+decompress the input data as mentioned above, then run the following command:
 
 
 ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory1/KL "33-34,37-45,47-48,61"
@@ -55,7 +57,8 @@ that your run produces should match the corresponding files in `data/results_Blo
 
 The file `HSC_B-cellGroupSpec.txt` contains the column specification
 for a group of stem-cell and B-cell samples in the input data. To compute DKL
-for a comparison of these two subsets of the input data, run the following command:
+for a comparison of these two subsets of the input data, run the following command,
+again from the epilogos `data` subdirectory:
 
 
 

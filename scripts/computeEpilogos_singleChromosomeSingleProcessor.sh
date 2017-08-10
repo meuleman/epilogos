@@ -131,7 +131,27 @@ mkdir -p $outdir
 # echo -e "Executing \"part 1a\"..."
 # ----------------------------------
 
-chr=`head -n 1 $singleChromInputFile | cut -f1`
+INFILE_IS_COMPRESSED=`echo $singleChromInputFile | awk '{len=split($0,x,".");if("gz" == x[len]){print 1}else{print 0}}'`
+if [ "$INFILE_IS_COMPRESSED" == "1" ]; then
+    ZCAT_EXE=`which zcat 2> /dev/null`
+    if [ ! -x "$ZCAT_EXE" ]; then
+	echo -e "Error:  Failed to decompress input file $singleChromInputFile using zcat."
+	echo -e "Try decompressing it yourself and specifying the decompressed version of it as input."
+	exit 2
+    fi
+    chr=`zcat $singleChromInputFile | head -n 1 | cut -f1`
+    infile1=${outdir}/uncompressedInfile_${chr}.txt
+    zcat $singleChromInputFile > $infile1
+    if [ ! -s $infile1 ]; then
+	echo -e "Error:  Failed to decompress input file $singleChromInputFile using zcat."
+	echo -e "Try decompressing it yourself and specifying the decompressed version of it as input."
+	exit 2
+    fi
+else
+    infile1=$singleChromInputFile
+    chr=`head -n 1 $infile1 | cut -f1`
+fi
+
 outfileRand="" # used only if 2 groups of epigenomes are being compared
 outfileQ2=""   # used only if 2 groups of epigenomes are being compared
 PfilenameString=""
@@ -168,9 +188,11 @@ else
 fi
 outfileP=${outdir}/${chr}${PfilenameString}
 
+
+
 jobName="p1a_$chr"
 if [[ ! -s $outfileP || ! -s $outfileQ || ! -s $outfileNsites || ($group2spec != "" && (! -s $outfileQ2 || ! -s $outfileRand)) ]]; then
-    $EXE1 $singleChromInputFile $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE1 $infile1 $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
         exit 2
     fi
@@ -241,9 +263,12 @@ rm -f $outfileNsites
 # echo -e "Executing \"part 2a\"..."
 # ----------------------------------
 
-firstBegPos=`head -n 1 $singleChromInputFile | cut -f2`
-firstEndPos=`head -n 1 $singleChromInputFile | cut -f3`
+firstBegPos=`head -n 1 $infile1 | cut -f2`
+firstEndPos=`head -n 1 $infile1 | cut -f3`
 regionWidth=`echo $firstBegPos | awk -v e=$firstEndPos '{print e - $1}'`
+if [ "$INFILE_IS_COMPRESSED" == "1" ]; then
+    rm -f $infile1
+fi
 infile=${outdir}/${chr}${PfilenameString}
 infileQ=$outfileQ
 infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
@@ -318,6 +343,40 @@ if [ ! -s $outfile ]; then
     if [ $? == 0 ]; then
 	rm -f $outfile
     fi
+fi
+
+exemplarRegions=${outdir}/exemplarRegions.txt
+if [ -s $finalOutfile ] && [ ! -s $exemplarRegions ]; then
+    STATE_COLUMN=4
+    if [ $KL == 1 ]; then
+	SCORE_COLUMN=7
+    else
+	SCORE_COLUMN=10
+    fi
+    unstarch $finalOutfile \
+	 | awk -v stateCol=$STATE_COLUMN -v scoreCol=$SCORE_COLUMN 'BEGIN {OFS="\t"; chrom=""; state=""; bestScore=""; line=""} \
+           { \
+              if ( $(stateCol) != state || $1 != chrom ) { \
+                 if ( state != "" ) { \
+                    print line; \
+                 } \
+                 chrom = $1; \
+                 state = $(stateCol); \
+                 bestScore = $(scoreCol); \
+                 line = $0; \
+              } else { \
+                 if ( $(scoreCol) >= bestScore ) { \
+                    bestScore = $(scoreCol); \
+                    line = $0; \
+                 } \
+              } \
+           } END { \
+                      if ( line != "" ) { \
+                         print line; \
+                      } \
+                 }' \
+	 | sort -gr -k${SCORE_COLUMN},${SCORE_COLUMN} \
+	 > $exemplarRegions
 fi
 
 exit 0

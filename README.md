@@ -9,6 +9,8 @@ In the meantime, here's a very brief tutorial:
 and `starch` (the latter is part of `bedops`) in your PATH
 environment variable.
 * A single script, `computeEpilogos.sh`, does all the processing.
+(But see below for important differences between `computeEpilogos.sh`
+and `computeEpilogos_singleChromosomeSingleProcessor.sh`.)
 Before you run the script, you need to make the executable programs
 that the script calls.  This is done by running `make` from
 this directory.  This will make 3 programs, and place them into a
@@ -21,7 +23,7 @@ variable.
 * Run the script `computeEpilogos.sh` with no arguments to see
 the list of arguments it requires and descriptions of them.
 * Then you can run the script and supply your arguments and get your
-results.  All processing will be done on the cluster, managed by SLURM.
+results.  All processing will be done on a computer cluster, managed by SLURM.
 For the time being, the cluster/queue name is hardcoded in the script.
 * The key output files are `observations.starch` and `qcat.bed.gz`.
 Additional files will be created during execution and deleted when

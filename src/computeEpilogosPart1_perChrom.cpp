@@ -207,11 +207,13 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	       << endl << endl;
 	  return false;
 	}
-      // field 2:  begin site, ignore
+      // field 2:  begin site
+      ofsP << p;
       fieldnum++;
       if (!(p = strtok(NULL, "\t")))
 	goto MissingField;
-      // field 3:  end site, ignore
+      // field 3:  end site
+      ofsP << '\t' << p;
 
       if (1 == linenum)
 	{
@@ -294,7 +296,8 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	      if (comparisonOfGroups)
 		randP1[shuffledStatesInThe2groupsAtThisSite[k++] - 1]++;
 	    }
-	  ofsP << P1[0];
+	  // ofsP << P1[0];
+	  ofsP << '\t' << P1[0]; // we're now writing 
 	  if (comparisonOfGroups)
 	    ofsRand << randP1[0];
 	  for (unsigned int i = 1; i < P1.size(); i++)
@@ -354,10 +357,10 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 		  if (KLss == KLtype)
 		    {
 		      int thisStatePairID = (stateOfEpi1 - 1)*numStates + stateOfEpi2;
-		      if (0 == j)
-			ofsP << thisStatePairID;
-		      else
-			ofsP << '\t' << thisStatePairID;
+		      //		      if (0 == j)
+		      //			ofsP << thisStatePairID;
+		      //		      else
+		      ofsP << '\t' << thisStatePairID;
 		      Qss1[j++][thisStatePairID - 1]++;
 		    }
 		  else // KLs == KLtype
@@ -470,7 +473,7 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	    }
 	  if (KLs == KLtype) // then we haven't yet written the P* contributions to disk
 	    {
-	      ofsP << Ps1[0];
+	      ofsP << '\t' << Ps1[0]; // we're now writing "beg" and "end" prior to writing P1
 	      if (comparisonOfGroups)
 		ofsRand << randPs1[0];
 	      for (unsigned int i = 1; i < Ps1.size(); i++)

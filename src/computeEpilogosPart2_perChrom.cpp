@@ -23,9 +23,9 @@ bool PairFloatInt_LT(const pair<float,int>& a, const pair<float,int>& b)
 
 class Model {
 public:
-  virtual bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-		    const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth) = 0;
-  virtual unsigned int  size(void) const = 0;
+  virtual bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom) = 0;
+  virtual unsigned int size(void) const = 0;
+  virtual bool writingNulls(void) const = 0;
   virtual bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites) = 0;
   virtual bool processInputValue(const unsigned int& val) = 0;
   virtual void computeAndWriteMetric(void) = 0;
@@ -34,9 +34,9 @@ public:
 class KLModel : public Model {
 public:
   KLModel() {};
-  bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-	    const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth);
-  unsigned int  size(void) const { return m_size; }
+  bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom);
+  unsigned int size(void) const { return m_size; }
+  bool writingNulls(void) const { return m_writeNullMetric; }
   bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites);
   bool processInputValue(const unsigned int& val);
   void computeAndWriteMetric(void);
@@ -48,7 +48,7 @@ protected:
   bool m_writeNullMetric;
   ofstream m_ofsObs, m_ofsNullValues, m_ofsQcat;
   string m_chrom;
-  unsigned int m_curBegPos, m_curEndPos, m_regionWidth;
+  int m_curBegPos, m_curEndPos;
 private:
   KLModel(const KLModel&); // we have no need for a copy constructor, so disable it
   vector<unsigned int> m_P1numerators, m_P2numerators; 
@@ -83,8 +83,7 @@ private:
 };
 
 
-bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pNullFname,
-		   const string& chrom, const unsigned int& firstBegPos, const unsigned int& regionWidth)
+bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom)
 {
   if (pObsFname != NULL)
     {
@@ -114,9 +113,7 @@ bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pN
 	}
     }
   m_chrom = chrom;
-  m_curBegPos = firstBegPos;
-  m_regionWidth = regionWidth;
-  m_curEndPos = m_curBegPos + m_regionWidth;
+  m_curBegPos = m_curEndPos = -1;
   m_numValsProcessedForGroup1 = m_numValsProcessedForGroup2 = 0;
   m_group1size = m_group2size = 0;
   m_writeNullMetric = m_ofsNullValues.is_open();
@@ -221,6 +218,20 @@ bool KLModel::processInputValue(const unsigned int& thisTally)
 {
   bool processingGroup1(true);
 
+  if (!m_writeNullMetric && 0 == m_numValsProcessedForGroup1)
+    {
+      if (-1 == m_curBegPos)
+	{
+	  m_curBegPos = thisTally; // actually a position, not a "tally"
+	  return true;
+	}
+      if (-1 == m_curEndPos)
+	{
+	  m_curEndPos = thisTally; // actually a position, not a "tally"
+	  return true;
+	}
+    }
+  
   // Check these variables, in case excess columns appear in this line of input.
   // This is also how we determine, in the case of two groups of epigenomes being compared,
   // whether the input value is for group 1 or group 2.
@@ -333,14 +344,15 @@ void KLModel::computeAndWriteMetric(void)
 	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
 	}
       m_ofsQcat << " ]" << endl;
-      m_curBegPos = m_curEndPos;
-      m_curEndPos += m_regionWidth;
+      //      m_curBegPos = m_curEndPos;
+      //      m_curEndPos += m_regionWidth;
     }
   else
     m_ofsNullValues << retVal << endl;
   
   // reset the counting variables and the "P* numerator" (m_Ps1numerators, m_Ps2numerators) tallies
   m_numValsProcessedForGroup1 = m_numValsProcessedForGroup2 = 0;
+  m_curBegPos = m_curEndPos = -1;
   m_P1numerators.assign(m_P1numerators.size(), 0);
   if (!m_P2numerators.empty())
     m_P2numerators.assign(m_P2numerators.size(), 0);
@@ -474,6 +486,20 @@ bool KLsModel::processInputValue(const unsigned int& thisTally)
 {
   bool processingGroup1(true);
 
+  if (!m_writeNullMetric && 0 == m_numValsProcessedForGroup1)
+    {
+      if (-1 == m_curBegPos)
+	{
+	  m_curBegPos = thisTally; // actually a position, not a "tally"
+	  return true;
+	}
+      if (-1 == m_curEndPos)
+	{
+	  m_curEndPos = thisTally; // actually a position, not a "tally"
+	  return true;
+	}
+    }
+  
   // Check these variables, in case excess columns appear in this line of input.
   // This is also how we determine, in the case of two groups of epigenomes being compared,
   // whether the input value is for group 1 or group 2.
@@ -601,14 +627,15 @@ void KLsModel::computeAndWriteMetric(void)
 	  m_ofsQcat << ", [" << contribOfEachState[i].first << ',' << contribOfEachState[i].second << ']';
 	}
       m_ofsQcat << " ]" << endl;
-      m_curBegPos = m_curEndPos;
-      m_curEndPos += m_regionWidth;
+      //      m_curBegPos = m_curEndPos;
+      //      m_curEndPos += m_regionWidth;
     }
   else
     m_ofsNullValues << retVal << endl;
   
   // reset the counting variables and the "P* numerator" (m_Ps1numerators, m_Ps2numerators) tallies
   m_numValsProcessedForGroup1 = m_numValsProcessedForGroup2 = 0;
+  m_curBegPos = m_curEndPos = -1;
   m_Ps1numerators.assign(m_Ps1numerators.size(), 0);
   if (!m_Ps2numerators.empty())
     m_Ps2numerators.assign(m_Ps2numerators.size(), 0);
@@ -724,6 +751,20 @@ bool KLssModel::processInputValue(const unsigned int& statePairID)
   bool processingGroup1(true);
   unsigned int remainder = statePairID % m_numStates, statePairGroupID;
 
+  if (!m_writeNullMetric && 0 == m_numValsProcessedForGroup1)
+    {
+      if (-1 == m_curBegPos)
+	{
+	  m_curBegPos = statePairID; // actually a position, not a "statePairID"
+	  return true;
+	}
+      if (-1 == m_curEndPos)
+	{
+	  m_curEndPos = statePairID; // actually a position, not a "statePairID"
+	  return true;
+	}
+    }
+  
   // Check these variables, in case excess columns appear in this line of input.
   // This is also how we determine, in the case of two groups of epigenomes being compared,
   // whether the input value is for group 1 or group 2.
@@ -915,14 +956,15 @@ void KLssModel::computeAndWriteMetric(void)
 	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
 	}
       m_ofsQcat << " ]" << endl;
-      m_curBegPos = m_curEndPos;
-      m_curEndPos += m_regionWidth;
+      //      m_curBegPos = m_curEndPos;
+      //      m_curEndPos += m_regionWidth;
     }
   else
     m_ofsNullValues << retVal << endl;
   
   // reset counting variables and the map
   m_numValsProcessedForGroup1 = m_numValsProcessedForGroup2 = 0;
+  m_curBegPos = m_curEndPos = -1;
   m_statePairGroupObservationsAtThisSite.clear();
 }
 
@@ -933,7 +975,8 @@ bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
   const int BUFSIZE(100000);
   char buf[BUFSIZE], *p;
   unsigned int linenum(0), numColsProcessed;
-
+  const unsigned int numExpected = pModel->writingNulls() ? pModel->size() : pModel->size() + 2;
+  
   while (ifs.getline(buf,BUFSIZE))
     {
       linenum++;
@@ -952,11 +995,11 @@ bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
 	  }
       } while ((p = strtok(NULL, "\t")));
 
-      if (numColsProcessed != pModel->size())
+      if (numColsProcessed != numExpected)
 	{
-	  cerr << "Error:  Expected to find " << pModel->size() << " columns of integers "
+	  cerr << "Error:  Expected to find " << numExpected << " columns of integers "
 	       << "on line " << linenum << " of " << pFilename
-	       << ", but only found " << numColsProcessed << "." << endl << endl;
+	       << ", but instead found " << numColsProcessed << "." << endl << endl;
 	  return false;
 	}
 
@@ -968,10 +1011,10 @@ bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
 
 int main(int argc, const char* argv[])
 {
-  if (10 != argc && 11 != argc && 7 != argc)
+  if (8 != argc && 9 != argc && 7 != argc)
     {
     Usage:
-      cerr << "Usage type #1:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ outfileObs outfileQcat chr firstBegPos regionWidth [infileQ2]\n"
+      cerr << "Usage type #1:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ outfileObs outfileQcat chr [infileQ2]\n"
 	   << "where\n"
 	   << "* infile holds the tab-delimited state or state pair IDs observed in the epigenomes or pairs of epigenomes, one line per genomic segment\n"
 	   << "* KLtype is either 0 (for KL), 1 (for KL*), or 2 (for KL**)\n"
@@ -1004,7 +1047,6 @@ int main(int argc, const char* argv[])
   ofstream outfileObs, outfileQcat, outfileNulls;
   const int measurementTypeInt(atoi(argv[2]));
   const unsigned int Nsites(atoi(argv[3]));
-  unsigned int firstBegPos, regionWidth;
   string chrom;
   KLModel mKL;
   KLsModel mKLs;
@@ -1037,10 +1079,8 @@ int main(int argc, const char* argv[])
       pOutfileObsFilename = argv[5];
       pOutfileQcatFilename = argv[6];
       chrom = string(argv[7]);
-      firstBegPos = atoi(argv[8]);
-      regionWidth = atoi(argv[9]);
-      if (11 == argc)
-	pQ2filename = argv[10];
+      if (9 == argc)
+	pQ2filename = argv[8];
     }
   if (pQ2filename != NULL)
     {
@@ -1062,8 +1102,7 @@ int main(int argc, const char* argv[])
 	pM = &mKLss;
     }
 
-  if (!pM->init(pOutfileObsFilename, pOutfileQcatFilename, pOutfileNullValsFilename,
-		chrom, firstBegPos, regionWidth))
+  if (!pM->init(pOutfileObsFilename, pOutfileQcatFilename, pOutfileNullValsFilename, chrom))
     return -1;
   if (!pM->getQcontrib(infileQ1, pQ1filename, Nsites))
     return -1;

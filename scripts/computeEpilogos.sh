@@ -9,7 +9,7 @@ usage() {
     echo -e "  each chrom-specific infile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
     echo -e "  States are positive integers."
-    echo -e "* measurementType is either 0 (to use KL), 1 (to use KL*), or 2 (to use KL**)"
+    echo -e "* measurementType is either 0 (to use KL or DKL), 1 (to use KL* or DKL*), or 2 (to use KL** or DKL**)"
     echo -e "* numStates is the number of possible states (the positive integers given in columns 4 and following)"
     echo -e "* groupSpec specifies epigenomes to use in the analysis;"
     echo -e "  these are epigenome numbers corresponding to the order in which they appear in the input files"
@@ -45,12 +45,16 @@ KL=0
 KLs=0
 KLss=0
 if [ "$measurementType" == "0" ]; then
-    KL=1   # KL
+    KL=1   # KL (or DKL)
+    SCORE_COLUMN=7
 elif [ "$measurementType" == "1" ]; then
-    KLs=1  # KL*
+    KLs=1  # KL* (or DKL*)
+    SCORE_COLUMN=10
 else
-    KLss=1 # KL**
+    KLss=1 # KL** (or DKL**)
+    SCORE_COLUMN=10
 fi
+STATE_COLUMN=4
     
 if [ ! -s "$fileOfFilenames" ]; then
     echo -e "Error:  File \"$fileOfFilenames\" was not found, or it is empty."
@@ -375,9 +379,6 @@ do
 	exit 2
     fi
     chr=`head -n 1 $file | cut -f1`
-    firstBegPos=`head -n 1 $file | cut -f2`
-    firstEndPos=`head -n 1 $file | cut -f3`
-    regionWidth=`echo $firstBegPos | awk -v e=$firstEndPos '{print e - $1}'`
     infile=${outdir}/${chr}${PfilenameString}
     infileQ=$outfileQ
     infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
@@ -393,7 +394,7 @@ do
 	thisJobID=$(sbatch --parsable --partition=queue1 $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    totalNumSites=\`cat $tempfile\`
-   $EXE2 $infile $measurementType \$totalNumSites $infileQ $outfileObserved $outfileQcat $chr $firstBegPos $regionWidth $infileQ2
+   $EXE2 $infile $measurementType \$totalNumSites $infileQ $outfileObserved $outfileQcat $chr $infileQ2
    if [ \$? != 0 ]; then
       exit 2
    fi
@@ -520,7 +521,37 @@ finalJobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$
       rm -f ${outdir}/allNullsGenomewide.txt
    fi
    bedops -u ${outdir}/*.bed | starch - > ${outdir}/observations.starch
-   rm -f ${outdir}/*.bed
+   if [ \$? == 0 ]; then
+      rm -f ${outdir}/*.bed
+   else
+      echo -e "An error occurred while trying to execute \"bedops -u ${outdir}/*.bed | starch - > ${outdir}/observations.starch\"."
+      exit 2
+   fi
+
+   unstarch ${outdir}/observations.starch \
+	 | awk -v stateCol=$STATE_COLUMN -v scoreCol=$SCORE_COLUMN 'BEGIN {OFS="\t"; chrom=""; state=""; bestScore=""; line=""} \
+           { \
+              if (stateCol != state || \$1 != chrom) { \
+                 if (state != "") { \
+                    print line; \
+                 } \
+                 chrom = \$1; \
+                 state = stateCol; \
+                 bestScore = scoreCol; \
+                 line = \$0; \
+              } else { \
+                 if (scoreCol >= bestScore) { \
+                    bestScore = scoreCol; \
+                    line = \$0; \
+                 } \
+              } \
+           } END { \
+                      if (line != "") { \
+                         print line; \
+                      } \
+                 }' \
+	 | sort -gr -k${SCORE_COLUMN},${SCORE_COLUMN} \
+	 > ${outdir}/exemplarRegions.txt
 EOF
 	   )
 

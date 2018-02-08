@@ -148,7 +148,7 @@ Now that you have generated the tabix-indexed qcat and datahub JSON assets and a
 
 The basic format of this address is:
 
-> http ://epigenomegateway.wustl.edu/browser/?genome=**build_name**&datahub=**datahub_address**
+http&#8288;://epigenomegateway.wustl.edu/browser/?genome=**build_name**&datahub=**datahub_address**
 
 The *build_name* is replaced with one of `hg19`, `hg38`, or `mm10`, depending on how you made your epilogos dataset.
 
@@ -156,7 +156,7 @@ The *datahub_address* is replaced with the web address that points to your datah
 
 Here's a more concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
 
-> http ://epigenomegateway.wustl.edu/browser/?genome=hg19&datahub=http://192.168.0.1/mydatahub.json
+http&#8288;://epigenomegateway.wustl.edu/browser/?genome=hg19&datahub=http://192.168.0.1/mydatahub.json
 
 You can open this in a web browser, test it, modify it, and share it with others. It will persist as long as you have your web server up and running.
 

@@ -531,17 +531,17 @@ finalJobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$
    unstarch ${outdir}/observations.starch \
 	 | awk -v stateCol=$STATE_COLUMN -v scoreCol=$SCORE_COLUMN 'BEGIN {OFS="\t"; chrom=""; state=""; bestScore=""; line=""} \
            { \
-              if (stateCol != state || \$1 != chrom) { \
+              if (\$(stateCol) != state || \$1 != chrom) { \
                  if (state != "") { \
                     print line; \
                  } \
                  chrom = \$1; \
-                 state = stateCol; \
-                 bestScore = scoreCol; \
+                 state = \$(stateCol); \
+                 bestScore = \$(scoreCol); \
                  line = \$0; \
               } else { \
-                 if (scoreCol >= bestScore) { \
-                    bestScore = scoreCol; \
+                 if (\$(scoreCol) >= bestScore) { \
+                    bestScore = \$(scoreCol); \
                     line = \$0; \
                  } \
               } \

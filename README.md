@@ -156,7 +156,7 @@ The *datahub_address* is replaced with the web address that points to your datah
 
 Here's a more concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
 
-http&#8288;://epigenomegateway.wustl.edu/browser/?genome=hg19&datahub=http://192.168.0.1/mydatahub.json
+http&#8288;://epigenomegateway.wustl.edu/browser/?genome=**hg19**&datahub=**http&#8288;://192.168.0.1/mydatahub.json**
 
 You can open this in a web browser, test it, modify it, and share it with others. It will persist as long as you have your web server up and running.
 

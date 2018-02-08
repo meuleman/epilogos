@@ -71,3 +71,91 @@ The files `yourOutputDirectory2/DKL/observations.starch` and `yourOutputDirector
 that your run produces should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
 
 
+---
+
+## Visualizing a qcat file with the WashU Epigenome Browser
+
+This section describes how to visualize the qcat result file, using the WashU Epigenome Browser. 
+
+In broad terms, this can be done by way of:
+
+1. Setting up a public web server
+2. Indexing the qcat result with tabix
+3. Creating a JSON-formatted *datahub* file specific to the type of epilogos (single or paired group) and your web server
+4. Hosting the tabix and JSON assets on your web server
+5. Loading the WashU browser with your custom datahub
+
+### Setting up a web server
+
+A public-facing web server is a basic requirement for visualizing your qcat data with the WashU browser. This server makes your qcat-formatted epilogos data available, as well as related metadata about the epilogos track, chromatin states, and other annotation data.
+
+This web server must be able to serve files via port tcp/80 (http). You will need the public-facing static IP address assigned to this web server; in other words, you must be able to access this server through firewalls and outside your local network.
+
+Your institution or research facility may already offer a basic, public web service, and contacting your local IT help may get you information on this option to get you started, such as where you would store your files and, importantly, the web address of the server.
+
+Depending on what is available through your local setup, there are also (fee-based) web hosting services, such as [Dreamhost](https://www.dreamhost.com/) or [Amazon Lightsail](https://lightsail.aws.amazon.com). Management tools for these services are web-based and make configuration easy. 
+
+In the case of Lightsail, for example, you could set up a virtual machine instance running *nginx* (a web server), and then assign a static IP address to that instance. Epilogos files are copied to this instance in or under `/opt/bitnami/nginx/html` (or similar). The contents of this directory are available from a web browser, using the static address that Amazon has assigned the instance.
+
+For the purposes of this section, we will assume that you have a public-facing web server that is available at `http://192.168.0.1`, and that you are able to copy files to the required directory on this server, so that they are available through this address.
+
+### Preparing tabix-indexed qcat files
+
+The next step is to preprocess the qcat output from epilogos, so that smaller regions of interest can be quickly retrieved via the web. This is a two-step process: 
+
+1. Compressing with `bgzip`
+2. Indexing with `tabix`
+
+Both `bgzip` and `tabix` are programs that are available through the larger `htslib` software package. This can be installed through package managers like [Homebrew](https://brew.sh/) or [Bioconda](https://bioconda.github.io/), or you can download and compile source from [Github](https://github.com/samtools/htslib/blob/develop/INSTALL). You should be able to run `bgzip --help` and `tabix --help` or similar to verify their availability.
+
+#### Compressing
+
+The following creates a `bgzip`-compressed version of the `qcat.bed.gz` output file, which is called `qcat.bed.bgz`:
+
+```bash
+$ gunzip -c qcat.bed.gz | bgzip -c > qcat.bed.bgz
+```
+
+#### Indexing
+
+The following makes an index file called `qcat.bed.bgz.tbi`
+
+```bash
+$ tabix -p bed qcat.bed.bgz
+```
+
+Copy both `qcat.bed.bgz` and `qcat.bed.bgz.tbi` to the same directory associated with your web server. You can put these files into a subdirectory, but you must keep both files together in the same directory, at the same directory level.
+
+### Creating a datahub
+
+#### Single group
+
+```json
+
+```
+
+#### Paired group
+
+```json
+
+```
+
+Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file.
+
+### Loading the WashU browser
+
+Now that you have added the tabix-indexed qcat and datahub JSON assets to your web server, you are ready to build a web address that will load the WashU browser and instruct it to load your dataset of interest.
+
+The basic format of this address is:
+
+http://epigenomegateway.wustl.edu/browser/?genome=**build_name**&datahub=**datahub_address**
+
+The *build_name* is replaced with one of `hg19`, `hg38`, or `mm10`, depending on how you made your epilogos dataset.
+
+The *datahub_address* is replaced with the web address that points to your datahub JSON file.
+
+Here's a more concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
+
+http://epigenomegateway.wustl.edu/browser/?genome=hg19&tknamewidth=150&datahub=http://192.168.0.1/mydatahub.json
+
+You can open this in a web browser, test it, modify it, and share it with others. It will persist as long as you have your web server up and running.

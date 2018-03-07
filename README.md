@@ -81,13 +81,13 @@ In broad terms, this can be done by way of:
 
 1. Setting up a public web server
 2. Indexing the qcat result with tabix
-3. Creating a JSON-formatted *datahub* file specific to the type of epilogos (single or paired group) and your web server
-4. Copying the tabix and JSON assets to your web server
+3. Creating a JSON-formatted *datahub* file
+4. Copying the qcat file, tabix index, and JSON datahub assets to your web server
 5. Loading the WashU browser with your custom datahub
 
 ### Setting up a web server
 
-A public-facing web server is a basic requirement for visualizing your qcat data with the WashU browser. Your web server will make your qcat-formatted epilogos data available, as well as related metadata about the epilogos track, chromatin states, and other annotation data.
+A public-facing web server is a basic requirement for visualizing your qcat data with the WashU browser. Your web server will make your qcat-formatted epilogos data available, as well as related metadata about the epilogos track, chromatin states, and optional annotation data.
 
 This web server must be able to serve files via port tcp/80 (http). You will need the public-facing static IP address assigned to this web server; in other words, you must be able to access this server through firewalls and outside your local network.
 
@@ -95,7 +95,7 @@ Your institution or research facility may already offer a public-facing web serv
 
 Depending on what is available locally, there are also (fee-based) web hosting services, such as [Dreamhost](https://www.dreamhost.com/) or [Amazon Lightsail](https://lightsail.aws.amazon.com), for instance. Management tools for these services are web-based and make configuration easy.
 
-For the purposes of this section, we will assume that you have a public-facing web server that is available at `http://192.168.0.1` (your actual IP address will be different), and that you are able to copy or upload files to the required directory on this server, so that these files are available through this address.
+For the purposes of this section, we will assume that you have a working, public-facing web server that is available at `http://192.168.0.1` (your actual IP address will be different), and that you are able to copy or upload files to the required directory on this server, so that these files are available through this address.
 
 ### Preparing tabix-indexed qcat files
 

@@ -126,25 +126,346 @@ Copy both `qcat.bed.bgz` and `qcat.bed.bgz.tbi` to the same directory associated
 
 ### Creating a datahub
 
-A **datahub** is a JSON-formatted text file that tells the WashU browser where your qcat files are located, and how they should be rendered. The format of metadata within the datahub differs slightly for single- and paired-group qcat files, which we describe below:
+A **datahub** is a JSON-formatted text file that tells the WashU browser where your qcat files are located, and how they should be rendered. The structure of the datahub is the same for single- and paired-group qcat files, which we describe below:
 
-#### Single group
-
-```json
-
-```
-
-#### Paired group
+#### Datahub structure
 
 ```json
-
+[
+  {
+    "set": {
+      "1": {
+        "11": [
+          "Flanking Bivalent TSS/Enh",
+          "#e9967a"
+        ],
+        "10": [
+          "Bivalent/Poised TSS",
+          "#cd5c5c"
+        ],
+        "13": [
+          "Repressed PolyComb",
+          "#808080"
+        ],
+        "12": [
+          "Bivalent Enhancer",
+          "#bdb76b"
+        ],
+        "15": [
+          "Quiescent/Low",
+          "#ffffff"
+        ],
+        "14": [
+          "Weak Repressed PolyComb",
+          "#c0c0c0"
+        ],
+        "1": [
+          "Active TSS",
+          "#ff0000"
+        ],
+        "3": [
+          "Transcr at gene 5' and 3'",
+          "#32cd32"
+        ],
+        "2": [
+          "Flanking Active TSS",
+          "#ff4500"
+        ],
+        "5": [
+          "Weak transcription",
+          "#006400"
+        ],
+        "4": [
+          "Strong transcription",
+          "#008000"
+        ],
+        "7": [
+          "Enhancers",
+          "#ffff00"
+        ],
+        "6": [
+          "Genic enhancers",
+          "#c2e105"
+        ],
+        "9": [
+          "Heterochromatin",
+          "#8a91d0"
+        ],
+        "8": [
+          "ZNF genes & repeats",
+          "#66cdaa"
+        ]
+      },
+      "2": {
+        "11": [
+          "Weak Enhancer",
+          "#FFFF00"
+        ],
+        "10": [
+          "Active Enhancer 2",
+          "#FFC34D"
+        ],
+        "13": [
+          "Heterochromatin",
+          "#8A91D0"
+        ],
+        "12": [
+          "ZNF genes & repeats",
+          "#66CDAA"
+        ],
+        "15": [
+          "Bivalent Enhancer",
+          "#BDB76B"
+        ],
+        "14": [
+          "Bivalent/Poised TSS",
+          "#CD5C5C"
+        ],
+        "17": [
+          "Weak Repressed PolyComb",
+          "#C0C0C0"
+        ],
+        "16": [
+          "Repressed PolyComb",
+          "#808080"
+        ],
+        "18": [
+          "Quiescent/Low",
+          "#FFFFFF"
+        ],
+        "1": [
+          "Active TSS",
+          "#FF0000"
+        ],
+        "3": [
+          "Flanking TSS Upstream",
+          "#FF4500"
+        ],
+        "2": [
+          "Flanking TSS",
+          "#FF4500"
+        ],
+        "5": [
+          "Strong transcription",
+          "#008000"
+        ],
+        "4": [
+          "Flanking TSS Downstream",
+          "#FF4500"
+        ],
+        "7": [
+          "Genic enhancer 1",
+          "#C2E105"
+        ],
+        "6": [
+          "Weak transcription",
+          "#006400"
+        ],
+        "9": [
+          "Active Enhancer 1",
+          "#FFC34D"
+        ],
+        "8": [
+          "Genic enhancer 2",
+          "#C2E105"
+        ]
+      },
+      "3": {
+        "24": [
+          "Repressed PolyComb",
+          "#808080"
+        ],
+        "25": [
+          "Quiescent/Low",
+          "#ffffff"
+        ],
+        "20": [
+          "ZNF genes & repeats",
+          "#66cdaa"
+        ],
+        "21": [
+          "Heterochromatin",
+          "#8a91d0"
+        ],
+        "22": [
+          "Poised Promoter",
+          "#e6b8b7"
+        ],
+        "23": [
+          "Bivalent Promoter",
+          "#7030a0"
+        ],
+        "1": [
+          "Active TSS",
+          "#ff0000"
+        ],
+        "3": [
+          "Promoter Downstream TSS with DNase",
+          "#ff4500"
+        ],
+        "2": [
+          "Promoter Upstream TSS",
+          "#ff4500"
+        ],
+        "5": [
+          "Transcription 5'",
+          "#008000"
+        ],
+        "4": [
+          "Promoter Downstream TSS",
+          "#ff4500"
+        ],
+        "7": [
+          "Transcription 3'",
+          "#008000"
+        ],
+        "6": [
+          "Transcription",
+          "#008000"
+        ],
+        "9": [
+          "Transcription Regulatory",
+          "#c2e105"
+        ],
+        "8": [
+          "Weak transcription",
+          "#009600"
+        ],
+        "11": [
+          "Transcription 3' Enhancer",
+          "#c2e105"
+        ],
+        "10": [
+          "Transcription 5' Enhancer",
+          "#c2e105"
+        ],
+        "13": [
+          "Active Enhancer 1",
+          "#ffc34d"
+        ],
+        "12": [
+          "Transcription Weak Enhancer",
+          "#c2e105"
+        ],
+        "15": [
+          "Active Enhancer Flank",
+          "#ffc34d"
+        ],
+        "14": [
+          "Active Enhancer 2",
+          "#ffc34d"
+        ],
+        "17": [
+          "Weak Enhancer 2",
+          "#ffff00"
+        ],
+        "16": [
+          "Weak Enhancer 1",
+          "#ffff00"
+        ],
+        "19": [
+          "DNase only",
+          "#ffff66"
+        ],
+        "18": [
+          "Enhancer Acetylation Only",
+          "#ffff00"
+        ]
+      },
+      "4": {
+        "11": [
+          "Transcription - Permissive",
+          "#deecf7"
+        ],
+        "10": [
+          "Transcription - Strong",
+          "#0454a3"
+        ],
+        "13": [
+          "Heterochromatin - Polycomb",
+          "#f48c8f"
+        ],
+        "12": [
+          "Transcription - Initiation",
+          "#4290cf"
+        ],
+        "15": [
+          "No signal",
+          "#ffffff"
+        ],
+        "14": [
+          "Heterochromatin - H3K9me3",
+          "#fde2e5"
+        ],
+        "1": [
+          "Promoter - Active",
+          "#0e6f37"
+        ],
+        "3": [
+          "Promoter - Bivalent",
+          "#cdcdcd"
+        ],
+        "2": [
+          "Promoter - Weak/Inactive",
+          "#c7e4c0"
+        ],
+        "5": [
+          "Enhancer - Strong, TSS-distal",
+          "#f3eb1a"
+        ],
+        "4": [
+          "Promoter - Flanking",
+          "#41ac5e"
+        ],
+        "7": [
+          "Enhancer - Weak, TSS-distal",
+          "#faf8c8"
+        ],
+        "6": [
+          "Enhancer - Strong, TSS-proximal",
+          "#f3eb1a"
+        ],
+        "9": [
+          "Enhancer - Poised, TSS-proximal",
+          "#808080"
+        ],
+        "8": [
+          "Enhancer - Poised, TSS-distal",
+          "#808080"
+        ]
+      }
+    },
+    "type": "category_set"
+  },
+  {
+    "category_set_index": 1,
+    "name": "My sample of interest",
+    "url": "http://192.168.0.1/qcat.bed.bgz",
+    "height": 225,
+    "mode": "show",
+    "backgroundcolor": "#000000",
+    "type": "quantitativeCategorySeries"
+  }
+]
 ```
 
-Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file.
+For this example JSON, there are two main objects. The first object `set` contains chromatin states, names, and colors. You must include this object, at minimum, in order to color the epilogos data correctly.
 
-### Loading the WashU browser
+You would modify three variables in the second and last object; specifically: `category_set_index`, `name`, and `url`. Optionally, you can adjust the track height by changing the `height` key.
 
-Now that you have generated the tabix-indexed qcat and datahub JSON assets and added them to your web server, you are ready to generate a web address that will load the WashU browser and instruct it to load your data.
+The `category_set_index` should be set to `1`, `2`, `3`, or `4`. The first three numbers `1`, `2`, and `3` refer to 15-, 18-, and 25-state chromatin models, respectively, for `hg19` and `hg38` genome assemblies. The number `4` refers to the 15-state model used for `mm10` chromatin state.
+
+The `name` variable (set here to "My sample of interest") can be set to a descriptive name of your choice. It is recommended to make this short enough to read within the space provided in a WashU browser track label column -- perhaps no more than 20-25 characters.
+
+The `url` variable is the web address of the bgzip-compressed epilogos result. While the `url` key contains the link to the bgzip file, as mentioned above, the tabix index should be in the same directory as the bzgip file.
+
+Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file. 
+
+For purposes of demonstration, we can call this file `mydatahub.json` and place it in the root of the web server directory. This would make the JSON file available at the address `http://192.168.0.1/mydatahub.json`.
+
+### Loading the hub in the WashU browser
+
+Now that you have generated the tabix-indexed qcat and datahub JSON assets and added them to your web server, you are ready to generate a web address that will load the WashU browser and instruct the browser to load your data.
 
 The basic format of this address is:
 
@@ -154,10 +475,10 @@ The *build_name* is replaced with one of `hg19`, `hg38`, or `mm10`, depending on
 
 The *datahub_address* is replaced with the web address that points to your datahub JSON file.
 
-Here's a concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
+Here is a concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
 
 #### &nbsp;&nbsp;http&#8288;://epigenomegateway.wustl.edu/browser/?genome=**hg19**&datahub=**http&#8288;://192.168.0.1/mydatahub.json**
 
-You can open this link in a web browser, test it, modify it, and share it with others. It will persist as long as you have your web server up and running, serving your datahub and qcat files.
+You can open this link in a web browser, test it, modify it, and share it with others. This link will persist as long as you have your web server up and running, serving your datahub and qcat files.
 
 Other parameters may be added to this address, which customize the behavior and appearance of the WashU browser. A more complete listing of parameters is available from the WashU browser [wiki](http://wiki.wubrowse.org/URL_parameter).

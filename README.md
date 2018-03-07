@@ -453,19 +453,17 @@ You can copy this text to your text editor of choice and make modifications, des
 
 For this example JSON, there are two main objects. The first object `set` contains chromatin states, names, and colors. You must include this object, unedited, in order to color the epilogos data correctly.
 
-You would modify three variables in the second and last object; specifically: `category_set_index`, `name`, and `url`. Optionally, you can adjust the track height by changing the `height` key.
+You would modify three variables in the second and last object; specifically: `category_set_index`, `name`, and `url`. Optionally, you can adjust the track height by changing the `height` key. Include the remaining three key-value pairs for `mode`, `backgroundcolor`, and `type`, and leave their values unchanged.
 
-The value of `category_set_index` should be set to one of `1`, `2`, `3`, or `4`. The first three numbers `1`, `2`, and `3` refer to 15-, 18-, and 25-state chromatin models, respectively, for `hg19` and `hg38` genome assemblies. The number `4` refers to the labels and colors used for the 15-state chromatin state model for `mm10`.
+The value of `category_set_index` should be set to one of `1`, `2`, `3`, or `4`. The first three numbers `1`, `2`, and `3` refer to 15-, 18-, and 25-state chromatin models, respectively, for `hg19` and `hg38` genome assemblies. The number `4` refers to the labels and colors used for the 15-state chromatin state model for `mm10`. This setting should match your epilogos analysis.
 
 The `name` variable (set here to "My sample of interest") can be set to a descriptive name of your choice. It is recommended to make this short enough to read within the space provided in a WashU browser track label column -- perhaps no more than 20-25 characters.
 
 The `url` variable is the web address of the bgzip-compressed epilogos result. While the `url` key contains the link to the bgzip file, as mentioned above, the tabix index should be in the same directory as the bzgip file.
 
-Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file. 
+Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file. You may give this file any name that you like; this simply changes the web address used to load the JSON-formatted datahub file.
 
 For purposes of demonstration, we can call this file `mydatahub.json` and place it in the root of the web server directory. This would make the JSON file available at the address `http://192.168.0.1/mydatahub.json`. 
-
-You may give this file any name that you like; this simply changes the web address used to load the JSON-formatted datahub file.
 
 ### Loading the datahub in the WashU browser
 
@@ -479,7 +477,7 @@ The *build_name* is replaced with one of `hg19`, `hg38`, or `mm10`, depending on
 
 The *datahub_address* is replaced with the web address that points to your datahub JSON file.
 
-Here is a concrete example, which specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
+Here is an example that specifies the `hg19` assembly and points to a hypothetical datahub file available at `http://192.168.0.1/mydatahub.json`:
 
 #### &nbsp;&nbsp;http&#8288;://epigenomegateway.wustl.edu/browser/?genome=**hg19**&datahub=**http&#8288;://192.168.0.1/mydatahub.json**
 

@@ -122,13 +122,13 @@ The following command makes an index file called `qcat.bed.bgz.tbi`
 $ tabix -p bed qcat.bed.bgz
 ```
 
-Copy both `qcat.bed.bgz` and `qcat.bed.bgz.tbi` to the same directory associated with your web server. You can put these files into a subdirectory, but you must keep both files together in the same directory, at the same directory level.
+Copy or upload both `qcat.bed.bgz` and `qcat.bed.bgz.tbi` to the same directory associated with your web server. You can put these files into a subdirectory, but you must keep both files together in the same directory, at the same directory level.
 
 ### Creating a datahub
 
-A **datahub** is a JSON-formatted text file that tells the WashU browser where your qcat files are located, and how they should be rendered. The structure of the datahub is the same for single- and paired-group qcat files, which we describe below:
+A **datahub** is a JSON-formatted text file that tells the WashU browser where your qcat files are located, and how they should be rendered. The structure of the datahub is the same for single- and paired-group qcat files, which we describe in the template below.
 
-#### Datahub structure
+#### Datahub template
 
 ```json
 [
@@ -449,11 +449,13 @@ A **datahub** is a JSON-formatted text file that tells the WashU browser where y
 ]
 ```
 
-For this example JSON, there are two main objects. The first object `set` contains chromatin states, names, and colors. You must include this object, at minimum, in order to color the epilogos data correctly.
+You can copy this text to your text editor of choice and make modifications, described below.
+
+For this example JSON, there are two main objects. The first object `set` contains chromatin states, names, and colors. You must include this object, unedited, in order to color the epilogos data correctly.
 
 You would modify three variables in the second and last object; specifically: `category_set_index`, `name`, and `url`. Optionally, you can adjust the track height by changing the `height` key.
 
-The `category_set_index` should be set to `1`, `2`, `3`, or `4`. The first three numbers `1`, `2`, and `3` refer to 15-, 18-, and 25-state chromatin models, respectively, for `hg19` and `hg38` genome assemblies. The number `4` refers to the 15-state model used for `mm10` chromatin state.
+The value of `category_set_index` should be set to one of `1`, `2`, `3`, or `4`. The first three numbers `1`, `2`, and `3` refer to 15-, 18-, and 25-state chromatin models, respectively, for `hg19` and `hg38` genome assemblies. The number `4` refers to the labels and colors used for the 15-state chromatin state model for `mm10`.
 
 The `name` variable (set here to "My sample of interest") can be set to a descriptive name of your choice. It is recommended to make this short enough to read within the space provided in a WashU browser track label column -- perhaps no more than 20-25 characters.
 
@@ -461,9 +463,11 @@ The `url` variable is the web address of the bgzip-compressed epilogos result. W
 
 Copy this JSON file to the directory associated with your web server. You can put this file into a subdirectory; the name of a subdirectory simply modifies the web address for the JSON file. 
 
-For purposes of demonstration, we can call this file `mydatahub.json` and place it in the root of the web server directory. This would make the JSON file available at the address `http://192.168.0.1/mydatahub.json`.
+For purposes of demonstration, we can call this file `mydatahub.json` and place it in the root of the web server directory. This would make the JSON file available at the address `http://192.168.0.1/mydatahub.json`. 
 
-### Loading the hub in the WashU browser
+You may give this file any name that you like; this simply changes the web address used to load the JSON-formatted datahub file.
+
+### Loading the datahub in the WashU browser
 
 Now that you have generated the tabix-indexed qcat and datahub JSON assets and added them to your web server, you are ready to generate a web address that will load the WashU browser and instruct the browser to load your data.
 
@@ -481,4 +485,4 @@ Here is a concrete example, which specifies the `hg19` assembly and points to a 
 
 You can open this link in a web browser, test it, modify it, and share it with others. This link will persist as long as you have your web server up and running, serving your datahub and qcat files.
 
-Other parameters may be added to this address, which customize the behavior and appearance of the WashU browser. A more complete listing of parameters is available from the WashU browser [wiki](http://wiki.wubrowse.org/URL_parameter).
+Other parameters may be added to this address, which customize the behavior and appearance of the WashU browser. A more complete listing of track parameters is available from the WashU browser [wiki](http://wiki.wubrowse.org/URL_parameter).

@@ -263,9 +263,6 @@ rm -f $outfileNsites
 # echo -e "Executing \"part 2a\"..."
 # ----------------------------------
 
-firstBegPos=`head -n 1 $infile1 | cut -f2`
-firstEndPos=`head -n 1 $infile1 | cut -f3`
-regionWidth=`echo $firstBegPos | awk -v e=$firstEndPos '{print e - $1}'`
 if [ "$INFILE_IS_COMPRESSED" == "1" ]; then
     rm -f $infile1
 fi
@@ -281,7 +278,7 @@ fi
 jobName="p2_$chr"
 
 if [ ! -s $outfileObserved ]; then
-    $EXE2 $infile $measurementType $totalNumSites $infileQ $outfileObserved $outfileQcat $chr $firstBegPos $regionWidth $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $measurementType $totalNumSites $infileQ $outfileObserved $outfileQcat $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up

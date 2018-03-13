@@ -13,7 +13,7 @@
     * [Creating a datahub](#creating-a-datahub)
         - [Datahub template](#datahub-template)
     * [Loading the datahub in the WashU browser](#loading-the-datahub-in-the-washu-browser)
-5. [Qcat specification](#qcat-specification)
+5. [Qcat file specification](#qcat-file-specification)
 6. [Support](#support)
 
 ## About
@@ -22,17 +22,21 @@ This is the repository for the software that computes epilogos components from o
 
 ## Prerequisites
 
-To compute epilogos, you must have the external programs `bgzip` and `starch` in your PATH environment variable. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops).
+To compute epilogos, you must have the external programs `bgzip` and `starch` installed. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops). Both binaries should be available via your `PATH` environment variable.
 
 ## Running epilogos
 
-A single script, `computeEpilogos.sh`, does all the processing. See [below](#single-chromosome-execution) for important differences between `computeEpilogos.sh` and `computeEpilogos_singleChromosomeSingleProcessor.sh` scripts. Before you run the script, you need to make the executable programs that the script calls.  This is done by running `make` from this directory.  This will make 3 programs, and place them into a parallel directory named `bin`.
+A single script, `computeEpilogos.sh`, does all the processing. See [below](#single-chromosome-execution) for important differences between `computeEpilogos.sh` and `computeEpilogos_singleChromosomeSingleProcessor.sh` scripts. Before you run the script, you need to make the executable programs that the script calls.  This is done by running `make` from this directory.  This will make three programs and place them into a parallel directory named `bin`.
 
-After you have made these programs, and before you run the script, you need to do one more thing:  Enable the script to find the `bin` directory so it can access and run those programs. To do this, add the full path to the `bin` directory to your PATH environment variable.
+After you have made these programs, and before you run the script, you need to do one more thing: Enable the script to find the `bin` directory so it can access and run those programs. To do this, add the full path to the `bin` directory to your PATH environment variable, *e.g.*, edit your `bash` profile or edit the `PATH` variable directly:
 
-Run the script `computeEpilogos.sh` with no arguments to see the list of arguments it requires and descriptions of them.
+```bash
+$ export PATH=${PWD}/bin:${PATH}
+```
 
-Then you can run the script and supply your arguments and get your results.  All processing will be done on a compute cluster, managed by [SLURM](https://slurm.schedmd.com/). For the time being, the cluster/queue name is hardcoded in the script.
+Run the script `computeEpilogos.sh` with no arguments to see the list of arguments it requires and their descriptions.
+
+Then you can run the script and supply your arguments and get your results.  All processing will be done on a compute cluster managed by [SLURM](https://slurm.schedmd.com/). For the time being, the cluster/queue name is hardcoded in the script; edit this value, as needed.
 
 ### Output
 
@@ -64,7 +68,7 @@ The files `yourOutputDirectory2/DKL/observations.starch` and `yourOutputDirector
 
 ## Visualizing a qcat file
 
-This section describes how to visualize the [qcat](#qcat-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
+This section describes how to visualize the [qcat](#qcat-file-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
 
 In broad terms, this can be done by way of:
 

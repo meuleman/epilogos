@@ -22,7 +22,7 @@ This is the repository for the software that computes epilogos components from o
 
 ## Prerequisites
 
-To compute epilogos, you must have the external programs `bgzip` and `starch` installed. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops). Both binaries should be available via your `PATH` environment variable.
+To compute epilogos, you must have the external programs `bgzip` and `starch` installed. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops). Both binaries should be accessible by way of your `PATH` environment variable.
 
 ## Running epilogos
 

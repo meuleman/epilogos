@@ -41,7 +41,7 @@ A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingl
 
 Sample input data has been provided. If you set up epilogos correctly, you should be able to use the input data, write results into new directories of your choosing, and then ensure that those results match the results provided alongside the input data. 
 
-<aside class="notice">Use `gunzip` to decompress the input data file `chr1_127epigenomes_15observedStates.txt.gz` before using it.</aside>
+**Note**: Use `gunzip` to decompress the input data file `chr1_127epigenomes_15observedStates.txt.gz` before using it.
 
 The file `Blood_T-cellGroupSpec.txt` contains the column specifications for a group of blood and T-cell samples in the input data. To compute KL from this subset of the input data, cd to the epilogos `data` subdirectory, decompress the input data as mentioned above, then run the following command:
 

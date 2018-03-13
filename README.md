@@ -40,7 +40,7 @@ The key output files are `observations.starch` and `qcat.bed.gz`. Additional fil
 
 ### Single-chromosome execution
 
-A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingleProcessor.sh`, has been provided for running data from a single chromosome on a single processor, as opposed to `computeEpilogos.sh`, which assumes multiple input files (one per chromosome) and access to a computer cluster managed by SLURM software.
+A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingleProcessor.sh`, has been provided for running data from a single chromosome on a single processor, as opposed to `computeEpilogos.sh`, which assumes multiple input files (one per chromosome) and access to a compute cluster managed by a [SLURM](https://slurm.schedmd.com/) job scheduler.
 
 Sample input data has been provided. If you set up epilogos correctly, you should be able to use the input data, write results into new directories of your choosing, and then ensure that those results match the results provided alongside the input data. 
 

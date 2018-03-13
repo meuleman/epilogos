@@ -1,81 +1,74 @@
-This is the repository for the software that computes Epilogos components
-from observations of states at sites across the genome.
+# Epilogos
 
-More info will be added to this README file soon.
+1. [About](#about)
+2. [Prequisites](#prerequisites)
+3. [Running epilogos](#running-epilogos)
+    * [Output](#output)
+    * [Single-chromosome execution](#single-chromosome-execution)
+4. [Visualizing a qcat file](#visualizing-a-qcat-file)
+    * [Setting up a web server](#setting-up-a-web-server)
+    * [Preparing tabix-indexed qcat files](#preparing-tabix-indexed-qcat-files)
+        - [Compressing](#compressing)
+        - [Indexing](#indexing)
+    * [Creating a datahub](#creating-a-datahub)
+        - [Datahub template](#datahub-template)
+    * [Loading the datahub in the WashU browser](#loading-the-datahub-in-the-washu-browser)
+5. [Qcat file specification](#qcat-file-specification)
+6. [Support](#support)
 
-In the meantime, here's a very brief tutorial:
+## About
 
-* To compute epilogos, you must have the external programs `bgzip`
-and `starch` (the latter is part of `bedops`) in your PATH
-environment variable.
-* A single script, `computeEpilogos.sh`, does all the processing.
-(But see below for important differences between `computeEpilogos.sh`
-and `computeEpilogos_singleChromosomeSingleProcessor.sh`.)
-Before you run the script, you need to make the executable programs
-that the script calls.  This is done by running `make` from
-this directory.  This will make 3 programs, and place them into a
-parallel directory named `bin`.
-* After you have made these programs, and before you run the script,
-you need to do one more thing:  Enable the script to find the `bin`
-directory so it can access and run those programs. To do this,
-add the full path to the `bin` directory to your PATH environment
-variable.
-* Run the script `computeEpilogos.sh` with no arguments to see
-the list of arguments it requires and descriptions of them.
-* Then you can run the script and supply your arguments and get your
-results.  All processing will be done on a computer cluster, managed by SLURM.
-For the time being, the cluster/queue name is hardcoded in the script.
-* The key output files are `observations.starch` and `qcat.bed.gz`.
-Additional files will be created during execution and deleted when
-no longer needed. Various small files that will persist will contain
-error messages in the event of an error, and otherwise be empty.
+This is the repository for the software that computes epilogos components from observations of states at sites across the genome.
 
+## Prerequisites
 
-A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingleProcessor.sh`,
-has been provided for running data from a single chromosome on a single processor,
-as opposed to `computeEpilogos.sh`, which assumes multiple input files (one per chromosome)
-and access to a computer cluster managed by SLURM software.
+To compute epilogos, you must have the external programs `bgzip` and `starch` installed. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops). Both binaries should be accessible by way of your `PATH` environment variable.
 
+## Running epilogos
 
-Sample input data has been provided. If you set up epilogos correctly,
-you should be able to use the input data, write results into new
-directories of your choosing, and then ensure that those results
-match the results provided alongside the input data. NOTE: You must
-use gunzip to decompress the input data file before using it.
+A single script, `computeEpilogos.sh`, does all the processing. See [below](#single-chromosome-execution) for important differences between `computeEpilogos.sh` and `computeEpilogos_singleChromosomeSingleProcessor.sh` scripts. Before you run the script, you need to make the executable programs that the script calls.  This is done by running `make` from this directory.  This will make three programs and place them into a parallel directory named `bin`.
 
+After you have made these programs, and before you run the script, you need to do one more thing: Enable the script to find the `bin` directory so it can access and run those programs. To do this, add the full path to the `bin` directory to your PATH environment variable, *e.g.*, edit your `bash` profile or edit the `PATH` variable directly:
 
-The file `Blood_T-cellGroupSpec.txt` contains the column specifications
-for a group of blood and T-cell samples in the input data. To compute KL
-from this subset of the input data, cd to the epilogos `data` subdirectory,
-decompress the input data as mentioned above, then run the following command:
+```bash
+$ export PATH=${PWD}/bin:${PATH}
+```
 
+Run the script `computeEpilogos.sh` with no arguments to see the list of arguments it requires and their descriptions.
 
-../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory1/KL "33-34,37-45,47-48,61"
+Then you can run the script and supply your arguments and get your results.  All processing will be done on a compute cluster managed by [SLURM](https://slurm.schedmd.com/). For the time being, the cluster/queue name is hardcoded in the script; edit this value, as needed.
 
+### Output
 
-The files `yourOutputDirectory1/KL/observations.starch` and `yourOutputDirectory1/KL/qcat.bed.gz`
-that your run produces should match the corresponding files in `data/results_Blood_T-cell/KL`.
+The key output files are `observations.starch` and `qcat.bed.gz`. Additional files will be created during execution and deleted when no longer needed. Various small files that will persist will contain error messages in the event of an error, and otherwise be empty.
 
+### Single-chromosome execution
 
-The file `HSC_B-cellGroupSpec.txt` contains the column specification
-for a group of stem-cell and B-cell samples in the input data. To compute DKL
-for a comparison of these two subsets of the input data, run the following command,
-again from the epilogos `data` subdirectory:
+A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingleProcessor.sh`, has been provided for running data from a single chromosome on a single processor, as opposed to `computeEpilogos.sh`, which assumes multiple input files (one per chromosome) and access to a compute cluster managed by a [SLURM](https://slurm.schedmd.com/) job scheduler.
 
+Sample input data has been provided. If you set up epilogos correctly, you should be able to use the input data, write results into new directories of your choosing, and then ensure that those results match the results provided alongside the input data. 
 
+**Note**: Use `gunzip` to decompress the input data file `chr1_127epigenomes_15observedStates.txt.gz` before using it.
 
-../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory2/DKL "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
+The file `Blood_T-cellGroupSpec.txt` contains the column specifications for a group of blood and T-cell samples in the input data. To compute KL from this subset of the input data, cd to the epilogos `data` subdirectory, decompress the input data as mentioned above, then run the following command:
 
+```bash
+$ ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory1/KL "33-34,37-45,47-48,61"
+```
 
-The files `yourOutputDirectory2/DKL/observations.starch` and `yourOutputDirectory2/DKL/qcat.bed.gz`
-that your run produces should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
+The files `yourOutputDirectory1/KL/observations.starch` and `yourOutputDirectory1/KL/qcat.bed.gz` that your run produces should match the corresponding files in `data/results_Blood_T-cell/KL`.
 
+The file `HSC_B-cellGroupSpec.txt` contains the column specification for a group of stem-cell and B-cell samples in the input data. To compute DKL for a comparison of these two subsets of the input data, run the following command, again from the epilogos `data` subdirectory:
 
----
+```bash
+$ ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory2/DKL "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
+```
 
-## Visualizing a qcat file with the WashU Epigenome Browser
+The files `yourOutputDirectory2/DKL/observations.starch` and `yourOutputDirectory2/DKL/qcat.bed.gz` that your run produces should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
 
-This section describes how to visualize the qcat result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
+## Visualizing a qcat file
+
+This section describes how to visualize the [qcat](#qcat-file-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
 
 In broad terms, this can be done by way of:
 
@@ -89,11 +82,11 @@ In broad terms, this can be done by way of:
 
 A public-facing web server is a basic requirement for visualizing your qcat data with the WashU browser. Your web server will make your qcat-formatted epilogos data available, as well as related metadata about the epilogos track, chromatin states, and optional annotation data.
 
-This web server must be able to serve files via port tcp/80 (http). You will need the public-facing static IP address assigned to this web server; in other words, you must be able to access this server through firewalls and outside your local network.
+This web server must be able to serve files via port `tcp/80` (http). You will need the public-facing static IP address assigned to this web server; in other words, you must be able to access this server through firewalls and outside your local network.
 
 Your institution or research facility may already offer a public-facing web service, and contacting your local IT help may get you information on this option to get you started, such as where you would store your files and, importantly, the web address of the server.
 
-Depending on what is available locally, there are also (fee-based) web hosting services, such as [Dreamhost](https://www.dreamhost.com/) or [Amazon Lightsail](https://lightsail.aws.amazon.com), for instance. Management tools for these services are web-based and make configuration easy.
+Depending on what resources are available locally, there are also (fee-based) web hosting services, such as [Dreamhost](https://www.dreamhost.com/) or [Amazon Lightsail](https://lightsail.aws.amazon.com), for instance. Management tools for these services are web-based and make configuration easy.
 
 For the purposes of this section, we will assume that you have a working, public-facing web server that is available at `http://192.168.0.1` (your actual IP address will be different), and that you are able to copy or upload files to the required directory on this server, so that these files are available through this address.
 
@@ -484,3 +477,17 @@ Here is an example that specifies the `hg19` assembly and points to a hypothetic
 You can open this link in a web browser, test it, modify it, and share it with others. This link will persist as long as you have your web server up and running, serving your datahub and qcat files.
 
 Other parameters may be added to this address, which customize the behavior and appearance of the WashU browser. A more complete listing of track parameters is available from the WashU browser [wiki](http://wiki.wubrowse.org/URL_parameter).
+
+## Qcat file specification
+
+After extraction with `gunzip` or `bgzip`, the qcat output file is a BED4 (four-column BED) formatted file.
+
+The first three columns of the BED4 file represent the genomic interval or bin that contains [histone modifications used to generate chromatin state calls](http://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html). Epilogos allows bins of any size; however, bins will be generally be 200 nt in size, representing the distance between nucleosomes.
+
+The fourth column contains a JSON-like string in "qcat" or "quantitative category" format, which describes a 15-, 18- or 25-element array of "state: value" pairs. These pairs are the chromatin states ordered by ascending per-state contribution to the overall epilogos score (*i.e.*, the overall score is the sum of all individual per-state values).
+
+A complete description of the quantitative category format is provided at the [WashU Epigenome Browser wiki](http://wiki.wubrowse.org/QuantitativeCategorySeries).
+
+## Support
+
+To get additional help or if you have questions about this software, open an [issue ticket](https://github.com/Altius/epilogos/issues).

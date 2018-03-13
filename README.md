@@ -3,6 +3,7 @@
 1. [About](#about)
 2. [Prequisites](#prerequisites)
 3. [Running epilogos](#running-epilogos)
+    * [Output](#output)
     * [Single-chromosome execution](#single-chromosome-execution)
 4. [Qcat specification](#qcat-specification)
 5. [Visualizing a qcat file](#visualizing-a-qcat-file)
@@ -32,6 +33,8 @@ After you have made these programs, and before you run the script, you need to d
 Run the script `computeEpilogos.sh` with no arguments to see the list of arguments it requires and descriptions of them.
 
 Then you can run the script and supply your arguments and get your results.  All processing will be done on a compute cluster, managed by [SLURM](https://slurm.schedmd.com/). For the time being, the cluster/queue name is hardcoded in the script.
+
+### Output
 
 The key output files are `observations.starch` and `qcat.bed.gz`. Additional files will be created during execution and deleted when no longer needed. Various small files that will persist will contain error messages in the event of an error, and otherwise be empty.
 

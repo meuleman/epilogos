@@ -491,4 +491,4 @@ Other parameters may be added to this address, which customize the behavior and 
 
 ## Support
 
-To get additional help or if you have questions about this software, open an [issue ticket](./issues).
+To get additional help or if you have questions about this software, open an [issue ticket](https://github.com/Altius/epilogos/issues).

@@ -5,8 +5,7 @@
 3. [Running epilogos](#running-epilogos)
     * [Output](#output)
     * [Single-chromosome execution](#single-chromosome-execution)
-4. [Qcat specification](#qcat-specification)
-5. [Visualizing a qcat file](#visualizing-a-qcat-file)
+4. [Visualizing a qcat file](#visualizing-a-qcat-file)
     * [Setting up a web server](#setting-up-a-web-server)
     * [Preparing tabix-indexed qcat files](#preparing-tabix-indexed-qcat-files)
         - [Compressing](#compressing)
@@ -14,6 +13,7 @@
     * [Creating a datahub](#creating-a-datahub)
         - [Datahub template](#datahub-template)
     * [Loading the datahub in the WashU browser](#loading-the-datahub-in-the-washu-browser)
+5. [Qcat specification](#qcat-specification)
 6. [Support](#support)
 
 ## About
@@ -62,19 +62,9 @@ $ ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenom
 
 The files `yourOutputDirectory2/DKL/observations.starch` and `yourOutputDirectory2/DKL/qcat.bed.gz` that your run produces should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
 
-## Qcat file specification
-
-After extraction with `gunzip` or `bgzip`, the qcat output file is a BED4 (four-column BED) formatted file.
-
-The first three columns of the BED4 file represent the genomic interval or bin that contains [histone modifications used to generate chromatin state calls](http://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html). Epilogos allows bins of any size; however, bins will be generally be 200 nt in size, representing the distance between nucleosomes.
-
-The fourth column contains a JSON-like string in "qcat" or "quantitative category" format, which describes a 15-, 18- or 25-element array of "state: value" pairs. These pairs are the chromatin states ordered by their per-state contribution to the overall epilogos score (*i.e.*, the overall score is the sum of all individual per-state values).
-
-A complete description of the quantitative category format is provided at the [WashU Epigenome Browser wiki](http://wiki.wubrowse.org/QuantitativeCategorySeries).
-
 ## Visualizing a qcat file
 
-This section describes how to visualize the qcat result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
+This section describes how to visualize the [qcat](#qcat-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
 
 In broad terms, this can be done by way of:
 
@@ -483,6 +473,16 @@ Here is an example that specifies the `hg19` assembly and points to a hypothetic
 You can open this link in a web browser, test it, modify it, and share it with others. This link will persist as long as you have your web server up and running, serving your datahub and qcat files.
 
 Other parameters may be added to this address, which customize the behavior and appearance of the WashU browser. A more complete listing of track parameters is available from the WashU browser [wiki](http://wiki.wubrowse.org/URL_parameter).
+
+## Qcat file specification
+
+After extraction with `gunzip` or `bgzip`, the qcat output file is a BED4 (four-column BED) formatted file.
+
+The first three columns of the BED4 file represent the genomic interval or bin that contains [histone modifications used to generate chromatin state calls](http://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html). Epilogos allows bins of any size; however, bins will be generally be 200 nt in size, representing the distance between nucleosomes.
+
+The fourth column contains a JSON-like string in "qcat" or "quantitative category" format, which describes a 15-, 18- or 25-element array of "state: value" pairs. These pairs are the chromatin states ordered by their per-state contribution to the overall epilogos score (*i.e.*, the overall score is the sum of all individual per-state values).
+
+A complete description of the quantitative category format is provided at the [WashU Epigenome Browser wiki](http://wiki.wubrowse.org/QuantitativeCategorySeries).
 
 ## Support
 

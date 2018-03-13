@@ -480,7 +480,7 @@ After extraction with `gunzip` or `bgzip`, the qcat output file is a BED4 (four-
 
 The first three columns of the BED4 file represent the genomic interval or bin that contains [histone modifications used to generate chromatin state calls](http://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html). Epilogos allows bins of any size; however, bins will be generally be 200 nt in size, representing the distance between nucleosomes.
 
-The fourth column contains a JSON-like string in "qcat" or "quantitative category" format, which describes a 15-, 18- or 25-element array of "state: value" pairs. These pairs are the chromatin states ordered by their per-state contribution to the overall epilogos score (*i.e.*, the overall score is the sum of all individual per-state values).
+The fourth column contains a JSON-like string in "qcat" or "quantitative category" format, which describes a 15-, 18- or 25-element array of "state: value" pairs. These pairs are the chromatin states ordered by ascending per-state contribution to the overall epilogos score (*i.e.*, the overall score is the sum of all individual per-state values).
 
 A complete description of the quantitative category format is provided at the [WashU Epigenome Browser wiki](http://wiki.wubrowse.org/QuantitativeCategorySeries).
 

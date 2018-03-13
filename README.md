@@ -21,15 +21,11 @@ This is the repository for the software that computes epilogos components from o
 
 ## Prerequisites
 
-To compute epilogos, you must have the external programs `bgzip` and `starch` in your PATH environment variable. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops)).
+To compute epilogos, you must have the external programs `bgzip` and `starch` in your PATH environment variable. The first tool is part of the [htslib](https://github.com/samtools/htslib) kit, while the latter application is part of [BEDOPS](https://github.com/bedops/bedops).
 
 ## Running epilogos
 
-A single script, `computeEpilogos.sh`, does all the processing.
-
-<aside class="notice">See [below](#single-chromosome-execution) for important differences between `computeEpilogos.sh` and `computeEpilogos_singleChromosomeSingleProcessor.sh` scripts</aside>
-
-Before you run the script, you need to make the executable programs that the script calls.  This is done by running `make` from this directory.  This will make 3 programs, and place them into a parallel directory named `bin`.
+A single script, `computeEpilogos.sh`, does all the processing. See [below](#single-chromosome-execution) for important differences between `computeEpilogos.sh` and `computeEpilogos_singleChromosomeSingleProcessor.sh` scripts. Before you run the script, you need to make the executable programs that the script calls.  This is done by running `make` from this directory.  This will make 3 programs, and place them into a parallel directory named `bin`.
 
 After you have made these programs, and before you run the script, you need to do one more thing:  Enable the script to find the `bin` directory so it can access and run those programs. To do this, add the full path to the `bin` directory to your PATH environment variable.
 

@@ -127,6 +127,17 @@ fi
 
 mkdir -p $outdir
 
+# If all 3 final output files already exist, assume this is a re-run that isn't necessary.
+if [ -s ${outdir}/observations.starch ] && [ -s ${outdir}/scores.txt.gz ] && [ -s ${outdir}/exemplarRegions.txt ]; then
+    echo -e "All 3 final output files already exist and are non-empty:"
+    echo -e "\t${outdir}/observations.starch"
+    echo -e "\t${outdir}/scores.txt.gz"
+    echo -e "\t${outdir}/exemplarRegions.txt"
+    echo -e "Exiting, under the assumption that these files should not be recreated from scratch."
+    echo -e "To recreate these files, move/rename them before running this program."
+    exit 0
+fi
+
 # ----------------------------------
 # echo -e "Executing \"part 1a\"..."
 # ----------------------------------
@@ -270,7 +281,7 @@ infile=${outdir}/${chr}${PfilenameString}
 infileQ=$outfileQ
 infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
 outfileObserved=${outdir}/${chr}_observed.txt
-outfileQcat=${outdir}/${chr}_qcat.txt
+outfileScores=${outdir}/${chr}_scores.txt
 outfileNulls=""
 if [ "$group2spec" != "" ]; then
     outfileNulls=${outdir}/${chr}_nulls.txt
@@ -278,7 +289,7 @@ fi
 jobName="p2_$chr"
 
 if [ ! -s $outfileObserved ]; then
-    $EXE2 $infile $measurementType $totalNumSites $infileQ $outfileObserved $outfileQcat $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $measurementType $totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up
@@ -302,12 +313,10 @@ fi
 # echo -e "Executing \"part 2b\"..."
 # ----------------------------------
 
-cat ${outdir}/${chr}_qcat.txt \
-      | sort -k1b,1 -s \
-      | awk 'BEGIN{FS=OFS="\t"}{print $1,$2,$3,"id:"NR",qcat:"$4}' \
+cat ${outdir}/${chr}_scores.txt \
       | bgzip \
-      > ${outdir}/qcat.bed.gz
-rm -f ${outdir}/${chr}_qcat.txt
+      > ${outdir}/scores.txt.gz
+rm -f ${outdir}/${chr}_scores.txt $outfileQ $outfileQ2
           
 # ----------------------------------
 # echo -e "Executing \"part 3\"..."

@@ -3,8 +3,9 @@
 # set -e -o pipefail
 
 usage() {
-    echo -e "Usage:  $0 fileOfPerChromFilenames measurementType numStates outdir groupSpec [group2spec]"
+    echo -e "Usage:  $0 queueName fileOfPerChromFilenames measurementType numStates outdir groupSpec [group2spec]"
     echo -e "where"
+    echo -e "* queueName is the name of the SLURM-managed resource on which the jobs will run"
     echo -e "* fileOfPerChromFilenames contains one input filename per line (including path if needed);"
     echo -e "  each chrom-specific infile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
@@ -22,18 +23,19 @@ usage() {
     exit 2
 }
     
-if [[ $# != 5 ]] && [[ $# != 6 ]]; then # invalid number of arguments
+if [[ $# != 6 ]] && [[ $# != 7 ]]; then # invalid number of arguments
     usage
 fi    
 
-fileOfFilenames=$1
-measurementType=$2
-numStates=$3
-outdir=$4
-group1spec=$5
+queueName=$1
+fileOfFilenames=$2
+measurementType=$3
+numStates=$4
+outdir=$5
+group1spec=$6
 group2spec=""
-if [ "$6" != "" ]; then
-    group2spec=$6
+if [ "$7" != "" ]; then
+    group2spec=$7
 fi
 
 # measurementType directs the programs to use KL, KL*, or KL**
@@ -67,14 +69,17 @@ EXE3=`which computeEpilogosPart3_perChrom`
 
 if [ ! -x "$EXE1" ]; then
     echo -e "Error:  Required executable \"$EXE1\" not found, or it is not executable."
+    echo -e "Instructions for building this file and making it accessible are in the file README.md."
     exit 2
 fi
 if [ ! -x "$EXE2" ]; then
     echo -e "Error:  Required executable \"$EXE2\" not found, or it is not executable."
+    echo -e "Instructions for building this file and making it accessible are in the file README.md."
     exit 2
 fi
 if [ ! -x "$EXE3" ]; then
     echo -e "Error:  Required executable \"$EXE3\" not found, or it is not executable."
+    echo -e "Instructions for building this file and making it accessible are in the file README.md."
     exit 2
 fi
 
@@ -95,13 +100,43 @@ if [ "$?" != 0 ]; then
     usage
 fi
 
-group2size=""
+group2size="0"
 group1size=`$EXE1 $group1spec`
 if [ "$group2spec" != "" ]; then
     group2size=`$EXE1 $group2spec`
 fi
 
 mkdir -p $outdir
+
+# If all 3 final output files already exist, assume this is a re-run that isn't necessary.
+if [ -s ${outdir}/observations.starch ] && [ -s ${outdir}/scores.txt.gz ] && [ -s ${outdir}/exemplarRegions.txt ]; then
+    echo -e "All 3 final output files already exist and are non-empty:"
+    echo -e "\t${outdir}/observations.starch"
+    echo -e "\t${outdir}/scores.txt.gz"
+    echo -e "\t${outdir}/exemplarRegions.txt"
+    echo -e "Exiting, under the assumption that these files should not be recreated from scratch."
+    echo -e "To recreate these files, move/rename them before running this program."
+    exit 0
+fi
+
+# Get a quick estimate of the total number of sites genome-wide.
+# This will be used to estimate memory needs for later parts of the computation.
+tempVar=""
+linenum=0
+while read line
+do
+    ((linenum++))
+    file=$line
+    if [ ! -s $file ]; then
+	echo -e "Error:  File \"$file\", on line $linenum of $fileOfFilenames, was not found, or it is empty."
+	exit 2
+    fi
+    bytes=`ls -l $file | awk '{print $5}'`
+    maxNumEpis=`head -n 1 $file | cut -f4- | awk '{print NF}'`
+    approxLineCount=`echo $bytes | awk -v n=$maxNumEpis '{print int($1/(n*3))}'`
+    tempVar=${tempVar}":"${approxLineCount}
+done <<< "$(cat $fileOfFilenames)" # see note above regarding this syntax
+approxTotalNumSites=`echo $tempVar | sed 's/^://' | tr ':' '\n' | awk 'BEGIN{approxTotalLines=0}{approxTotalLines+=$1}END{print approxTotalLines}'`
 
 # ----------------------------------
 # echo -e "Executing \"part 1a\"..."
@@ -112,7 +147,6 @@ outfileQ2=""   # used only if 2 groups of epigenomes are being compared
 PfilenameString=""
 randFilenameString=""
 dependencies="afterok" # SLURM syntax
-linenum=0
 # Important:
 # Need to code this as follows (i.e., "while read line do ... done <<< input"
 # instead of "input | while read line do ... done"),
@@ -121,12 +155,7 @@ linenum=0
 # (i.e., they're lost after the "done" statement).
 while read line
 do
-    ((linenum++))
     file=$line
-    if [ ! -s $file ]; then
-	echo -e "Error:  File \"$file\", on line $linenum of $fileOfFilenames, was not found, or it is empty."
-	exit 2
-    fi
     chr=`head -n 1 $file | cut -f1`
     outfileNsites=${outdir}/${chr}_numSites.txt
     if [ $KL == 1 ]; then
@@ -158,19 +187,49 @@ do
 	fi
     fi
     outfileP=${outdir}/${chr}${PfilenameString}
-	
+
+    # This could be a new run, or a re-run if the cluster or electricity was disabled in the middle of a previous run.
+    processThisChromosome="YES"
+
+    if [ -s ${outdir}/observations.starch ]; then
+	if [ -s ${outdir}/scores.txt.gz ] || [ -s ${outdir}/${chr}_scores.txt ]; then
+	    if [[ "$group2spec" == "" || ("$group2spec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
+		processThisChromosome="NO"
+	    fi
+	fi
+    else
+	if [[ -s ${outdir}/${chr}_observed.txt || -s ${outdir}/${chr}_observed.bed || -s ${outdir}/${chr}_observed_withPvals.bed ]]; then
+	    if [ -s ${outdir}/scores.txt.gz ] || [ -s ${outdir}/${chr}_scores.txt ]; then
+		if [[ "$group2spec" == "" || ("$group2spec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
+		    processThisChromosome="NO"
+		fi
+	    fi
+	fi
+    fi
+
     jobName="p1a_$chr"
-    memSize="50M"
-    if [[ ! -s $outfileP || ! -s $outfileQ || ! -s $outfileNsites || ($group2spec != "" && (! -s $outfileQ2 || ! -s $outfileRand)) ]]; then
-    thisJobID=$(sbatch --parsable --partition=queue1 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
+    offset=4000      # estimated empirically
+    coefficient=0.03 # estimated empirically
+    maxNumEpigenomes=`head -n 1 $file | cut -f4- | awk '{print NF}'`
+    memSize=`echo $maxNumEpigenomes | awk -v c=$offset -v g1=$group1size -v g2=$group2size '{print c + $1 + g1 + g2}'`
+    if [ $KL == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v g2=$group2size '{kbOut = $1 + 2*ns; if(g2!=0){kbOut += 4*ns} print kbOut}'`
+    elif [ $KLs == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v g2=$group2size '{kbOut = $1 + ns*(ns+1); if(g2!=0){kbOut += 2*ns*(ns+1)} print kbOut}'`
+    else
+	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size -v a=$coefficient '{print $1 + a*(ns*ns + 0.5*ns*ns*(g1*(g1-1) + g2*(g2-1)))}'`
+    fi
+    memSize=`echo $memSize | awk '{print int($1/1000. + 0.5)"M"}'`
+    if [ "YES" == $processThisChromosome ]; then
+	thisJobID=$(sbatch --parsable --partition=$queueName --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
-       $EXE1 $file $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2
-       if [ \$? != 0 ]; then
-          exit 2
-       fi
+        $EXE1 $file $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2
+        if [ \$? != 0 ]; then
+           exit 2
+        fi
 EOF
-    )
-    dependencies="${dependencies}:${thisJobID}"
+	)
+	dependencies="${dependencies}:${thisJobID}"
     fi
 
 done <<< "$(cat $fileOfFilenames)" # see note above regarding this syntax
@@ -185,7 +244,6 @@ done <<< "$(cat $fileOfFilenames)" # see note above regarding this syntax
 
 PID=$$
 QQjobName=QQ_1b_${PID}
-memSize="50M" # more than enough
 outfileQ2=""
 Q2filenameString=""
 if [ $KL == 1 ]; then
@@ -216,7 +274,6 @@ else
 	Q2filenameString="_Qss2tallies.txt"
     fi
 fi
-totalNumSites=0 # placeholder
 
 tempfile=${outdir}/tempfile_Q_${PID}.txt
 TEMP1=${outdir}/tempfile1_Q_${PID}.txt
@@ -228,8 +285,28 @@ else
 fi
 
 dependencyString2=""
-if [[ ! -s $outfileQ || ("$group2spec" != "" && ! -s $outfileQ2) ]]; then
-    QQjobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$QQjobName --output=${outdir}/${QQjobName}.o%j --error=${outdir}/${QQjobName}.e%j --mem=$memSize <<EOF
+if [[ ! -s ${outdir}/observations.starch && ! -s ${outdir}/scores.txt.gz && (! -s $outfileQ || ("$group2spec" != "" && ! -s $outfileQ2)) ]]; then
+    if [[ $dependencyString == "" &&
+		(`ls -1 ${outdir}/chr*${QfilenameString} 2> /dev/null | wc -l` == "0" ||
+			`ls -1Sl ${outdir}/chr*${QfilenameString} 2> /dev/null | head -n 1 | awk '{print $5}'` == "0") ]]; then
+	echo -en "Error:  Attempted to construct file "
+	if [ ! -s $outfileQ ]; then
+	    echo -en $outfileQ
+	else
+	    echo -en $outfileQ2
+	fi
+	echo -e ", but the necessary file(s) (${outdir}/chr*${QfilenameString}) were not found, or are empty."
+	echo -e "Try removing intermediate files and re-running."
+	exit 2
+    fi
+    if [ $KLss == 1 ]; then
+	memSize=`echo 2 | awk -v g1=$group1size -v g2=$group2size -v ns=$numStates '{gmax=g1;if(g2>g1){gmax=g2}print int($1 + 3*(ns*ns*gmax*(gmax-1)/2)/1000000 + 0.5)"M"}'`
+	# the factor of 3 provides a bit of extra room for safety
+    else
+	memSize="2M" # more than enough
+    fi
+    
+    QQjobID=$(sbatch --parsable --partition=$queueName $dependencyString --job-name=$QQjobName --output=${outdir}/${QQjobName}.o%j --error=${outdir}/${QQjobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
 firstFile=\`ls -1 ${outdir}/chr*${QfilenameString} | head -n 1\`
 if [ ! -s \$firstFile ]; then
@@ -346,24 +423,32 @@ fi
 # echo -e "Executing \"part 1c\"..."
 # ----------------------------------
 
+totalNumSitesFile=${outdir}/totalNumSites.txt
 totalSitesJobName=QQ_1c_${PID}
-memSize="5M" # more than enough
-totalSitesJobID=$(sbatch --parsable --partition=queue1 $dependencyString2 --job-name=$totalSitesJobName --output=${outdir}/${totalSitesJobName}.o%j --error=${outdir}/${totalSitesJobName}.e%j --mem=$memSize <<EOF
+memSize="5M" # more than enough; these are byte-size files.
+if [ ! -s $totalNumSitesFile ]; then
+    if [[ ($dependencyString == "" && $dependencyString2 == "") &&
+	      (`ls -1 ${outdir}/chr*_numSites.txt 2> /dev/null | wc -l` == "0" || `ls -1Sl ${outdir}/chr*_numSites.txt 2> /dev/null | head -n 1 | awk '{print $5}'` == "0") ]]; then
+	echo -e "Error:  $totalNumSitesFile is missing or empty, and the files needed to create it (${outdir}/chr*_numSites.txt) are also missing or empty."
+	echo -e "Try removing intermediate files and re-running."
+	exit 2
+    fi
+    totalSitesJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$totalSitesJobName --output=${outdir}/${totalSitesJobName}.o%j --error=${outdir}/${totalSitesJobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    cat ${outdir}/chr*_numSites.txt \
       | awk 'BEGIN{sum=0}{sum += \$0}END{print sum}' \
-      > $tempfile
+      > $totalNumSitesFile
    rm ${outdir}/chr*_numSites.txt
 EOF
 	       )
-dependencyString2="--dependency=afterok:"${totalSitesJobID}
+    dependencyString2="--dependency=afterok:"${totalSitesJobID}
+fi
 
 # ----------------------------------
 # echo -e "Executing \"part 2a\"..."
 # ----------------------------------
 
 dependencies="afterok" # SLURM syntax
-linenum=0
 # Important:
 # Need to code this as follows (i.e., "while read line do ... done <<< input"
 # instead of "input | while read line do ... done"),
@@ -372,29 +457,41 @@ linenum=0
 # (i.e., they're lost after the "done" statement).
 while read line
 do
-    ((linenum++))
     file=$line
-    if [ ! -s $file ]; then
-	echo -e "Error:  File \"$file\", on line $linenum of $fileOfFilenames, was not found, or it is empty."
-	exit 2
-    fi
     chr=`head -n 1 $file | cut -f1`
     infile=${outdir}/${chr}${PfilenameString}
     infileQ=$outfileQ
     infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
     outfileObserved=${outdir}/${chr}_observed.txt
-    outfileQcat=${outdir}/${chr}_qcat.txt
+    outfileScores=${outdir}/${chr}_scores.txt
     outfileNulls=""
     if [ "$group2spec" != "" ]; then
 	outfileNulls=${outdir}/${chr}_nulls.txt
+	outfileObsFromPart3=`echo $outfileObserved | sed 's/\.txt$/_withPvals.bed/'`
+    else
+	outfileObsFromPart3=`echo $outfileObserved | sed 's/txt$/bed/'`
     fi
     jobName="p2_$chr"
-    memSize="5G"
-    if [ ! -s $outfileObserved ]; then
-	thisJobID=$(sbatch --parsable --partition=queue1 $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
+    offset=4000     # estimated empirically
+    coefficient=0.3 # estimated empirically
+    memSize=`echo $numStates | awk -v c=$offset '{print c + $1}'`
+    if [ $KL == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; if(g2>g1){gmax=g2} \
+           kbOut = $1 + 2*ns + gmax; if(g2!=0){kbOut += 2*ns} print kbOut}'`
+    elif [ $KLs == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; if(g2>g1){gmax=g2} \
+           kbOut = $1 + 3*ns*(ns+1)/2 + gmax*(gmax-1)/2; if(g2!=0){kbOut += ns*(ns+1)} print kbOut}'`
+    else
+	memSize=`echo $memSize | awk -v a=$coefficient -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; gmin=g2; if(g2>g1){gmax=g2; gmin=g1} \
+           kbOut = $1 + a*(ns*ns + (1 + 4*ns*ns)*gmax*(gmax-1)/2); if(g2!=0){kbOut += a*(ns*ns*gmin*(gmin-1))} print kbOut}'`
+    fi
+    memSize=`echo $memSize | awk '{print int($1/1000. + 0.5)"M"}'`    
+    
+    if [[ ( ! -s $outfileObserved && ! -s $outfileObsFromPart3 && ! -s ${outdir}/observations.starch ) || ( ! -s $outfileScores && ! -s ${outdir}/scores.txt.gz ) ]]; then
+	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
-   totalNumSites=\`cat $tempfile\`
-   $EXE2 $infile $measurementType \$totalNumSites $infileQ $outfileObserved $outfileQcat $chr $infileQ2
+   totalNumSites=\`cat $totalNumSitesFile\`
+   $EXE2 $infile $measurementType \$totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2
    if [ \$? != 0 ]; then
       exit 2
    fi
@@ -405,9 +502,9 @@ EOF
     if [ "$group2spec" != "" ] && [ ! -s $outfileNulls ]; then
 	infile=${outdir}/${chr}${randFilenameString}
 	jobName="p2r_$chr"
-	thisJobID=$(sbatch --parsable --partition=queue1 $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
+	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
-   totalNumSites=\`cat $tempfile\`
+   totalNumSites=\`cat $totalNumSitesFile\`
    # The smaller number of arguments in the following call informs $EXE2 that it should only write the metric to $outfileNulls, with no additional info.
    $EXE2 $infile $measurementType \$totalNumSites $infileQ $infileQ2 $outfileNulls
    if [ \$? != 0 ]; then
@@ -426,8 +523,8 @@ done <<< "$(cat $fileOfFilenames)" # see note above regarding this syntax
 # echo -e "Executing \"part 2b\"..."
 # ----------------------------------
 
-memSize="10G" # is this a good amount???
-catJobName=catNulls_${PID}
+memSize=`echo $approxTotalNumSites | awk -v ns=$numStates -v safeApproxMeanBytesPerField=14 '{print int($1*(4 + ns)*safeApproxMeanBytesPerField/1000000. + 0.5)"M"}'`
+part2bJobName=p2b_${PID}
 if [ $dependencies == "afterok" ]; then
     dependencyString=""
 else
@@ -435,22 +532,24 @@ else
 fi
 dependencyString2=""
 
-catJobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$catJobName --output=${outdir}/${catJobName}.o%j --error=${outdir}/${catJobName}.e%j --mem=$memSize <<EOF
+if [[ ! -s ${outdir}/scores.txt.gz || ( "$group2spec" != "" && ! -s ${outdir}/allNullsGenomewide.txt ) ]]; then
+    part2bJobID=$(sbatch --parsable --partition=$queueName $dependencyString --job-name=$part2bJobName --output=${outdir}/${part2bJobName}.o%j --error=${outdir}/${part2bJobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    module load htslib
-   echo -n "Total number of sites is:  "
-   cat $tempfile
-# rm -f $tempfile
-   cat ${outdir}/*_qcat.txt \
+   cat ${outdir}/*_scores.txt \
       | sort -k1b,1 -s \
-      | awk 'BEGIN{FS = OFS="\t"}{print \$1,\$2,\$3,"id:"NR",qcat:"\$4}' \
       | bgzip \
-      > ${outdir}/qcat.bed.gz
-   rm -f ${outdir}/*_qcat.txt
+      > ${outdir}/scores.txt.gz
+   if [ \$? != 0 ]; then
+      echo -e "An error occurred while attempting to combine and compress the per-chromosome score files."
+      exit 2
+   fi
+   rm -f ${outdir}/*_scores.txt
           
    if [ "$group2spec" != "" ] && [ ! -s ${outdir}/allNullsGenomewide.txt ]; then
       cat ${outdir}/*_nulls.txt > ${outdir}/allNullsGenomewide.txt
       if [ \$? != 0 ]; then
+         echo -e "An error occurred while attempting to concatenate the per-chromosome null values."
          exit 2
       fi
       rm -f ${outdir}/*_nulls.txt
@@ -458,8 +557,9 @@ catJobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$ca
    # Clean up some files
    rm -f ${outdir}/*${PfilenameString}
 EOF
-	)
-dependencyString2="--dependency=afterok:"${catJobID}
+    )
+    dependencyString2="--dependency=afterok:"${part2bJobID}
+fi
 
 # ----------------------------------
 # echo -e "Executing \"part 3\"..."
@@ -474,35 +574,30 @@ do
     begPos=`head -n 1 $origFile | cut -f2`
     endPos=`head -n 1 $origFile | cut -f3`
     infile=${chr}_observed.txt
-    if [ -s ${outdir}/allNullsGenomewide.txt ]; then
-	outfile=`echo $infile | sed 's/_observed.txt$/_withPvals.bed/g'`
+    if [ "$group2spec" != "" ]; then
+	outfile=`echo $infile | sed 's/\.txt$/_withPvals.bed/'`
+	memSize=`echo $approxTotalNumSites | awk -v safeApproxMeanBytesPerField=8 '{print int(0.5*$1*safeApproxMeanBytesPerField/1000000)"M"}'`
     else
-	outfile=`echo $infile | sed 's/txt$/bed/g'`
+	outfile=`echo $infile | sed 's/txt$/bed/'`
+	memSize="2M" # all we'll be doing is renaming a file	
     fi
-
     outfile=${outdir}/${outfile}
+    infile=${outdir}/${infile}
     jobName="p3_$chr"
-    memSize="10G" # is this a good amount???
-    if [ ! -s $outfile ]; then
-	thisJobID=$(sbatch --parsable --partition=queue1 $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
+    if [[ ! -s $outfile &&  ! -s ${outdir}/observations.starch ]]; then
+	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    if [ -s ${outdir}/allNullsGenomewide.txt ]; then
-      outfile=\`echo $infile | sed 's/_observed.txt$/_withPvals.bed/g'\`
-      infile=${outdir}/$infile
-      outfile=${outdir}/\$outfile
-      $EXE3 \$infile ${outdir}/allNullsGenomewide.txt \$outfile
+      $EXE3 $infile ${outdir}/allNullsGenomewide.txt $outfile
       if [ \$? == 0 ]; then
-         rm -f \$infile
+         rm -f $infile
       fi
    else
-      outfile=\`echo $infile | sed 's/txt$/bed/g'\`
-      infile=${outdir}/$infile
-      outfile=${outdir}/\$outfile
-      mv \$infile \$outfile
+      mv $infile $outfile
    fi
 EOF
-	 )
-    dependencies="${dependencies}:${thisJobID}"
+	)
+	dependencies="${dependencies}:${thisJobID}"
     fi
 done <<< "$(cat $fileOfFilenames)"
 
@@ -510,23 +605,30 @@ done <<< "$(cat $fileOfFilenames)"
 # echo -e "Collating and cleaning up..."
 # --------------------------------------
 
-dependencyString="--dependency=$dependencies"
+if [ $dependencies == "afterok" ]; then
+    dependencyString=""
+else
+    dependencyString="--dependency=$dependencies"
+fi
 finalJobName=finalStep
-memSize="5G" # is this a good number?
+memSize="5M" # this should be sufficient, due to how bedops/starch/unstarch and awk process input
 
-finalJobID=$(sbatch --parsable --partition=queue1 $dependencyString --job-name=$finalJobName --output=${outdir}/${finalJobName}.o%j --error=${outdir}/${finalJobName}.e%j --mem=$memSize <<EOF
+finalJobID=$(sbatch --parsable --partition=$queueName $dependencyString --job-name=$finalJobName --output=${outdir}/${finalJobName}.o%j --error=${outdir}/${finalJobName}.e%j --mem=$memSizeFinal <<EOF
 #! /bin/bash
    module load bedops
-   if [ -s ${outdir}/allNullsGenomewide.txt ] && [ \`ls -1 ${outdir}/*_withPvals.bed | wc -l\` != "0" ]; then
+   if [ -s ${outdir}/allNullsGenomewide.txt ] && [ \`ls -1 ${outdir}/*_observed_withPvals.bed | wc -l\` != "0" ]; then
       rm -f ${outdir}/allNullsGenomewide.txt
    fi
-   bedops -u ${outdir}/*.bed | starch - > ${outdir}/observations.starch
-   if [ \$? == 0 ]; then
-      rm -f ${outdir}/*.bed
-   else
-      echo -e "An error occurred while trying to execute \"bedops -u ${outdir}/*.bed | starch - > ${outdir}/observations.starch\"."
-      exit 2
+   if [ ! -s ${outdir}/observations.starch ]; then
+      bedops -u ${outdir}/*_observed*.bed | starch - > ${outdir}/observations.starch
+      if [ \$? == 0 ]; then
+         rm -f ${outdir}/*_observed*.bed
+      else
+         echo -e "An error occurred while trying to execute \"bedops -u ${outdir}/*_observed*.bed | starch - > ${outdir}/observations.starch\"."
+         exit 2
+      fi
    fi
+   rm -f $outfileQ $outfileQ2
 
    unstarch ${outdir}/observations.starch \
 	 | awk -v stateCol=$STATE_COLUMN -v scoreCol=$SCORE_COLUMN 'BEGIN {OFS="\t"; chrom=""; state=""; bestScore=""; line=""} \

@@ -15,15 +15,15 @@ using namespace std;
 
 enum measurementType {KL, KLs, KLss}; // corresponding to measurements using KL, KL*, or KL**
 
-bool PairFloatInt_LT(const pair<float,int>& a, const pair<float,int>& b);
-bool PairFloatInt_LT(const pair<float,int>& a, const pair<float,int>& b)
+bool FloatAbs_LT(const float& a, const float& b);
+bool FloatAbs_LT(const float& a, const float& b)
 {
-  return a.first < b.first;
+  return fabs(a) < fabs(b);
 }
 
 class Model {
 public:
-  virtual bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom) = 0;
+  virtual bool init(const char *pObsFname, const char *pScoresFname, const char *pNullsFname, const string& chrom) = 0;
   virtual unsigned int size(void) const = 0;
   virtual bool writingNulls(void) const = 0;
   virtual bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites) = 0;
@@ -34,7 +34,7 @@ public:
 class KLModel : public Model {
 public:
   KLModel() {};
-  bool init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom);
+  bool init(const char *pObsFname, const char *pScoresFname, const char *pNullsFname, const string& chrom);
   unsigned int size(void) const { return m_size; }
   bool writingNulls(void) const { return m_writeNullMetric; }
   bool getQcontrib(ifstream& infile, const char *pFilename, const unsigned int& Nsites);
@@ -46,7 +46,7 @@ protected:
   unsigned int m_group1size, m_group2size;
   unsigned int m_numValsProcessedForGroup1, m_numValsProcessedForGroup2;
   bool m_writeNullMetric;
-  ofstream m_ofsObs, m_ofsNullValues, m_ofsQcat;
+  ofstream m_ofsObs, m_ofsNullValues, m_ofsScores;
   string m_chrom;
   int m_curBegPos, m_curEndPos;
 private:
@@ -83,7 +83,7 @@ private:
 };
 
 
-bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pNullFname, const string& chrom)
+bool KLModel::init(const char *pObsFname, const char *pScoresFname, const char *pNullsFname, const string& chrom)
 {
   if (pObsFname != NULL)
     {
@@ -94,21 +94,21 @@ bool KLModel::init(const char *pObsFname, const char *pQcatFname, const char *pN
 	  return false;
 	}
     }
-  if (pQcatFname != NULL)
+  if (pScoresFname != NULL)
     {
-      m_ofsQcat.open(pQcatFname);
-      if (!m_ofsQcat)
+      m_ofsScores.open(pScoresFname);
+      if (!m_ofsScores)
 	{
-	  cerr << "Error:  Unable to open file \"" << pQcatFname << "\" for writing." << endl << endl;
+	  cerr << "Error:  Unable to open file \"" << pScoresFname << "\" for writing." << endl << endl;
 	  return false;
 	}
     }
-    if (pNullFname != NULL)
+    if (pNullsFname != NULL)
     {
-      m_ofsNullValues.open(pNullFname);
+      m_ofsNullValues.open(pNullsFname);
       if (!m_ofsNullValues)
 	{
-	  cerr << "Error:  Unable to open file \"" << pNullFname << "\" for writing." << endl << endl;
+	  cerr << "Error:  Unable to open file \"" << pNullsFname << "\" for writing." << endl << endl;
 	  return false;
 	}
     }
@@ -158,9 +158,7 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const unsigne
       return false;
     }
 
-  // The number of unique (unordered) state pairs is numStates*(numStates + 1)/2
-  // (yes, +1, not -1).  Thus if x is the number of elements in the Q* vector,
-  // numStates satisfies numStates^2 + numStates - 2*x == 0.
+  // The Q vector contains one element for each possible state.
   if (0 == m_group1size)
     m_numStates = m_Q1contrib.size();
   else
@@ -177,7 +175,7 @@ bool KLModel::getQcontrib(ifstream& infile, const char *pFilename, const unsigne
 	}
     }
 
-  // The sum of the tallies in this Q* equals the total number of sites
+  // The sum of the tallies in this Q equals the total number of sites
   // times the number of epigenomes
   if (0 == m_group1size)
     {
@@ -269,19 +267,9 @@ void KLModel::computeAndWriteMetric(void)
   static const float LOG2(0.6931471806);
   static const float denom1 = LOG2 * static_cast<float>(m_group1size);
   static const float denom2 = LOG2 * static_cast<float>(m_group2size);
-  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
+  vector<float> contribOfEachState(m_numStates, 0);
   float retVal(0);
   
-  if (!m_writeNullMetric)
-    {
-      // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (unsigned int i = 0; i < m_numStates; i++)
-	{
-	  contribOfEachState[i].first = 0;
-	  contribOfEachState[i].second = i+1;
-	}
-    }
-
   for (unsigned int i = 0; i < m_P1numerators.size(); i++)
     {
       float term(0);
@@ -305,52 +293,32 @@ void KLModel::computeAndWriteMetric(void)
 	    }
 	}
       if (!m_writeNullMetric) // no need to break down the metric by state if we're solely tasked with writing null metric values
-	contribOfEachState[i].first = term;
+	contribOfEachState[i] = term;
 
       retVal += (0 == m_group2size ? term : fabs(term));
     }
 
   if (!m_writeNullMetric)
     {
-      float contribOfMaxTerm;
-      unsigned int stateWithMaxTerm_1based;
-      bool signOfMaxTerm;
-      char formattedQcatFloat[10];
-      sort(contribOfEachState.begin(), contribOfEachState.end(), PairFloatInt_LT);
-      if (fabs(contribOfEachState.front().first) > contribOfEachState.back().first)
-	{
-	  contribOfMaxTerm = contribOfEachState.front().first;
-	  stateWithMaxTerm_1based = contribOfEachState.front().second;
-	}
-      else
-	{
-	  contribOfMaxTerm = contribOfEachState.back().first;
-	  stateWithMaxTerm_1based = contribOfEachState.back().second;
-	}
-
-      signOfMaxTerm = contribOfMaxTerm > 0 ? true : false;
-      contribOfMaxTerm = fabs(contribOfMaxTerm);
+      vector<float>::iterator itMaxContributor = max_element(contribOfEachState.begin(), contribOfEachState.end(), FloatAbs_LT);
+      char formattedScoreFloat[10];
       m_ofsObs << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos << '\t'
-	       << stateWithMaxTerm_1based << '\t'
-	       << contribOfMaxTerm << '\t'
-	       << (signOfMaxTerm ? "1" : "-1") << '\t'
+	       << distance(contribOfEachState.begin(), itMaxContributor) + 1 << '\t' // the state with the max contribution
+	       << fabs(*itMaxContributor) << '\t'
+	       << (*itMaxContributor > 0 ? "1" : "-1") << '\t'
 	       << retVal << endl;
-      sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
-      m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
-		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
+      m_ofsScores << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos;
+      for (unsigned int i = 0; i < contribOfEachState.size(); i++)
 	{
-	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);	  
-	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
+	  sprintf(formattedScoreFloat, "%.4g", contribOfEachState[i]);
+	  m_ofsScores << '\t' << formattedScoreFloat;
 	}
-      m_ofsQcat << " ]" << endl;
-      //      m_curBegPos = m_curEndPos;
-      //      m_curEndPos += m_regionWidth;
+      m_ofsScores << endl;
     }
   else
     m_ofsNullValues << retVal << endl;
   
-  // reset the counting variables and the "P* numerator" (m_Ps1numerators, m_Ps2numerators) tallies
+  // reset the counting variables and the "P numerator" (m_P1numerators, m_P2numerators) tallies
   m_numValsProcessedForGroup1 = m_numValsProcessedForGroup2 = 0;
   m_curBegPos = m_curEndPos = -1;
   m_P1numerators.assign(m_P1numerators.size(), 0);
@@ -528,20 +496,9 @@ void KLsModel::computeAndWriteMetric(void)
   static const float LOG2(0.6931471806);
   static const float denom1 = LOG2 * static_cast<float>(m_group1size)*static_cast<float>(m_group1size - 1)/2.;
   static const float denom2 = LOG2 * static_cast<float>(m_group2size)*static_cast<float>(m_group2size - 1)/2.;
-  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
-  float retVal(0), contribOfMaxStatePairTerm(0), contribOfMaxStateTerm(0);
-  unsigned int statePairWithMaxTerm_1based(0), stateWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
-  bool signOfMaxStatePairTerm, signOfMaxStateTerm;
-
-  if (!m_writeNullMetric)
-    {
-      // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (unsigned int i = 0; i < m_numStates; i++)
-	{
-	  contribOfEachState[i].first = 0;
-	  contribOfEachState[i].second = i+1;
-	}
-    }
+  vector<float> contribOfEachState(m_numStates, 0);
+  float retVal(0), contribOfMaxStatePairTerm(0);
+  unsigned int statePairWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
 
   for (unsigned int uniqueStatePairID = 0; uniqueStatePairID < m_Ps1numerators.size(); uniqueStatePairID++)
     {
@@ -582,8 +539,8 @@ void KLsModel::computeAndWriteMetric(void)
 	      contribOfMaxStatePairTerm = term;
 	      statePairWithMaxTerm_1based = uniqueStatePairID + 1;
 	    }
-	  contribOfEachState[stateOfEpi1_1based - 1].first += 0.5*term;
-	  contribOfEachState[stateOfEpi2_1based - 1].first += 0.5*term;
+	  contribOfEachState[stateOfEpi1_1based - 1] += 0.5*term;
+	  contribOfEachState[stateOfEpi2_1based - 1] += 0.5*term;
 	}
 
       retVal += (0 == m_group2size ? term : absTerm);
@@ -595,40 +552,24 @@ void KLsModel::computeAndWriteMetric(void)
       // that contributed the most to the metric
       unsigned int s1 = m_unorderedStatePairDecompositions[statePairWithMaxTerm_1based - 1].first,
 	s2 = m_unorderedStatePairDecompositions[statePairWithMaxTerm_1based - 1].second;
-      char formattedQcatFloat[10];
-      sort(contribOfEachState.begin(), contribOfEachState.end(), PairFloatInt_LT);
-      if (fabs(contribOfEachState.front().first) > contribOfEachState.back().first)
-	{
-	  contribOfMaxStateTerm = -1*contribOfEachState.front().first;
-	  stateWithMaxTerm_1based = contribOfEachState.front().second;
-	  signOfMaxStateTerm = false;
-	}
-      else
-	{
-	  contribOfMaxStateTerm = contribOfEachState.back().first;
-	  stateWithMaxTerm_1based = contribOfEachState.back().second;
-	  signOfMaxStateTerm = true;
-	}
-      signOfMaxStatePairTerm = contribOfMaxStatePairTerm > 0 ? true : false;      
-      contribOfMaxStatePairTerm = fabs(contribOfMaxStatePairTerm);
+      vector<float>::iterator itMaxContributor = max_element(contribOfEachState.begin(), contribOfEachState.end(), FloatAbs_LT);
+      char formattedScoreFloat[10];
       m_ofsObs << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos << '\t'
-	       << stateWithMaxTerm_1based << '\t' << contribOfMaxStateTerm << '\t'
-	       << (signOfMaxStateTerm ? "1" : "-1") << '\t'
-	       << '(' << s1 << ',' << s2 << ')' << '\t' // << statePairWithMaxTerm_1based << '\t'
-	       << contribOfMaxStatePairTerm << '\t'
-	       << (signOfMaxStatePairTerm ? "1" : "-1") << '\t'
+	       << distance(contribOfEachState.begin(), itMaxContributor) + 1 << '\t' // the state with the max contribution
+	       << fabs(*itMaxContributor) << '\t'
+	       << (*itMaxContributor > 0 ? "1" : "-1") << '\t'
+	       << '(' << s1 << ',' << s2 << ')' << '\t'
+	       << fabs(contribOfMaxStatePairTerm) << '\t'
+	       << (contribOfMaxStatePairTerm > 0 ? "1" : "-1") << '\t'
 	       << retVal << endl;
-      sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
-      m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
-		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
+      sprintf(formattedScoreFloat, "%.4g", contribOfEachState[0]);
+      m_ofsScores << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos;
+      for (unsigned int i = 0; i < contribOfEachState.size(); i++)
 	{
-	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);
-	  m_ofsQcat << ", [" << contribOfEachState[i].first << ',' << contribOfEachState[i].second << ']';
+	  sprintf(formattedScoreFloat, "%.4g", contribOfEachState[i]);
+	  m_ofsScores << '\t' << formattedScoreFloat;
 	}
-      m_ofsQcat << " ]" << endl;
-      //      m_curBegPos = m_curEndPos;
-      //      m_curEndPos += m_regionWidth;
+      m_ofsScores << endl;
     }
   else
     m_ofsNullValues << retVal << endl;
@@ -650,7 +591,7 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const unsig
   float denom;
   vector<unsigned int> row, transposeRow;
   vector<vector<unsigned int> > tallyMatrix, transposedTallyMatrix;
-  map<unsigned int, map<unsigned int,float> > tempMap;
+  map<unsigned int, map<unsigned int,float> > *pQss = m_Qss1contrib.empty() ? &m_Qss1contrib : &m_Qss2contrib;
   unsigned int linenum(0), fieldnum, numCols(0);
 
   while (infile.getline(buf, BUFSIZE))
@@ -732,13 +673,8 @@ bool KLssModel::getQcontrib(ifstream& infile, const char *pFilename, const unsig
 	  else
 	    epigenomePairID_to_QssContrib[epigenomePairID] = 999999.;	    
 	}
-      tempMap[statePairID + 1] = epigenomePairID_to_QssContrib;
+      (*pQss)[statePairID + 1] = epigenomePairID_to_QssContrib;
     }
-
-  if (m_Qss1contrib.empty())
-    m_Qss1contrib = tempMap;
-  else
-    m_Qss2contrib = tempMap;
 
   m_size = m_group1size*(m_group1size - 1)/2 + m_group2size*(m_group2size - 1)/2;
   return true;
@@ -842,21 +778,10 @@ bool KLssModel::processInputValue(const unsigned int& statePairID)
 void KLssModel::computeAndWriteMetric(void)
 {
   float retVal(0);
-  static vector<pair<float, unsigned int> > contribOfEachState(m_numStates, make_pair(0,0));
-  float contribOfMaxStatePairGroupTerm(0), contribOfMaxStateTerm(0);
-  unsigned int statePairGroupWithMaxTerm_1based(0), stateWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
-  bool signOfMaxStatePairGroupTerm, signOfMaxStateTerm;
+  vector<float> contribOfEachState(m_numStates, 0);
+  float contribOfMaxStatePairGroupTerm(0);
+  unsigned int statePairGroupWithMaxTerm_1based(0); // initialized to 0 to suppress compiler warnings
 
-  if (!m_writeNullMetric)
-    {
-      // Initialize the vector of per-state contributions. This is needed for the "qcat" file.
-      for (unsigned int i = 0; i < m_numStates; i++)
-	{
-	  contribOfEachState[i].first = 0;
-	  contribOfEachState[i].second = i+1;
-	}
-    }
-  
   for (map<unsigned int, pair<map<unsigned int, set<unsigned int> >, map<unsigned int, set<unsigned int> > > >::const_iterator statePairGroup_it =
 	 m_statePairGroupObservationsAtThisSite.begin();
        statePairGroup_it != m_statePairGroupObservationsAtThisSite.end(); statePairGroup_it++)
@@ -909,8 +834,8 @@ void KLssModel::computeAndWriteMetric(void)
 	      contribOfMaxStatePairGroupTerm = term;
 	      statePairGroupWithMaxTerm_1based = statePairGroupID;
 	    }
-	  contribOfEachState[row - 1].first += 0.5*term;    // row = state of epigenome 1 (1-based)
-	  contribOfEachState[column - 1].first += 0.5*term; // column = state of epigenome 2 (1-based)
+	  contribOfEachState[row - 1] += 0.5*term;    // row = state of epigenome 1 (1-based)
+	  contribOfEachState[column - 1] += 0.5*term; // column = state of epigenome 2 (1-based)
 	}
       retVal += (0 == m_group2size ? term : absTerm);
     }
@@ -919,45 +844,28 @@ void KLssModel::computeAndWriteMetric(void)
     {
       unsigned int s1 = statePairGroupWithMaxTerm_1based / m_numStates + 1,
 	s2 = statePairGroupWithMaxTerm_1based % m_numStates; // statePairGroupID = (s1,s2)
-      char formattedQcatFloat[10];
+      vector<float>::iterator itMaxContributor = max_element(contribOfEachState.begin(), contribOfEachState.end(), FloatAbs_LT);
+      char formattedScoreFloat[10];
       if (0 == s2)
 	{
 	  s2 = m_numStates;
 	  s1 -= 1;
 	}
-      sort(contribOfEachState.begin(), contribOfEachState.end(), PairFloatInt_LT);
-      if (fabs(contribOfEachState.front().first) > contribOfEachState.back().first)
-	{
-	  contribOfMaxStateTerm = -1*contribOfEachState.front().first;
-	  stateWithMaxTerm_1based = contribOfEachState.front().second;
-	  signOfMaxStateTerm = false;
-	}
-      else
-	{
-	  contribOfMaxStateTerm = contribOfEachState.back().first;
-	  stateWithMaxTerm_1based = contribOfEachState.back().second;
-	  signOfMaxStateTerm = true;
-	}
-      signOfMaxStatePairGroupTerm = contribOfMaxStatePairGroupTerm > 0 ? true : false;
-      contribOfMaxStatePairGroupTerm = fabs(contribOfMaxStatePairGroupTerm);
       m_ofsObs << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos << '\t'
-	       << stateWithMaxTerm_1based << '\t' << contribOfMaxStateTerm << '\t'
-	       << (signOfMaxStateTerm ? "1" : "-1") << '\t'
-	       << '(' << s1 << ',' << s2 << ')' << '\t' // << statePairWithMaxTerm_1based << '\t'
-	       << contribOfMaxStatePairGroupTerm << '\t'
-	       << (signOfMaxStatePairGroupTerm ? "1" : "-1") << '\t'
+	       << distance(contribOfEachState.begin(), itMaxContributor) + 1 << '\t' // the state with the max contribution
+	       << fabs(*itMaxContributor) << '\t'
+	       << (*itMaxContributor > 0 ? "1" : "-1") << '\t'
+	       << '(' << s1 << ',' << s2 << ')' << '\t'
+	       << fabs(contribOfMaxStatePairGroupTerm) << '\t'
+	       << (contribOfMaxStatePairGroupTerm > 0 ? "1" : "-1") << '\t'
 	       << retVal << endl;
-      sprintf(formattedQcatFloat, "%.4g", contribOfEachState[0].first);
-      m_ofsQcat << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos
-		<< "\t[ [" << formattedQcatFloat << ',' << contribOfEachState[0].second << ']';
-      for (unsigned int i = 1; i < contribOfEachState.size(); i++)
+      m_ofsScores << m_chrom << '\t' << m_curBegPos << '\t' << m_curEndPos;
+      for (unsigned int i = 0; i < contribOfEachState.size(); i++)
 	{
-	  sprintf(formattedQcatFloat, "%.4g", contribOfEachState[i].first);
-	  m_ofsQcat << ", [" << formattedQcatFloat << ',' << contribOfEachState[i].second << ']';
+	  sprintf(formattedScoreFloat, "%.4g", contribOfEachState[i]);
+	  m_ofsScores << '\t' << formattedScoreFloat;
 	}
-      m_ofsQcat << " ]" << endl;
-      //      m_curBegPos = m_curEndPos;
-      //      m_curEndPos += m_regionWidth;
+      m_ofsScores << endl;
     }
   else
     m_ofsNullValues << retVal << endl;
@@ -972,7 +880,7 @@ void KLssModel::computeAndWriteMetric(void)
 bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel);
 bool parseInputWriteOutput(ifstream& ifs, const char *pFilename, Model* pModel)
 {
-  const int BUFSIZE(100000);
+  const int BUFSIZE(2000000);
   char buf[BUFSIZE], *p;
   unsigned int linenum(0), numColsProcessed;
   const unsigned int numExpected = pModel->writingNulls() ? pModel->size() : pModel->size() + 2;
@@ -1014,7 +922,7 @@ int main(int argc, const char* argv[])
   if (8 != argc && 9 != argc && 7 != argc)
     {
     Usage:
-      cerr << "Usage type #1:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ outfileObs outfileQcat chr [infileQ2]\n"
+      cerr << "Usage type #1:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ outfileObs outfileScores chr [infileQ2]\n"
 	   << "where\n"
 	   << "* infile holds the tab-delimited state or state pair IDs observed in the epigenomes or pairs of epigenomes, one line per genomic segment\n"
 	   << "* KLtype is either 0 (for KL), 1 (for KL*), or 2 (for KL**)\n"
@@ -1026,7 +934,7 @@ int main(int argc, const char* argv[])
 	   << "  the magnitude of that contribution, and the total value of the metric.\n"
 	   << "  If two groups are specified (see below), it will also include a column containing +/-1,\n"
 	   << "  specifying whether the first group (+1) or the second (-1) contributes more to the overall metric.\n"
-	   << "* outfileQcat will be in \"qcat\" format, uncompressed\n"
+	   << "* outfileScores will receive per-state score contributions in state order (uncompressed)\n"
 	   << "* Optional additional argument infileQ2 can be used to specify Q, Q*, or Q** for a 2nd group of epigenomes,\n"
 	   << "  in which case the metric quantifies the difference (distance) between them.\n"
 	   << "\n"
@@ -1041,10 +949,10 @@ int main(int argc, const char* argv[])
       return -1;
     }
 
-  const char *pOutfileObsFilename(NULL), *pOutfileQcatFilename(NULL), *pOutfileNullValsFilename(NULL),
+  const char *pOutfileObsFilename(NULL), *pOutfileScoresFilename(NULL), *pOutfileNullValsFilename(NULL),
     *pInfilename(argv[1]), *pQ1filename(argv[4]), *pQ2filename(NULL);
   ifstream infile(pInfilename), infileQ1(pQ1filename), infileQ2;
-  ofstream outfileObs, outfileQcat, outfileNulls;
+  ofstream outfileObs, outfileScores, outfileNulls;
   const int measurementTypeInt(atoi(argv[2]));
   const unsigned int Nsites(atoi(argv[3]));
   string chrom;
@@ -1077,7 +985,7 @@ int main(int argc, const char* argv[])
   else
     {
       pOutfileObsFilename = argv[5];
-      pOutfileQcatFilename = argv[6];
+      pOutfileScoresFilename = argv[6];
       chrom = string(argv[7]);
       if (9 == argc)
 	pQ2filename = argv[8];
@@ -1102,7 +1010,7 @@ int main(int argc, const char* argv[])
 	pM = &mKLss;
     }
 
-  if (!pM->init(pOutfileObsFilename, pOutfileQcatFilename, pOutfileNullValsFilename, chrom))
+  if (!pM->init(pOutfileObsFilename, pOutfileScoresFilename, pOutfileNullValsFilename, chrom))
     return -1;
   if (!pM->getQcontrib(infileQ1, pQ1filename, Nsites))
     return -1;

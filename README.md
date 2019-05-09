@@ -39,6 +39,26 @@ By default, the script assumes the availability of a compute cluster managed by 
 See [below](#single-chromosome-execution) for a more elementary implementation of the script for use on a single machine, using data from a single chromosome only.
 The first argument to `computeEpilogos.sh` must be the name of the cluster/queue.
 The second argument is a text file with paths to *uncompressed* input data files (one per chromosome).
+The first three columns of each input file must specify genomic coordinates (`seqname`, `start`, `end`),
+and the remaining columns contain labels (e.g. chromatin state calls), representing (chromatin state) annotations -- one column per biosample.
+
+### Modes of operation
+
+Epilogos implements information-theoretic metrics to quantify saliency levels of datasets.
+The third argument to the coordination script allows one to choose one of three possible metrics:
+1. Metric S1, implementing a standard Kullback-Leibler relative entropy 
+2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
+3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
+
+The fourth argument, `numStates`, specifies the number of distinct labels (chromatin states) provided in the input data,
+to prevent having to scan through the full input dataset.
+
+The fifth argument, `groupSpec`, specifies which biosamples, i.e. columns in the input data, are to be used in the computation.
+This argument can be specified as comma- and/or hyphen-delimited list (e.g. "1,3,6-10,12,13").
+For instance, "1,2,3" corresponds to the first 3 samples, which are in columns 4,5,6 of the input data.
+
+Importantly, Epilogos implements the possibility for comparing annotations between groups of biosamples.
+To enable this, a sixth argument can be specified in the same format as the fifth argument, denoting a separate set of columns/biosamples to compare the first set to.
 
 ### Output
 
@@ -46,7 +66,10 @@ Three output files will be produced: `observations.starch`, `scores.txt.gz`, and
 In case of errors during the exuction of the code, error messages will be collected in separate log files.
 
 `observations.starch` is a compressed file (uncompress it using `unstarch` from the `bedops` tool suite) containing one line of summary statistics for each input site.
-Its exact contents will depend on whether you're measuring occurrences of states (metric KL or DKL, specified via `0`), state pairs (metric KL\* or DKL\*, specified via `1`), or state pairs while tracking the epigenome pairs in which they were observed (metric KL\*\* or DKL\*\*, specified via `2`).
+Its exact format depends on the mode of operation 
+
+Its exact contents depends on whether you're measuring occurrences of states (metric KL or DKL, specified via `0`), 
+state pairs (metric KL\* or DKL\*, specified via `1`), or state pairs while tracking the epigenome pairs in which they were observed (metric KL\*\* or DKL\*\*, specified via `2`).
 
 For KL, `observations.starch` will contain 7 columns.
 An example: `chr1	2468800	     2469000	 13	    2.56266  1	3.79557`.

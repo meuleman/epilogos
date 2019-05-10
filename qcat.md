@@ -1,3 +1,8 @@
+# Please note:
+**This material is mostly here for legacy reasons, as we currently make use of the [HiGlass](https://higlass.io) platform to visualize results via the output file** `scores.txt.gz`**.**
+
+======
+
 1. [Visualizing a qcat file](#visualizing-a-qcat-file)
     * [Setting up a web server](#setting-up-a-web-server)
     * [Preparing tabix-indexed qcat files](#preparing-tabix-indexed-qcat-files)
@@ -8,10 +13,9 @@
     * [Loading the datahub in the WashU browser](#loading-the-datahub-in-the-washu-browser)
 2. [Qcat file specification](#qcat-file-specification)
 
-## Visualizing a qcat file (not recommended)
+## Visualizing a qcat file
 
 This section describes how to visualize a [qcat](#qcat-file-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
-**This material is mostly here for legacy reasons, as we currently make use of the [HiGlass](https://higlass.io) platform to visualize results via the output file** `scores.txt.gz`**.**
 
 In broad terms, this can be done by way of:
 

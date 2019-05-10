@@ -85,6 +85,7 @@ An example: `chr1	2468800	     2469000	 13	    2.56266  1	3.79557`.
 For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 10 columns.
 For instance: `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	1    20.2829`.
 The first 6 columns are specified identical to the S1 metric, and the remainder of the columns are specified as follows:
+{:start="7"}
 7. The label/state pair with the largest contribution to the S2 or S3 metric
 8. Magnitude of the contirbution of this pair
 9. Constant value of `1` (used in other modes of operation, see below).
@@ -94,6 +95,7 @@ The first 6 columns are specified identical to the S1 metric, and the remainder 
 
 For saliency metric S1 (standard relative entropy), `observations.starch` will contain 8 columns, 
 the first 7 columns specified mostly identical to the single-group case, with the following exceptions and addition:
+{:start="4"}
 4. Label/state with the largest difference in information between the two groups of biosamples.
 5. Absolute magnitude of this difference
 6. Sign of the difference, i.e. wether the first (`1`) or second (`-1`) group of biosamples contributes more information.

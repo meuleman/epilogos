@@ -95,12 +95,13 @@ The first 6 columns are specified identical to the S1 metric, and the remainder 
 
 For saliency metric S1 (standard relative entropy), `observations.starch` will contain 8 columns, 
 the first 7 columns specified mostly identical to the single-group case, with the following exceptions and addition:
-{:start="4"}
-4. Label/state with the largest difference in information between the two groups of biosamples.
-5. Absolute magnitude of this difference
-6. Sign of the difference, i.e. wether the first (`1`) or second (`-1`) group of biosamples contributes more information.
-7. Overall differential S1 metric score, i.e. the sum of all absolute per-state information differences between the two groups.
-8. Empirical p-value of this differential S1 metric score.
+<ol start="4">
+<li>Label/state with the largest difference in information between the two groups of biosamples.</li>
+<li>Absolute magnitude of this difference</li>
+<li>Sign of the difference, i.e. wether the first (`1`) or second (`-1`) group of biosamples contributes more information.</li>
+<li>Overall differential S1 metric score, i.e. the sum of all absolute per-state information differences between the two groups.</li>
+<li>Empirical p-value of this differential S1 metric score.</li>
+</ol>
 
 P-values are obtained by creating an empirical null distribution of differential S1 metric values by randomly shuffling state and epigenome labels.
 These are nominal p-values *not* adjusted for multiple hypothesis testing; an external procedure must be used to estimate false discovery rates (FDRs) from these p-values.

@@ -3,6 +3,7 @@
 1. [About](#about)
 2. [Prerequisites](#prerequisites)
 3. [Running epilogos](#running-epilogos)
+    * [Modes of operation](#modes-operation)
     * [Output](#output)
     * [Single-chromosome execution](#single-chromosome-execution)
 4. [Visualizing results](#visualizing-results)
@@ -57,8 +58,9 @@ The fifth argument, `groupSpec`, specifies which biosamples, i.e. columns in the
 This argument can be specified as comma- and/or hyphen-delimited list (e.g. "1,3,6-10,12,13").
 For instance, "1,2,3" corresponds to the first 3 samples, which are in columns 4,5,6 of the input data.
 
-Importantly, Epilogos implements the possibility for comparing annotations between groups of biosamples.
-To enable this, a sixth argument can be specified in the same format as the fifth argument, denoting a separate set of columns/biosamples to compare the first set to.
+Importantly, Epilogos implements the possibility for comparing annotations between two groups of biosamples.
+This pairwise comparison mode can be enabled with a sixth argument, denoting a separate set of columns/biosamples to compare the first set to.
+The sixth argument has the same format as the fifth argument.
 
 ### Output
 
@@ -66,27 +68,50 @@ Three output files will be produced: `observations.starch`, `scores.txt.gz`, and
 In case of errors during the exuction of the code, error messages will be collected in separate log files.
 
 `observations.starch` is a compressed file (uncompress it using `unstarch` from the `bedops` tool suite) containing one line of summary statistics for each input site.
-Its exact format depends on the mode of operation 
+Its exact format depends on the specified mode of operation.
 
-Its exact contents depends on whether you're measuring occurrences of states (metric KL or DKL, specified via `0`), 
-state pairs (metric KL\* or DKL\*, specified via `1`), or state pairs while tracking the epigenome pairs in which they were observed (metric KL\*\* or DKL\*\*, specified via `2`).
+#### Single group of biosamples
 
-For KL, `observations.starch` will contain 7 columns.
+For saliency metric S1 (standard relative entropy), `observations.starch` will contain 7 columns.
 An example: `chr1	2468800	     2469000	 13	    2.56266  1	3.79557`.
-Columns 1-3 hold the site's coordinates.
-Column 4 holds the state that made the largest contribution to the overall score (i.e., to the KL or DKL value).
-Column 5 holds the magnitude of this contribution.
-When DKL is being computed to compare two groups of epigenomes, the contribution to DKL given in column 5 is the difference between the contributions from that state in the two groups, and column 6 will hold either 1 or -1, indicating whether the second group (-1) or the first group (1) contributed more to DKL; when KL is being computed on a single collection of epigenomes, all entries in column 6 will be 1.
-Column 7 holds the overall score (KL or DKL value).
-When DKL is being computed, an empirical p-value estimate for DKL (column 7) is given in column 8.
-The p-values are obtained by creating an empirical null distribution of DKL values by randomly shuffling state and epigenome labels.
-These p-values are *not* adjusted for the large number of measurements made; an external program of the user's choosing must be used to estimate false discovery rates (FDRs) from these p-values.
+1. Chromosome
+2. Start coordinate
+3. End coordinate
+4. Label/state with the largest contribution to the S1 metric score (i.e, largest relative information content)
+5. Magnitude of this state's contribution.
+6. Constant value of `1` (used in other modes of operation, see below).
+7. Overall S1 metric score, i.e. the relative entropy of the specified genomic region.
 
-For KL\* and KL\*\*, `observations.starch` will contain 10 columns; for DKL\* and DKL\*\*, p-values will be appended in an 11th column.
-An example using DKL\*\*, comparing two groups of epigenomes labeled *A* and *B* : `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	-1    20.2829	 6.58696e-08`.
-Columns 1-6 have the same meanings as for KL and DKL:  in this example, at chr3:125932600-125932800, state 13 (column 4) made the largest contribution, and because column 6 is +1, we know that the contribution to DKL\*\* from state 13 (3.65048, column 5), which is the difference between the contributions from state 13 from *A* and *B*, was larger in *A*.
-At the same time, the co-occurrence of states 2 and 11 (column 7) in one or more pairs of epigenomes had the largest impact on DKL\*\*; the appearance of -1 in column 9 means that for state pair (2,11), the contribution from *B* increased DKL\*\* while *A* decreased it, with a next contribution of 2.27667 (column 8) from state pair (2,11).
+For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 10 columns.
+For instance: `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	1    20.2829`.
+The first 6 columns are specified identical to the S1 metric, and the remainder of the columns are specified as follows:
+7. The label/state pair with the largest contribution to the S2 or S3 metric
+8. Magnitude of the contirbution of this pair
+9. Constant value of `1` (used in other modes of operation, see below).
+10. Overall S2 or S3 metric score
+
+#### Pairwise comparison between groups of biosamples
+
+For saliency metric S1 (standard relative entropy), `observations.starch` will contain 8 columns, 
+the first 7 columns specified mostly identical to the single-group case, with the following exceptions and addition:
+4. Label/state with the largest difference in information between the two groups of biosamples.
+5. Absolute magnitude of this difference
+6. Sign of the difference, i.e. wether the first (`1`) or second (`-1`) group of biosamples contributes more information.
+7. Overall differential S1 metric score, i.e. the sum of all absolute per-state information differences between the two groups.
+8. Empirical p-value of this differential S1 metric score.
+
+P-values are obtained by creating an empirical null distribution of differential S1 metric values by randomly shuffling state and epigenome labels.
+These are nominal p-values *not* adjusted for multiple hypothesis testing; an external procedure must be used to estimate false discovery rates (FDRs) from these p-values.
+
+For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 11 columns, 
+specified analogous to what is described above, with an additional empirical p-value column.
+
+<!--
+For instance: `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	-1    20.2829	 6.58696e-08`.
+
+the appearance of -1 in column 9 means that for state pair (2,11), the contribution from *B* increased DKL\*\* while *A* decreased it, with a next contribution of 2.27667 (column 8) from state pair (2,11).
 In this case, it was estimated that p < 6.58697e-08 for observing a DKL\*\* score of 20.2829 or higher due to random chance alone.
+	-->
 
 `exemplarRegions.txt` is a text file containing single sites or contiguous stretches of sites where the highest scores were observed, sorted in descending order by score.
 Its format is identical to the corresponding `observations.starch` file.
@@ -125,7 +150,7 @@ The files `yourOutputDirectory2/DKL/observations.starch`, `yourOutputDirectory2/
 
 ## Visualizing results
 
-We strongly recommend using [HiGlass](https://higlass.io) to visualize the per-site per-state results written to the file `scores.txt.gz`.
+We recommend using [HiGlass](https://higlass.io) to visualize the per-site per-state results written to the file `scores.txt.gz`.
 Further instructions are forthcoming.
 
 ## Support

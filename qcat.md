@@ -10,7 +10,8 @@
 
 ## Visualizing a qcat file (not recommended)
 
-This section describes how to visualize a [qcat](#qcat-file-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). **We strongly recommend using [HiGlass](https://higlass.io) to visualize results via the output file** `scores.txt.gz`**.**
+This section describes how to visualize a [qcat](#qcat-file-specification) result file ("epilogos"), using the [WashU Epigenome Browser](https://epigenomegateway.wustl.edu/). 
+**This material is mostly here for legacy reasons, as we currently make use of the [HiGlass](https://higlass.io) platform to visualize results via the output file** `scores.txt.gz`**.**
 
 In broad terms, this can be done by way of:
 
@@ -427,3 +428,4 @@ A complete description of the quantitative category format is provided at the [W
 ## Support
 
 To get additional help or if you have questions about this software, open an [issue ticket](https://github.com/Altius/epilogos/issues).
+

@@ -5,14 +5,14 @@
 3. [Running epilogos](#running-epilogos)
     * [Modes of operation](#modes-operation)
     * [Output](#output)
-    * [Single-chromosome execution](#single-chromosome-execution)
+    * [Minimal example](#minimal-example)
 4. [Visualizing results](#visualizing-results)
 5. [Support](#support)
 
 ## About
 
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, 
-with an emphasis on chromatin state maps generated with, e.g. ChromHMM or Segway.
+with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
 
 The software provided in this repository implements the methods underlying Epilogos, using a combination of C++ and bash.
 We provide a proof-of-principle dataset based on chromatin state calls from the Roadmap Epigenomics project.
@@ -37,7 +37,7 @@ $ export PATH=${PWD}/bin:${PATH}
 ```
 
 By default, the script assumes the availability of a compute cluster managed by [SLURM](https://slurm.schedmd.com/).
-See [below](#single-chromosome-execution) for a more elementary implementation of the script for use on a single machine, using data from a single chromosome only.
+See [below](#minimal-example) for a more elementary implementation of the script for use on a single machine, using data from a single chromosome only.
 The first argument to `computeEpilogos.sh` must be the name of the cluster/queue.
 The second argument is a text file with paths to *uncompressed* input data files (one per chromosome).
 The first three columns of each input file must specify genomic coordinates (`seqname`, `start`, `end`),
@@ -64,18 +64,27 @@ The sixth argument has the same format as the fifth argument.
 
 ### Output
 
-Three output files will be produced: `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt`.
+Regardless of the mode of operation, upon successful completion of execution, 
+three output files will be produced: `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt`.
 In case of errors during the exuction of the code, error messages will be collected in separate log files.
 
 `observations.starch` is a compressed file (uncompress it using `unstarch` from the `bedops` tool suite) containing one line of summary statistics for each input site.
-Its exact format depends on the specified mode of operation.
+Its exact format depends on the specified mode of operation (see below).
+Regardless, the value that is likely of most interest to typical users are the overal (S1, S2 or S3) metric scores for each genomic coordinate.
+
+`scores.txt.gz` is a compressed file (compressed using `bgzip`) containing all sites and the signed contributions from each state to the metric at each site.
+Columns 1-3 hold the site's coordinates.
+Column 4 holds the contribution from state 1, column 5 holds the contribution from state 2, etcetera; if there are *n* states, the file will contain *n* + 3 columns.
+This file can be used for downstream analyses or visualization.
+
+`exemplarRegions.txt` is a text file containing single sites or contiguous stretches of sites where the highest saliency scores were observed, sorted in descending order by score.
+Its format is identical to the corresponding `observations.starch` file.
 
 #### Single group of biosamples
 
-For saliency metric S1 (standard relative entropy), `observations.starch` will contain 7 columns.
-
-An example: `chr1	2468800	     2469000	 13	    2.56266  1	3.79557`.
-
+For saliency metric S1 (standard relative entropy), `observations.starch` will contain 7 columns, e.g.:
+``chr1	2468800	     2469000	 13	    2.56266  1	3.79557``
+The specifications of the columns are as follows:
 1. Chromosome
 2. Start coordinate
 3. End coordinate
@@ -84,14 +93,12 @@ An example: `chr1	2468800	     2469000	 13	    2.56266  1	3.79557`.
 6. Constant value of `1` (used in other modes of operation, see below).
 7. Overall S1 metric score, i.e. the relative entropy of the specified genomic region.
 
-For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 10 columns.
-
-For instance: `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	1    20.2829`.
-
+For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 10 columns, e.g.:
+``chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	1    20.2829``
 The first 6 columns are specified identical to the S1 metric, and the remainder of the columns are specified as follows:
 <ol start="7">
 <li>The label/state pair with the largest contribution to the S2 or S3 metric</li>
-<li>Magnitude of the contirbution of this pair</li>
+<li>Magnitude of the contribution of this pair</li>
 <li>Constant value of `1` (used in other modes of operation, see below).</li>
 <li>Overall S2 or S3 metric score</li>
 </ol>
@@ -99,7 +106,7 @@ The first 6 columns are specified identical to the S1 metric, and the remainder 
 #### Pairwise comparison between groups of biosamples
 
 For saliency metric S1 (standard relative entropy), `observations.starch` will contain 8 columns, 
-the first 7 columns specified mostly identical to the single-group case, with the following exceptions and addition:
+the first 7 columns are specified similarly to the single-group case, with the following exceptions and additional column:
 <ol start="4">
 <li>Label/state with the largest difference in information between the two groups of biosamples.</li>
 <li>Absolute magnitude of this difference</li>
@@ -112,49 +119,33 @@ P-values are obtained by creating an empirical null distribution of differential
 These are nominal p-values *not* adjusted for multiple hypothesis testing; an external procedure must be used to estimate false discovery rates (FDRs) from these p-values.
 
 For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 11 columns, 
-specified analogous to what is described above, with an additional empirical p-value column.
+specified analogous to what is described above for pairwise metric S1 and single-group S2 and S3, with an additional empirical p-value column.
 
 <!--
-For instance: `chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	-1    20.2829	 6.58696e-08`.
-
 the appearance of -1 in column 9 means that for state pair (2,11), the contribution from *B* increased DKL\*\* while *A* decreased it, with a next contribution of 2.27667 (column 8) from state pair (2,11).
 In this case, it was estimated that p < 6.58697e-08 for observing a DKL\*\* score of 20.2829 or higher due to random chance alone.
-	-->
+-->
 
-`exemplarRegions.txt` is a text file containing single sites or contiguous stretches of sites where the highest scores were observed, sorted in descending order by score.
-Its format is identical to the corresponding `observations.starch` file.
+### Minimal example
 
-`scores.txt.gz` is a compressed file (compressed using `bgzip`) containing all sites and the signed contributions from each state to the metric at each site.
-Columns 1-3 hold the site's coordinates.
-Column 4 holds the contribution from state 1, column 5 holds the contribution from state 2, etc.; if there are *N* states, the file will contain *N* + 3 columns.
-This file can be used to visualize the data in a browser; see the section below regarding data visualization.
+A smaller version of the script, `computeEpilogos_minimal.sh`, has been provided for running epilogos without access to a SLURM cluster, on data from a single chromosome only.
 
-### Single-chromosome execution
+The following sample input data are provided in the `data` directory:
+* The file `chr1_127epigenomes_15observedStates.txt.gz` contains ChromHMM chromatin state calls for a 15-state chromatin state model, across 200bp genomic bins spanning human chromosome 1.
+* The file `Blood_T-cellGroupSpec.txt` contains the column specifications for a group of blood and T-cell biosamples in the input data (33-34,37-45,47-48,61).
+* The file `HSC_B-cellGroupSpec.txt` contains the column specifications for a group of hematopoietic stem cell (HSC) and B-cell samples in the input data (29-32,35-36,46,50-51).
 
-A slightly smaller version of the script, `computeEpilogos_singleChromosomeSingleProcessor.sh`, has been provided for running data from a single chromosome on a single processor, as opposed to `computeEpilogos.sh`, which assumes multiple uncompressed input files (one per chromosome) and access to a compute cluster managed by a [SLURM](https://slurm.schedmd.com/) job scheduler.
-
-Sample input data has been provided.
-If you set up epilogos correctly, you should be able to use the input data, write results into new directories of your choosing, and then ensure that those results match the results provided alongside the input data.
-This input file (`chr1_127epigenomes_15observedStates.txt.gz`) can be provided as-is as the first argument to `computeEpilogos_singleChromosomeSingleProcessor.sh`.
-(To use it with `computeEpilogos.sh`, you will need to decompress it using `gunzip` and supply a text file containing the path to the decompressed version of the file.)
-
-The file `Blood_T-cellGroupSpec.txt` contains the column specifications for a group of blood and T-cell samples in the input data (33-34,37-45,47-48,61).
-To compute KL from this subset of the input data, cd to the epilogos `data` subdirectory, then run the following command:
-
+To compute epilogos (using the S1 saliency metric) for blood and T-cell biosamples only, run the following command from the `data` subdirectory:
 ```bash
-$ ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt.gz 0 15 yourOutputDirectory1/KL "33-34,37-45,47-48,61"
+$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt.gz 0 15 OUTPUTDIR "33-34,37-45,47-48,61"
 ```
+The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR` should match the corresponding files in `data/results_Blood_T-cell/KL`.
 
-The files `yourOutputDirectory1/KL/observations.starch`, `yourOutputDirectory1/KL/scores.txt.gz`, and `yourOutputDirectory1/KL/exemplarRegions.txt` that your run produces should match the corresponding files in `data/results_Blood_T-cell/KL`.
-
-The file `HSC_B-cellGroupSpec.txt` contains the column specifications for a group of stem-cell and B-cell samples in the input data (29-32,35-36,46,50-51).
-To compute DKL for a comparison of these two subsets of the input data, run the following command, again from the epilogos `data` subdirectory:
-
+To compute differential epilogos (using the differential S1 saliency metric) between two groups of biosamples, run the following command, again from the epilogos `data` subdirectory:
 ```bash
-$ ../scripts/computeEpilogos_singleChromosomeSingleProcessor.sh chr1_127epigenomes_15observedStates.txt 0 15 yourOutputDirectory2/DKL "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
+$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt 0 15 OUTPUTDIR2 "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
 ```
-
-The files `yourOutputDirectory2/DKL/observations.starch`, `yourOutputDirectory2/DKL/scores.txt.gz`, and `yourOutputDirectory2/DKL/exemplarRegions.txt` that your run produces should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
+The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR2` should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
 
 ## Visualizing results
 
@@ -164,3 +155,5 @@ Further instructions are forthcoming.
 ## Support
 
 To get additional help or if you have questions about this software, open an [issue ticket](https://github.com/Altius/epilogos/issues).
+
+

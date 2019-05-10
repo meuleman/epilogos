@@ -1,7 +1,7 @@
-# Please note:
+## Please note:
 **This material is mostly here for legacy reasons, as we currently make use of the [HiGlass](https://higlass.io) platform to visualize results via the output file** `scores.txt.gz`**.**
 
-======
+---
 
 1. [Visualizing a qcat file](#visualizing-a-qcat-file)
     * [Setting up a web server](#setting-up-a-web-server)

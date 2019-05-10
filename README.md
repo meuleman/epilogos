@@ -137,13 +137,13 @@ The following sample input data are provided in the `data` directory:
 
 To compute epilogos (using the S1 saliency metric) for blood and T-cell biosamples only, run the following command from the `data` subdirectory:
 ```bash
-$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt.gz 0 15 OUTPUTDIR "33-34,37-45,47-48,61"
+$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt.gz 1 15 OUTPUTDIR "33-34,37-45,47-48,61"
 ```
 The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR` should match the corresponding files in `data/results_Blood_T-cell/KL`.
 
 To compute differential epilogos (using the differential S1 saliency metric) between two groups of biosamples, run the following command, again from the epilogos `data` subdirectory:
 ```bash
-$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt 0 15 OUTPUTDIR2 "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
+$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt 1 15 OUTPUTDIR2 "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
 ```
 The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR2` should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
 

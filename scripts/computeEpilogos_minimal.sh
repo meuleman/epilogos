@@ -3,12 +3,12 @@
 # set -e -o pipefail
 
 usage() {
-    echo -e "Usage:  $0 singleChromInputFile measurementType numStates outdir groupSpec [group2spec]"
+    echo -e "Usage:  $0 singleChromInputFile metric numStates outdir groupSpec [group2spec]"
     echo -e "where"
     echo -e "* singleChromInputFile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
     echo -e "  States are positive integers.  singleChromInputFile must only contain data for a single chromosome."
-    echo -e "* measurementType is either 0 (to use KL), 1 (to use KL*), or 2 (to use KL**)"
+    echo -e "* metric is either 1 (S1), 2 (S2), or 3 (S3)"
     echo -e "* numStates is the number of possible states (the positive integers given in columns 4 and following)"
     echo -e "* groupSpec specifies epigenomes to use in the analysis;"
     echo -e "  these are epigenome numbers corresponding to the order in which they appear in the input files"
@@ -40,7 +40,7 @@ if [ ! -x "$STARCH_EXE" ]; then
 fi
 
 singleChromInputFile=$1
-measurementType=$2
+metric=$2
 numStates=$3
 outdir=$4
 group1spec=$5
@@ -49,20 +49,23 @@ if [ "$6" != "" ]; then
     group2spec=$6
 fi
 
-# measurementType directs the programs to use KL, KL*, or KL**
-if [ "$measurementType" != "0" ] && [ "$measurementType" != "1" ] && [ "$measurementType" != "2" ]; then
-    echo -e "Error:  Invalid \"measurementType\" (\"$measurementType\") received."
+# metric directs the programs to use S1, S2, or S3
+if [ "$metric" != "1" ] && [ "$metric" != "2" ] && [ "$metric" != "3" ]; then
+    echo -e "Error:  Invalid \"metric\" (\"$metric\") received."
     usage
 fi
 KL=0
 KLs=0
 KLss=0
-if [ "$measurementType" == "0" ]; then
+if [ "$metric" == "1" ]; then
     KL=1   # KL
-elif [ "$measurementType" == "1" ]; then
+elif [ "$metric" == "2" ]; then
     KLs=1  # KL*
-else
+elif [ "$metric" == "3" ]; then
     KLss=1 # KL**
+else
+    echo -e "Error:  Mode of operation \"$metric\" not implemented."
+    exit 2
 fi
 
 if [ ! -s $singleChromInputFile ]; then
@@ -203,7 +206,7 @@ outfileP=${outdir}/${chr}${PfilenameString}
 
 jobName="p1a_$chr"
 if [[ ! -s $outfileP || ! -s $outfileQ || ! -s $outfileNsites || ($group2spec != "" && (! -s $outfileQ2 || ! -s $outfileRand)) ]]; then
-    $EXE1 $infile1 $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE1 $infile1 $metric $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
         exit 2
     fi
@@ -289,7 +292,7 @@ fi
 jobName="p2_$chr"
 
 if [ ! -s $outfileObserved ]; then
-    $EXE2 $infile $measurementType $totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $metric $totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up
@@ -301,7 +304,7 @@ if [ "$group2spec" != "" ] && [ ! -s $outfileNulls ]; then
     infile=${outdir}/${chr}${randFilenameString}
     jobName="p2r_$chr"
     # The smaller number of arguments in the following call informs $EXE2 that it should only write the metric to $outfileNulls, with no additional info.
-    $EXE2 $infile $measurementType $totalNumSites $infileQ $infileQ2 $outfileNulls > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $metric $totalNumSites $infileQ $infileQ2 $outfileNulls > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up

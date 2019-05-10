@@ -3,14 +3,14 @@
 # set -e -o pipefail
 
 usage() {
-    echo -e "Usage:  $0 queueName fileOfPerChromFilenames measurementType numStates outdir groupSpec [group2spec]"
+    echo -e "Usage:  $0 queueName fileOfPerChromFilenames metric numStates outdir groupSpec [group2spec]"
     echo -e "where"
     echo -e "* queueName is the name of the SLURM-managed resource on which the jobs will run"
     echo -e "* fileOfPerChromFilenames contains one input filename per line (including path if needed);"
     echo -e "  each chrom-specific infile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
     echo -e "  States are positive integers."
-    echo -e "* measurementType is either 0 (to use KL or DKL), 1 (to use KL* or DKL*), or 2 (to use KL** or DKL**)"
+    echo -e "* metric is either 1 (S1), 2 (S2) or 3 (S3)"
     echo -e "* numStates is the number of possible states (the positive integers given in columns 4 and following)"
     echo -e "* groupSpec specifies epigenomes to use in the analysis;"
     echo -e "  these are epigenome numbers corresponding to the order in which they appear in the input files"
@@ -29,7 +29,7 @@ fi
 
 queueName=$1
 fileOfFilenames=$2
-measurementType=$3
+metric=$3
 numStates=$4
 outdir=$5
 group1spec=$6
@@ -38,23 +38,26 @@ if [ "$7" != "" ]; then
     group2spec=$7
 fi
 
-# measurementType directs the programs to use KL, KL*, or KL**
-if [ "$measurementType" != "0" ] && [ "$measurementType" != "1" ] && [ "$measurementType" != "2" ]; then
-    echo -e "Error:  Invalid \"measurementType\" (\"$measurementType\") received."
+# metric directs the programs to use S1, S2, or S3
+if [ "$metric" != "1" ] && [ "$metric" != "2" ] && [ "$metric" != "3" ]; then
+    echo -e "Error:  Invalid \"metric\" (\"$metric\") received."
     usage
 fi
 KL=0
 KLs=0
 KLss=0
-if [ "$measurementType" == "0" ]; then
+if [ "$metric" == "1" ]; then
     KL=1   # KL (or DKL)
     SCORE_COLUMN=7
-elif [ "$measurementType" == "1" ]; then
+elif [ "$metric" == "2" ]; then
     KLs=1  # KL* (or DKL*)
     SCORE_COLUMN=10
-else
+elif [ "$metric" == "3" ]; then
     KLss=1 # KL** (or DKL**)
     SCORE_COLUMN=10
+else
+    echo -e "Error:  Mode of operation \"$metric\" not implemented."
+    exit 2
 fi
 STATE_COLUMN=4
     
@@ -223,7 +226,7 @@ do
     if [ "YES" == $processThisChromosome ]; then
 	thisJobID=$(sbatch --parsable --partition=$queueName --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
-        $EXE1 $file $measurementType $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2
+        $EXE1 $file $metric $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2
         if [ \$? != 0 ]; then
            exit 2
         fi
@@ -491,7 +494,7 @@ do
 	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    totalNumSites=\`cat $totalNumSitesFile\`
-   $EXE2 $infile $measurementType \$totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2
+   $EXE2 $infile $metric \$totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2
    if [ \$? != 0 ]; then
       exit 2
    fi
@@ -506,7 +509,7 @@ EOF
 #! /bin/bash
    totalNumSites=\`cat $totalNumSitesFile\`
    # The smaller number of arguments in the following call informs $EXE2 that it should only write the metric to $outfileNulls, with no additional info.
-   $EXE2 $infile $measurementType \$totalNumSites $infileQ $infileQ2 $outfileNulls
+   $EXE2 $infile $metric \$totalNumSites $infileQ $infileQ2 $outfileNulls
    if [ \$? != 0 ]; then
       exit 2
    else # clean up

@@ -3,13 +3,13 @@
 # set -e -o pipefail
 
 usage() {
-    echo -e "Usage:  $0 singleChromInputFile metric numStates outdir groupSpec [group2spec]"
+    echo -e "Usage:  $0 singleChromInputFile numStates metric outdir groupSpec [group2spec]"
     echo -e "where"
     echo -e "* singleChromInputFile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
     echo -e "  States are positive integers.  singleChromInputFile must only contain data for a single chromosome."
-    echo -e "* metric is either 1 (S1), 2 (S2), or 3 (S3)"
     echo -e "* numStates is the number of possible states (the positive integers given in columns 4 and following)"
+    echo -e "* metric is either 1 (S1), 2 (S2), or 3 (S3)"
     echo -e "* groupSpec specifies epigenomes to use in the analysis;"
     echo -e "  these are epigenome numbers corresponding to the order in which they appear in the input files"
     echo -e "  (e.g. 1, 2, 3 for the first three epigenomes, whose states are in columns 4, 5, 6)."
@@ -40,13 +40,13 @@ if [ ! -x "$STARCH_EXE" ]; then
 fi
 
 singleChromInputFile=$1
-metric=$2
-numStates=$3
+numStates=$2
+metric=$3
 outdir=$4
-group1spec=$5
-group2spec=""
+groupAspec=$5
+groupBspec=""
 if [ "$6" != "" ]; then
-    group2spec=$6
+    groupBspec=$6
 fi
 
 # metric directs the programs to use S1, S2, or S3
@@ -54,15 +54,15 @@ if [ "$metric" != "1" ] && [ "$metric" != "2" ] && [ "$metric" != "3" ]; then
     echo -e "Error:  Invalid \"metric\" (\"$metric\") received."
     usage
 fi
-KL=0
-KLs=0
-KLss=0
+S1=0
+S2=0
+S3=0
 if [ "$metric" == "1" ]; then
-    KL=1   # KL
+    S1=1
 elif [ "$metric" == "2" ]; then
-    KLs=1  # KL*
+    S2=1
 elif [ "$metric" == "3" ]; then
-    KLss=1 # KL**
+    S3=1
 else
     echo -e "Error:  Mode of operation \"$metric\" not implemented."
     exit 2
@@ -112,20 +112,20 @@ if [ "0" == "$numStatesIsValid" ]; then
 fi
 
 # Validate the group specifications
-$EXE1 $group1spec $group2spec > /dev/null
+$EXE1 $groupAspec $groupBspec > /dev/null
 if [ "$?" != 0 ]; then
-    if [ "$group2spec" == "" ]; then
-	echo -e "Error in the group specification (\"$group1spec\")."
+    if [ "$groupBspec" == "" ]; then
+	echo -e "Error in the group specification (\"$groupAspec\")."
     else
-	echo -e "Error in one or both group specifications (\"$group1spec\" and \"$group2spec\")."
+	echo -e "Error in one or both group specifications (\"$groupAspec\" and \"$groupBspec\")."
     fi
     usage
 fi
 
-group2size=""
-group1size=`$EXE1 $group1spec`
-if [ "$group2spec" != "" ]; then
-    group2size=`$EXE1 $group2spec`
+groupBsize=""
+groupAsize=`$EXE1 $groupAspec`
+if [ "$groupBspec" != "" ]; then
+    groupBsize=`$EXE1 $groupBspec`
 fi
 
 mkdir -p $outdir
@@ -167,37 +167,37 @@ else
 fi
 
 outfileRand="" # used only if 2 groups of epigenomes are being compared
-outfileQ2=""   # used only if 2 groups of epigenomes are being compared
+outfileQB=""   # used only if 2 groups of epigenomes are being compared
 PfilenameString=""
 randFilenameString=""
 
 outfileNsites=${outdir}/${chr}_numSites.txt
-if [ $KL == 1 ]; then
-    PfilenameString="_Pnumerators.txt"
-    outfileQ=${outdir}/${chr}_Qnumerators.txt
-    if [ "$group2spec" != "" ]; then
-	randFilenameString="_randPnumerators.txt"
+if [ $S1 == 1 ]; then
+    PfilenameString="_P1numerators.txt"
+    outfileQ=${outdir}/${chr}_Q1numerators.txt
+    if [ "$groupBspec" != "" ]; then
+	randFilenameString="_randP1numerators.txt"
 	outfileRand=${outdir}/${chr}${randFilenameString}
-	outfileQ=${outdir}/${chr}_Q1numerators.txt
-	outfileQ2=${outdir}/${chr}_Q2numerators.txt
+	outfileQ=${outdir}/${chr}_Q1Anumerators.txt
+	outfileQB=${outdir}/${chr}_Q1Bnumerators.txt
     fi
-elif [ $KLs == 1 ]; then
-    PfilenameString="_PsNumerators.txt"
-    outfileQ=${outdir}/${chr}_QsNumerators.txt
-    if [ "$group2spec" != "" ]; then
-	randFilenameString="_randPsNumerators.txt"
+elif [ $S2 == 1 ]; then
+    PfilenameString="_P2numerators.txt"
+    outfileQ=${outdir}/${chr}_Q2numerators.txt
+    if [ "$groupBspec" != "" ]; then
+	randFilenameString="_randP2numerators.txt"
 	outfileRand=${outdir}/${chr}${randFilenameString}
-	outfileQ=${outdir}/${chr}_Qs1numerators.txt
-	outfileQ2=${outdir}/${chr}_Qs2numerators.txt
+	outfileQ=${outdir}/${chr}_Q2Anumerators.txt
+	outfileQB=${outdir}/${chr}_Q2Bnumerators.txt
     fi
 else
     PfilenameString="_statePairs.txt"
-    outfileQ=${outdir}/${chr}_QssTallies.txt
-    if [ "$group2spec" != "" ]; then
+    outfileQ=${outdir}/${chr}_Q3Tallies.txt
+    if [ "$groupBspec" != "" ]; then
 	randFilenameString="_randomizedStatePairs.txt"
 	outfileRand=${outdir}/${chr}${randFilenameString}	    
-	outfileQ=${outdir}/${chr}_Qss1tallies.txt
-	outfileQ2=${outdir}/${chr}_Qss2tallies.txt
+	outfileQ=${outdir}/${chr}_Q3Atallies.txt
+	outfileQB=${outdir}/${chr}_Q3Btallies.txt
     fi
 fi
 outfileP=${outdir}/${chr}${PfilenameString}
@@ -205,8 +205,8 @@ outfileP=${outdir}/${chr}${PfilenameString}
 
 
 jobName="p1a_$chr"
-if [[ ! -s $outfileP || ! -s $outfileQ || ! -s $outfileNsites || ($group2spec != "" && (! -s $outfileQ2 || ! -s $outfileRand)) ]]; then
-    $EXE1 $infile1 $metric $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+if [[ ! -s $outfileP || ! -s $outfileQ || ! -s $outfileNsites || ($groupBspec != "" && (! -s $outfileQB || ! -s $outfileRand)) ]]; then
+    $EXE1 $infile1 $metric $numStates $outfileP $outfileQ $outfileNsites $groupAspec $groupBspec $outfileRand $outfileQB > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
         exit 2
     fi
@@ -216,57 +216,57 @@ fi
 # echo -e "Executing \"part 1b\"..."
 # ----------------------------------
 
-# Add up the Q (or Q* or Q**) tallies to get the genome-wide Q (or Q* or Q**) matrices,
-# or to get the Q1 and Q2 (or Q1* and Q2*, or Q1** and Q2**) matrices
+# Add up the Q1 (or Q2 or Q3) tallies to get the genome-wide Q1 (or Q2 or Q3) matrices,
+# or to get the Q1A and Q1A (or Q2A and Q2B, or Q3A and Q3B) matrices
 # if two groups of epigenomes are being compared.
 
 PID=$$
 QQjobName=QQ_1b_${PID}
-outfileQ2=""
-Q2filenameString=""
-if [ $KL == 1 ]; then
-    outfileQ=${outdir}/Q.txt
-    QfilenameString="_Qnumerators.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Q1.txt
-	outfileQ2=${outdir}/Q2.txt
-	QfilenameString="_Q1numerators.txt"
-	Q2filenameString="_Q2numerators.txt"
+outfileQB=""
+QBfilenameString=""
+if [ $S1 == 1 ]; then
+    outfileQ=${outdir}/Q1.txt
+    QfilenameString="_Q1numerators.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q1A.txt
+	outfileQB=${outdir}/Q1B.txt
+	QfilenameString="_Q1Anumerators.txt"
+	QBfilenameString="_Q1Bnumerators.txt"
     fi
-elif [ $KLs == 1 ]; then
-    outfileQ=${outdir}/Qs.txt
-    QfilenameString="_QsNumerators.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Qs1.txt
-	outfileQ2=${outdir}/Qs2.txt
-	QfilenameString="_Qs1numerators.txt"
-	Q2filenameString="_Qs2numerators.txt"
+elif [ $S2 == 1 ]; then
+    outfileQ=${outdir}/Q2.txt
+    QfilenameString="_Q2numerators.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q2A.txt
+	outfileQB=${outdir}/Q2B.txt
+	QfilenameString="_Q2Anumerators.txt"
+	QBfilenameString="_Q2Bnumerators.txt"
     fi
 else
-    outfileQ=${outdir}/Qss.txt
-    QfilenameString="_QssTallies.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Qss1.txt
-	outfileQ2=${outdir}/Qss2.txt
-	QfilenameString="_Qss1tallies.txt"
-	Q2filenameString="_Qss2tallies.txt"
+    outfileQ=${outdir}/Q3.txt
+    QfilenameString="_Q3Tallies.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q3A.txt
+	outfileQB=${outdir}/Q3B.txt
+	QfilenameString="_Q3Atallies.txt"
+	QBfilenameString="_Q3Btallies.txt"
     fi
 fi
 
-if [[ ! -s $outfileQ || ("$group2spec" != "" && ! -s $outfileQ2) ]]; then
+if [[ ! -s $outfileQ || ("$groupBspec" != "" && ! -s $outfileQB) ]]; then
     file=${outdir}/${chr}${QfilenameString}
     if [ ! -s $file ]; then
 	echo -e "Error:  File "$file" is empty." > ${outdir}/${QQjobName}.stdout
 	exit 2
     fi
     mv $file $outfileQ
-    if [ "$group2spec" != "" ]; then
-	file=${outdir}/${chr}${Q2filenameString}
+    if [ "$groupBspec" != "" ]; then
+	file=${outdir}/${chr}${QBfilenameString}
 	if [ ! -s $file ]; then
 	    echo -e "Error:  File "$file" is empty." > ${outdir}/${QQjobName}.stdout
 	    exit 2
 	fi
-	mv $file $outfileQ2
+	mv $file $outfileQB
     fi
 fi
 
@@ -282,17 +282,17 @@ if [ "$INFILE_IS_COMPRESSED" == "1" ]; then
 fi
 infile=${outdir}/${chr}${PfilenameString}
 infileQ=$outfileQ
-infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
+infileQB=$outfileQB # empty ("") if only one group of epigenomes was specified
 outfileObserved=${outdir}/${chr}_observed.txt
 outfileScores=${outdir}/${chr}_scores.txt
 outfileNulls=""
-if [ "$group2spec" != "" ]; then
+if [ "$groupBspec" != "" ]; then
     outfileNulls=${outdir}/${chr}_nulls.txt
 fi
 jobName="p2_$chr"
 
 if [ ! -s $outfileObserved ]; then
-    $EXE2 $infile $metric $totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2 > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $metric $totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQB > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up
@@ -300,11 +300,11 @@ if [ ! -s $outfileObserved ]; then
     fi
 fi
 
-if [ "$group2spec" != "" ] && [ ! -s $outfileNulls ]; then
+if [ "$groupBspec" != "" ] && [ ! -s $outfileNulls ]; then
     infile=${outdir}/${chr}${randFilenameString}
     jobName="p2r_$chr"
     # The smaller number of arguments in the following call informs $EXE2 that it should only write the metric to $outfileNulls, with no additional info.
-    $EXE2 $infile $metric $totalNumSites $infileQ $infileQ2 $outfileNulls > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
+    $EXE2 $infile $metric $totalNumSites $infileQ $infileQB $outfileNulls > ${outdir}/${jobName}.stdout 2> ${outdir}/${jobName}.stderr
     if [ $? != 0 ]; then
 	exit 2
     else # clean up
@@ -319,7 +319,7 @@ fi
 cat ${outdir}/${chr}_scores.txt \
       | bgzip \
       > ${outdir}/scores.txt.gz
-rm -f ${outdir}/${chr}_scores.txt $outfileQ $outfileQ2
+rm -f ${outdir}/${chr}_scores.txt $outfileQ $outfileQB
           
 # ----------------------------------
 # echo -e "Executing \"part 3\"..."
@@ -357,7 +357,7 @@ fi
 exemplarRegions=${outdir}/exemplarRegions.txt
 if [ -s $finalOutfile ] && [ ! -s $exemplarRegions ]; then
     STATE_COLUMN=4
-    if [ $KL == 1 ]; then
+    if [ $S1 == 1 ]; then
 	SCORE_COLUMN=7
     else
 	SCORE_COLUMN=10

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-enum measurementType {KL, KLs, KLss}; // corresponding to measurements using KL, KL*, or KL**
+enum measurementType {KL = 1, KLs, KLss}; // corresponding to measurements using KL, KL*, or KL**
 
 bool parseOneSetOfColumnSpecs(char* pString, set<int>& colsOut);
 bool parseOneSetOfColumnSpecs(char* pString, set<int>& colsOut)
@@ -561,10 +561,10 @@ int main(int argc, char* argv[])
   if (8 != argc && 11 != argc && 2 != argc && 3 != argc)
     {
     Usage:
-      cerr << "Usage flavor 1:  " << argv[0] << " infile measurementType numStates outfileP outfileQ outfileNsites groupSpec [group2spec outfileRandP outfileQ2]\n"
+      cerr << "Usage flavor 1:  " << argv[0] << " infile metric numStates outfileP outfileQ outfileNsites groupSpec [group2spec outfileRandP outfileQ2]\n"
 	   << "where\n"
 	   << "* infile is tab-delimited: chrom, start, stop, state of epigenome1, state of epigenome2, ...\n"
-	   << "* measurementType is either 0 (to use KL), 1 (KL*), or 2 (KL**)\n"
+	   << "* metric is either 1 (to use S1), 2 (S2), or 3 (S3)\n"
 	   << "* numStates is the number of possible states (e.g. 15) that can be observed in \"infile\"\n"
 	   << "* outfileP, in 1-to-1 correspondence with \"infile,\" will contain state tallies or state-pair tallies\n"
 	   << "* outfileQ will contain chromosome-wide state tallies or state-pair tallies\n"

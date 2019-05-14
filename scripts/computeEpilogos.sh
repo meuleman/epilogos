@@ -3,15 +3,15 @@
 # set -e -o pipefail
 
 usage() {
-    echo -e "Usage:  $0 queueName fileOfPerChromFilenames metric numStates outdir groupSpec [group2spec]"
+    echo -e "Usage:  $0 queueName fileOfPerChromFilenames numStates metric outdir groupSpec [group2spec]"
     echo -e "where"
     echo -e "* queueName is the name of the SLURM-managed resource on which the jobs will run"
     echo -e "* fileOfPerChromFilenames contains one input filename per line (including path if needed);"
     echo -e "  each chrom-specific infile consists of tab-delimited coordinates (chrom, start, stop)"
     echo -e "  and states observed at those loci for epigenome 1 (in column 4), epigenome 2 (in column 5), etc."
-    echo -e "  States are positive integers."
-    echo -e "* metric is either 1 (S1), 2 (S2) or 3 (S3)"
-    echo -e "* numStates is the number of possible states (the positive integers given in columns 4 and following)"
+    echo -e "  States are integers with values 1, 2, ..., numStates."
+    echo -e "* numStates is the number of possible states"
+    echo -e "* metric is either 1 (S1), 2 (S2), or 3 (S3)"
     echo -e "* groupSpec specifies epigenomes to use in the analysis;"
     echo -e "  these are epigenome numbers corresponding to the order in which they appear in the input files"
     echo -e "  (e.g. 1, 2, 3 for the first three epigenomes, whose states are in columns 4, 5, 6)."
@@ -29,13 +29,13 @@ fi
 
 queueName=$1
 fileOfFilenames=$2
-metric=$3
-numStates=$4
+numStates=$3
+metric=$4
 outdir=$5
-group1spec=$6
-group2spec=""
+groupAspec=$6
+groupBspec=""
 if [ "$7" != "" ]; then
-    group2spec=$7
+    groupBspec=$7
 fi
 
 # metric directs the programs to use S1, S2, or S3
@@ -43,17 +43,17 @@ if [ "$metric" != "1" ] && [ "$metric" != "2" ] && [ "$metric" != "3" ]; then
     echo -e "Error:  Invalid \"metric\" (\"$metric\") received."
     usage
 fi
-KL=0
-KLs=0
-KLss=0
+S1=0
+S2=0
+S3=0
 if [ "$metric" == "1" ]; then
-    KL=1   # KL (or DKL)
+    S1=1
     SCORE_COLUMN=7
 elif [ "$metric" == "2" ]; then
-    KLs=1  # KL* (or DKL*)
+    S2=1
     SCORE_COLUMN=10
 elif [ "$metric" == "3" ]; then
-    KLss=1 # KL** (or DKL**)
+    S3=1
     SCORE_COLUMN=10
 else
     echo -e "Error:  Mode of operation \"$metric\" not implemented."
@@ -93,20 +93,20 @@ if [ "0" == "$numStatesIsValid" ]; then
 fi
 
 # Validate the group specifications
-$EXE1 $group1spec $group2spec > /dev/null
+$EXE1 $groupAspec $groupBspec > /dev/null
 if [ "$?" != 0 ]; then
-    if [ "$group2spec" == "" ]; then
-	echo -e "Error in the group specification (\"$group1spec\")."
+    if [ "$groupBspec" == "" ]; then
+	echo -e "Error in the group specification (\"$groupAspec\")."
     else
-	echo -e "Error in one or both group specifications (\"$group1spec\" and \"$group2spec\")."
+	echo -e "Error in one or both group specifications (\"$groupAspec\" and \"$groupBspec\")."
     fi
     usage
 fi
 
-group2size="0"
-group1size=`$EXE1 $group1spec`
-if [ "$group2spec" != "" ]; then
-    group2size=`$EXE1 $group2spec`
+groupBsize="0"
+groupAsize=`$EXE1 $groupAspec`
+if [ "$groupBspec" != "" ]; then
+    groupBsize=`$EXE1 $groupBspec`
 fi
 
 mkdir -p $outdir
@@ -146,7 +146,7 @@ approxTotalNumSites=`echo $tempVar | sed 's/^://' | tr ':' '\n' | awk 'BEGIN{app
 # ----------------------------------
 
 outfileRand="" # used only if 2 groups of epigenomes are being compared
-outfileQ2=""   # used only if 2 groups of epigenomes are being compared
+outfileQB=""   # used only if 2 groups of epigenomes are being compared
 PfilenameString=""
 randFilenameString=""
 dependencies="afterok" # SLURM syntax
@@ -161,32 +161,32 @@ do
     file=$line
     chr=`head -n 1 $file | cut -f1`
     outfileNsites=${outdir}/${chr}_numSites.txt
-    if [ $KL == 1 ]; then
-	PfilenameString="_Pnumerators.txt"
-	outfileQ=${outdir}/${chr}_Qnumerators.txt
-	if [ "$group2spec" != "" ]; then
-	    randFilenameString="_randPnumerators.txt"
+    if [ $S1 == 1 ]; then
+	PfilenameString="_P1numerators.txt"
+	outfileQ=${outdir}/${chr}_Q1numerators.txt
+	if [ "$groupBspec" != "" ]; then
+	    randFilenameString="_randP1numerators.txt"
 	    outfileRand=${outdir}/${chr}${randFilenameString}
-	    outfileQ=${outdir}/${chr}_Q1numerators.txt
-	    outfileQ2=${outdir}/${chr}_Q2numerators.txt
+	    outfileQ=${outdir}/${chr}_Q1Anumerators.txt
+	    outfileQB=${outdir}/${chr}_Q1Bnumerators.txt
 	fi
-    elif [ $KLs == 1 ]; then
-	PfilenameString="_PsNumerators.txt"
-	outfileQ=${outdir}/${chr}_QsNumerators.txt
-	if [ "$group2spec" != "" ]; then
-	    randFilenameString="_randPsNumerators.txt"
+    elif [ $S2 == 1 ]; then
+	PfilenameString="_P2numerators.txt"
+	outfileQ=${outdir}/${chr}_Q2numerators.txt
+	if [ "$groupBspec" != "" ]; then
+	    randFilenameString="_randP2numerators.txt"
 	    outfileRand=${outdir}/${chr}${randFilenameString}
-	    outfileQ=${outdir}/${chr}_Qs1numerators.txt
-	    outfileQ2=${outdir}/${chr}_Qs2numerators.txt
+	    outfileQ=${outdir}/${chr}_Q2Anumerators.txt
+	    outfileQB=${outdir}/${chr}_Q2Bnumerators.txt
 	fi
     else
 	PfilenameString="_statePairs.txt"
-	outfileQ=${outdir}/${chr}_QssTallies.txt
-	if [ "$group2spec" != "" ]; then
+	outfileQ=${outdir}/${chr}_Q3Tallies.txt
+	if [ "$groupBspec" != "" ]; then
 	    randFilenameString="_randomizedStatePairs.txt"
 	    outfileRand=${outdir}/${chr}${randFilenameString}	    
-	    outfileQ=${outdir}/${chr}_Qss1tallies.txt
-	    outfileQ2=${outdir}/${chr}_Qss2tallies.txt
+	    outfileQ=${outdir}/${chr}_Q3Atallies.txt
+	    outfileQB=${outdir}/${chr}_Q3Btallies.txt
 	fi
     fi
     outfileP=${outdir}/${chr}${PfilenameString}
@@ -196,14 +196,14 @@ do
 
     if [ -s ${outdir}/observations.starch ]; then
 	if [ -s ${outdir}/scores.txt.gz ] || [ -s ${outdir}/${chr}_scores.txt ]; then
-	    if [[ "$group2spec" == "" || ("$group2spec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
+	    if [[ "$groupBspec" == "" || ("$groupBspec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
 		processThisChromosome="NO"
 	    fi
 	fi
     else
 	if [[ -s ${outdir}/${chr}_observed.txt || -s ${outdir}/${chr}_observed.bed || -s ${outdir}/${chr}_observed_withPvals.bed ]]; then
 	    if [ -s ${outdir}/scores.txt.gz ] || [ -s ${outdir}/${chr}_scores.txt ]; then
-		if [[ "$group2spec" == "" || ("$group2spec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
+		if [[ "$groupBspec" == "" || ("$groupBspec" != "" && ( -s $outfileRand || -s ${outdir}/allNullsGenomewide.txt )) ]]; then
 		    processThisChromosome="NO"
 		fi
 	    fi
@@ -214,19 +214,19 @@ do
     offset=4000      # estimated empirically
     coefficient=0.03 # estimated empirically
     maxNumEpigenomes=`head -n 1 $file | cut -f4- | awk '{print NF}'`
-    memSize=`echo $maxNumEpigenomes | awk -v c=$offset -v g1=$group1size -v g2=$group2size '{print c + $1 + g1 + g2}'`
-    if [ $KL == 1 ]; then
-	memSize=`echo $memSize | awk -v ns=$numStates -v g2=$group2size '{kbOut = $1 + 2*ns; if(g2!=0){kbOut += 4*ns} print kbOut}'`
-    elif [ $KLs == 1 ]; then
-	memSize=`echo $memSize | awk -v ns=$numStates -v g2=$group2size '{kbOut = $1 + ns*(ns+1); if(g2!=0){kbOut += 2*ns*(ns+1)} print kbOut}'`
+    memSize=`echo $maxNumEpigenomes | awk -v c=$offset -v gA=$groupAsize -v gB=$groupBsize '{print c + $1 + gA + gB}'`
+    if [ $S1 == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v gB=$groupBsize '{kbOut = $1 + 2*ns; if(gB!=0){kbOut += 4*ns} print kbOut}'`
+    elif [ $S2 == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v gB=$groupBsize '{kbOut = $1 + ns*(ns+1); if(gB!=0){kbOut += 2*ns*(ns+1)} print kbOut}'`
     else
-	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size -v a=$coefficient '{print $1 + a*(ns*ns + 0.5*ns*ns*(g1*(g1-1) + g2*(g2-1)))}'`
+	memSize=`echo $memSize | awk -v ns=$numStates -v gA=$groupAsize -v gB=$groupBsize -v a=$coefficient '{print $1 + a*(ns*ns + 0.5*ns*ns*(gA*(gA-1) + gB*(gB-1)))}'`
     fi
     memSize=`echo $memSize | awk '{print int($1/1000. + 0.5)"M"}'`
     if [ "YES" == $processThisChromosome ]; then
 	thisJobID=$(sbatch --parsable --partition=$queueName --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
-        $EXE1 $file $metric $numStates $outfileP $outfileQ $outfileNsites $group1spec $group2spec $outfileRand $outfileQ2
+        $EXE1 $file $metric $numStates $outfileP $outfileQ $outfileNsites $groupAspec $groupBspec $outfileRand $outfileQB
         if [ \$? != 0 ]; then
            exit 2
         fi
@@ -241,40 +241,40 @@ done <<< "$(cat $fileOfFilenames)" # see note above regarding this syntax
 # echo -e "Executing \"part 1b\"..."
 # ----------------------------------
 
-# Add up the Q (or Q* or Q**) tallies to get the genome-wide Q (or Q* or Q**) matrices,
-# or to get the Q1 and Q2 (or Q1* and Q2*, or Q1** and Q2**) matrices
+# Add up the Q1 (or Q2 or Q3) tallies to get the genome-wide Q1 (or Q2 or Q3) matrices,
+# or to get the Q1A and Q1B (or Q2A and Q2B, or Q3A and Q3B) matrices
 # if two groups of epigenomes are being compared.
 
 PID=$$
 QQjobName=QQ_1b_${PID}
-outfileQ2=""
-Q2filenameString=""
-if [ $KL == 1 ]; then
-    outfileQ=${outdir}/Q.txt
-    QfilenameString="_Qnumerators.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Q1.txt
-	outfileQ2=${outdir}/Q2.txt
-	QfilenameString="_Q1numerators.txt"
-	Q2filenameString="_Q2numerators.txt"
+outfileQB=""
+QBfilenameString=""
+if [ $S1 == 1 ]; then
+    outfileQ=${outdir}/Q1.txt
+    QfilenameString="_Q1numerators.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q1A.txt
+	outfileQB=${outdir}/Q1B.txt
+	QfilenameString="_Q1Anumerators.txt"
+	QBfilenameString="_Q1Bnumerators.txt"
     fi
-elif [ $KLs == 1 ]; then
-    outfileQ=${outdir}/Qs.txt
-    QfilenameString="_QsNumerators.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Qs1.txt
-	outfileQ2=${outdir}/Qs2.txt
-	QfilenameString="_Qs1numerators.txt"
-	Q2filenameString="_Qs2numerators.txt"
+elif [ $S2 == 1 ]; then
+    outfileQ=${outdir}/Q2.txt
+    QfilenameString="_Q2numerators.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q2A.txt
+	outfileQB=${outdir}/Q2B.txt
+	QfilenameString="_Q2Anumerators.txt"
+	QBfilenameString="_Q2Bnumerators.txt"
     fi
 else
-    outfileQ=${outdir}/Qss.txt
-    QfilenameString="_QssTallies.txt"
-    if [ "$group2spec" != "" ]; then
-	outfileQ=${outdir}/Qss1.txt
-	outfileQ2=${outdir}/Qss2.txt
-	QfilenameString="_Qss1tallies.txt"
-	Q2filenameString="_Qss2tallies.txt"
+    outfileQ=${outdir}/Q3.txt
+    QfilenameString="_Q3Tallies.txt"
+    if [ "$groupBspec" != "" ]; then
+	outfileQ=${outdir}/Q3A.txt
+	outfileQB=${outdir}/Q3B.txt
+	QfilenameString="_Q3Atallies.txt"
+	QBfilenameString="_Q3Btallies.txt"
     fi
 fi
 
@@ -288,7 +288,7 @@ else
 fi
 
 dependencyString2=""
-if [[ ! -s ${outdir}/observations.starch && ! -s ${outdir}/scores.txt.gz && (! -s $outfileQ || ("$group2spec" != "" && ! -s $outfileQ2)) ]]; then
+if [[ ! -s ${outdir}/observations.starch && ! -s ${outdir}/scores.txt.gz && (! -s $outfileQ || ("$groupBspec" != "" && ! -s $outfileQB)) ]]; then
     if [[ $dependencyString == "" &&
 		(`ls -1 ${outdir}/chr*${QfilenameString} 2> /dev/null | wc -l` == "0" ||
 			`ls -1Sl ${outdir}/chr*${QfilenameString} 2> /dev/null | head -n 1 | awk '{print $5}'` == "0") ]]; then
@@ -296,14 +296,14 @@ if [[ ! -s ${outdir}/observations.starch && ! -s ${outdir}/scores.txt.gz && (! -
 	if [ ! -s $outfileQ ]; then
 	    echo -en $outfileQ
 	else
-	    echo -en $outfileQ2
+	    echo -en $outfileQB
 	fi
 	echo -e ", but the necessary file(s) (${outdir}/chr*${QfilenameString}) were not found, or are empty."
 	echo -e "Try removing intermediate files and re-running."
 	exit 2
     fi
-    if [ $KLss == 1 ]; then
-	memSize=`echo 2 | awk -v g1=$group1size -v g2=$group2size -v ns=$numStates '{gmax=g1;if(g2>g1){gmax=g2}print int($1 + 3*(ns*ns*gmax*(gmax-1)/2)/1000000 + 0.5)"M"}'`
+    if [ $S3 == 1 ]; then
+	memSize=`echo 2 | awk -v gA=$groupAsize -v gB=$groupBsize -v ns=$numStates '{gmax=gA;if(gB>gA){gmax=gB}print int($1 + 3*(ns*ns*gmax*(gmax-1)/2)/1000000 + 0.5)"M"}'`
 	# the factor of 3 provides a bit of extra room for safety
     else
 	memSize="2M" # more than enough
@@ -362,8 +362,8 @@ done
 cp $TEMP1 $outfileQ
 rm -f ${outdir}/chr*${QfilenameString}
 
-if [ "$group2spec" != "" ]; then
-   firstFile=\`ls -1 ${outdir}/chr*${Q2filenameString} | head -n 1\`
+if [ "$groupBspec" != "" ]; then
+   firstFile=\`ls -1 ${outdir}/chr*${QBfilenameString} | head -n 1\`
    if [ ! -s \$firstFile ]; then
       echo -e "Error:  File "\$firstFile" is empty."
       exit 2
@@ -377,7 +377,7 @@ if [ "$group2spec" != "" ]; then
    numCols=\`cat $tempfile\`
 
    cp \$firstFile $TEMP1
-   for file in \`ls -1 ${outdir}/chr*${Q2filenameString} | tail -n +2\`
+   for file in \`ls -1 ${outdir}/chr*${QBfilenameString} | tail -n +2\`
    do
       if [ ! -s \$file ]; then
          echo -e "Error:  File "\$file" is empty."
@@ -411,8 +411,8 @@ if [ "$group2spec" != "" ]; then
          > $TEMP2
       mv $TEMP2 $TEMP1
    done
-   cp $TEMP1 $outfileQ2
-   rm -f ${outdir}/chr*${Q2filenameString}
+   cp $TEMP1 $outfileQB
+   rm -f ${outdir}/chr*${QBfilenameString}
 fi
 
 rm -f $tempfile $TEMP1 $TEMP2
@@ -464,11 +464,11 @@ do
     chr=`head -n 1 $file | cut -f1`
     infile=${outdir}/${chr}${PfilenameString}
     infileQ=$outfileQ
-    infileQ2=$outfileQ2 # empty ("") if only one group of epigenomes was specified
+    infileQB=$outfileQB # empty ("") if only one group of epigenomes was specified
     outfileObserved=${outdir}/${chr}_observed.txt
     outfileScores=${outdir}/${chr}_scores.txt
     outfileNulls=""
-    if [ "$group2spec" != "" ]; then
+    if [ "$groupBspec" != "" ]; then
 	outfileNulls=${outdir}/${chr}_nulls.txt
 	outfileObsFromPart3=`echo $outfileObserved | sed 's/\.txt$/_withPvals.bed/'`
     else
@@ -478,15 +478,15 @@ do
     offset=4000     # estimated empirically
     coefficient=0.3 # estimated empirically
     memSize=`echo $numStates | awk -v c=$offset '{print c + $1}'`
-    if [ $KL == 1 ]; then
-	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; if(g2>g1){gmax=g2} \
-           kbOut = $1 + 2*ns + gmax; if(g2!=0){kbOut += 2*ns} print kbOut}'`
-    elif [ $KLs == 1 ]; then
-	memSize=`echo $memSize | awk -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; if(g2>g1){gmax=g2} \
-           kbOut = $1 + 3*ns*(ns+1)/2 + gmax*(gmax-1)/2; if(g2!=0){kbOut += ns*(ns+1)} print kbOut}'`
+    if [ $S1 == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v gA=$groupAsize -v gB=$groupBsize '{gmax=gA; if(gB>gA){gmax=gB} \
+           kbOut = $1 + 2*ns + gmax; if(gB!=0){kbOut += 2*ns} print kbOut}'`
+    elif [ $S2 == 1 ]; then
+	memSize=`echo $memSize | awk -v ns=$numStates -v gA=$groupAsize -v gB=$groupBsize '{gmax=gA; if(gB>gA){gmax=gB} \
+           kbOut = $1 + 3*ns*(ns+1)/2 + gmax*(gmax-1)/2; if(gB!=0){kbOut += ns*(ns+1)} print kbOut}'`
     else
-	memSize=`echo $memSize | awk -v a=$coefficient -v ns=$numStates -v g1=$group1size -v g2=$group2size '{gmax=g1; gmin=g2; if(g2>g1){gmax=g2; gmin=g1} \
-           kbOut = $1 + a*(ns*ns + (1 + 4*ns*ns)*gmax*(gmax-1)/2); if(g2!=0){kbOut += a*(ns*ns*gmin*(gmin-1))} print kbOut}'`
+	memSize=`echo $memSize | awk -v a=$coefficient -v ns=$numStates -v gA=$groupAsize -v gB=$groupBsize '{gmax=gA; gmin=gB; if(gB>gA){gmax=gB; gmin=gA} \
+           kbOut = $1 + a*(ns*ns + (1 + 4*ns*ns)*gmax*(gmax-1)/2); if(gB!=0){kbOut += a*(ns*ns*gmin*(gmin-1))} print kbOut}'`
     fi
     memSize=`echo $memSize | awk '{print int($1/1000. + 0.5)"M"}'`    
     
@@ -494,7 +494,7 @@ do
 	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    totalNumSites=\`cat $totalNumSitesFile\`
-   $EXE2 $infile $metric \$totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQ2
+   $EXE2 $infile $metric \$totalNumSites $infileQ $outfileObserved $outfileScores $chr $infileQB
    if [ \$? != 0 ]; then
       exit 2
    fi
@@ -502,14 +502,14 @@ EOF
 		 )
     dependencies="${dependencies}:${thisJobID}"
     fi
-    if [ "$group2spec" != "" ] && [ ! -s $outfileNulls ]; then
+    if [ "$groupBspec" != "" ] && [ ! -s $outfileNulls ]; then
 	infile=${outdir}/${chr}${randFilenameString}
 	jobName="p2r_$chr"
 	thisJobID=$(sbatch --parsable --partition=$queueName $dependencyString2 --job-name=$jobName --output=${outdir}/${jobName}.o%j --error=${outdir}/${jobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    totalNumSites=\`cat $totalNumSitesFile\`
    # The smaller number of arguments in the following call informs $EXE2 that it should only write the metric to $outfileNulls, with no additional info.
-   $EXE2 $infile $metric \$totalNumSites $infileQ $infileQ2 $outfileNulls
+   $EXE2 $infile $metric \$totalNumSites $infileQ $infileQB $outfileNulls
    if [ \$? != 0 ]; then
       exit 2
    else # clean up
@@ -535,7 +535,7 @@ else
 fi
 dependencyString2=""
 
-if [[ ! -s ${outdir}/scores.txt.gz || ( "$group2spec" != "" && ! -s ${outdir}/allNullsGenomewide.txt ) ]]; then
+if [[ ! -s ${outdir}/scores.txt.gz || ( "$groupBspec" != "" && ! -s ${outdir}/allNullsGenomewide.txt ) ]]; then
     part2bJobID=$(sbatch --parsable --partition=$queueName $dependencyString --job-name=$part2bJobName --output=${outdir}/${part2bJobName}.o%j --error=${outdir}/${part2bJobName}.e%j --mem=$memSize <<EOF
 #! /bin/bash
    module load htslib
@@ -549,7 +549,7 @@ if [[ ! -s ${outdir}/scores.txt.gz || ( "$group2spec" != "" && ! -s ${outdir}/al
    fi
    rm -f ${outdir}/*_scores.txt
           
-   if [ "$group2spec" != "" ] && [ ! -s ${outdir}/allNullsGenomewide.txt ]; then
+   if [ "$groupBspec" != "" ] && [ ! -s ${outdir}/allNullsGenomewide.txt ]; then
       cat ${outdir}/*_nulls.txt > ${outdir}/allNullsGenomewide.txt
       if [ \$? != 0 ]; then
          echo -e "An error occurred while attempting to concatenate the per-chromosome null values."
@@ -577,7 +577,7 @@ do
     begPos=`head -n 1 $origFile | cut -f2`
     endPos=`head -n 1 $origFile | cut -f3`
     infile=${chr}_observed.txt
-    if [ "$group2spec" != "" ]; then
+    if [ "$groupBspec" != "" ]; then
 	outfile=`echo $infile | sed 's/\.txt$/_withPvals.bed/'`
 	memSize=`echo $approxTotalNumSites | awk -v safeApproxMeanBytesPerField=8 '{print int(0.5*$1*safeApproxMeanBytesPerField/1000000)"M"}'`
     else
@@ -631,7 +631,7 @@ finalJobID=$(sbatch --parsable --partition=$queueName $dependencyString --job-na
          exit 2
       fi
    fi
-   rm -f $outfileQ $outfileQ2
+   rm -f $outfileQ $outfileQB
 
    unstarch ${outdir}/observations.starch \
 	 | awk -v stateCol=$STATE_COLUMN -v scoreCol=$SCORE_COLUMN 'BEGIN {OFS="\t"; chrom=""; state=""; bestScore=""; line=""} \

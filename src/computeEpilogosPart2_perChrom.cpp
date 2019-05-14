@@ -13,7 +13,7 @@
 
 using namespace std;
 
-enum measurementType {KL, KLs, KLss}; // corresponding to measurements using KL, KL*, or KL**
+enum measurementType {KL = 1, KLs, KLss}; // corresponding to measurements using S1 (KL), S2 (KL*), or S3 (KL**)
 
 bool FloatAbs_LT(const float& a, const float& b);
 bool FloatAbs_LT(const float& a, const float& b)
@@ -922,11 +922,11 @@ int main(int argc, const char* argv[])
   if (8 != argc && 9 != argc && 7 != argc)
     {
     Usage:
-      cerr << "Usage type #1:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ outfileObs outfileScores chr [infileQ2]\n"
+      cerr << "Usage type #1:  " << argv[0] << " infile metric NsitesGenomewide infileQ outfileObs outfileScores chr [infileQ2]\n"
 	   << "where\n"
 	   << "* infile holds the tab-delimited state or state pair IDs observed in the epigenomes or pairs of epigenomes, one line per genomic segment\n"
-	   << "* KLtype is either 0 (for KL), 1 (for KL*), or 2 (for KL**)\n"
-	   << "  KL compares states, KL* compares tallies of state pairs, and KL** compares state pairs of individual epigenome pairs\n"
+	   << "* metric is either 1 (for S1), 1 (for S2), or 2 (for S3)\n"
+	   << "  S1 compares states, S2 compares tallies of state pairs, and S3 compares state pairs of individual epigenome pairs\n"
 	   << "* NsitesGenomewide is the total number of sites observed genome-wide\n"
 	   << "* infileQ contains the Q, Q*, or Q** tally matrix (also see below)\n"
 	   << "* outfileObs will receive genomic coordinates (regions on chromosome \"chr\" of width regionWidth, starting at firstBegPos),\n"
@@ -938,7 +938,7 @@ int main(int argc, const char* argv[])
 	   << "* Optional additional argument infileQ2 can be used to specify Q, Q*, or Q** for a 2nd group of epigenomes,\n"
 	   << "  in which case the metric quantifies the difference (distance) between them.\n"
 	   << "\n"
-	   << "Usage type #2:  " << argv[0] << " infile KLtype NsitesGenomewide infileQ1 infileQ2 outfileNulls\n"
+	   << "Usage type #2:  " << argv[0] << " infile metric NsitesGenomewide infileQ1 infileQ2 outfileNulls\n"
 	   << "where\n"
 	   << "* infile contains random permutations of states (or state pairs) observed in the initial input data\n"
 	   << "* outfileNulls will receive the total difference metric for each line of permuted states (or state pairs)\n"
@@ -963,8 +963,8 @@ int main(int argc, const char* argv[])
   
   if (KL != measurementTypeInt && KLs != measurementTypeInt && KLss != measurementTypeInt)
     {
-      cerr << "Error:  Invalid \"measurementType\" received (2nd argument, \"" << argv[2] << "\").\n"
-	   << "The valid options are 0 (to use KL), 1 (to use KL*), and 2 (to use KL**)." << endl << endl;
+      cerr << "Error:  Invalid \"metric\" received (2nd argument, \"" << argv[2] << "\").\n"
+	   << "The valid options are 1 (to use S1), 2 (to use S2), and 3 (to use S3)." << endl << endl;
       goto Usage;
     }
   if (!infile)

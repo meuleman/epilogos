@@ -233,6 +233,27 @@ bool onePassThroughData(ifstream& ifs, const measurementType& KLtype, const set<
 	      fieldnum++;
 	    }
 	  numFieldsOnLineOne = fieldnum;
+	  set<int>::const_iterator it_group1(group1.end()), it_group2(group2.end());
+	  it_group1--;
+	  const int totalNumEpigenomes(static_cast<int>(allStatesAtThisSite.size()));
+	  if (*it_group1 > totalNumEpigenomes)
+	    {
+	      cerr << "Error:  Specification for group 1 calls for data for " << *it_group1
+		   << " epigenomes to be provided, but data for only "
+		   << totalNumEpigenomes << " were found." << endl << endl;
+	      return false;
+	    }
+	  if (comparisonOfGroups)
+	    {
+	      it_group2--;
+	      if (*it_group2 > totalNumEpigenomes)
+		{
+		  cerr << "Error:  Specification for group 2 calls for data for " << *it_group2
+		       << " epigenomes to be provided, but data for only "
+		       << totalNumEpigenomes << " were found." << endl << endl;
+		  return false;
+		}
+	    }      
 	}
       else
 	{
@@ -620,7 +641,7 @@ int main(int argc, char* argv[])
   if (KL != measurementTypeInt && KLs != measurementTypeInt && KLss != measurementTypeInt)
     {
       cerr << "Error:  Invalid \"measurementType\" received (2nd argument, \"" << argv[2] << "\").\n"
-	   << "The valid options are 0 (to use KL), 1 (to use KL*), and 2 (to use KL**)." << endl << endl;
+	   << "The valid options are " << KL << " (to use S1), " << KLs << " (to use S2), and " << KLss << " (to use S3)." << endl << endl;
       goto Usage;
     }
   if (!infile)

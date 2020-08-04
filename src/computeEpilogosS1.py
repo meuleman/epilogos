@@ -3,6 +3,7 @@ import numpy as np
 import sys
 from pathlib import Path
 import math
+import time
 
 def main(filename, numstates, saliency, outputDirectory, columnSpecification = "All"):
     dataFilePath = Path(filename)
@@ -12,37 +13,47 @@ def main(filename, numstates, saliency, outputDirectory, columnSpecification = "
     # with open(dataFilePath, "r") as f:
     #     nColsData = len(f.readline().split())
 
-    nColsData = len(np.loadtxt(fname = dataFilePath, dtype="str", max_rows= 1))
+    nColsData = len(np.loadtxt(fname = dataFilePath, dtype="str", max_rows= 1)) - 3
 
+    t0 = time.time()
     # Read in the data
-    dataArr = np.loadtxt(fname = dataFilePath, dtype="str", usecols=columnSpecificationAsTuple(columnSpecification, nColsData))
+    dataArr = np.loadtxt(fname = dataFilePath, dtype="str", usecols=columnSpecificationAsTuple(columnSpecification, nColsData), delimiter="\t")
     num_rows, num_cols = dataArr.shape
 
+    t1 = time.time() - t0
+    print("Time To Read in: ", t1)
+
     # Calculate the expected frequencies of each state
+    t0 = time.time()
     uniqueStates, stateCounts = np.unique(dataArr[:,3:], return_counts=True)
     expFreqArr = np.zeros(numstates)
     for i in range(len(uniqueStates)):
         expFreqArr[int(uniqueStates[i]) - 1] = stateCounts[i] / dataArr[:,3:].size
 
-    print(expFreqArr)
+    print("Time for exp values: ", time.time() - t0)
 
     # Calculate the observed frequencies of each state for each row
+    t0 = time.time()
     obsFreqArr = np.zeros((num_rows, numstates))
     for row in range(num_rows):
         uniqueStates, stateCounts = np.unique(dataArr[row,3:], return_counts=True)
         for i in range(len(uniqueStates)):
-            obsFreqArr[row, int(uniqueStates[i]) - 1] = stateCounts[i] / num_cols
-
-    print(obsFreqArr)
+            obsFreqArr[row, int(uniqueStates[i]) - 1] = stateCounts[i] / nColsData
         
+    print("Time for obs values: ", time.time() - t0)
+
     # Calculate the KL-divergence scores for each state in each location
+    t0 = time.time()
     scoreArr = np.zeros((num_rows, numstates))
     for i in range(num_rows):
         for j in range(numstates):
             scoreArr[i, j] = logBase2(obsFreqArr[i, j], expFreqArr[j])
 
+    print("Time for score values: ", time.time() - t0)
+
 
     # Writing the data to the files
+    t0 = time.time()
     observationsTxtPath = outputDirPath / "observations.txt"
     scoresTxtPath = outputDirPath / "scores.txt"
 
@@ -75,6 +86,8 @@ def main(filename, numstates, saliency, outputDirectory, columnSpecification = "
     observationsTxt.close()
     scoresTxt.close()
 
+    print("Time for writing: ", time.time() - t0)
+
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
@@ -86,10 +99,10 @@ def logBase2(obs, exp):
 
 # Helper to create a sequence from the inputed column specification
 def columnSpecificationAsTuple(columnSpecification, ncols):
-    columnListExpanded = []
+    columnListExpanded = [0,1,2]
     if columnSpecification == "All":
         # Include all columns except the first 3
-        columnListExpanded = list(range(0, ncols))
+        columnListExpanded = list(range(0, ncols + 3))
     else:
         columnList = columnSpecification.split(',')
         for str in columnList:

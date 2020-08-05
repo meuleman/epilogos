@@ -80,22 +80,22 @@ def main(filename, numStates, saliency, outputDirectory, columnSpecification = "
         # Write in the coordinates
         locationData = dataArr[i, :3]
         for location in locationData:
-            observationsTxt.write("%s " % location)
-            scoresTxt.write("%s " % location)
+            observationsTxt.write("%s\t" % location)
+            scoresTxt.write("%s\t" % location)
         
         # Write to observations
         maxContribution = np.amax(scoreArr[i])
         maxContributionLoc = np.argmax(scoreArr[i]) + 1
         totalScore = np.sum(scoreArr[i])
 
-        observationsTxt.write("%d " % maxContributionLoc)
-        observationsTxt.write("%.5f " % maxContribution)
-        observationsTxt.write("1 ")
-        observationsTxt.write("%.5f \n" % totalScore)
+        observationsTxt.write("%d\t" % maxContributionLoc)
+        observationsTxt.write("%.5f\t" % maxContribution)
+        observationsTxt.write("1\t")
+        observationsTxt.write("%.5f\t\n" % totalScore)
 
         # Write to scores
         for j in range(numStates):
-            scoresTxt.write("%.5f " % scoreArr[i, j])
+            scoresTxt.write("%.5f\t" % scoreArr[i, j])
         scoresTxt.write("\n")
 
     observationsTxt.close()

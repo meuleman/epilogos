@@ -5,8 +5,7 @@ from pathlib import Path
 import math
 import pandas as pd
 import time
-import operator as op
-from functools import reduce
+import numpy.ma as ma
 # import click
 
 # @click.command()
@@ -44,11 +43,10 @@ def s1Score(dataDF, numStates, outputDirPath):
     numRows, numCols = dataDF.shape
     dataArr = dataDF.to_numpy(dtype = str)
 
-
     # Calculate the expected frequencies of each state
     print("Calculating expected frequencies...")
     tExp = time.time()
-    stateIndices = list(range(1, numstates + 1))
+    stateIndices = list(range(1, numStates + 1))
     expFreqSeries = pd.Series(np.zeros(15), index=stateIndices)
     dfSize = numRows * (numCols - 3)
     for i in range(3, numCols):
@@ -56,7 +54,6 @@ def s1Score(dataDF, numStates, outputDirPath):
         for state, count in stateCounts.items():
             expFreqSeries.loc[state] += count / dfSize
     print("    Time: ", time.time() - tExp)
-
 
     # Calculate the observed frequencies and final scores in one loop
     print("Calculating scores...")
@@ -71,16 +68,76 @@ def s1Score(dataDF, numStates, outputDirPath):
             scoreArr[row, column] = klScore(stateCounts[i] / (numCols - 3), expFreqArr[column])
     print("    Time: ", time.time() - tScore)
 
-
-    # Writing the data to the files
+    # Writing the scores to the files
     print("Writing to files...")
     tWrite = time.time()
+    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
+    print("    Time: ", time.time() - tWrite)
 
+# Function that calculates the scores for the S2 metric
+def s2Score(dataDF, numStates, outputDirPath):
+    numRows, numCols = dataDF.shape
+    dataArr = dataDF.to_numpy(dtype = str)
+
+    # Calculate the expected frequencies and observed frequencies in the same loop
+    print("Calculating expected and observed frequencies...")
+    tExp = time.time()
+    tArrC = time.time()
+    expFreqArr = np.zeros((numStates, numStates))
+    obsFreqArr = np.zeros((numRows, numStates, numStates))
+
+    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states) / numRows / numStates^2
+    # SumOverRows: (Prob of choosing x and y) / numRows / numStates^2
+    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
+    for row in range(numRows):
+        uniqueStates, stateCounts = np.unique(dataArr[row,3:], return_counts=True)
+        for i in range(len(uniqueStates)):
+            for j in range(len(uniqueStates)):
+                if int(uniqueStates[i]) > int(uniqueStates[j]) or int(uniqueStates[i]) < int(uniqueStates[j]):
+                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2) / numRows / numStates**2
+                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2)
+                elif int(uniqueStates[i]) == int(uniqueStates[j]):
+                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2) / numRows / numStates**2
+                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2)
+    print("    Time: ", time.time() - tExp)
+
+    print("Calculating scores...")
+    # Calculate the KL Scores
+    tScore = time.time()
+    scoreArr = np.zeros((numRows, numStates))
+    for row in range(numRows):
+        scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr).sum(axis=0)
+    print("    Time: ", time.time() - tScore)
+
+    # Writing the scores to the files
+    print("Writing to files...")
+    tWrite = time.time()
+    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
+    print("    Time: ", time.time() - tWrite)
+    
+
+# Function that calculates the scores for the S3 metric
+def s3Score(dataDF, numStates, outputDirPath):
+    return
+
+# Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
+def klScore(obs, exp):
+    if obs == 0.0:
+        return 0.0
+    else:
+        return obs * math.log2(obs / exp)
+
+# Helper to calculate KL-score for 2d arrays (cleans up the code)
+def klScore2D(obs, exp):
+    return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
+
+# Helper to write the final scores to files
+def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    observationsTxtPath = outputDirPath / "observations.txt"
-    scoresTxtPath = outputDirPath / "scores.txt"
+    observationsTxtPath = outputDirPath / "observations2.txt"
+    scoresTxtPath = outputDirPath / "scores2.txt"
 
     observationsTxt = open(observationsTxtPath, "w")
     scoresTxt = open(scoresTxtPath, "w")
@@ -111,63 +168,6 @@ def s1Score(dataDF, numStates, outputDirPath):
     observationsTxt.close()
     scoresTxt.close()
 
-    print("    Time: ", time.time() - tWrite)
-
-# Function that calculates the scores for the S2 metric
-def s2Score(dataDF, numStates, outputDirPath):
-    numRows, numCols = dataDF.shape
-    dataArr = dataDF.to_numpy(dtype = str)
-
-    # Calculate the expected frequencies and observed frequencies in the same loop
-    print("Calculating expected frequencies...")
-    tExp = time.time()
-    expFreqArr = np.zeros((numStates, numStates))
-    obsFreqArr = np.zeros((numRows, numStates, numStates))
-
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states) / numRows / numStates^2
-    # SumOverRows: (Prob of choosing x and y) / numRows / numStates^2
-    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    for row in range(numRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row,3:])
-        for i in range(len(uniqueStates)):
-            for j in range(len(uniqueStates)):
-                if int(uniqueStates[i]) > int(uniqueStates[j]):
-                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2) / numRows / numStates**2
-                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2)
-                elif int(uniqueStates[i]) == int(uniqueStates[j]):
-                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2) / numRows / numStates**2
-                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2)
-    print("    Time: ", time.time() - tExp)
-
-
-    # Calculate the observed frequencies
-
-
-    # Calculate the KL Scores
-
-
-    # Write to the files
-
-    
-
-# Function that calculates the scores for the S3 metric
-def s3Score(dataDF, numStates, outputDirPath):
-    return
-
-# Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
-def klScore(obs, exp):
-    if obs == 0.0:
-        return 0.0
-    else:
-        return obs * math.log2(obs / exp)
-
-# Helper to calculate combinations
-def ncr(n, r):
-    r = min(r, n-r)
-    numer = reduce(op.mul, range(n, n-r, -1), 1)
-    denom = reduce(op.mul, range(1, r+1), 1)
-    return numer // denom
-
 if __name__ == "__main__":
     # Checking that the arguments are all correct
     if len(sys.argv) - 1 < 4:
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         print("   4. Output directory\n")
     elif int(sys.argv[2]) != 15:
         print("We currently only offer support for a 15-state chromatin state model")
-    elif int(sys.argv[3]) != 1:
-        print("We currently only offer support for a saliency of one")
+    elif (not int(sys.argv[3]) == 1) and (not int(sys.argv[3]) == 2):
+        print("We currently only offer support for a saliency of 1 or 2")
     else:
         main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])

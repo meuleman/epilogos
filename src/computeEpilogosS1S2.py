@@ -55,6 +55,8 @@ def s1Score(dataDF, numStates, outputDirPath):
             expFreqSeries.loc[state] += count / dfSize
     print("    Time: ", time.time() - tExp)
 
+    print(expFreqSeries)
+
     # Calculate the observed frequencies and final scores in one loop
     print("Calculating scores...")
     tScore = time.time()
@@ -77,28 +79,34 @@ def s1Score(dataDF, numStates, outputDirPath):
 # Function that calculates the scores for the S2 metric
 def s2Score(dataDF, numStates, outputDirPath):
     numRows, numCols = dataDF.shape
+    numCols -= 3
     dataArr = dataDF.to_numpy(dtype = str)
 
-    # Calculate the expected frequencies and observed frequencies in the same loop
+    # Calculate the observed frequencies
     print("Calculating expected and observed frequencies...")
     tExp = time.time()
     expFreqArr = np.zeros((numStates, numStates))
     obsFreqArr = np.zeros((numRows, numStates, numStates))
 
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states) / numRows / numStates^2
-    # SumOverRows: (Prob of choosing x and y) / numRows / numStates^2
+    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
+    # SumOverRows: (Prob of choosing x and y)
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row,3:], return_counts=True)
         for i in range(len(uniqueStates)):
             for j in range(len(uniqueStates)):
                 if int(uniqueStates[i]) > int(uniqueStates[j]) or int(uniqueStates[i]) < int(uniqueStates[j]):
-                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2) / numRows / numStates**2
-                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * stateCounts[j] / math.comb(numCols - 3, 2)
+                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1]  = stateCounts[i] * stateCounts[j] / math.comb(numCols, 2) / 2 # Extra 2 is to account for the symmetric matrix
                 elif int(uniqueStates[i]) == int(uniqueStates[j]):
-                    expFreqArr[int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2) / numRows / numStates**2
-                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2)
+                    obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1]  = math.comb(stateCounts[i], 2) / math.comb(numCols, 2)
+
+    # Calculate the expected frequencies by summing the observed frequencies for each row
+    expFreqArr = obsFreqArr.sum(axis=0) / numRows
     print("    Time: ", time.time() - tExp)
+
+    print(expFreqArr)
+    print(expFreqArr.sum())
+    print(expFreqArr.sum(axis=0))
 
     # print("Calculating scores...")
     # # Calculate the KL Scores

@@ -71,7 +71,7 @@ def s1Score(dataDF, numStates, outputDirPath):
     # Writing the scores to the files
     print("Writing to files...")
     tWrite = time.time()
-    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
+    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates, 1)
     print("    Time: ", time.time() - tWrite)
 
 # Function that calculates the scores for the S2 metric
@@ -82,7 +82,6 @@ def s2Score(dataDF, numStates, outputDirPath):
     # Calculate the expected frequencies and observed frequencies in the same loop
     print("Calculating expected and observed frequencies...")
     tExp = time.time()
-    tArrC = time.time()
     expFreqArr = np.zeros((numStates, numStates))
     obsFreqArr = np.zeros((numRows, numStates, numStates))
 
@@ -101,18 +100,26 @@ def s2Score(dataDF, numStates, outputDirPath):
                     obsFreqArr[row, int(uniqueStates[i]) - 1, int(uniqueStates[j]) - 1] += stateCounts[i] * (stateCounts[i] - 1) / 2 / math.comb(numCols - 3, 2)
     print("    Time: ", time.time() - tExp)
 
+    # print("Calculating scores...")
+    # # Calculate the KL Scores
+    # tScore = time.time()
+    # scoreArr = np.zeros((numRows, numStates))
+    # for row in range(numRows):
+    #     scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr).sum(axis=0)
+    # print("    Time: ", time.time() - tScore)
+
     print("Calculating scores...")
     # Calculate the KL Scores
     tScore = time.time()
-    scoreArr = np.zeros((numRows, numStates))
+    scoreArr = np.zeros((numRows, numStates, numStates))
     for row in range(numRows):
-        scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr).sum(axis=0)
+        scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr)
     print("    Time: ", time.time() - tScore)
 
     # Writing the scores to the files
     print("Writing to files...")
     tWrite = time.time()
-    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
+    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates, 2)
     print("    Time: ", time.time() - tWrite)
     
 
@@ -132,7 +139,7 @@ def klScore2D(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 
 # Helper to write the final scores to files
-def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates):
+def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates, saliency):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
@@ -150,20 +157,51 @@ def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates):
             observationsTxt.write("%s\t" % location)
             scoresTxt.write("%s\t" % location)
         
-        # Write to observations
-        maxContribution = np.amax(scoreArr[i])
-        maxContributionLoc = np.argmax(scoreArr[i]) + 1
-        totalScore = np.sum(scoreArr[i])
+        if saliency == 1:
+            # Write to observations
+            maxContribution = np.amax(scoreArr[i])
+            maxContributionLoc = np.argmax(scoreArr[i]) + 1
+            totalScore = np.sum(scoreArr[i])
 
-        observationsTxt.write("%d\t" % maxContributionLoc)
-        observationsTxt.write("%.5f\t" % maxContribution)
-        observationsTxt.write("1\t")
-        observationsTxt.write("%.5f\t\n" % totalScore)
+            observationsTxt.write("%d\t" % maxContributionLoc)
+            observationsTxt.write("%.5f\t" % maxContribution)
+            observationsTxt.write("1\t")
+            observationsTxt.write("%.5f\t\n" % totalScore)
 
-        # Write to scores
-        for j in range(numStates):
-            scoresTxt.write("%.5f\t" % scoreArr[i, j])
-        scoresTxt.write("\n")
+            # Write to scores
+            for j in range(numStates):
+                scoresTxt.write("%.5f\t" % scoreArr[i, j])
+            scoresTxt.write("\n")
+        elif saliency == 2 or saliency == 3:
+
+            #################################################################
+            #    maxContributionS1 and maxContributionLocS1 need to fixed   #
+            #################################################################
+
+            maxContributionS1 = np.amax(scoreArr[i].sum(axis=0))
+            maxContributionLocS1 = np.argmax(scoreArr[i].sum(axis=0)) + 1
+            maxContributionS2 = np.amax(scoreArr[i])
+
+            coords = np.where(scoreArr[i] == np.amax(scoreArr[i]))
+            maxContributionLocS2 = (coords[0][0] + 1, coords[1][0] + 1)
+
+            totalScore = np.sum(scoreArr[i])
+
+            observationsTxt.write("%d\t" % maxContributionLocS1)
+            observationsTxt.write("%.5f\t" % maxContributionS1)
+            observationsTxt.write("1\t")
+            observationsTxt.write("{}\t".format(maxContributionLocS2))
+            observationsTxt.write("%.5f\t" % maxContributionS2)
+            observationsTxt.write("1\t")
+            observationsTxt.write("%.5f\t\n" % totalScore)
+
+            # Write to scores
+            #################################################################
+            #    Scores need to fixed (its just sums not s1 scores)         #
+            #################################################################
+            for j in range(numStates):
+                scoresTxt.write("%.5f\t" % scoreArr[i].sum(axis=0)[j])
+            scoresTxt.write("\n")
 
     observationsTxt.close()
     scoresTxt.close()

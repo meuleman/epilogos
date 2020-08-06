@@ -39,6 +39,7 @@ def main(filename, numStates, saliency, outputDirectory, columnSpecification = "
     stateIndices = list(range(1, 16))
     expFreqSeries = pd.Series(np.zeros(15), index=stateIndices)
     # Raw counts
+    print(dataDF)
     for i in range(3, numCols):
         stateCounts = dataDF[i].value_counts()
         for state, count in stateCounts.items():
@@ -123,10 +124,13 @@ def columnSpecificationAsTuple(columnSpecification, ncols):
             # Add 3 because of 3 not data columns in file
             if "-" in str:
                 strList = str.split("-")
-                columnListExpanded.append(list(range(int(strList[0]) + 3, int(strList[1] + 1 + 3))))
+                print(strList)
+                columnListExpanded.extend(list(range(int(strList[0]) + 3, int(strList[1]) + 1 + 3)))
             else:
                 columnListExpanded.append(int(str) + 3)
-    return tuple(columnListExpanded)
+    print(columnListExpanded)
+    print(len(columnListExpanded))
+    return columnListExpanded
 
 if __name__ == "__main__":
     # Checking that the arguments are all correct

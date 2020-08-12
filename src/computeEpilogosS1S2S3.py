@@ -32,18 +32,30 @@ def main(filename, numStates, saliency, outputDirectory):
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.to_numpy()
+    dataArr = dataDF.to_numpy()[:,3:].astype(int)
+    locationArr = dataDF.to_numpy()[:,0:3].astype(str)
     print("    Time: ", time.time() - tConvert)
 
+    print(dataArr.shape)
+    print(locationArr.shape)
+    print(dataArr[0][1], ", ", type(dataArr[0][1]))
+
     if saliency == 1:
-        s1Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
     elif saliency == 2:
-        s2Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr =s2Score(dataDF, dataArr, numStates, outputDirPath)
     elif saliency == 3:
         scoreArr = s3Score(dataDF, dataArr, numStates, outputDirPath)
     else:
         print("Inputed saliency value not supported")
         return
+
+    # Writing the scores to the files
+    print("Writing to files...")
+    tWrite = time.time()
+    writeScores(locationArr, scoreArr, outputDirPath, numStates)
+    print("    Time: ", time.time() - tWrite)
+
     print("Total Time: ", time.time() - tTotal)
 
 # Function that calculates the scores for the S1 metric
@@ -71,18 +83,14 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath):
     expFreqArr = expFreqSeries.to_numpy()
     scoreArr = np.zeros((numRows, numStates))
     for row in range(numRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row,3:], return_counts=True)
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq
             column = uniqueStates[i] - 1
             scoreArr[row, column] = klScore(stateCounts[i] / (numCols), expFreqArr[column])
     print("    Time: ", time.time() - tScore)
 
-    # Writing the scores to the files
-    print("Writing to files...")
-    tWrite = time.time()
-    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
-    print("    Time: ", time.time() - tWrite)
+    return scoreArr
 
 # Function that calculates the scores for the S2 metric
 def s2Score(dataDF, dataArr, numStates, outputDirPath):
@@ -100,7 +108,7 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
     combinations = math.comb(numCols, 2)
     for row in range(numRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row,3:], return_counts=True)
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i in range(len(uniqueStates)):
             for j in range(len(uniqueStates)):
                 if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
@@ -120,11 +128,7 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
         scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr).sum(axis=0)
     print("    Time: ", time.time() - tScore)
 
-    # Writing the scores to the files
-    print("Writing to files...")
-    tWrite = time.time()
-    writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
-    print("    Time: ", time.time() - tWrite)
+    return scoreArr
     
 
 # Function that calculates the scores for the S3 metric
@@ -137,26 +141,15 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     tExp = time.time()
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
 
-    # # s1 = state 1, s2 = state 2
-    # # Should we count the epigenome paired with itself?
-    # for row in dataArr[0:50]:
-    #     it1 = np.nditer(row[3:], flags=["c_index", "refs_ok"])
-    #     for s1 in it1:
-    #         it2 = np.nditer(row[3:], flags=["c_index", "refs_ok"])
-    #         for s2 in it2:
-    #             if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
-    #                 expFreqArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] += 1
-
     # s1 = state 1, s2 = state 2
     # should we count the epigenome paired with itself?
     # only iterate over the data (not location)
-    dataIter = np.nditer(dataArr[0:50,3:], flags=["multi_index", "refs_ok"])
+    dataIter = np.nditer(dataArr[0:50], flags=["multi_index", "refs_ok"])
     for s1 in dataIter:
-        rowIter = np.nditer(dataArr[dataIter.multi_index[0], 3:], flags=["c_index", "refs_ok"])
+        rowIter = np.nditer(dataArr[dataIter.multi_index[0]], flags=["c_index", "refs_ok"])
         for s2 in rowIter:
             if dataIter.multi_index[1] != rowIter.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
                 expFreqArr[dataIter.multi_index[1], rowIter.index, int(s1) - 1, int(s2) - 1] += 1
-
 
     # Normalize the array
     expFreqArr /= 50 * numCols * (numCols - 1)
@@ -170,27 +163,158 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     # for row in range(numRows):
     #     scoreArr[row] = klScore2D(obsFreqArr[row], expFreqArr).sum(axis=(0,1,2))
     # print("    Time: ", time.time() - tScore)
+
     # Calculate the obsFreq and scores
-    print("Calculating observed frequencies and scores...")
-    tScore = time.time()
+    # print("Calculating observed frequencies and scores...")
+    # tScore = time.time()
+    # scoreArr = np.zeros((numRows, numStates))
+    # for row in range(50):
+    #     obsFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+    #     it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+    #     for s1 in it1:
+    #         it2 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+    #         for s2 in it2:
+    #             if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+    #                 obsFreqArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] += 1
+    #     obsFreqArr /= numCols * (numCols - 1)
+    #     scoreArr[row] = klScore2D(obsFreqArr, expFreqArr).sum(axis=(0,1,2))
+    # print("    Time: ", numRows * (time.time() - tScore) / 50)
+
+
+    scoreArrOnes = klScore2D(np.ones((numCols, numCols, numStates, numStates)), expFreqArr)
+    print("Calculating observed frequencies and scores (refs | no cast | sum axis)")
+    tScore2 = time.time()
     scoreArr = np.zeros((numRows, numStates))
     for row in range(50):
-        obsFreqArr = np.zeros((numCols, numCols, numStates, numStates))
-        it1 = np.nditer(dataArr[row, 3:], flags=["c_index", "refs_ok"])
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
         for s1 in it1:
-            it2 = np.nditer(dataArr[row, 3:], flags=["c_index", "refs_ok"])
+            it2 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
             for s2 in it2:
-                if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
-                    obsFreqArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] += 1
-        obsFreqArr /= numCols * (numCols - 1)
-        scoreArr[row] = klScore2D(obsFreqArr, expFreqArr).sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore) / 50)
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
 
-    # # Writing the scores to the files
-    # print("Writing to files...")
-    # tWrite = time.time()
-    # writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates)
-    # print("    Time: ", time.time() - tWrite)
+    print("Calculating observed frequencies and scores (refs | no cast | incremental sum)")
+    tScore3 = time.time()
+    scoreArr2 = np.zeros((numRows, numStates))
+    for row in range(50):
+        it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    scoreArr2[row, s1 - 1] += scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1] / 2
+                    scoreArr2[row, s2 - 1] += scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1] / 2
+    print("    Time: ", numRows * (time.time() - tScore3) / 50)
+    print()
+
+
+    print("Calculating observed frequencies and scores (refs | cast | sum axis)")
+    tScore2 = time.time()
+    scoreArr3 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr3[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (refs | no cast | incremental sum)")
+    tScore3 = time.time()
+    scoreArr4 = np.zeros((numRows, numStates))
+    for row in range(50):
+        it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    scoreArr4[row, int(s1) - 1] += scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1] / 2
+                    scoreArr4[row, int(s2) - 1] += scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1] / 2
+    print("    Time: ", numRows * (time.time() - tScore3) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (raw loop)")
+    tScore3 = time.time()
+    scoreArr5 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        for s1 in range(numCols):
+            for s2 in range(numCols):
+                if s1 != s2:
+                    tempScoreArr[s1, s2, dataArr[row, s1] - 1, dataArr[row, s2] - 1] = scoreArrOnes[s1, s2, dataArr[row, s1] - 1, dataArr[row, s2] - 1]
+        scoreArr5[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis)")
+    tScore2 = time.time()
+    scoreArr6 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr6[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis)")
+    tScore2 = time.time()
+    scoreArr7 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr7[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered ints)")
+    tScore2 = time.time()
+    scoreArr8 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int32'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int32'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr8[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered ints)")
+    tScore2 = time.time()
+    scoreArr9 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int32'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int32'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr9[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print()
+
+    return scoreArr
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):
@@ -204,7 +328,7 @@ def klScore2D(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 
 # Helper to write the final scores to files
-def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates):
+def writeScores(locationArr, scoreArr, outputDirPath, numStates):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
@@ -215,10 +339,9 @@ def writeScores(dataArr, scoreArr, outputDirPath, numRows, numStates):
     scoresTxt = open(scoresTxtPath, "w")
 
     # Write each row in both observations and scores
-    for i in range(numRows):
+    for i in range(locationArr.shape[0]):
         # Write in the coordinates
-        locationData = dataArr[i, :3]
-        for location in locationData:
+        for location in locationArr[i]:
             observationsTxt.write("%s\t" % location)
             scoresTxt.write("%s\t" % location)
         

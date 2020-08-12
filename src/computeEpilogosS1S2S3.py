@@ -32,8 +32,8 @@ def main(filename, numStates, saliency, outputDirectory):
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.to_numpy()[:,3:].astype(int)
-    locationArr = dataDF.to_numpy()[:,0:3].astype(str)
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=np.int8)
+    locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
     print(dataArr.shape)
@@ -183,7 +183,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
 
     scoreArrOnes = klScore2D(np.ones((numCols, numCols, numStates, numStates)), expFreqArr)
     print("Calculating observed frequencies and scores (refs | no cast | sum axis)")
-    tScore2 = time.time()
+    tScore = time.time()
     scoreArr = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -194,11 +194,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
         scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore) / 50)
     print()
 
     print("Calculating observed frequencies and scores (refs | no cast | incremental sum)")
-    tScore3 = time.time()
+    tScore2 = time.time()
     scoreArr2 = np.zeros((numRows, numStates))
     for row in range(50):
         it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
@@ -208,12 +208,12 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     scoreArr2[row, s1 - 1] += scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1] / 2
                     scoreArr2[row, s2 - 1] += scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1] / 2
-    print("    Time: ", numRows * (time.time() - tScore3) / 50)
+    print("    Time: ", numRows * (time.time() - tScore2) / 50)
     print()
 
 
     print("Calculating observed frequencies and scores (refs | cast | sum axis)")
-    tScore2 = time.time()
+    tScore3 = time.time()
     scoreArr3 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -224,11 +224,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
         scoreArr3[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore3) / 50)
     print()
 
     print("Calculating observed frequencies and scores (refs | no cast | incremental sum)")
-    tScore3 = time.time()
+    tScore4 = time.time()
     scoreArr4 = np.zeros((numRows, numStates))
     for row in range(50):
         it1 = np.nditer(dataArr[row], flags=["c_index", "refs_ok"])
@@ -238,11 +238,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     scoreArr4[row, int(s1) - 1] += scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1] / 2
                     scoreArr4[row, int(s2) - 1] += scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1] / 2
-    print("    Time: ", numRows * (time.time() - tScore3) / 50)
+    print("    Time: ", numRows * (time.time() - tScore4) / 50)
     print()
 
     print("Calculating observed frequencies and scores (raw loop)")
-    tScore3 = time.time()
+    tScore5 = time.time()
     scoreArr5 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -251,11 +251,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if s1 != s2:
                     tempScoreArr[s1, s2, dataArr[row, s1] - 1, dataArr[row, s2] - 1] = scoreArrOnes[s1, s2, dataArr[row, s1] - 1, dataArr[row, s2] - 1]
         scoreArr5[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore5) / 50)
     print()
 
     print("Calculating observed frequencies and scores (no refs | cast | sum axis)")
-    tScore2 = time.time()
+    tScore6 = time.time()
     scoreArr6 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -266,11 +266,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
         scoreArr6[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore6) / 50)
     print()
 
     print("Calculating observed frequencies and scores (no refs | no cast | sum axis)")
-    tScore2 = time.time()
+    tScore7 = time.time()
     scoreArr7 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -281,11 +281,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
         scoreArr7[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore7) / 50)
     print()
 
-    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered ints)")
-    tScore2 = time.time()
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered int32)")
+    tScore8 = time.time()
     scoreArr8 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -296,11 +296,11 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
         scoreArr8[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore8) / 50)
     print()
 
-    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered ints)")
-    tScore2 = time.time()
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered int32)")
+    tScore9 = time.time()
     scoreArr9 = np.zeros((numRows, numStates))
     for row in range(50):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -311,8 +311,153 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index:
                     tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
         scoreArr9[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore2) / 50)
+    print("    Time: ", numRows * (time.time() - tScore9) / 50)
     print()
+
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered int16)")
+    tScore10 = time.time()
+    scoreArr10 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int16'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int16'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr10[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore10) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered int16)")
+    tScore11 = time.time()
+    scoreArr11 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int16'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int16'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr11[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore11) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered int8)")
+    tScore12 = time.time()
+    scoreArr12 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int8'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int8'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr12[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore12) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered int8)")
+    tScore13 = time.time()
+    scoreArr13 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int8'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"], op_dtypes=['int8'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr13[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore13) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | buffered)")
+    tScore14 = time.time()
+    scoreArr14 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr14[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore14) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | buffered)")
+    tScore15 = time.time()
+    scoreArr15 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index", "buffered"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index", "buffered"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr15[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore15) / 50)
+    print()
+    
+    print("Calculating observed frequencies and scores (no refs | no cast | sum axis | copy int8)")
+    tScore16 = time.time()
+    scoreArr16 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"], op_flags=["readonly", "copy"], op_dtypes=['int8'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"], op_flags=["readonly", "copy"], op_dtypes=['int8'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, s1 - 1, s2 - 1] = scoreArrOnes[it1.index, it2.index, s1 - 1, s2 - 1]
+        scoreArr16[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore16) / 50)
+    print()
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | copy int8)")
+    tScore17 = time.time()
+    scoreArr17 = np.zeros((numRows, numStates))
+    for row in range(50):
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"], op_flags=["readonly", "copy"], op_dtypes=['int8'])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"], op_flags=["readonly", "copy"], op_dtypes=['int8'])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    tempScoreArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = scoreArrOnes[it1.index, it2.index, int(s1) - 1, int(s2) - 1]
+        scoreArr17[row] = tempScoreArr.sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore17) / 50)
+    print()
+
+
+    print("Calculating observed frequencies and scores (no refs | cast | sum axis | masked)")
+    tScore = time.time()
+    scoreArr = np.zeros((numRows, numStates))
+    for row in range(50):
+        booleanArr = np.ones((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index:
+                    booleanArr[it1.index, it2.index, int(s1) - 1, int(s2) - 1] = 0
+        scoreArr[row] = ma.masked_array(scoreArrOnes, booleanArr).filled(0).sum(axis=(0,1,2))
+    print("    Time: ", numRows * (time.time() - tScore) / 50)
+    print()
+
+    print((scoreArr == scoreArr6).all())
+
+
+
+
+
+
+
 
     return scoreArr
 
@@ -369,7 +514,7 @@ if __name__ == "__main__":
         # Argument info if wrong number
         print("You must provide at least 4 arguments:\n")
         print("   1. Filename to read from\n")
-        print("   2. Number of states in chromatin state model\n")
+        print("   2. Number of states in chromatin state model (only supports up to 127)\n")
         print("   3. Saliency metric (1-3)\n")
         print("   4. Output directory\n")
     elif int(sys.argv[2]) != 15:

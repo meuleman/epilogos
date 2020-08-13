@@ -139,7 +139,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
 
     # s1 = state 1, s2 = state 2
-    for row in range(50):
+    for row in range(500000, 500100):
         it1 = np.nditer(dataArr[row], flags=["c_index"])
         for s1 in it1:
             it2 = np.nditer(dataArr[row], flags=["c_index"])
@@ -148,9 +148,8 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                     expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
 
     # Normalize the array
-    expFreqArr /= 50 * numCols * (numCols - 1)
-    print("    Time: ", numRows * (time.time() - tExp) / 50)
-    expFreqArrTimes[i] = numRows * (time.time() - tExp) / 50
+    expFreqArr /= 100 * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / 100)
 
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
@@ -159,7 +158,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     print("Calculating observed frequencies and scores...")
     tScore = time.time()
     scoreArr = np.zeros((numRows, numStates))
-    for row in range(50):
+    for row in range(500000, 500100):
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
         it1 = np.nditer(dataArr[row], flags=["c_index"])
         for s1 in it1:
@@ -168,8 +167,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
                     tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
         scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore) / 50)
-    scoreArrTimes[i] = numRows * (time.time() - tScore) / 50
+    print("    Time: ", numRows * (time.time() - tScore) / 100)
 
     return scoreArr
 

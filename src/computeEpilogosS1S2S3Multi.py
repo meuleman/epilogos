@@ -8,6 +8,7 @@ import time
 import numpy.ma as ma
 import operator as op
 from functools import reduce
+import multiprocessing
 # import click
 
 # @click.command()
@@ -73,7 +74,7 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath):
     print("    Time: ", time.time() - tExp)
 
     # Calculate the observed frequencies and final scores in one loop
-    print("Calculating scores...")
+    print("Calculating observed frequencies and scores...")
     tScore = time.time()
     expFreqArr = expFreqSeries.to_numpy()
     scoreArr = np.zeros((numRows, numStates))
@@ -139,14 +140,76 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
 # Function that calculates the scores for the S3 metric
 def s3Score(dataDF, dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
-
+    numProcesses = 32
 
     # FOR TESTING
-    rowsToCalculate = range(500000, 500100)
+    numRowsToCalculate = 10000
+    # FOR TESTING
 
-    # Calculate expected frequencies
+    # Use multiprocessing to speed up expected frequency calculation time
     print("Calculating Expected Frequencies...")
     tExp = time.time()
+
+    # Initializing needed variables
+    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+    expQueue = multiprocessing.Queue()
+    expProcesses = []
+
+    # Creating the expected frequency processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ExpMulti, args=(dataArr, numCols, numStates, rowsToCalculate, expQueue))
+        expProcesses.append(p)
+        p.start()
+
+    # Combine all the calculated expvalue arrays into one
+    for process in expProcesses:
+        expFreqArr += expQueue.get()
+
+    # Shut down all the processes
+    for process in expProcesses:
+        process.join()
+
+    # Normalize the array
+    expFreqArr /= numRowsToCalculate * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / numRowsToCalculate)
+
+    # Use multiprocessing to speed up the observed frequency and score calculation time
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
+
+    # Initializing necessary variables
+    scoreArr = np.zeros((numRows, numStates))
+    obsQueue = multiprocessing.Queue()
+    obsProcesses = []
+
+    # Creating the observed frequency/score processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ObsMulti, args=(dataArr, numCols, numStates, rowsToCalculate, scoreArrOnes, obsQueue))
+        obsProcesses.append(p)
+        p.start()
+
+    # Move all the scores from the queue to the score array
+    for i in range(numRowsToCalculate):
+        scoreRow = expQueue.get()
+        scoreArr[scoreRow[0]] = scoreRow[1]
+
+    # Shut down all the processes
+    for process in obsProcesses:
+        process.join()
+    
+    print("    Time: ", numRows * (time.time() - tScore) / numRowsToCalculate)
+
+    return scoreArr
+
+# Helper function to allow for multiprocessing of the expected frequency calculation
+def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, queue):
+    # initialize the return array
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
 
     # s1 = state 1, s2 = state 2
@@ -158,17 +221,10 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
                 if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
                     expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
 
-    # Normalize the array
-    expFreqArr /= len(rowsToCalculate) * numCols * (numCols - 1)
-    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+    queue.put(expFreqArr)
 
-    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
-    # This saves a lot of time in the loop as we are just looking up references and not calculating
-    scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
-
-    print("Calculating observed frequencies and scores...")
-    tScore = time.time()
-    scoreArr = np.zeros((numRows, numStates))
+# Helper function to allow for multiprocessing of the observed frequency and score calculation
+def s3ObsMulti(dataArr, numCols, numStates, rowsToCalculate, scoreArrOnes, queue):
     for row in rowsToCalculate:
         tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
         it1 = np.nditer(dataArr[row], flags=["c_index"])
@@ -177,10 +233,8 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
             for s2 in it2:
                 if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
                     tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
-        scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
-    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+        queue.put((row, tempScoreArr.sum(axis=(0,1,2))))
 
-    return scoreArr
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):
@@ -198,8 +252,8 @@ def writeScores(locationArr, scoreArr, outputDirPath, numStates):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    observationsTxtPath = outputDirPath / "observations.txt.gz"
-    scoresTxtPath = outputDirPath / "scores.txt.gz"
+    observationsTxtPath = outputDirPath / "observationsM.txt.gz"
+    scoresTxtPath = outputDirPath / "scoresM.txt.gz"
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")

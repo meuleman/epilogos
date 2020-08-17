@@ -143,7 +143,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     numProcesses = 32
 
     # FOR TESTING
-    numRowsToCalculate = 10000
+    numRowsToCalculate = 100000
     # FOR TESTING
 
     # Use multiprocessing to speed up expected frequency calculation time
@@ -187,6 +187,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     obsQueue = multiprocessing.Queue()
     obsProcesses = []
 
+    tCalc = time.time()
     # Creating the observed frequency/score processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
@@ -194,10 +195,15 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
         obsProcesses.append(p)
         p.start()
 
+    print("    Calculation Time: ", numRows * (time.time() - tCalc) / numRowsToCalculate)
+
+    tStore = time.time()
     # Move all the scores from the queue to the score array
     for i in range(numRowsToCalculate):
-        scoreRow = expQueue.get()
+        scoreRow = obsQueue.get()
         scoreArr[scoreRow[0]] = scoreRow[1]
+
+    print("    Storing Time: ", numRows * (time.time() - tStore) / numRowsToCalculate)
 
     # Shut down all the processes
     for process in obsProcesses:

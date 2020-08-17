@@ -143,7 +143,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     numProcesses = 32
 
     # FOR TESTING
-    numRowsToCalculate = 100000
+    numRowsToCalculate = 1000
     # FOR TESTING
 
     # Use multiprocessing to speed up expected frequency calculation time

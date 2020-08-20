@@ -145,19 +145,17 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
 # Function that calculates the scores for the S3 metric
 def s3Score(dataDF, dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
-    print("CPU COUNT: ", numProcesses)
+    numProcesses = 32
 
     # FOR TESTING
     numRowsToCalculate = 10000
     # FOR TESTING
 
     # Use multiprocessing to speed up expected frequency calculation time
-    # Calculate expected frequencies
+    print()
+    print("Multiprocessing Queue")
     print("Calculating Expected Frequencies...")
     tExp = time.time()
-
-    basePermutationArr = np.array(list(itertools.permutations(range(127), 2))).T
 
     # Initializing needed variables
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
@@ -167,7 +165,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     # Creating the expected frequency processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
-        p = multiprocessing.Process(target=s3Exp, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue))
+        p = multiprocessing.Process(target=s3ExpMulti, args=(dataArr, numCols, numStates, rowsToCalculate, expQueue))
         expProcesses.append(p)
         p.start()
 
@@ -183,8 +181,10 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     expFreqArr /= numRowsToCalculate * numCols * (numCols - 1)
     print("    Time: ", numRows * (time.time() - tExp) / numRowsToCalculate)
 
+    # Use multiprocessing to speed up the observed frequency and score calculation time
     print("Calculating observed frequencies and scores...")
     tScore = time.time()
+
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
@@ -198,7 +198,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     # Creating the observed frequency/score processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
-        p = multiprocessing.Process(target=s3Obs, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, obsQueue))
+        p = multiprocessing.Process(target=s3ObsMulti, args=(dataArr, numCols, numStates, rowsToCalculate, scoreArrOnes, obsQueue))
         obsProcesses.append(p)
         p.start()
 
@@ -215,18 +215,231 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     # Shut down all the processes
     for process in obsProcesses:
         process.join()
+    
+    print("    Time: ", numRows * (time.time() - tScore) / numRowsToCalculate)
+
+
+
+
+    print()
+    print("Fully Vectorized Implementation Permutations:")
+    # Calculate expected frequencies
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
+    expFreqArr = np.zeros((numCols, numStates, numCols, numStates))
+
+    basePermutationArr = np.array(list(itertools.permutations(range(127), 2))).T
+
+    # Initializing needed variables
+    expFreqArr2 = np.zeros((numCols, numCols, numStates, numStates))
+    expQueue2 = multiprocessing.Queue()
+    expProcesses2 = []
+
+    # Creating the expected frequency processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ExpMultiVectorized, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue2))
+        expProcesses2.append(p)
+        p.start()
+
+    # Combine all the calculated expvalue arrays into one
+    for process in expProcesses2:
+        expFreqArr2 += expQueue2.get()
+
+    # Shut down all the processes
+    for process in expProcesses2:
+        process.join()
+
+    # Normalize the array
+    expFreqArr2 /= numRowsToCalculate * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / numRowsToCalculate)
+
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes2 = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr2)
+
+    # Initializing necessary variables
+    scoreArr2 = np.zeros((numRows, numStates))
+    obsQueue2 = multiprocessing.Queue()
+    obsProcesses2 = []
+
+    tCalc = time.time()
+    # Creating the observed frequency/score processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ObsMultiVectorized, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes2, obsQueue2))
+        obsProcesses2.append(p)
+        p.start()
+
+    print("    Calculation Time: ", numRows * (time.time() - tCalc) / numRowsToCalculate)
+
+    tStore = time.time()
+    # Move all the scores from the queue to the score array
+    for i in range(numRowsToCalculate):
+        scoreRow = obsQueue2.get()
+        scoreArr2[scoreRow[0]] = scoreRow[1]
+
+    print("    Storing Time: ", numRows * (time.time() - tStore) / numRowsToCalculate)
+
+    # Shut down all the processes
+    for process in obsProcesses2:
+        process.join()
 
     print("    Time: ", numRows * (time.time() - tScore) / numRowsToCalculate)
+
+
+
+
+    # Use multiprocessing to speed up expected frequency calculation time
+    print()
+    print("Calculating Expected Frequencies Shared mp.array...")
+    tExp = time.time()
+
+    # Initializing needed variables
+    expProcesses = []
+
+    # Creating a shared expFreqArr
+    expFreqArrShared2 = multiprocessing.Array(ctypes.c_int, numCols*numCols*numStates*numStates)
+
+    # Creating the expected frequency processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ExpMultiShared2, args=(dataArr, numCols, numStates, rowsToCalculate, expFreqArrShared2))
+        expProcesses.append(p)
+        p.start()
+
+    # Shut down all the processes
+    for process in expProcesses:
+        process.join()
+
+    # Normalize the array
+    print("    Time: ", numRows * (time.time() - tExp) / numRowsToCalculate)
+
+    # Use multiprocessing to speed up the observed frequency and score calculation time
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+
+    # Creating a shared expFreqArr
+    scoreArrShared2 = multiprocessing.Array(ctypes.c_int, numRows*numStates)
+
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND((np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1))).flatten(), expFreqArrShared2).reshape(numCols, numCols, numStates, numStates)
+
+    # Initializing necessary variables
+    obsProcesses = []
+
+    # Creating the observed frequency/score processes and starting them
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+        p = multiprocessing.Process(target=s3ObsMultiShared2, args=(dataArr, numRows, numCols, numStates, rowsToCalculate, scoreArrOnes, scoreArrShared2))
+        obsProcesses.append(p)
+        p.start()
+
+    # Shut down all the processes
+    for process in obsProcesses:
+        process.join()
+    
+    print("    Time: ", numRows * (time.time() - tScore) / numRowsToCalculate)
+
+
+    # print("Original multiprocess = shared np.ndarray: ", (scoreArr == scoreArrShared).all())
+    # print("Original multiprocess = shared mp.array:   ", (scoreArr == scoreArrShared2).all())
+    # print("shared mp.array       = shared np.ndarray: ", (scoreArrShared2 == scoreArrShared).all())
+
+
     return scoreArr
 
-def s3Exp(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
+# Helper function to allow for multiprocessing of the expected frequency calculation
+def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, queue):
+    # initialize the return array
+    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
+
+    queue.put(expFreqArr)
+
+# Helper function to allow for multiprocessing of the observed frequency and score calculation
+def s3ObsMulti(dataArr, numCols, numStates, rowsToCalculate, scoreArrOnes, queue):
+    for row in rowsToCalculate:
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
+        queue.put((row, tempScoreArr.sum(axis=(0,1,2))))
+
+
+# Helper function to allow for multiprocessing of the expected frequency calculation
+def s3ExpMultiShared(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
+
+# Helper function to allow for multiprocessing of the observed frequency and score calculation
+def s3ObsMultiShared(dataArr, numCols, numStates, rowsToCalculate, scoreArrOnes, scoreArr):
+    for row in rowsToCalculate:
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
+        scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
+
+
+# Helper function to allow for multiprocessing of the expected frequency calculation
+def s3ExpMultiShared2(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
+    sharedArrFlat = np.frombuffer(expFreqArr.get_obj(), dtype=ctypes.c_int)
+    sharedArr = sharedArrFlat.reshape(numCols, numCols, numStates, numStates)
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    sharedArr[it1.index, it2.index, int(s1), int(s2)] += 1 / (100 * numCols * (numCols - 1))
+
+# Helper function to allow for multiprocessing of the observed frequency and score calculation
+def s3ObsMultiShared2(dataArr, numRows, numCols, numStates, rowsToCalculate, scoreArrOnes, scoreArr):
+    sharedArrFlat = np.frombuffer(scoreArr.get_obj(), dtype=ctypes.c_int)
+    sharedArr = sharedArrFlat.reshape(numRows, numStates)
+    for row in rowsToCalculate:
+        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        it1 = np.nditer(dataArr[row], flags=["c_index"])
+        for s1 in it1:
+            it2 = np.nditer(dataArr[row], flags=["c_index"])
+            for s2 in it2:
+                if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+                    tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
+        sharedArr[row] = tempScoreArr.sum(axis=(0,1,2))
+
+def s3ExpMultiVectorized(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
     for row in rowsToCalculate:
         fullPermutationArr = np.array([basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])
         expFreqArr[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]] += np.ones(fullPermutationArr.shape[1])
     queue.put(expFreqArr)
 
-def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
+def s3ObsMultiVectorized(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
     for row in rowsToCalculate:
         # Creates an array of all the permutations of columns and states
         fullPermutationArr = np.array([basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])

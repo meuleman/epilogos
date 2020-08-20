@@ -9,7 +9,6 @@ import numpy.ma as ma
 import operator as op
 from functools import reduce
 import multiprocessing
-from multiprocessing import shared_memory
 import ctypes
 import itertools
 # import click

@@ -8,6 +8,7 @@ import time
 import numpy.ma as ma
 import operator as op
 from functools import reduce
+import itertools
 # import click
 
 # @click.command()
@@ -25,16 +26,19 @@ def main(filename, numStates, saliency, outputDirectory):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
 
+    colNames = ["Chromosome", "Start", "End"] + list(range(127))
+
     # Read in the data
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header = None, sep="\t")
+    dataDF = pd.read_table(dataFilePath, header=None, names=colNames, sep="\t")
+    dataDF.iloc[:,3:] -= 1
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int)
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
@@ -144,10 +148,47 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     # FOR TESTING
     rowsToCalculate = range(500000, 500100)
 
+    # # Calculate expected frequencies
+    # print("Calculating Expected Frequencies...")
+    # tExp = time.time()
+    # expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+
+    # # s1 = state 1, s2 = state 2
+    # for row in rowsToCalculate:
+    #     it1 = np.nditer(dataArr[row], flags=["c_index"])
+    #     for s1 in it1:
+    #         it2 = np.nditer(dataArr[row], flags=["c_index"])
+    #         for s2 in it2:
+    #             if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+    #                 expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
+
+    # # Normalize the array
+    # expFreqArr /= len(rowsToCalculate) * numCols * (numCols - 1)
+    # print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+
+    # # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # # This saves a lot of time in the loop as we are just looking up references and not calculating
+    # scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
+
+    # print("Calculating observed frequencies and scores...")
+    # tScore = time.time()
+    # scoreArr = np.zeros((numRows, numStates))
+    # for row in rowsToCalculate:
+    #     tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+    #     it1 = np.nditer(dataArr[row], flags=["c_index"])
+    #     for s1 in it1:
+    #         it2 = np.nditer(dataArr[row], flags=["c_index"])
+    #         for s2 in it2:
+    #             if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
+    #                 tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
+    #     scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
+    # print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+
     # Calculate expected frequencies
     print("Calculating Expected Frequencies...")
     tExp = time.time()
-    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+    expFreqArr = np.zeros((numCols, numStates, numCols, numStates))
 
     # s1 = state 1, s2 = state 2
     for row in rowsToCalculate:
@@ -156,7 +197,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
             it2 = np.nditer(dataArr[row], flags=["c_index"])
             for s2 in it2:
                 if it1.index != it2.index: # POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
-                    expFreqArr[it1.index, it2.index, int(s1), int(s2)] += 1
+                    expFreqArr[it1.index, int(s1), it2.index, int(s2)] += 1
 
     # Normalize the array
     expFreqArr /= len(rowsToCalculate) * numCols * (numCols - 1)
@@ -164,21 +205,186 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
 
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
-    scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
+    scoreArrOnes = klScoreND(np.ones((numCols, numStates, numCols, numStates)) / (numCols * (numCols - 1)), expFreqArr)
 
     print("Calculating observed frequencies and scores...")
     tScore = time.time()
     scoreArr = np.zeros((numRows, numStates))
     for row in rowsToCalculate:
-        tempScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+        tempScoreArr = np.zeros((numCols, numStates, numCols, numStates))
         it1 = np.nditer(dataArr[row], flags=["c_index"])
         for s1 in it1:
             it2 = np.nditer(dataArr[row], flags=["c_index"])
             for s2 in it2:
                 if it1.index != it2.index: #POTENTIALLY DELETABLE IF WE DONT MIND COUNTING EPIGENOME WITH ITSELF
-                    tempScoreArr[it1.index, it2.index, int(s1), int(s2)] = scoreArrOnes[it1.index, it2.index, int(s1), int(s2)]
+                    tempScoreArr[it1.index, int(s1), it2.index, int(s2)] = scoreArrOnes[it1.index, int(s1), it2.index, int(s2)]
         scoreArr[row] = tempScoreArr.sum(axis=(0,1,2))
     print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+
+    print()
+    print("Vectorized Format Permutations:")
+
+    # Calculate expected frequencies
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
+    expFreqArr2 = np.zeros((numCols, numStates, numCols, numStates))
+
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        permutationArr = np.array(list(itertools.permutations(dataDF.iloc[row, 3:].items(), 2))).reshape(-1, 4).T
+        expFreqArr2[permutationArr[0], permutationArr[1], permutationArr[2], permutationArr[3]] += np.ones(permutationArr.shape[1])
+
+    # Normalize the array
+    expFreqArr2 /= len(rowsToCalculate) * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numStates, numCols, numStates)) / (numCols * (numCols - 1)), expFreqArr2)
+
+    scoreArr2 = np.zeros((numRows, numStates))
+    for row in rowsToCalculate:
+        # Creates an array of all the permutations of columns and states
+        permutationArr = np.array(list(itertools.permutations(dataDF.iloc[row, 3:].items(), 2))).reshape(-1, 4).T
+        
+        # Pull the scores from the precalculated score array
+        rowScoreArr = np.zeros((numCols, numStates, numCols, numStates))
+        rowScoreArr[permutationArr[0], permutationArr[1], permutationArr[2], permutationArr[3]] = scoreArrOnes[permutationArr[0], permutationArr[1], permutationArr[2], permutationArr[3]]
+
+        scoreArr2[row] = rowScoreArr.sum(axis=(0,1,2)) 
+    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+
+    print()
+    print("Vectorized Addition Combinations:")
+    # Calculate expected frequencies
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
+    expFreqArr3 = np.zeros((numCols, numStates, numCols, numStates))
+
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        combinationArr = np.array(list(itertools.combinations(dataDF.iloc[row, 3:].items(), 2))).reshape(-1, 4).T
+        expFreqArr3[combinationArr[0], combinationArr[1], combinationArr[2], combinationArr[3]] += np.ones(combinationArr.shape[1])
+        expFreqArr3[combinationArr[2], combinationArr[3], combinationArr[0], combinationArr[1]] += np.ones(combinationArr.shape[1])
+
+    # Normalize the array
+    expFreqArr3 /= len(rowsToCalculate) * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numStates, numCols, numStates)) / (numCols * (numCols - 1)), expFreqArr3)
+
+    scoreArr3 = np.zeros((numRows, numStates))
+    for row in rowsToCalculate:
+        # Creates an array of all the permutations of columns and states
+        combinationArr = np.array(list(itertools.combinations(dataDF.iloc[row, 3:].items(), 2))).reshape(-1, 4).T
+        
+        # Pull the scores from the precalculated score array
+        rowScoreArr = np.zeros((numCols, numStates, numCols, numStates))
+        indices1 = (combinationArr[0], combinationArr[1], combinationArr[2], combinationArr[3])
+        indices2 = (combinationArr[2], combinationArr[3], combinationArr[0], combinationArr[1])
+        rowScoreArr[indices1] = scoreArrOnes[indices1]
+        rowScoreArr[indices2] = scoreArrOnes[indices2]
+
+
+        scoreArr3[row] = rowScoreArr.sum(axis=(0,1,2)) 
+    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+    print()
+    print("Fully Vectorized Implementation Combinations:")
+    # Calculate expected frequencies
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
+    expFreqArr4 = np.zeros((numCols, numStates, numCols, numStates))
+
+    baseCombinationArr = np.array(list(itertools.combinations(range(127), 2))).T
+
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        fullCombinationArr = np.array([baseCombinationArr[0], dataArr[row, baseCombinationArr[0]], baseCombinationArr[1], dataArr[row, baseCombinationArr[1]]])
+        expFreqArr4[fullCombinationArr[0], fullCombinationArr[1], fullCombinationArr[2], fullCombinationArr[3]] += np.ones(fullCombinationArr.shape[1])
+        expFreqArr4[fullCombinationArr[2], fullCombinationArr[3], fullCombinationArr[0], fullCombinationArr[1]] += np.ones(fullCombinationArr.shape[1])
+
+    # Normalize the array
+    expFreqArr4 /= len(rowsToCalculate) * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numStates, numCols, numStates)) / (numCols * (numCols - 1)), expFreqArr4)
+
+    scoreArr4 = np.zeros((numRows, numStates))
+    for row in rowsToCalculate:
+        # Creates an array of all the permutations of columns and states
+        fullCombinationArr = np.array([baseCombinationArr[0], dataArr[row, baseCombinationArr[0]], baseCombinationArr[1], dataArr[row, baseCombinationArr[1]]])
+        
+        # Pull the scores from the precalculated score array
+        rowScoreArr = np.zeros((numCols, numStates, numCols, numStates))
+        indices1 = (fullCombinationArr[0], fullCombinationArr[1], fullCombinationArr[2], fullCombinationArr[3])
+        indices2 = (fullCombinationArr[2], fullCombinationArr[3], fullCombinationArr[0], fullCombinationArr[1])
+        rowScoreArr[indices1] = scoreArrOnes[indices1]
+        rowScoreArr[indices2] = scoreArrOnes[indices2]
+
+        scoreArr4[row] = rowScoreArr.sum(axis=(0,1,2))
+
+    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+    print()
+    print("Fully Vectorized Implementation Permutations:")
+    # Calculate expected frequencies
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
+    expFreqArr5 = np.zeros((numCols, numStates, numCols, numStates))
+
+    basePermutationArr = np.array(list(itertools.permutations(range(127), 2))).T
+
+    # s1 = state 1, s2 = state 2
+    for row in rowsToCalculate:
+        fullPermutationArr = np.array([basePermutationArr[0], dataArr[row, basePermutationArr[0]], basePermutationArr[1], dataArr[row, basePermutationArr[1]]])
+        expFreqArr5[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]] += np.ones(fullPermutationArr.shape[1])
+
+    # Normalize the array
+    expFreqArr5 /= len(rowsToCalculate) * numCols * (numCols - 1)
+    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+
+    print("Calculating observed frequencies and scores...")
+    tScore = time.time()
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numStates, numCols, numStates)) / (numCols * (numCols - 1)), expFreqArr5)
+
+    scoreArr5 = np.zeros((numRows, numStates))
+    for row in rowsToCalculate:
+        # Creates an array of all the permutations of columns and states
+        fullPermutationArr = np.array([basePermutationArr[0], dataArr[row, basePermutationArr[0]], basePermutationArr[1], dataArr[row, basePermutationArr[1]]])
+        
+        # Pull the scores from the precalculated score array
+        rowScoreArr = np.zeros((numCols, numStates, numCols, numStates))
+        rowScoreArr[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]] = scoreArrOnes[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]]
+
+        scoreArr5[row] = rowScoreArr.sum(axis=(0,1,2))
+
+    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+
+
+
+
+
+    print()
+    print("Expected Frequency Arrays Equal: ", (expFreqArr == expFreqArr4).all())
+    print("Score Arrays Equal: ", (scoreArr == scoreArr4).all())
+    print()
+    print("Expected Frequency Arrays Equal (permutations and combinations): ", (expFreqArr5 == expFreqArr4).all())
+    print("Score Arrays Equal (permutations and combinations): ", (scoreArr5 == scoreArr4).all())
 
     return scoreArr
 
@@ -198,8 +404,8 @@ def writeScores(locationArr, scoreArr, outputDirPath, numStates):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    observationsTxtPath = outputDirPath / "observations.txt.gz"
-    scoresTxtPath = outputDirPath / "scores.txt.gz"
+    observationsTxtPath = outputDirPath / "observationsV.txt.gz"
+    scoresTxtPath = outputDirPath / "scoresV.txt.gz"
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")

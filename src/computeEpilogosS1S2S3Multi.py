@@ -28,39 +28,36 @@ def main(filename, numStates, saliency, outputDirectory):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
 
-    colNames = ["Chromosome", "Start", "End"] + list(range(127))
-
     # Read in the data
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header=None, names=colNames, sep="\t")
-    dataDF.iloc[:,3:] -= 1
+    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int)
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
     if saliency == 1:
         scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
     elif saliency == 2:
-        scoreArr =s2Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr =s2Score(dataArr, numStates, outputDirPath)
     elif saliency == 3:
-        scoreArr = s3Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr = s3Score(dataArr, numStates, outputDirPath)
     else:
         print("Inputed saliency value not supported")
         return
 
-    # # Writing the scores to the files
-    # print("Writing to files...")
-    # tWrite = time.time()
-    # writeScores(locationArr, scoreArr, outputDirPath, numStates)
-    # print("    Time: ", time.time() - tWrite)
+    # Writing the scores to the files
+    print("Writing to files...")
+    tWrite = time.time()
+    writeScores(locationArr, scoreArr, outputDirPath, numStates)
+    print("    Time: ", time.time() - tWrite)
 
-    # print("Total Time: ", time.time() - tTotal)
+    print("Total Time: ", time.time() - tTotal)
 
 # Function that calculates the scores for the S1 metric
 def s1Score(dataDF, dataArr, numStates, outputDirPath):
@@ -93,7 +90,7 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath):
     return scoreArr
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, numStates, outputDirPath):
+def s2Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -143,7 +140,7 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
     return scoreArr
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, numStates, outputDirPath):
+def s3Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
     print("CPU COUNT: ", numProcesses)
@@ -157,7 +154,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     print("Calculating Expected Frequencies...")
     tExp = time.time()
 
-    basePermutationArr = np.array(list(itertools.permutations(range(127), 2))).T
+    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 
     # Initializing needed variables
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))

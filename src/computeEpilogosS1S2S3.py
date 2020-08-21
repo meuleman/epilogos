@@ -26,28 +26,25 @@ def main(filename, numStates, saliency, outputDirectory):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
 
-    colNames = ["Chromosome", "Start", "End"] + list(range(127))
-
     # Read in the data
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header=None, names=colNames, sep="\t")
-    dataDF.iloc[:,3:] -= 1
+    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int)
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
     if saliency == 1:
         scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
     elif saliency == 2:
-        scoreArr =s2Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr =s2Score(dataArr, numStates, outputDirPath)
     elif saliency == 3:
-        scoreArr = s3Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr = s3Score(dataArr, numStates, outputDirPath)
     else:
         print("Inputed saliency value not supported")
         return
@@ -91,7 +88,7 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath):
     return scoreArr
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, numStates, outputDirPath):
+def s2Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -112,19 +109,19 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
                     if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
                     elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = ncr(stateCounts[i], 2) / combinations
+                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = ncr(stateCounts[i], 2) / combinations
     else:
         combinations = math.comb(numCols, 2)
         for row in range(numRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
                     if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
                     elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = math.comb(stateCounts[i], 2) / combinations
+                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = math.comb(stateCounts[i], 2) / combinations
 
     # Calculate the expected frequencies by summing the observed frequencies for each row
     expFreqArr = obsFreqArr.sum(axis=0) / numRows
@@ -141,9 +138,8 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath):
     return scoreArr
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, numStates, outputDirPath):
+def s3Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
-
 
     # FOR TESTING
     rowsToCalculate = range(500000, 500100)
@@ -154,7 +150,7 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath):
     tExp = time.time()
     expFreqArr = np.zeros((numCols, numStates, numCols, numStates))
 
-    basePermutationArr = np.array(list(itertools.permutations(range(127), 2))).T
+    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 
     # s1 = state 1, s2 = state 2
     for row in rowsToCalculate:

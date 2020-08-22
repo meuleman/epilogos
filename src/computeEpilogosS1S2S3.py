@@ -142,7 +142,7 @@ def s3Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
 
     # FOR TESTING
-    rowsToCalculate = range(500000, 500100)
+    rowsToCalculate = range(numRows)
     # FOR TESTING
 
     # Calculate expected frequencies

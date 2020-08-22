@@ -146,7 +146,7 @@ def s3Score(dataArr, numStates, outputDirPath):
     print("CPU COUNT: ", numProcesses)
 
     # FOR TESTING
-    numRowsToCalculate = 10000
+    numRowsToCalculate = numRows
     # FOR TESTING
 
     # Use multiprocessing to speed up expected frequency calculation time

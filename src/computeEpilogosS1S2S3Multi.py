@@ -33,6 +33,7 @@ def main(filename, numStates, saliency, outputDirectory):
     tRead = time.time()
     dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
+    print(dataDF.iloc[0:10, 0:3])
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")

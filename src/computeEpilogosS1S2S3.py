@@ -142,7 +142,7 @@ def s3Score(dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
 
     # FOR TESTING
-    rowsToCalculate = range(numRows)
+    rowsToCalculate = range(100)
     # FOR TESTING
 
     # Calculate expected frequencies
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         # Argument info if wrong number
         print("\nYou must provide at least 4 arguments:\n")
         print("   1. Filename to read from\n")
-        print("   2. Number of states in chromatin state model (only supports up to 127)\n")
+        print("   2. Number of states in chromatin state model (only supports up to 15)\n")
         print("   3. Saliency metric (1-3)\n")
         print("   4. Output directory\n")
         print("NOTE: Please make sure you are have Python 3.8 or later installed for maximum efficiency (Python 3.6 is the oldest possible version)")

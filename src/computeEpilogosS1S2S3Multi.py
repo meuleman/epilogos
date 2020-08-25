@@ -40,6 +40,7 @@ def main(filename, numStates, saliency, outputDirectory):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
+    print(locationArr[0:10])
 
     if saliency == 1:
         scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
@@ -146,7 +147,7 @@ def s3Score(dataArr, numStates, outputDirPath):
     print("CPU COUNT: ", numProcesses)
 
     # FOR TESTING
-    numRowsToCalculate = numRows
+    numRowsToCalculate = 100
     # FOR TESTING
 
     # Use multiprocessing to speed up expected frequency calculation time

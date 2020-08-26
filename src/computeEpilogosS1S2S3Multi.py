@@ -23,7 +23,7 @@ import itertools
 # @click.option("-s", "--start",          type=int,   required=True, help="Query start position")
 # @click.option("-e", "--end",            type=int,   required=True, help="Query end position")
 
-def main(filename, numStates, saliency, outputDirectory):
+def main(filename, numStates, saliency, outputDirectory, storeExpBool=False, useStoredExpBool=False, expFreqDir="null"):
     tTotal = time.time()
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
@@ -33,7 +33,6 @@ def main(filename, numStates, saliency, outputDirectory):
     tRead = time.time()
     dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
-    print(dataDF.iloc[0:10, 0:3])
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
@@ -41,7 +40,18 @@ def main(filename, numStates, saliency, outputDirectory):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
-    print(locationArr[0:10])
+
+    # Variables for opting in to storing/retrieving the expected frequency array
+    global storedExpDir
+    if expFreqDir != "null":
+        expFreqFilename = "exp_freq_" + str(dataArr.shape[1]) + "_" + str(numStates) + "_s" + str(saliency) + ".npy"
+        storedExpDir = Path(expFreqDir) / expFreqFilename
+
+    global storeExp
+    storeExp = storeExpBool
+
+    global useStoredExp
+    useStoredExp = useStoredExpBool
 
     if saliency == 1:
         scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
@@ -65,22 +75,34 @@ def main(filename, numStates, saliency, outputDirectory):
 def s1Score(dataDF, dataArr, numStates, outputDirPath):
     numRows, numCols = dataArr.shape
 
-    # Calculate the expected frequencies of each state
-    print("Calculating expected frequencies...")
-    tExp = time.time()
-    stateIndices = list(range(1, numStates + 1))
-    expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
-    dfSize = numRows * numCols
-    for i in range(3, numCols + 3):
-        stateCounts = dataDF[i].value_counts()
-        for state, count in stateCounts.items():
-            expFreqSeries.loc[state] += count / dfSize
-    print("    Time: ", time.time() - tExp)
+    # If user desires, use the stored expected frequency array
+    if useStoredExp:
+        try:
+            expFreqArr = np.load(storedExpDir, allow_pickle=False)
+        except IOError:
+            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
+    else:
+        # Calculate the expected frequencies of each state
+        print("Calculating expected frequencies...")
+        tExp = time.time()
+        stateIndices = list(range(1, numStates + 1))
+        expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
+        dfSize = numRows * numCols
+        for i in range(3, numCols + 3):
+            stateCounts = dataDF[i].value_counts()
+            for state, count in stateCounts.items():
+                expFreqSeries.loc[state] += count / dfSize
+        expFreqArr = expFreqSeries.to_numpy()
+
+        # If user desires, store away the expected frequency array
+        if storeExp:
+            np.save(storedExpDir, expFreqArr, allow_pickle=False)
+
+        print("    Time: ", time.time() - tExp)
 
     # Calculate the observed frequencies and final scores in one loop
     print("Calculating observed frequencies and scores...")
     tScore = time.time()
-    expFreqArr = expFreqSeries.to_numpy()
     scoreArr = np.zeros((numRows, numStates))
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
@@ -156,30 +178,39 @@ def s3Score(dataArr, numStates, outputDirPath):
     print("Calculating Expected Frequencies...")
     tExp = time.time()
 
-    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
+    # If the user desires, use the stored expected frequency array
+    if useStoredExp:
+        expFreqArr = np.load(storedExpDir, allow_pickle=False)
+    else:
+        basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 
-    # Initializing needed variables
-    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
-    expQueue = multiprocessing.Queue()
-    expProcesses = []
+        # Initializing needed variables
+        expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+        expQueue = multiprocessing.Queue()
+        expProcesses = []
 
-    # Creating the expected frequency processes and starting them
-    for i in range(numProcesses):
-        rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
-        p = multiprocessing.Process(target=s3Exp, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue))
-        expProcesses.append(p)
-        p.start()
+        # Creating the expected frequency processes and starting them
+        for i in range(numProcesses):
+            rowsToCalculate = range(i * numRowsToCalculate // numProcesses, (i+1) * numRowsToCalculate // numProcesses)
+            p = multiprocessing.Process(target=s3Exp, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue))
+            expProcesses.append(p)
+            p.start()
 
-    # Combine all the calculated expvalue arrays into one
-    for process in expProcesses:
-        expFreqArr += expQueue.get()
+        # Combine all the calculated expvalue arrays into one
+        for process in expProcesses:
+            expFreqArr += expQueue.get()
 
-    # Shut down all the processes
-    for process in expProcesses:
-        process.join()
+        # Shut down all the processes
+        for process in expProcesses:
+            process.join()
 
-    # Normalize the array
-    expFreqArr /= numRowsToCalculate * numCols * (numCols - 1)
+        # Normalize the array
+        expFreqArr /= numRowsToCalculate * numCols * (numCols - 1)
+
+        # If the user desires, store the expected frequency array
+        if storeExp:
+            np.save(storedExpDir, expFreqArr, allow_pickle=False)
+
     print("    Time: ", numRows * (time.time() - tExp) / numRowsToCalculate)
 
     print("Calculating observed frequencies and scores...")
@@ -290,6 +321,16 @@ def ncr(n, r):
     denom = reduce(op.mul, range(1, r + 1), 1)
     return numer // denom
 
+# Helper to convert a string to a boolean
+def strToBool(string):
+    string = string.lower()
+    if string == "true" or string == "t" or string == "y" or string == "yes" or string == "1" or string == "on":
+        return True
+    elif string == "false" or string == "f" or string == "n" or string == "no" or string == "0" or string == "off":
+        return False
+    else:
+        print("Error: strToBool Failed because input was not a supported boolean expression")
+
 if __name__ == "__main__":
     # Checking that the arguments are all correct
     if len(sys.argv) - 1 < 4:
@@ -299,10 +340,21 @@ if __name__ == "__main__":
         print("   2. Number of states in chromatin state model (only supports up to 127)\n")
         print("   3. Saliency metric (1-3)\n")
         print("   4. Output directory\n")
+        print("   5. (Optional) True/False: Store the expected frequency array for later calculations (Default == False)")
+        print("   6. (Optional) Path to the stored expected frequency array")
+        print("   7. (Optional) True/False: Use previously stored expected frequency array (Default == False)")
+        print("NOTE: If argument 5 is used, argument 6 must also be used")
+        print("NOTE: If argument 7 is used, argument 6 must also be used. Additionally, argument 5 must be set to false if argument 7 is used")
         print("NOTE: Please make sure you are have Python 3.8 or later installed for maximum efficiency (Python 3.6 is the oldest possible version)")
-    elif int(sys.argv[2]) != 15:
-        print("We currently only offer support for a 15-state chromatin state model")
     elif (not int(sys.argv[3]) == 1) and (not int(sys.argv[3]) == 2) and (not int(sys.argv[3]) == 3):
         print("We currently only offer support for a saliency of 1, 2, or 3")
-    else:
+    elif (len(sys.argv) - 1 == 4):
         main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
+    elif (len(sys.argv) - 1 == 5):
+        print("ERROR: Cannot have only 5 arguments, arguments 5 and 6 must be used in conjunction")
+    elif (len(sys.argv) - 1 == 6):
+        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], storeExpBool=strToBool(sys.argv[5]), expFreqDir=sys.argv[6])
+    elif (len(sys.argv) - 1 == 7):
+        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], storeExpBool=strToBool(sys.argv[5]), expFreqDir=sys.argv[6], useStoredExpBool=strToBool(sys.argv[7]))
+    else:
+        print("ERROR: Too many arguments inputted")

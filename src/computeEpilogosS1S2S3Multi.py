@@ -11,22 +11,34 @@ from functools import reduce
 import multiprocessing
 import ctypes
 import itertools
-# import click
+import click
 
-# @click.command()
-# @click.option("-d", "--dataset",        type=str,   required=True, help="Source publication or dataset (ROADMAP, ADSERA, or GORKIN)")
-# @click.option("-a", "--assembly",       type=str,   required=True, help="Genomic assembly (hg19, hg38, or mm10)")
-# @click.option("-m", "--state-model",    type=int,   required=True, help="State model (15, 18, or 25 for ROADMAP; 15 or 18 for ADSERA; 15 for GORKIN)")
-# @click.option("-g", "--group",          type=str,   required=True, help="Individual dataset group name (using \"new\" naming scheme, ref. /net/seq/data/projects/Epilogos/epilogos-by-sample-group)")
-# @click.option("-l", "--saliency-level", type=str,   required=True, help="Saliency level (S1, S2, or S3)")
-# @click.option("-c", "--chromosome",     type=str,   required=True, help="Query chromosome")
-# @click.option("-s", "--start",          type=int,   required=True, help="Query start position")
-# @click.option("-e", "--end",            type=int,   required=True, help="Query end position")
-
-def main(filename, numStates, saliency, outputDirectory, storeExpBool=False, useStoredExpBool=False, expFreqDir="null"):
+@click.command()
+@click.option("-f", "--filename", type=str, required=True, help="Path to file to read from")
+@click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
+@click.option("-s", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
+@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
+@click.option("-e", "--store-expected", "storeExpected", is_flag=True, help="Flag: Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
+@click.option("-u", "--use-expected", "useStoredExpected", is_flag=True, help="Flag: Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
+@click.option("-d", "--expected-directory", "expFreqDir", type=str, default="null", help="Path to the stored expected frequency array (Must be used in conjunction with either '-e' or '-u')")
+def main(filename, numStates, saliency, outputDirectory, storeExpected, useStoredExpected, expFreqDir):
     tTotal = time.time()
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
+
+    # Check that paths are valid before doing anything
+    if not dataFilePath.exists():
+        print("ERROR: Given file path does not exist")
+        return
+
+    if not outputDirPath.is_dir():
+        print("ERROR: Output directory is not a directory")
+        return
+
+    # If the output directory does not exist yet, make it for the user 
+    if not outputDirPath.exists():
+        outputDirPath.mkdir(parents=True)
+
 
     # Read in the data
     print("\nReading data from file...")
@@ -37,7 +49,7 @@ def main(filename, numStates, saliency, outputDirectory, storeExpBool=False, use
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
@@ -48,10 +60,10 @@ def main(filename, numStates, saliency, outputDirectory, storeExpBool=False, use
         storedExpDir = Path(expFreqDir) / expFreqFilename
 
     global storeExp
-    storeExp = storeExpBool
+    storeExp = storeExpected
 
     global useStoredExp
-    useStoredExp = useStoredExpBool
+    useStoredExp = useStoredExpected
 
     if saliency == 1:
         scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
@@ -151,6 +163,11 @@ def s2Score(dataArr, numStates, outputDirPath):
 
     # Calculate the expected frequencies by summing the observed frequencies for each row
     expFreqArr = obsFreqArr.sum(axis=0) / numRows
+
+    # If the user desires, store the expected frequency array
+    if storeExp:
+        np.save(storedExpDir, expFreqArr, allow_pickle=False)
+
     print("    Time: ", time.time() - tExp)
 
     print("Calculating scores...")
@@ -252,18 +269,14 @@ def s3Score(dataArr, numStates, outputDirPath):
 def s3Exp(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
     for row in rowsToCalculate:
-        fullPermutationArr = np.array([basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])
-        expFreqArr[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]] += np.ones(fullPermutationArr.shape[1])
+        expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1])
     queue.put(expFreqArr)
 
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
     for row in rowsToCalculate:
-        # Creates an array of all the permutations of columns and states
-        fullPermutationArr = np.array([basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])
-        
         # Pull the scores from the precalculated score array
         rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
-        rowScoreArr[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]] = scoreArrOnes[fullPermutationArr[0], fullPermutationArr[1], fullPermutationArr[2], fullPermutationArr[3]]
+        rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))
 
@@ -280,9 +293,6 @@ def klScoreND(obs, exp):
 
 # Helper to write the final scores to files
 def writeScores(locationArr, scoreArr, outputDirPath, numStates):
-    if not outputDirPath.exists():
-        outputDirPath.mkdir(parents=True)
-
     observationsTxtPath = outputDirPath / "observationsM.txt.gz"
     scoresTxtPath = outputDirPath / "scoresM.txt.gz"
 
@@ -321,40 +331,5 @@ def ncr(n, r):
     denom = reduce(op.mul, range(1, r + 1), 1)
     return numer // denom
 
-# Helper to convert a string to a boolean
-def strToBool(string):
-    string = string.lower()
-    if string == "true" or string == "t" or string == "y" or string == "yes" or string == "1" or string == "on":
-        return True
-    elif string == "false" or string == "f" or string == "n" or string == "no" or string == "0" or string == "off":
-        return False
-    else:
-        print("Error: strToBool Failed because input was not a supported boolean expression")
-
 if __name__ == "__main__":
-    # Checking that the arguments are all correct
-    if len(sys.argv) - 1 < 4:
-        # Argument info if wrong number
-        print("\nYou must provide at least 4 arguments:\n")
-        print("   1. Filename to read from\n")
-        print("   2. Number of states in chromatin state model (only supports up to 127)\n")
-        print("   3. Saliency metric (1-3)\n")
-        print("   4. Output directory\n")
-        print("   5. (Optional) True/False: Store the expected frequency array for later calculations (Default == False)")
-        print("   6. (Optional) Path to the stored expected frequency array")
-        print("   7. (Optional) True/False: Use previously stored expected frequency array (Default == False)")
-        print("NOTE: If argument 5 is used, argument 6 must also be used")
-        print("NOTE: If argument 7 is used, argument 6 must also be used. Additionally, argument 5 must be set to false if argument 7 is used")
-        print("NOTE: Please make sure you are have Python 3.8 or later installed for maximum efficiency (Python 3.6 is the oldest possible version)")
-    elif (not int(sys.argv[3]) == 1) and (not int(sys.argv[3]) == 2) and (not int(sys.argv[3]) == 3):
-        print("We currently only offer support for a saliency of 1, 2, or 3")
-    elif (len(sys.argv) - 1 == 4):
-        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
-    elif (len(sys.argv) - 1 == 5):
-        print("ERROR: Cannot have only 5 arguments, arguments 5 and 6 must be used in conjunction")
-    elif (len(sys.argv) - 1 == 6):
-        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], storeExpBool=strToBool(sys.argv[5]), expFreqDir=sys.argv[6])
-    elif (len(sys.argv) - 1 == 7):
-        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], storeExpBool=strToBool(sys.argv[5]), expFreqDir=sys.argv[6], useStoredExpBool=strToBool(sys.argv[7]))
-    else:
-        print("ERROR: Too many arguments inputted")
+    main()

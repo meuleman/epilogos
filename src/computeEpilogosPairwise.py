@@ -30,32 +30,16 @@ def main(file1, file2, outputDirectory):
     locationArr = dataDF1.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
-    scoreArr = calculatePairwise(dataArr1, dataArr2)
+    # Calculate the difference between the two score files
+    scoreArr = dataArr1 - dataArr2
 
-    writeScores(scoreArr, locationArr, outputDirPath, dataArr1.shape[1])
+    writeScores(scoreArr, locationArr, outputDirPath)
 
     print("Total Time: ", time.time() - tTotal)
 
 
-def calculatePairwise(dataArr1, dataArr2):
-    numRows, numCols = dataArr1.shape
-
-    # scoreArr = np.zeros(numRows, numCols)
-
-    # for row in range(numRows):
-    #     scoreArr[row] = dataArr1[row] - dataArr2[row]
-
-    scoreArr = dataArr1 - dataArr2
-
-    return scoreArr
-
-
-
-
-
-
 # Helper to write the final scores to files
-def writeScores(locationArr, scoreArr, outputDirPath, numStates):
+def writeScores(locationArr, scoreArr, outputDirPath):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
@@ -73,17 +57,18 @@ def writeScores(locationArr, scoreArr, outputDirPath, numStates):
             scoresTxt.write("{}\t".format(location))
         
         # Write to observations
-        maxContribution = np.amax(scoreArr[i])
-        maxContributionLoc = np.argmax(scoreArr[i]) + 1
-        totalScore = np.sum(scoreArr[i])
+        maxDifference = np.amax(np.absolute(scoreArr[i]))
+        maxDifferenceLoc = np.argmax(np.absolute(scoreArr[i])) + 1
+        differenceSign = np.sign(scoreArr[maxDifferenceLoc - 1])
+        totalAbsoluteDifference = np.sum(np.absolute(scoreArr[i]))
 
-        observationsTxt.write("{}\t".format(maxContributionLoc))
-        observationsTxt.write("{0:.5f}\t".format(maxContribution))
-        observationsTxt.write("1\t")
-        observationsTxt.write("{0:.5f}\t\n".format(totalScore))
+        observationsTxt.write("{}\t".format(maxDifferenceLoc))
+        observationsTxt.write("{0:.5f}\t".format(maxDifference))
+        observationsTxt.write("{}\t".format(differenceSign))
+        observationsTxt.write("{0:.5f}\t\n".format(totalAbsoluteDifference))
 
         # Write to scores
-        for j in range(numStates):
+        for j in range(scoreArr.shape[1]):
             scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j]))
         scoresTxt.write("\n")
 

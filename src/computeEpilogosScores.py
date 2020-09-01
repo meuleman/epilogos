@@ -27,23 +27,25 @@ def main(filename, numStates, saliency, outputDirPath, expFreqPath):
     print("Converting to numpy array...")
     tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
+    # Loading the expected frequency array
+    expFreqArr = np.load(expFreqPath, allow_pickle=False)
+
     if saliency == 1:
-        s1Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath)
+        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
     elif saliency == 2:
-        s2Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath)
+        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
     elif saliency == 3:
-        s3Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath)
+        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
     else:
         print("Inputed saliency value not supported")
         return
 
 # Function that calculates the scores for the S1 metric
-def s1Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
+def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
     numRows, numCols = dataArr.shape
-
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     # Calculate the observed frequencies and final scores in one loop
     scoreArr = np.zeros((numRows, numStates))
@@ -53,15 +55,10 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    scoreFilename = "temp_scores_" + epigenomeNumber + "_" + str(numStates) + "_s1_" + chromosomeNumber + ".npy"
-    scoreFilePath = outputDirPath / scoreFilename
-    np.save(scoreFilePath, scoreArr, allow_pickle=False)
+    storeScores(dataArr, scoreArr, locationArr, numStates, 1, outputDirPath)
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
+def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -93,26 +90,16 @@ def s2Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
                     elif uniqueStates[i] == uniqueStates[j]:
                         obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = math.comb(stateCounts[i], 2) / combinations
 
-    # Calculate the expected frequencies by summing the observed frequencies for each row
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
-
     scoreArr = np.zeros((numRows, numStates))
     for row in range(numRows):
         scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    scoreFilename = "temp_scores_" + epigenomeNumber + "_" + str(numStates) + "_s1_" + chromosomeNumber + ".npy"
-    scoreFilePath = outputDirPath / scoreFilename
-    np.save(scoreFilePath, scoreArr, allow_pickle=False)
+    storeScores(dataArr, scoreArr, locationArr, numStates, 2, outputDirPath)
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
+def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
-
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
@@ -139,13 +126,9 @@ def s3Score(dataDF, dataArr, numStates, outputDirPath, expFreqPath):
     for process in obsProcesses:
         process.join()
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    scoreFilename = "temp_scores_" + epigenomeNumber + "_" + str(numStates) + "_s1_" + chromosomeNumber + ".npy"
-    scoreFilePath = outputDirPath / scoreFilename
-    np.save(scoreFilePath, scoreArr, allow_pickle=False)
+    storeScores(dataArr, scoreArr, locationArr, numStates, 3, outputDirPath)
 
+# Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
     for row in rowsToCalculate:
         # Pull the scores from the precalculated score array
@@ -153,6 +136,19 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
         rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))
+
+# Helper to store the score arrays combined with the location arrays
+def storeScores(dataArr, scoreArr, locationArr, numStates, saliency, outputDirPath):
+    # Creating a file path
+    chromosomeNumber = str(locationArr[0, 0])
+    epigenomeNumber = str(dataArr.shape[1])
+    scoreFilename = "temp_scores_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
+    scoreFilePath = outputDirPath / scoreFilename
+
+    # Concatenating the locationArr and dataArr into one for writing later
+    combinedArr = np.concatenate((locationArr, scoreArr), axis=1)
+
+    np.save(scoreFilePath, combinedArr, allow_pickle=False)
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):

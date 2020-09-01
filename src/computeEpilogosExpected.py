@@ -52,12 +52,7 @@ def s1Exp(dataDF, dataArr, numStates, outputDirPath):
             expFreqSeries.loc[state] += count / dfSize
     expFreqArr = expFreqSeries.to_numpy()
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    expFreqFilename = "temp_exp_freq_" + epigenomeNumber + "_" + str(numStates) + "_s1_" + chromosomeNumber + ".npy"
-    expFreqPath = outputDirPath / expFreqFilename
-    np.save(expFreqPath, expFreqArr, allow_pickle=False)
+    storeArray(dataDF, dataArr, expFreqArr, numStates, 1, outputDirPath)
 
 # Function that calculates the expected frequencies for the S2 metric
 def s2Exp(dataDF, dataArr, numStates, outputDirPath):
@@ -93,13 +88,7 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath):
 
     expFreqArr = expFreqArr / numRows
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    expFreqFilename = "temp_exp_freq_" + epigenomeNumber + "_" + str(numStates) + "_s2_" + chromosomeNumber + ".npy"
-    expFreqPath = outputDirPath / expFreqFilename
-    np.save(expFreqPath, expFreqArr, allow_pickle=False)
-
+    storeArray(dataDF, dataArr, expFreqArr, numStates, 2, outputDirPath)
 
 # Function that calculates the expected frequencies for the S3 metric
 def s3Exp(dataDF, dataArr, numStates, outputDirPath):
@@ -134,12 +123,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath):
     # Normalize the array
     expFreqArr /= numRows * numCols * (numCols - 1)
 
-    # Store the expected frequency array somewhere where it can be accessed for scores
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    expFreqFilename = "temp_exp_freq_" + epigenomeNumber + "_" + str(numStates) + "_s3_" + chromosomeNumber + ".npy"
-    expFreqPath = outputDirPath / expFreqFilename
-    np.save(expFreqPath, expFreqArr, allow_pickle=False)
+    storeArray(dataDF, dataArr, expFreqArr, numStates, 3, outputDirPath)
 
 # Helper function for the multiprocessing
 def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
@@ -148,6 +132,15 @@ def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr,
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1])
     queue.put(expFreqArr)
 
+# Helper to store the expected frequency arrays
+def storeArray(dataDF, dataArr, expFreqArr, numStates, saliency, outputDirPath):
+    # Creating a file path
+    chromosomeNumber = str(dataDF.iloc[0, 0])
+    epigenomeNumber = str(dataArr.shape[1])
+    expFreqFilename = "temp_scores_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
+    expFreqPath = outputDirPath / expFreqFilename
+
+    np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 # Helper to calculate combinations
 def ncr(n, r):

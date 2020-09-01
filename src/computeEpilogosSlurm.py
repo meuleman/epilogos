@@ -14,6 +14,7 @@ import itertools
 import click
 import glob
 import os
+import subprocess
 
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from")
@@ -48,8 +49,13 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     # Path for storing/retrieving the expected frequency array
     if expFreqDir != "null":
-        expFreqFilename = "exp_freq_" + str(numEpigenomes) + "_" + str(numStates) + "_s" + str(saliency) + ".npy"
+        expFreqFilename = "exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
         storedExpPath = Path(expFreqDir) / expFreqFilename
+
+    if Path(__file__).is_absolute:
+        pythonFilesDir = Path(__file__).parents[0]
+    else:
+        pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     # Calculate the expected frequencies
     tExp = time.time()
@@ -63,62 +69,72 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
     else:        
         for file in dataFilePath.glob("*"):
+            if not file.is_dir():
+                filename = file.name.split(".")[0]
+                jobName = "exp_freq_calc_{}".format(filename)
+                jobPath = outputDirPath / "{}.job".format(jobName)
+                pythonCommand = "python computeEpilogosExpected.py {} {} {} {}".format(file, numStates, saliency, outputDirPath)
 
-            ##############################################################
-            #                                                            #
-            #   Insert bash stuff here to run computeEpilogosExpected    #
-            #                                                            #
-            ##############################################################
+                slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
-            # py computeEpilogosExpected.py file numStates saliency outputDirPath
+                subprocess.call(slurmCommand, shell=True)
 
-            print("lakes")
-
-        # Loop over all the expected value arrays and add them up
-        firstFile = True
+        # Loop over all the expected value arrays and add them up (normalize for number of chromosomes)
+        count = 0
         for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-            if firstFile:
+            if count == 0:
                 expFreqArr = np.load(file, allow_pickle=False)
                 firstFile = False
             else:
                 expFreqArr += np.load(file, allow_pickle=False)
+            count += 1
             # Delete file after were done with it
             os.remove(file)
+        expFreqArr /= count
 
         # If user desires, store away the expected frequency array
         if storeExp:
             np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
         # Save somewhere regardless for use in score calculation
-        expFreqPath = "temp_exp_freq_" + str(numEpigenomes) + "_" + str(numStates) + "_s" + str(saliency) + ".npy"
+        expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
+        expFreqPath = outputDirPath / expFreqFilename
         np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
     print("    Time: ", time.time() - tExp)
 
     # Calculate the observed frequencies and scores
     for file in dataFilePath.glob("*"):
+        if not file.is_dir():
+            filename = file.name.split(".")[0]
+            jobName = "score_calc_{}".format(filename)
+            jobPath = outputDirPath / "{}.job".format(jobName)
+            pythonCommand = "python computeEpilogosScores.py {} {} {} {} {}".format(file, numStates, saliency, outputDirPath, expFreqPath)
 
-        ##############################################################
-        #                                                            #
-        #    Insert bash stuff here to run computeEpilogosScores     #
-        #                                                            #
-        ##############################################################
+            slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
-        # py computeEpilogosScores.py file numStates saliency outputDirPath expFreqPath
+            subprocess.call(slurmCommand, shell=True)
 
-        print("lakes")
-
+    # Clean up the saved temporary expected frequency array
+    for file in outputDirPath.glob("temp_exp_freq_*.npy"):
+        os.remove(file)
 
     # Writing the scores to the files
     print("Writing to files...")
     tWrite = time.time()
-    writeScores(locationArr, outputDirPath, numStates)
+
+    for file in outputDirPath.glob("temp_scores_*.npy"):
+        scoreArr = np.load(file, allow_pickle=False)
+        writeScores(scoreArr, outputDirPath, numStates)
+        # Clean up
+        os.remove(file)
+
     print("    Time: ", time.time() - tWrite)
 
     print("Total Time: ", time.time() - tTotal)
 
 # Helper to write the final scores to files
-def writeScores(locationArr, outputDirPath, numStates):
+def writeScores(scoreArr, outputDirPath, numStates):
     observationsTxtPath = outputDirPath / "observationsM.txt.gz"
     scoresTxtPath = outputDirPath / "scoresM.txt.gz"
 
@@ -126,16 +142,16 @@ def writeScores(locationArr, outputDirPath, numStates):
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
     # Write each row in both observations and scores
-    for i in range(locationArr.shape[0]):
+    for i in range(scoreArr.shape[0]):
         # Write in the coordinates
-        for location in locationArr[i]:
+        for location in scoreArr[i, 0:3]:
             observationsTxt.write("{}\t".format(location))
             scoresTxt.write("{}\t".format(location))
         
         # Write to observations
-        maxContribution = np.amax(scoreArr[i])
-        maxContributionLoc = np.argmax(scoreArr[i]) + 1
-        totalScore = np.sum(scoreArr[i])
+        maxContribution = np.amax(int(scoreArr[i, 3:].astype(float)))
+        maxContributionLoc = np.argmax(scoreArr[i, 3:].astype(float)) + 1
+        totalScore = np.sum(scoreArr[i, 3:].astype(float))
 
         observationsTxt.write("{}\t".format(maxContributionLoc))
         observationsTxt.write("{0:.5f}\t".format(maxContribution))
@@ -144,7 +160,7 @@ def writeScores(locationArr, outputDirPath, numStates):
 
         # Write to scores
         for j in range(numStates):
-            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j]))
+            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j + 3]))
         scoresTxt.write("\n")
 
     observationsTxt.close()

@@ -32,10 +32,10 @@ def main(file1, file2, outputDirectory):
 
     # Calculate the difference between the two score files
     tScores = time.time()
-    scoreArr = dataArr1[0:100000] - dataArr2[0:100000]
+    scoreArr = dataArr1 - dataArr2
     print("Score Time: ", time.time() - tScores)
 
-    writeScores(scoreArr, locationArr[0:100000], outputDirPath)
+    writeScores(scoreArr, locationArr, outputDirPath)
 
     print("Total Time: ", time.time() - tTotal)
 
@@ -76,7 +76,6 @@ def writeScores(locationArr, scoreArr, outputDirPath):
 
     observationsTxt.close()
     scoresTxt.close()
-
 
 if __name__ == "__main__":
     if len(sys.argv) - 1 < 3:

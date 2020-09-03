@@ -35,7 +35,7 @@ def main(file1, file2, outputDirectory):
     scoreArr = dataArr1 - dataArr2
     print("Score Time: ", time.time() - tScores)
 
-    writeScores(scoreArr, locationArr, outputDirPath)
+    writeScores(locationArr, scoreArr, outputDirPath)
 
     print("Total Time: ", time.time() - tTotal)
 

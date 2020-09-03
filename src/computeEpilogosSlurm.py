@@ -25,6 +25,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print("ERROR: Given file path does not exist or is not a directory")
         return
 
+    if list(dataFilePath.glob("*")):
+        print("ERROR: Ensure that file directory is not empty")
+
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
@@ -36,14 +39,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     # Calculate the number of epigenomes (just read one line of one of the data files)
     for x in dataFilePath.glob("*"):
         numEpigenomes = pd.read_table(x, header=None, sep="\t", nrows=1).shape[1] - 3
-        print(numEpigenomes)
         break
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to the number of epigenomes, number of states, and saliency metric involved in the calculation
     if expFreqDir != "null":
         expFreqFilename = "exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
-        print(numEpigenomes)
         storedExpPath = Path(expFreqDir) / expFreqFilename
 
     # Finding the location of the .py files that must be run

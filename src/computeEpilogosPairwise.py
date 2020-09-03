@@ -25,9 +25,9 @@ def main(file1, file2, outputDirectory):
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr1 = dataDF1.iloc[:,3:].to_numpy(dtype=int)
-    dataArr2 = dataDF2.iloc[:,3:].to_numpy(dtype=int)
-    locationArr = dataDF1.iloc[:,0:3].to_numpy(dtype=str)
+    dataArr1 = dataDF1.iloc[-1000:,3:].to_numpy(dtype=float)
+    dataArr2 = dataDF2.iloc[-1000:,3:].to_numpy(dtype=float)
+    locationArr = dataDF1.iloc[-1000:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
     # Calculate the difference between the two score files
@@ -61,7 +61,7 @@ def writeScores(locationArr, scoreArr, outputDirPath):
         # Write to observations
         maxDifference = np.amax(np.absolute(scoreArr[i]))
         maxDifferenceLoc = np.argmax(np.absolute(scoreArr[i])) + 1
-        differenceSign = np.sign(scoreArr[maxDifferenceLoc - 1])
+        differenceSign = np.sign(scoreArr[i, maxDifferenceLoc - 1])
         totalAbsoluteDifference = np.sum(np.absolute(scoreArr[i]))
 
         observationsTxt.write("{}\t".format(maxDifferenceLoc))

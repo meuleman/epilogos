@@ -1,17 +1,13 @@
-import gzip
 import numpy as np
 import sys
 from pathlib import Path
 import math
 import pandas as pd
 import time
-import numpy.ma as ma
 import operator as op
 from functools import reduce
 import multiprocessing
-import ctypes
 import itertools
-import click
 
 def main(filename, numStates, saliency, outputDirPath):
     dataFilePath = Path(filename)
@@ -52,7 +48,7 @@ def s1Exp(dataDF, dataArr, numStates, outputDirPath):
             expFreqSeries.loc[state] += count / dfSize
     expFreqArr = expFreqSeries.to_numpy()
 
-    storeArray(dataDF, dataArr, expFreqArr, numStates, 1, outputDirPath)
+    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 1, outputDirPath)
 
 # Function that calculates the expected frequencies for the S2 metric
 def s2Exp(dataDF, dataArr, numStates, outputDirPath):
@@ -88,7 +84,7 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath):
 
     expFreqArr = expFreqArr / numRows
 
-    storeArray(dataDF, dataArr, expFreqArr, numStates, 2, outputDirPath)
+    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 2, outputDirPath)
 
 # Function that calculates the expected frequencies for the S3 metric
 def s3Exp(dataDF, dataArr, numStates, outputDirPath):
@@ -123,7 +119,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath):
     # Normalize the array
     expFreqArr /= numRows * numCols * (numCols - 1)
 
-    storeArray(dataDF, dataArr, expFreqArr, numStates, 3, outputDirPath)
+    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 3, outputDirPath)
 
 # Helper function for the multiprocessing
 def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
@@ -133,11 +129,11 @@ def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr,
     queue.put(expFreqArr)
 
 # Helper to store the expected frequency arrays
-def storeArray(dataDF, dataArr, expFreqArr, numStates, saliency, outputDirPath):
+def storeExpArray(dataDF, dataArr, expFreqArr, numStates, saliency, outputDirPath):
     # Creating a file path
     chromosomeNumber = str(dataDF.iloc[0, 0])
     epigenomeNumber = str(dataArr.shape[1])
-    expFreqFilename = "temp_scores_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
+    expFreqFilename = "temp_exp_freq_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
     expFreqPath = outputDirPath / expFreqFilename
 
     np.save(expFreqPath, expFreqArr, allow_pickle=False)

@@ -9,7 +9,6 @@ import numpy.ma as ma
 import operator as op
 from functools import reduce
 import multiprocessing
-import ctypes
 import itertools
 import click
 
@@ -18,8 +17,8 @@ import click
 @click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
-@click.option("-e", "--store-expected", "storeExpected", is_flag=True, help="Flag: Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
-@click.option("-u", "--use-expected", "useStoredExpected", is_flag=True, help="Flag: Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
+@click.option("-e", "--store-expected", "storeExpected", is_flag=True, help="[Flag] Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
+@click.option("-u", "--use-expected", "useStoredExpected", is_flag=True, help="[Flag] Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
 @click.option("-d", "--expected-directory", "expFreqDir", type=str, default="null", help="Path to the stored expected frequency array (Must be used in conjunction with either '-e' or '-u')")
 def main(filename, numStates, saliency, outputDirectory, storeExpected, useStoredExpected, expFreqDir):
     tTotal = time.time()

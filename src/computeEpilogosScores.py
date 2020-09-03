@@ -1,4 +1,3 @@
-import gzip
 import numpy as np
 import sys
 from pathlib import Path
@@ -9,10 +8,6 @@ import numpy.ma as ma
 import operator as op
 from functools import reduce
 import multiprocessing
-import ctypes
-import itertools
-import click
-
 
 def main(filename, numStates, saliency, outputDirPath, expFreqPath):
     dataFilePath = Path(filename)
@@ -145,7 +140,7 @@ def storeScores(dataArr, scoreArr, locationArr, numStates, saliency, outputDirPa
     scoreFilename = "temp_scores_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
     scoreFilePath = outputDirPath / scoreFilename
 
-    # Concatenating the locationArr and dataArr into one for writing later
+    # Concatenating the locationArr and dataArr into one helps writing later
     combinedArr = np.concatenate((locationArr, scoreArr), axis=1)
 
     np.save(scoreFilePath, combinedArr, allow_pickle=False)

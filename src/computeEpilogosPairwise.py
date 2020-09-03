@@ -31,9 +31,11 @@ def main(file1, file2, outputDirectory):
     print("    Time: ", time.time() - tConvert)
 
     # Calculate the difference between the two score files
-    scoreArr = dataArr1 - dataArr2
+    tScores = time.time()
+    scoreArr = dataArr1[0:100000] - dataArr2[0:100000]
+    print("Score Time: ", time.time() - tScores)
 
-    writeScores(scoreArr, locationArr, outputDirPath)
+    writeScores(scoreArr, locationArr[0:100000], outputDirPath)
 
     print("Total Time: ", time.time() - tTotal)
 

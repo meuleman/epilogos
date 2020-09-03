@@ -1,28 +1,19 @@
 import gzip
 import numpy as np
-import sys
 from pathlib import Path
-import math
 import pandas as pd
 import time
-import numpy.ma as ma
-import operator as op
-from functools import reduce
-import multiprocessing
-import ctypes
-import itertools
 import click
-import glob
 import os
 import subprocess
 
 @click.command()
-@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from")
+@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (Please ensure that this directory contains only files you want to read from)")
 @click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
-@click.option("-e", "--store-expected", "storeExp", is_flag=True, help="Flag: Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
-@click.option("-u", "--use-expected", "useStoredExp", is_flag=True, help="Flag: Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
+@click.option("-e", "--store-expected", "storeExp", is_flag=True, help="[Flag] Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
+@click.option("-u", "--use-expected", "useStoredExp", is_flag=True, help="[Flag] Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
 @click.option("-d", "--expected-directory", "expFreqDir", type=str, default="null", help="Path to the stored expected frequency array (Must be used in conjunction with either '-e' or '-u')")
 def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStoredExp, expFreqDir):
     tTotal = time.time()
@@ -34,24 +25,26 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print("ERROR: Given file path does not exist or is not a directory")
         return
 
-    if not outputDirPath.is_dir():
-        print("ERROR: Output directory is not a directory")
-        return
-
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    # Calculate the number of epigenomes
+    if not outputDirPath.is_dir():
+        print("ERROR: Output directory is not a directory")
+        return
+
+    # Calculate the number of epigenomes (just read one line of one of the data files)
     for x in dataFilePath.glob("*"):
         numEpigenomes = pd.read_table(x, header=None, sep="\t", nrows=1).shape[1] - 3
         break
 
     # Path for storing/retrieving the expected frequency array
+    # Expected frequency arrays are stored according to the number of epigenomes, number of states, and saliency metric involved in the calculation
     if expFreqDir != "null":
         expFreqFilename = "exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
         storedExpPath = Path(expFreqDir) / expFreqFilename
 
+    # Finding the location of the .py files that must be run
     if Path(__file__).is_absolute:
         pythonFilesDir = Path(__file__).parents[0]
     else:
@@ -72,9 +65,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}".format(filename)
-                jobPath = outputDirPath / "{}.job".format(jobName)
-                pythonCommand = "python computeEpilogosExpected.py {} {} {} {}".format(file, numStates, saliency, outputDirPath)
+                file = dataFilePath / file
+                computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
+                pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath)
                 slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
                 subprocess.call(slurmCommand, shell=True)
@@ -84,11 +78,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         for file in outputDirPath.glob("temp_exp_freq_*.npy"):
             if count == 0:
                 expFreqArr = np.load(file, allow_pickle=False)
-                firstFile = False
             else:
                 expFreqArr += np.load(file, allow_pickle=False)
             count += 1
-            # Delete file after were done with it
+            # Delete file after we're done with it
             os.remove(file)
         expFreqArr /= count
 
@@ -108,9 +101,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         if not file.is_dir():
             filename = file.name.split(".")[0]
             jobName = "score_calc_{}".format(filename)
-            jobPath = outputDirPath / "{}.job".format(jobName)
-            pythonCommand = "python computeEpilogosScores.py {} {} {} {} {}".format(file, numStates, saliency, outputDirPath, expFreqPath)
+            computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
+            pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
             slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
             subprocess.call(slurmCommand, shell=True)
@@ -123,7 +116,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("Writing to files...")
     tWrite = time.time()
 
-    for file in outputDirPath.glob("temp_scores_*.npy"):
+    # Order matters to us when writing, so use sorted
+    for file in sorted(outputDirPath.glob("temp_scores_*.npy")):
         scoreArr = np.load(file, allow_pickle=False)
         writeScores(scoreArr, outputDirPath, numStates)
         # Clean up

@@ -129,8 +129,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
 # Helper to write the final scores to files
 def writeScores(scoreArr, outputDirPath, numStates):
-    observationsTxtPath = outputDirPath / "observationsM.txt.gz"
-    scoresTxtPath = outputDirPath / "scoresM.txt.gz"
+    observationsTxtPath = outputDirPath / "observationsSLURM.txt.gz"
+    scoresTxtPath = outputDirPath / "scoresSLURM.txt.gz"
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")

@@ -36,12 +36,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     # Calculate the number of epigenomes (just read one line of one of the data files)
     for x in dataFilePath.glob("*"):
         numEpigenomes = pd.read_table(x, header=None, sep="\t", nrows=1).shape[1] - 3
+        print(numEpigenomes)
         break
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to the number of epigenomes, number of states, and saliency metric involved in the calculation
     if expFreqDir != "null":
         expFreqFilename = "exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
+        print(numEpigenomes)
         storedExpPath = Path(expFreqDir) / expFreqFilename
 
     # Finding the location of the .py files that must be run
@@ -61,6 +63,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         except IOError:
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
     else:        
+        print(numEpigenomes)
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -91,6 +94,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
         # Save somewhere regardless for use in score calculation
+        print(numEpigenomes)
         expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
         expFreqPath = outputDirPath / expFreqFilename
         np.save(expFreqPath, expFreqArr, allow_pickle=False)

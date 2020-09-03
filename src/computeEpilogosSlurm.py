@@ -75,6 +75,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         # Loop over all the expected value arrays and add them up (normalize for number of chromosomes)
         count = 0
+        expFreqArr = np.zeros((1,1))
         for file in outputDirPath.glob("temp_exp_freq_*.npy"):
             if count == 0:
                 expFreqArr = np.load(file, allow_pickle=False)

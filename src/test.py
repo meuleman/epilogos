@@ -40,7 +40,7 @@ def main(fileDir, outputDir):
             # print("STDOUT", process.stdout)
 
             jobPath = outputDirPath / "{}.sh".format(jobName)
-            with open(jobPath) as script:
+            with open(jobPath, "w") as script:
                 script.writelines("#!/bin/bash\n")
                 script.writelines("#SBATCH --job-name={}.job\n".format(jobName))
                 script.writelines("#SBATCH --output=.out/{}.out\n".format(jobName))

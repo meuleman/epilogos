@@ -12,62 +12,34 @@ import glob
 import pandas as pd
 import os
 import sys
+import subprocess
 
-def main():
+def main(fileDir, outputDir):
 
-    strArr = np.array([["chr1", "0", "200"],
-                       ["chr1", "200", "400"],
-                       ["chr1", "400", "600"]], dtype=str)
+    dataFilePath = Path(fileDir)
+    outputPath = Path(outputDir)
 
-    intArr = np.array([[1.7, 1.3, .9],
-                       [2.0, .21, .08],
-                       [7.3, 2.1, 33]], dtype=float)
+    # Finding the location of the .py files that must be run
+    if Path(__file__).is_absolute:
+        pythonFilesDir = Path(__file__).parents[0]
+    else:
+        pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
-    print(intArr)
+    for file in dataFilePath.glob("*"):
+        if not file.is_dir():
+            filename = file.name.split(".")[0]
+            jobName = "exp_freq_calc_{}".format(filename)
+            file = dataFilePath / file
+            computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-    for i in range(10):
-        arr = np.array(np.arange(i, i+9).reshape(3,3), dtype=float)
-        np.save(Path.cwd() / "intArrTest{}.npy".format(i), arr, allow_pickle=False)
+            pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputPath)
+            slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
-    count = 0
-    for file in Path.cwd().glob("intArrTest*.npy"):
-        if count == 0:
-            expFreqArr = np.load(file, allow_pickle=False)
-        else:
-            expFreqArr += np.load(file, allow_pickle=False)
-        count += 1
-        # Delete file after we're done with it
-        os.remove(file)
+            process = subprocess.run(slurmCommand, shell=True, universal_newlines=True)
 
-    print()
-    print(expFreqArr)
-    print(count)
-    expFreqArr /= count
+            print(process.cp)
 
-    print()
-    print(expFreqArr)
-    print()
-
-    global x
-    x= "fantabulous"
-
-    test()
-
-
-    print(os.getcwd())
-    print(Path.cwd())
-    print(Path(__file__).is_absolute())
-    for file in (Path(__file__).parents[0]).glob("*"):
-        print(file)
-
-
-    print()
-
-    print("{0}{0}{0}{1}".format("test", "success"))
-
-
-def test():
-    print(x)
+            # slurmCheck = subprocess.run("")
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], sys.argv[2])

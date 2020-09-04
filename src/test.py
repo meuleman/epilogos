@@ -33,11 +33,11 @@ def main(fileDir, outputDir):
             computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
             pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputPath)
-            slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
+            slurmCommand = "sbatch --uid=jquon --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
             process = subprocess.run(slurmCommand, shell=True, universal_newlines=True)
 
-            print(process.cp)
+            print("STDOUT", process.stdout)
 
             # slurmCheck = subprocess.run("")
 

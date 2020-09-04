@@ -25,9 +25,9 @@ def main(file1, file2, outputDirectory):
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr1 = dataDF1.iloc[-1000:,3:].to_numpy(dtype=float)
-    dataArr2 = dataDF2.iloc[-1000:,3:].to_numpy(dtype=float)
-    locationArr = dataDF1.iloc[-1000:,0:3].to_numpy(dtype=str)
+    dataArr1 = dataDF1.iloc[:,3:].to_numpy(dtype=float)
+    dataArr2 = dataDF2.iloc[:,3:].to_numpy(dtype=float)
+    locationArr = dataDF1.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
     # Calculate the difference between the two score files
@@ -45,8 +45,8 @@ def writeScores(locationArr, scoreArr, outputDirPath):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    observationsTxtPath = outputDirPath / "observationsP.txt.gz"
-    scoresTxtPath = outputDirPath / "scoresP.txt.gz"
+    observationsTxtPath = outputDirPath / "observationsPairwise.txt.gz"
+    scoresTxtPath = outputDirPath / "scoresPairwise.txt.gz"
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")

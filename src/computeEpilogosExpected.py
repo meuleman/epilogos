@@ -136,6 +136,8 @@ def storeExpArray(dataDF, dataArr, expFreqArr, numStates, saliency, outputDirPat
     expFreqFilename = "temp_exp_freq_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
     expFreqPath = outputDirPath / expFreqFilename
 
+    print(type(expFreqArr[0,0]))
+
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 # Helper to calculate combinations

@@ -53,118 +53,134 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     else:
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
-    # Calculate the expected frequencies
-    tExp = time.time()
-    print("Calculating expected frequencies...")
-
     # Check if its already been calculated before
     if useStoredExp:
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
-    else:        
-        print(numEpigenomes)
+    else:     
+        expJobIDArr = []   
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}".format(filename)
-                file = dataFilePath / file
+                jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+                jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+
+                # Creating the out and err files for the batch job
+                try:
+                    jout = open(jobOutPath, "x")
+                    jout.close()
+                    jerr = open(jobErrPath, "x")
+                    jerr.close()
+                except FileExistsError:
+                    print("ERROR: sbatch '.out' or '.err' file already exists")
+
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
                 pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath)
-                slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
-                subprocess.call(slurmCommand, shell=True)
+                slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
-        # Loop over all the expected value arrays and add them up (normalize for number of chromosomes)
-        count = 0
-        expFreqArr = np.zeros((1,1))
-        for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-            if count == 0:
-                expFreqArr = np.load(file, allow_pickle=False)
-            else:
-                expFreqArr += np.load(file, allow_pickle=False)
-            count += 1
-            # Delete file after we're done with it
-            os.remove(file)
-        expFreqArr /= count
+                sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
-        # If user desires, store away the expected frequency array
-        if storeExp:
-            np.save(storedExpPath, expFreqArr, allow_pickle=False)
+                if not sp.startswith("Submitted batch"):
+                    print("ERROR: sbatch not submitted correctly")
+                
+                expJobIDArr.append(int(sp.split()[-1]))
 
-        # Save somewhere regardless for use in score calculation
-        print(numEpigenomes)
-        expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
-        expFreqPath = outputDirPath / expFreqFilename
-        np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
-    print("    Time: ", time.time() - tExp)
+        # create a string for slurm dependency to work
+        jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
+
+        jobName = "exp_freq_comb_{}".format("_".join(str(dataFilePath).split("/")[-5:]))
+        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+
+        # Creating the out and err files for the batch job
+        try:
+            jout = open(jobOutPath, "x")
+            jout.close()
+            jerr = open(jobErrPath, "x")
+            jerr.close()
+        except FileExistsError:
+            print("ERROR: sbatch '.out' or '.err' file already exists")
+
+        computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
+
+        pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, numEpigenomes, numStates, saliency, storeExp, storedExpPath)
+
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+
+        sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+        if not sp.startswith("Submitted batch"):
+            print("ERROR: sbatch not submitted correctly")
+        
+        combinationJobID = int(sp.split()[-1])
+
+    expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
+    expFreqPath = outputDirPath / expFreqFilename
 
     # Calculate the observed frequencies and scores
+    scoreJobIDArr = []
     for file in dataFilePath.glob("*"):
         if not file.is_dir():
             filename = file.name.split(".")[0]
             jobName = "score_calc_{}".format(filename)
+            jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+            jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+
+            # Creating the out and err files for the batch job
+            try:
+                jout = open(jobOutPath, "x")
+                jout.close()
+                jerr = open(jobErrPath, "x")
+                jerr.close()
+            except FileExistsError:
+                print("ERROR: sbatch '.out' or '.err' file already exists")
+            
             computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
             pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
-            slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-            subprocess.call(slurmCommand, shell=True)
+            sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
-    # Clean up the saved temporary expected frequency array
-    for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-        os.remove(file)
+            if not sp.startswith("Submitted batch"):
+                print("ERROR: sbatch not submitted correctly")
+            
+            scoreJobIDArr.append(int(sp.split()[-1]))
 
-    # Writing the scores to the files
-    print("Writing to files...")
-    tWrite = time.time()
+    # WRITING TO SCORE FILES
 
-    # Order matters to us when writing, so use sorted
-    for file in sorted(outputDirPath.glob("temp_scores_*.npy")):
-        scoreArr = np.load(file, allow_pickle=False)
-        writeScores(scoreArr, outputDirPath, numStates)
-        # Clean up
-        os.remove(file)
+    # create a string for slurm dependency to work
+    jobIDStrWrite = str(expJobIDArr).strip('[]').replace(" ", "")
 
-    print("    Time: ", time.time() - tWrite)
+    jobName = "write_{}".format("_".join(str(dataFilePath).split("/")[-5:]))
+    jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+    jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-    print("Total Time: ", time.time() - tTotal)
+    # Creating the out and err files for the batch job
+    try:
+        jout = open(jobOutPath, "x")
+        jout.close()
+        jerr = open(jobErrPath, "x")
+        jerr.close()
+    except FileExistsError:
+        print("ERROR: sbatch '.out' or '.err' file already exists")
 
-# Helper to write the final scores to files
-def writeScores(scoreArr, outputDirPath, numStates):
-    observationsTxtPath = outputDirPath / "observationsSLURM.txt.gz"
-    scoresTxtPath = outputDirPath / "scoresSLURM.txt.gz"
+    computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-    observationsTxt = gzip.open(observationsTxtPath, "wt")
-    scoresTxt = gzip.open(scoresTxtPath, "wt")
+    pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, dataFilePath, outputDirPath, numStates)
 
-    # Write each row in both observations and scores
-    for i in range(scoreArr.shape[0]):
-        # Write in the coordinates
-        for location in scoreArr[i, 0:3]:
-            observationsTxt.write("{}\t".format(location))
-            scoresTxt.write("{}\t".format(location))
-        
-        # Write to observations
-        maxContribution = np.amax(int(scoreArr[i, 3:].astype(float)))
-        maxContributionLoc = np.argmax(scoreArr[i, 3:].astype(float)) + 1
-        totalScore = np.sum(scoreArr[i, 3:].astype(float))
+    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-        observationsTxt.write("{}\t".format(maxContributionLoc))
-        observationsTxt.write("{0:.5f}\t".format(maxContribution))
-        observationsTxt.write("1\t")
-        observationsTxt.write("{0:.5f}\t\n".format(totalScore))
+    sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
-        # Write to scores
-        for j in range(numStates):
-            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j + 3]))
-        scoresTxt.write("\n")
-
-    observationsTxt.close()
-    scoresTxt.close()
+    if not sp.startswith("Submitted batch"):
+        print("ERROR: sbatch not submitted correctly")
 
 if __name__ == "__main__":
     main()

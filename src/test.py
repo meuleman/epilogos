@@ -16,6 +16,16 @@ import subprocess
 
 def main(fileDir, outputDir):
 
+    test = "hiya"
+
+    print(Path(__file__) / (".out/" + test + ".out"))
+
+    (Path(__file__).parents[0] / (".out")).mkdir(parents=True)
+
+    print(Path.cwd())
+
+    print(test[2])
+
     dataFilePath = Path(fileDir)
     outputDirPath = Path(outputDir)
 
@@ -26,32 +36,32 @@ def main(fileDir, outputDir):
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     for file in dataFilePath.glob("*"):
-        if not file.is_dir():
-            filename = file.name.split(".")[0]
-            jobName = "exp_freq_calc_{}".format(filename)
-            file = dataFilePath / file
-            computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
+        print(file)
+        # if not file.is_dir():
+        #     filename = file.name.split(".")[0]
+        #     jobName = "exp_freq_calc_{}".format(filename)
+        #     computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-            # pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath)
-            # slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
+        #     # pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath)
+        #     # slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
 
-            # process = subprocess.run(slurmCommand, shell=True, universal_newlines=True)
+        #     # process = subprocess.run(slurmCommand, shell=True, universal_newlines=True)
 
-            # print("STDOUT", process.stdout)
+        #     # print("STDOUT", process.stdout)
 
-            jobPath = outputDirPath / "{}.sh".format(jobName)
-            with open(jobPath, "w") as script:
-                script.writelines("#!/bin/bash\n")
-                script.writelines("#SBATCH --job-name={}.job\n".format(jobName))
-                script.writelines("#SBATCH --output=.out/{}.out\n".format(jobName))
-                script.writelines("#SBATCH --error=.out/{}.err\n".format(jobName))
-                script.writelines("#SBATCH --nodes=1\n".format())
-                script.writelines("#SBATCH --ntasks=1\n".format())
-                script.writelines("python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath))
+        #     jobPath = outputDirPath / "{}.sh".format(jobName)
+        #     with open(jobPath, "w") as script:
+        #         script.writelines("#!/bin/bash\n")
+        #         script.writelines("#SBATCH --job-name={}.job\n".format(jobName))
+        #         script.writelines("#SBATCH --output=.out/{}.out\n".format(jobName))
+        #         script.writelines("#SBATCH --error=.out/{}.err\n".format(jobName))
+        #         script.writelines("#SBATCH --nodes=1\n".format())
+        #         script.writelines("#SBATCH --ntasks=1\n".format())
+        #         script.writelines("python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath))
 
-            process = subprocess.run("sbatch {}".format(jobPath), shell=True, universal_newlines=True)
+        #     process = subprocess.run("sbatch {}".format(jobPath), shell=True, universal_newlines=True)
 
-            print("STDOUT: ", process.stdout)
+        #     print("STDOUT: ", process.stdout)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])

@@ -39,8 +39,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print("ERROR: Given file path does not exist or is not a directory")
         return
 
-    if list(dataFilePath.glob("*")):
-        print(list(dataFilePath.glob("*")))
+    if not list(dataFilePath.glob("*")):
         print("ERROR: Ensure that file directory is not empty")
 
     # If the output directory does not exist yet, make it for the user 
@@ -84,10 +83,15 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print("Calculating expected frequencies....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
+                print(file.name)
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+
+                print("JOBOUTPATH: ", jobOutPath)
+                print("JOBERRPATH: ", jobErrPath)
+                print()
 
                 # Creating the out and err files for the batch job
                 try:

@@ -28,9 +28,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
+        print("OUTPUTPATH: ", outputDirPath)
 
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
+        print("FILE PATH: ", dataFilePath)
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -38,6 +40,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         return
 
     if list(dataFilePath.glob("*")):
+        print(list(dataFilePath.glob("*")))
         print("ERROR: Ensure that file directory is not empty")
 
     # If the output directory does not exist yet, make it for the user 
@@ -77,6 +80,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists")
     else:     
         expJobIDArr = []   
+        print()
         print("Calculating expected frequencies....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
@@ -101,7 +105,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
                 slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 print(pythonCommand)
+                print()
                 print(slurmCommand)
+                print()
 
                 # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
@@ -112,13 +118,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         # Combining all the different chromosome expected frequency arrays into one
         # create a string for slurm dependency to work
-        for i in range(10):
-            teststr = "Submitted batch {}".format(i)
-            expJobIDArr.append(int(teststr.split()[-1]))
         jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
-        print("expJobIDArr: ", expJobIDArr)
-        print("jobIDStrComb: ", jobIDStrComb)
 
+        print()
         print("Combining expected frequencies....")
 
         jobName = "exp_freq_comb_{}".format(fileTag)
@@ -136,13 +138,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
-        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storeExp, storedExpPath)
+        if storeExp:
+            pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storeExp, storedExpPath)
+        else:
+            pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag)
 
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         print(pythonCommand)
+        print()
         print(slurmCommand)
-
+        print()
         # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
         # if not sp.stdout.startswith("Submitted batch"):
@@ -152,6 +158,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         combinationJobId = 1
 
     # Calculate the observed frequencies and scores
+    print()
     print("Calculating Scores....")
     expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
     expFreqPath = outputDirPath / expFreqFilename
@@ -178,7 +185,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
             print(pythonCommand)
+            print()
             print(slurmCommand)
+            print()
 
             # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
@@ -188,14 +197,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             # scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
     # WRITING TO SCORE FILES
+    print()
     print("Writing to score files....")
     # create a string for slurm dependency to work
-    for i in range(10):
-        teststr = "Submitted batch {}".format(i)
-        scoreJobIDArr.append(int(teststr.split()[-1]))
     jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
-    print("scoreJobIDArr: ", scoreJobIDArr)
-    print("jobIDStrWrite: ", jobIDStrWrite)
 
 
     jobName = "write_{}".format(fileTag)
@@ -218,7 +223,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
     print(pythonCommand)
+    print()
     print(slurmCommand)
+    print()
 
     # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 

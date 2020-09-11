@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-def main(outputDirectory, fileTag, storeExp, storedExpInput):
+def main(outputDirectory, fileTag, storeExp="False", storedExpInput="null"):
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
 

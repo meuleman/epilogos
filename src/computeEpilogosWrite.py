@@ -4,28 +4,24 @@ from pathlib import Path
 import gzip
 import sys
 
-def main(fileDirectory, outputDirectory, numStates):
+def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
-    filePath = Path(fileDirectory)
-
-    # formatting the name for the output files
-    filename = "_".join(str(filePath).split("/")[-5:])
 
     # Clean up the saved temporary expected frequency array
-    for file in outputDirPath.glob("temp_exp_freq_*.npy"):
+    for file in outputDirPath.glob("temp_exp_freq_{}_*.npy".format(fileTag)):
         os.remove(file)
 
     # Order matters to us when writing, so use sorted
-    for file in sorted(outputDirPath.glob("temp_scores_*.npy")):
+    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         scoreArr = np.load(file, allow_pickle=False)
-        writeScores(filename, scoreArr, outputDirPath, numStates)
+        writeScores(fileTag, scoreArr, outputDirPath, numStates)
         # Clean up
         os.remove(file)
 
 # Helper to write the final scores to files
-def writeScores(filename, scoreArr, outputDirPath, numStates):
-    observationsTxtPath = outputDirPath / "observations_{}.txt.gz".format(filename)
-    scoresTxtPath = outputDirPath / "scores_{}.txt.gz".format(filename)
+def writeScores(fileTag, scoreArr, outputDirPath, numStates):
+    observationsTxtPath = outputDirPath / "observations_{}.txt.gz".format(fileTag)
+    scoresTxtPath = outputDirPath / "scores_{}.txt.gz".format(fileTag)
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")

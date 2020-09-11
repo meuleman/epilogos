@@ -9,7 +9,7 @@ import operator as op
 from functools import reduce
 import multiprocessing
 
-def main(filename, numStates, saliency, outputDirPath, expFreqPath):
+def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     dataFilePath = Path(filename)
 
     # Read in the data
@@ -29,17 +29,17 @@ def main(filename, numStates, saliency, outputDirPath, expFreqPath):
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     if saliency == 1:
-        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
+        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
     elif saliency == 2:
-        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
+        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
     elif saliency == 3:
-        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr)
+        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
     else:
         print("Inputed saliency value not supported")
         return
 
 # Function that calculates the scores for the S1 metric
-def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
+def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies and final scores in one loop
@@ -50,10 +50,10 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-    storeScores(dataArr, scoreArr, locationArr, numStates, 1, outputDirPath)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
+def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -89,10 +89,10 @@ def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
     for row in range(numRows):
         scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
 
-    storeScores(dataArr, scoreArr, locationArr, numStates, 2, outputDirPath)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
+def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
 
@@ -121,7 +121,7 @@ def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr):
     for process in obsProcesses:
         process.join()
 
-    storeScores(dataArr, scoreArr, locationArr, numStates, 3, outputDirPath)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
 
 # Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
@@ -133,11 +133,10 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))
 
 # Helper to store the score arrays combined with the location arrays
-def storeScores(dataArr, scoreArr, locationArr, numStates, saliency, outputDirPath):
+def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag):
     # Creating a file path
     chromosomeNumber = str(locationArr[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    scoreFilename = "temp_scores_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
+    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, chromosomeNumber)
     scoreFilePath = outputDirPath / scoreFilename
 
     # Concatenating the locationArr and dataArr into one helps writing later

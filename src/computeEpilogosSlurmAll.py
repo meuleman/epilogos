@@ -40,6 +40,9 @@ def main(combinationsFile, parentDirectory, outputDirectory):
 
                 slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
+                print(pythonCommand)
+                print(slurmCommand)
+
                 subprocess.run(slurmCommand, shell=True)
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from functools import reduce
 import multiprocessing
 import itertools
 
-def main(filename, numStates, saliency, outputDirPath):
+def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataFilePath = Path(filename)
 
     # Reading in the data
@@ -25,17 +25,17 @@ def main(filename, numStates, saliency, outputDirPath):
     print("    Time: ", time.time() - tConvert)
 
     if saliency == 1:
-        s1Exp(dataDF, dataArr, numStates, outputDirPath)
+        s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     elif saliency == 2:
-        s2Exp(dataDF, dataArr, numStates, outputDirPath)
+        s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     elif saliency == 3:
-        s3Exp(dataDF, dataArr, numStates, outputDirPath)
+        s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     else:
         print("Inputed saliency value not supported")
         return
 
 # Function that calculates the expected frequencies for the S1 metric
-def s1Exp(dataDF, dataArr, numStates, outputDirPath):
+def s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
 
     # Calculate the expected frequencies of each state
@@ -48,10 +48,10 @@ def s1Exp(dataDF, dataArr, numStates, outputDirPath):
             expFreqSeries.loc[state] += count / dfSize
     expFreqArr = expFreqSeries.to_numpy()
 
-    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 1, outputDirPath)
+    storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
 # Function that calculates the expected frequencies for the S2 metric
-def s2Exp(dataDF, dataArr, numStates, outputDirPath):
+def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
 
     expFreqArr = np.zeros((numStates, numStates))
@@ -84,10 +84,10 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath):
 
     expFreqArr = expFreqArr / numRows
 
-    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 2, outputDirPath)
+    storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
 # Function that calculates the expected frequencies for the S3 metric
-def s3Exp(dataDF, dataArr, numStates, outputDirPath):
+def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
 
@@ -119,7 +119,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath):
     # Normalize the array
     expFreqArr /= numRows * numCols * (numCols - 1)
 
-    storeExpArray(dataDF, dataArr, expFreqArr, numStates, 3, outputDirPath)
+    storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
 # Helper function for the multiprocessing
 def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
@@ -129,14 +129,11 @@ def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr,
     queue.put(expFreqArr)
 
 # Helper to store the expected frequency arrays
-def storeExpArray(dataDF, dataArr, expFreqArr, numStates, saliency, outputDirPath):
+def storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag):
     # Creating a file path
     chromosomeNumber = str(dataDF.iloc[0, 0])
-    epigenomeNumber = str(dataArr.shape[1])
-    expFreqFilename = "temp_exp_freq_{}_{}_s{}_{}.npy".format(epigenomeNumber, numStates, saliency, chromosomeNumber)
+    expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, chromosomeNumber)
     expFreqPath = outputDirPath / expFreqFilename
-
-    print(type(expFreqArr[0,0]))
 
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 

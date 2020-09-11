@@ -20,8 +20,6 @@ def main(fileDir, outputDir):
 
     print(Path(__file__) / (".out/" + test + ".out"))
 
-    (Path(__file__).parents[0] / (".out")).mkdir(parents=True)
-
     print(Path.cwd())
 
     print(test[2])

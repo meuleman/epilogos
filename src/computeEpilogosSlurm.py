@@ -20,6 +20,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
+    fileTag = "_".join(str(dataFilePath).split("/")[-5:])
+
+    print("FILETAG: ", fileTag)
+
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
         print("ERROR: Given file path does not exist or is not a directory")
@@ -44,7 +48,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to the number of epigenomes, number of states, and saliency metric involved in the calculation
     if expFreqDir != "null":
-        expFreqFilename = "exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
+        expFreqFilename = "exp_freq_{}.npy".format(fileTag)#.format(numEpigenomes, numStates, saliency)
         storedExpPath = Path(expFreqDir) / expFreqFilename
 
     # Finding the location of the .py files that must be run
@@ -58,13 +62,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
-            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
+            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists")
     else:     
         expJobIDArr = []   
+        print("Calculating expected frequencies....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
-                jobName = "exp_freq_calc_{}".format(filename)
+                jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -79,22 +84,32 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath)
+                pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
                 slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
-                sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                print(pythonCommand)
+                print(slurmCommand)
 
-                if not sp.startswith("Submitted batch"):
-                    print("ERROR: sbatch not submitted correctly")
+                # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+
+                # if not sp.stdout.startswith("Submitted batch"):
+                #     print("ERROR: sbatch not submitted correctly")
                 
-                expJobIDArr.append(int(sp.split()[-1]))
+                # expJobIDArr.append(int(sp.stdout.split()[-1]))
 
-
+        # Combining all the different chromosome expected frequency arrays into one
         # create a string for slurm dependency to work
+        for i in range(10):
+            teststr = "Submitted batch {}".format(i)
+            expJobIDArr.append(int(teststr.split()[-1]))
         jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
+        print("expJobIDArr: ", expJobIDArr)
+        print("jobIDStrComb: ", jobIDStrComb)
 
-        jobName = "exp_freq_comb_{}".format("_".join(str(dataFilePath).split("/")[-5:]))
+        print("Combining expected frequencies....")
+
+        jobName = "exp_freq_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -109,26 +124,30 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
-        pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, numEpigenomes, numStates, saliency, storeExp, storedExpPath)
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storeExp, storedExpPath)
 
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-        sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        print(pythonCommand)
+        print(slurmCommand)
 
-        if not sp.startswith("Submitted batch"):
-            print("ERROR: sbatch not submitted correctly")
+        # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+
+        # if not sp.stdout.startswith("Submitted batch"):
+        #     print("ERROR: sbatch not submitted correctly")
         
-        combinationJobID = int(sp.split()[-1])
-
-    expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
-    expFreqPath = outputDirPath / expFreqFilename
+        # combinationJobID = int(sp.stdout.split()[-1])
+        combinationJobId = 1
 
     # Calculate the observed frequencies and scores
+    print("Calculating Scores....")
+    expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
+    expFreqPath = outputDirPath / expFreqFilename
     scoreJobIDArr = []
     for file in dataFilePath.glob("*"):
         if not file.is_dir():
             filename = file.name.split(".")[0]
-            jobName = "score_calc_{}".format(filename)
+            jobName = "score_calc_{}_{}".format(fileTag, filename)
             jobOutPath = outputDirPath / (".out/" + jobName + ".out")
             jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -146,19 +165,28 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-            sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            print(pythonCommand)
+            print(slurmCommand)
 
-            if not sp.startswith("Submitted batch"):
-                print("ERROR: sbatch not submitted correctly")
+            # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+
+            # if not sp.stdout.startswith("Submitted batch"):
+            #     print("ERROR: sbatch not submitted correctly")
             
-            scoreJobIDArr.append(int(sp.split()[-1]))
+            # scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
     # WRITING TO SCORE FILES
-
+    print("Writing to score files....")
     # create a string for slurm dependency to work
-    jobIDStrWrite = str(expJobIDArr).strip('[]').replace(" ", "")
+    for i in range(10):
+        teststr = "Submitted batch {}".format(i)
+        scoreJobIDArr.append(int(teststr.split()[-1]))
+    jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
+    print("scoreJobIDArr: ", scoreJobIDArr)
+    print("jobIDStrWrite: ", jobIDStrWrite)
 
-    jobName = "write_{}".format("_".join(str(dataFilePath).split("/")[-5:]))
+
+    jobName = "write_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -173,14 +201,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-    pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, dataFilePath, outputDirPath, numStates)
+    pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
     slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-    sp = subprocess.run(slurmCommand, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    print(pythonCommand)
+    print(slurmCommand)
 
-    if not sp.startswith("Submitted batch"):
-        print("ERROR: sbatch not submitted correctly")
+    # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+
+    # if not sp.stdout.startswith("Submitted batch"):
+    #     print("ERROR: sbatch not submitted correctly")
 
 if __name__ == "__main__":
     main()

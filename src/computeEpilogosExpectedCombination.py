@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-def main(outputDirectory, numEpigenomes, numStates, saliency, storeExp, storedExpInput):
+def main(outputDirectory, fileTag, storeExp, storedExpInput):
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
 
@@ -26,8 +26,9 @@ def main(outputDirectory, numEpigenomes, numStates, saliency, storeExp, storedEx
         np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
     # Save somewhere regardless for use in score calculation
-    expFreqFilename = "temp_exp_freq_{}_{}_s{}.npy".format(numEpigenomes, numStates, saliency)
+    expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
     expFreqPath = outputDirPath / expFreqFilename
+
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 if __name__ == "__main__":

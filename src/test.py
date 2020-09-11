@@ -16,29 +16,20 @@ import subprocess
 from pathlib import PurePath
 
 def main(fileDir, outputDir):
-
-    test = "hiya"
-
-    print(Path(__file__) / (".out/" + test + ".out"))
-
-    print(Path.cwd())
-
-    print(test[2])
-
     dataFilePath = Path(fileDir)
     outputDirPath = Path(outputDir)
 
-    print("ABSOLUTE?")
-    if PurePath(dataFilePath).is_absolute():
-        print(True)
-    else:
-        print(False)
-    if PurePath(outputDirPath).is_absolute():
-        print(True)
-    else:
-        print(False)
+    if not PurePath(outputDirPath).is_absolute():
+        outputDirPath = Path.cwd() / outputDirPath
+        print("OUTPUTPATH: ", outputDirPath)
 
-    f = open(dataFilePath / "out/test.txt", 'x')    
+    if not PurePath(dataFilePath).is_absolute():
+        dataFilePath = Path.cwd() / dataFilePath
+        print("FILE PATH: ", dataFilePath)
+
+    # For slurm output and error later
+    (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
+    (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
 
     # Finding the location of the .py files that must be run
     if Path(__file__).is_absolute:
@@ -47,32 +38,36 @@ def main(fileDir, outputDir):
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     for file in dataFilePath.glob("*"):
-        print(file)
-        # if not file.is_dir():
-        #     filename = file.name.split(".")[0]
-        #     jobName = "exp_freq_calc_{}".format(filename)
-        #     computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
+        filename = file.name.split(".")[0]
+        jobName = "exp_freq_calc_{}".format(filename)
+        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-        #     # pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath)
-        #     # slurmCommand = "sbatch --job-name={0}.job --output=.out/{0}.out --error=.out/{0}.err --nodes=1 --ntasks=1 --wrap='{1}'".format(jobName, pythonCommand)
+        # Creating the out and err files for the batch job
+        try:
+            jout = open(jobOutPath, 'x')
+            jout.close()
+            jerr = open(jobErrPath, 'x')
+            jerr.close()
+        except FileExistsError:
+            print("ERROR: sbatch '.out' or '.err' file already exists")
+        
+        computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-        #     # process = subprocess.run(slurmCommand, shell=True, universal_newlines=True)
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath)
+        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
-        #     # print("STDOUT", process.stdout)
+        print(pythonCommand)
+        print()
+        print(slurmCommand)
+        print()
 
-        #     jobPath = outputDirPath / "{}.sh".format(jobName)
-        #     with open(jobPath, "w") as script:
-        #         script.writelines("#!/bin/bash\n")
-        #         script.writelines("#SBATCH --job-name={}.job\n".format(jobName))
-        #         script.writelines("#SBATCH --output=.out/{}.out\n".format(jobName))
-        #         script.writelines("#SBATCH --error=.out/{}.err\n".format(jobName))
-        #         script.writelines("#SBATCH --nodes=1\n".format())
-        #         script.writelines("#SBATCH --ntasks=1\n".format())
-        #         script.writelines("python {} {} {} {} {}".format(computeExpectedPy, file, 15, 1, outputDirPath))
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
-        #     process = subprocess.run("sbatch {}".format(jobPath), shell=True, universal_newlines=True)
-
-        #     print("STDOUT: ", process.stdout)
+        if not sp.stdout.startswith("Submitted batch"):
+            print("ERROR: sbatch not submitted correctly")
+        
+        print("JOBID: ", int(sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])

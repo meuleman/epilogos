@@ -25,6 +25,18 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("FILETAG: ", fileTag)
     print("CWD: ", Path.cwd())
 
+    print("DataFilePath Absolute: ", dataFilePath.is_absolute)
+    print("outputDirPath Absolute: ", outputDirPath.is_absolute)
+
+    if not outputDirPath.is_absolute:
+        outputDirPath = Path.cwd() / outputDirPath
+
+    if not dataFilePath.is_absolute:
+        dataFilePath = Path.cwd() / dataFilePath
+
+    print("DataFilePath Absolute: ", dataFilePath.is_absolute)
+    print("outputDirPath Absolute: ", outputDirPath.is_absolute)
+
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
         print("ERROR: Given file path does not exist or is not a directory")

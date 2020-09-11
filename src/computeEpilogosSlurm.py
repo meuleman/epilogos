@@ -159,7 +159,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         #     print("ERROR: sbatch not submitted correctly")
         
         # combinationJobID = int(sp.stdout.split()[-1])
-        combinationJobId = 1
+        combinationJobID = 1
 
     # Calculate the observed frequencies and scores
     print()

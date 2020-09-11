@@ -26,17 +26,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("FILETAG: ", fileTag)
     print("CWD: ", Path.cwd())
 
-    print("DataFilePath Absolute: ", dataFilePath.is_absolute)
-    print("outputDirPath Absolute: ", outputDirPath.is_absolute)
-
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
 
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
-
-    print("DataFilePath Absolute: ", dataFilePath.is_absolute)
-    print("outputDirPath Absolute: ", outputDirPath.is_absolute)
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -49,6 +43,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
+    
+    # For slurm output and error later
+    (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
+    (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
 
     if not outputDirPath.is_dir():
         print("ERROR: Output directory is not a directory")

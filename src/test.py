@@ -38,6 +38,8 @@ def main(fileDir, outputDir):
     else:
         print(False)
 
+    f = open(dataFilePath / "out/test.txt", 'x')    
+
     # Finding the location of the .py files that must be run
     if Path(__file__).is_absolute:
         pythonFilesDir = Path(__file__).parents[0]

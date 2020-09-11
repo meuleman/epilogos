@@ -23,6 +23,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     fileTag = "_".join(str(dataFilePath).split("/")[-5:])
 
     print("FILETAG: ", fileTag)
+    print("CWD: ", Path.cwd())
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -75,9 +76,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
                 # Creating the out and err files for the batch job
                 try:
-                    jout = open(jobOutPath, "x")
+                    jout = open(jobOutPath, 'x')
                     jout.close()
-                    jerr = open(jobErrPath, "x")
+                    jerr = open(jobErrPath, 'x')
                     jerr.close()
                 except FileExistsError:
                     print("ERROR: sbatch '.out' or '.err' file already exists")
@@ -115,9 +116,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         # Creating the out and err files for the batch job
         try:
-            jout = open(jobOutPath, "x")
+            jout = open(jobOutPath, 'x')
             jout.close()
-            jerr = open(jobErrPath, "x")
+            jerr = open(jobErrPath, 'x')
             jerr.close()
         except FileExistsError:
             print("ERROR: sbatch '.out' or '.err' file already exists")
@@ -153,9 +154,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
             # Creating the out and err files for the batch job
             try:
-                jout = open(jobOutPath, "x")
+                jout = open(jobOutPath, 'x')
                 jout.close()
-                jerr = open(jobErrPath, "x")
+                jerr = open(jobErrPath, 'x')
                 jerr.close()
             except FileExistsError:
                 print("ERROR: sbatch '.out' or '.err' file already exists")
@@ -192,9 +193,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     # Creating the out and err files for the batch job
     try:
-        jout = open(jobOutPath, "x")
+        jout = open(jobOutPath, 'x')
         jout.close()
-        jerr = open(jobErrPath, "x")
+        jerr = open(jobErrPath, 'x')
         jerr.close()
     except FileExistsError:
         print("ERROR: sbatch '.out' or '.err' file already exists")

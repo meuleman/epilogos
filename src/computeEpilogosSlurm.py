@@ -113,12 +113,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
                 print(slurmCommand)
                 print()
 
-                # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+                sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-                # if not sp.stdout.startswith("Submitted batch"):
-                #     print("ERROR: sbatch not submitted correctly")
+                if not sp.stdout.startswith("Submitted batch"):
+                    print("ERROR: sbatch not submitted correctly")
                 
-                # expJobIDArr.append(int(sp.stdout.split()[-1]))
+                expJobIDArr.append(int(sp.stdout.split()[-1]))
 
         # Combining all the different chromosome expected frequency arrays into one
         # create a string for slurm dependency to work
@@ -153,13 +153,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print()
         print(slurmCommand)
         print()
-        # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
-        # if not sp.stdout.startswith("Submitted batch"):
-        #     print("ERROR: sbatch not submitted correctly")
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+
+        if not sp.stdout.startswith("Submitted batch"):
+            print("ERROR: sbatch not submitted correctly")
         
-        # combinationJobID = int(sp.stdout.split()[-1])
-        combinationJobID = 1
+        combinationJobID = int(sp.stdout.split()[-1])
+
 
     # Calculate the observed frequencies and scores
     print()
@@ -193,12 +194,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             print(slurmCommand)
             print()
 
-            # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+            sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-            # if not sp.stdout.startswith("Submitted batch"):
-            #     print("ERROR: sbatch not submitted correctly")
+            if not sp.stdout.startswith("Submitted batch"):
+                print("ERROR: sbatch not submitted correctly")
             
-            # scoreJobIDArr.append(int(sp.stdout.split()[-1]))
+            scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
     # WRITING TO SCORE FILES
     print()
@@ -231,10 +232,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print(slurmCommand)
     print()
 
-    # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+    sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-    # if not sp.stdout.startswith("Submitted batch"):
-    #     print("ERROR: sbatch not submitted correctly")
+    if not sp.stdout.startswith("Submitted batch"):
+        print("ERROR: sbatch not submitted correctly")
 
 if __name__ == "__main__":
     main()

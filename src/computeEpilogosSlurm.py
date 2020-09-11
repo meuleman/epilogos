@@ -6,6 +6,7 @@ import time
 import click
 import os
 import subprocess
+from pathlib import PurePath
 
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (Please ensure that this directory contains only files you want to read from)")
@@ -28,10 +29,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("DataFilePath Absolute: ", dataFilePath.is_absolute)
     print("outputDirPath Absolute: ", outputDirPath.is_absolute)
 
-    if not outputDirPath.is_absolute:
+    if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
 
-    if not dataFilePath.is_absolute:
+    if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
 
     print("DataFilePath Absolute: ", dataFilePath.is_absolute)
@@ -65,7 +66,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         storedExpPath = Path(expFreqDir) / expFreqFilename
 
     # Finding the location of the .py files that must be run
-    if Path(__file__).is_absolute:
+    if PurePath(__file__).is_absolute():
         pythonFilesDir = Path(__file__).parents[0]
     else:
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]

@@ -13,6 +13,7 @@ import pandas as pd
 import os
 import sys
 import subprocess
+from pathlib import PurePath
 
 def main(fileDir, outputDir):
 
@@ -26,6 +27,16 @@ def main(fileDir, outputDir):
 
     dataFilePath = Path(fileDir)
     outputDirPath = Path(outputDir)
+
+    print("ABSOLUTE?")
+    if PurePath(dataFilePath).is_absolute():
+        print(True)
+    else:
+        print(False)
+    if PurePath(outputDirPath).is_absolute():
+        print(True)
+    else:
+        print(False)
 
     # Finding the location of the .py files that must be run
     if Path(__file__).is_absolute:

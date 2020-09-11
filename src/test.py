@@ -64,6 +64,8 @@ def main(fileDir, outputDir):
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
 
+        print(sp.stdout)
+
         if not sp.stdout.startswith("Submitted batch"):
             print("ERROR: sbatch not submitted correctly")
         

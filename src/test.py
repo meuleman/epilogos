@@ -62,7 +62,7 @@ def main(fileDir, outputDir):
         print(slurmCommand)
         print()
 
-        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True)
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
         print(sp.stdout)
 

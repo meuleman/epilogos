@@ -154,69 +154,69 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         combinationJobID = int(sp.stdout.split()[-1])
 
 
-    # # Calculate the observed frequencies and scores
-    # print()
-    # print("Calculating Scores....")
-    # expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
-    # expFreqPath = outputDirPath / expFreqFilename
-    # scoreJobIDArr = []
-    # for file in dataFilePath.glob("*"):
-    #     if not file.is_dir():
-    #         filename = file.name.split(".")[0]
-    #         jobName = "score_calc_{}_{}".format(fileTag, filename)
-    #         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-    #         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+    # Calculate the observed frequencies and scores
+    print()
+    print("Calculating Scores....")
+    expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
+    expFreqPath = outputDirPath / expFreqFilename
+    scoreJobIDArr = []
+    for file in dataFilePath.glob("*"):
+        if not file.is_dir():
+            filename = file.name.split(".")[0]
+            jobName = "score_calc_{}_{}".format(fileTag, filename)
+            jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+            jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-    #         # Creating the out and err files for the batch job
-    #         try:
-    #             jout = open(jobOutPath, 'x')
-    #             jout.close()
-    #             jerr = open(jobErrPath, 'x')
-    #             jerr.close()
-    #         except FileExistsError:
-    #             print("ERROR: sbatch '.out' or '.err' file already exists")
+            # Creating the out and err files for the batch job
+            try:
+                jout = open(jobOutPath, 'x')
+                jout.close()
+                jerr = open(jobErrPath, 'x')
+                jerr.close()
+            except FileExistsError:
+                print("ERROR: sbatch '.out' or '.err' file already exists")
             
-    #         computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
+            computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-    #         pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
-    #         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+            pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-    #         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-    #         if not sp.stdout.startswith("Submitted batch"):
-    #             print("ERROR: sbatch not submitted correctly")
+            if not sp.stdout.startswith("Submitted batch"):
+                print("ERROR: sbatch not submitted correctly")
             
-    #         scoreJobIDArr.append(int(sp.stdout.split()[-1]))
+            scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
-    # # WRITING TO SCORE FILES
-    # print()
-    # print("Writing to score files....")
-    # # create a string for slurm dependency to work
-    # jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
+    # WRITING TO SCORE FILES
+    print()
+    print("Writing to score files....")
+    # create a string for slurm dependency to work
+    jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
 
-    # jobName = "write_{}".format(fileTag)
-    # jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-    # jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+    jobName = "write_{}".format(fileTag)
+    jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+    jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-    # # Creating the out and err files for the batch job
-    # try:
-    #     jout = open(jobOutPath, 'x')
-    #     jout.close()
-    #     jerr = open(jobErrPath, 'x')
-    #     jerr.close()
-    # except FileExistsError:
-    #     print("ERROR: sbatch '.out' or '.err' file already exists")
+    # Creating the out and err files for the batch job
+    try:
+        jout = open(jobOutPath, 'x')
+        jout.close()
+        jerr = open(jobErrPath, 'x')
+        jerr.close()
+    except FileExistsError:
+        print("ERROR: sbatch '.out' or '.err' file already exists")
 
-    # computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
+    computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-    # pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
+    pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
-    # slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
+    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-    # sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+    sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-    # if not sp.stdout.startswith("Submitted batch"):
-    #     print("ERROR: sbatch not submitted correctly")
+    if not sp.stdout.startswith("Submitted batch"):
+        print("ERROR: sbatch not submitted correctly")
 
 if __name__ == "__main__":
     main()

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-def main(outputDirectory, fileTag, storeExp="False", storedExpInput="null"):
+def main(outputDirectory, fileTag, storeExp, storedExpInput):
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
 
@@ -32,5 +32,5 @@ def main(outputDirectory, fileTag, storeExp="False", storedExpInput="null"):
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 

@@ -145,7 +145,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         if storeExp:
             pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storeExp, storedExpPath)
         else:
-            pythonCommand = "python {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag)
+            pythonCommand = "python {} {} {} False null".format(computeExpectedCombinationPy, outputDirPath, fileTag)
 
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 

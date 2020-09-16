@@ -11,11 +11,14 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
     # Loop over all the expected value arrays and add them up (normalize for number of chromosomes)
     count = 0
     expFreqArr = np.zeros((1,1))
+    print(expFreqArr[0:10])
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):
         if count == 0:
             expFreqArr = np.load(file, allow_pickle=False)
+            print(expFreqArr[0:10])
         else:
             expFreqArr += np.load(file, allow_pickle=False)
+            print(expFreqArr[0:10])
         count += 1
         # Delete file after we're done with it
         os.remove(file)

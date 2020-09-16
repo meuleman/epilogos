@@ -108,11 +108,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
                 slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
-                print(pythonCommand)
-                print()
-                print(slurmCommand)
-                print()
-
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
                 if not sp.stdout.startswith("Submitted batch"):
@@ -149,11 +144,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-        print(pythonCommand)
-        print()
-        print(slurmCommand)
-        print()
-
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
         if not sp.stdout.startswith("Submitted batch"):
@@ -189,11 +179,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
             pythonCommand = "python {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath)
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-            print(pythonCommand)
-            print()
-            print(slurmCommand)
-            print()
-
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             if not sp.stdout.startswith("Submitted batch"):
@@ -206,7 +191,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("Writing to score files....")
     # create a string for slurm dependency to work
     jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
-
 
     jobName = "write_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -226,11 +210,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
     slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
-
-    print(pythonCommand)
-    print()
-    print(slurmCommand)
-    print()
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

@@ -20,7 +20,9 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
             expFreqArr += np.load(file, allow_pickle=False)
             print(expFreqArr[0:10])
         count += 1
-        # Delete file after we're done with it
+    
+    # Clean up temp files
+    for file in outputDirPath.glob("temp_exp_freq_*.npy"):
         os.remove(file)
 
     print(expFreqArr[0:10])

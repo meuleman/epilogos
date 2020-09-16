@@ -83,7 +83,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         print("Calculating expected frequencies....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
-                print(file.name)
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")

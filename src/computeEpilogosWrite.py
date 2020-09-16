@@ -15,7 +15,9 @@ def main(fileTag, outputDirectory, numStates):
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         scoreArr = np.load(file, allow_pickle=False)
         writeScores(fileTag, scoreArr, outputDirPath, numStates)
-        # Clean up
+        
+    # Clean up
+    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         os.remove(file)
 
 # Helper to write the final scores to files

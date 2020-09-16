@@ -163,4 +163,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6])

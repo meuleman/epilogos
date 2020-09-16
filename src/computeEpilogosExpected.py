@@ -11,6 +11,7 @@ import itertools
 
 def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataFilePath = Path(filename)
+    outputDirPath = Path(outputDirPath)
 
     # Reading in the data
     print("\nReading data from file...")

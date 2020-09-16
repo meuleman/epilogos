@@ -11,6 +11,7 @@ import multiprocessing
 
 def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     dataFilePath = Path(filename)
+    outputDirPath = Path(outputDirPath)
 
     # Read in the data
     print("\nReading data from file...")

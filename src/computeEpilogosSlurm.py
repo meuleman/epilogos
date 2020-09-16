@@ -89,10 +89,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-                print("JOBOUTPATH: ", jobOutPath)
-                print("JOBERRPATH: ", jobErrPath)
-                print()
-
                 # Creating the out and err files for the batch job
                 try:
                     jout = open(jobOutPath, 'x')

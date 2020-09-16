@@ -19,6 +19,9 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
         count += 1
         # Delete file after we're done with it
         os.remove(file)
+
+    print(expFreqArr[0:10])
+    print(count)
     expFreqArr /= count
 
     # If user desires, store away the expected frequency array

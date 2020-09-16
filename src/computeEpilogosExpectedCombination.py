@@ -14,25 +14,18 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
     print(expFreqArr[0:10])
 
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-        print(file.name)
-        expFreqArr = np.load(file, allow_pickle=False)
-        print(expFreqArr)
-
-    # for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-    #     if count == 0:
-    #         expFreqArr = np.load(file, allow_pickle=False)
-    #         print(expFreqArr[0:10])
-    #     else:
-    #         expFreqArr += np.load(file, allow_pickle=False)
-    #         print(expFreqArr[0:10])
-    #     count += 1
+        if count == 0:
+            expFreqArr = np.load(file, allow_pickle=False)
+            print(expFreqArr[0:10])
+        else:
+            expFreqArr += np.load(file, allow_pickle=False)
+            print(expFreqArr[0:10])
+        count += 1
     
     # Clean up temp files
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):
         os.remove(file)
 
-    print(expFreqArr[0:10])
-    print(count)
     expFreqArr /= count
 
     # If user desires, store away the expected frequency array

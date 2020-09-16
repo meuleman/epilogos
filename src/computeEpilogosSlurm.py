@@ -25,6 +25,13 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     print("FILETAG: ", fileTag)
     print("CWD: ", Path.cwd())
+    print("fileDirectory=", dataFilePath)
+    print("numStates=", numStates)
+    print("saliency=", saliency)
+    print("outputDirectory=", outputDirPath)
+    print("storeExp=", storeExp)
+    print("usedStoredExp=", useStoredExp)
+    print("expFreqDir=", expFreqDir)
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath

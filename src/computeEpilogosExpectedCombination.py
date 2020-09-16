@@ -12,14 +12,20 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
     count = 0
     expFreqArr = np.zeros((1,1))
     print(expFreqArr[0:10])
+
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-        if count == 0:
-            expFreqArr = np.load(file, allow_pickle=False)
-            print(expFreqArr[0:10])
-        else:
-            expFreqArr += np.load(file, allow_pickle=False)
-            print(expFreqArr[0:10])
-        count += 1
+        print(file.name)
+        expFreqArr = np.load(file, allow_pickle=False)
+        print(expFreqArr)
+
+    # for file in outputDirPath.glob("temp_exp_freq_*.npy"):
+    #     if count == 0:
+    #         expFreqArr = np.load(file, allow_pickle=False)
+    #         print(expFreqArr[0:10])
+    #     else:
+    #         expFreqArr += np.load(file, allow_pickle=False)
+    #         print(expFreqArr[0:10])
+    #     count += 1
     
     # Clean up temp files
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):

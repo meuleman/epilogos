@@ -47,6 +47,7 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     scoreArr = np.zeros((numRows, numStates))
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        print("unique State length", len(uniqueStates))
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])

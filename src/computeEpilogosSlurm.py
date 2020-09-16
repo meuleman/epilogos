@@ -104,7 +104,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
+                pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
                 slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 

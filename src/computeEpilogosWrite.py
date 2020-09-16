@@ -38,14 +38,11 @@ def writeScores(fileTag, scoreArr, outputDirPath, numStates):
         maxContributionLoc = np.argmax(scoreArr[i, 3:].astype(float)) + 1
         totalScore = np.sum(scoreArr[i, 3:].astype(float))
 
-        observationsTxt.write("{}\t".format(maxContributionLoc))
-        observationsTxt.write("{0:.5f}\t".format(maxContribution))
-        observationsTxt.write("1\t")
-        observationsTxt.write("{0:.5f}\t\n".format(totalScore))
+        observationsTxt.write("{}\t{0:.5f}\t1\t{0:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
 
         # Write to scores
-        for j in range(numStates):
-            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j + 3]))
+        for j in range(scoreArr.shape[1]):
+            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j]))
         scoresTxt.write("\n")
 
     observationsTxt.close()

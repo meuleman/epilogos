@@ -310,7 +310,7 @@ def writeScores(locationArr, scoreArr, outputDirPath, numStates):
         maxContributionLoc = np.argmax(scoreArr[i]) + 1
         totalScore = np.sum(scoreArr[i])
 
-        observationsTxt.write("{}\t{0:.5f}\t1\t{0:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
+        observationsTxt.write("{}\t{:.5f}\t1\t{:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
 
         # Write to scores
         for j in range(scoreArr.shape[1]):

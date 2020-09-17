@@ -16,13 +16,8 @@ import subprocess
 from pathlib import PurePath
 
 def main():
-    file = Path("C:/Users/User/Desktop/epilogos/yout.txt")
-
-    with open(file, "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if int(line.split()[-1]) > 10:
-                print(line)
+    
+    print("ajlskfjsdljflkj{:.5f}".format(3.4444454545))
 
 if __name__ == "__main__":
     main()

@@ -60,6 +60,9 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
                 print("uniqueState =", uniqueStates[i])
                 print("row=", row)
                 print("stateCount=",stateCounts[i])
+                print(dataArr[row])
+                print(uniqueStates)
+                print(stateCounts)
             if (stateCounts[i] > 127):
                 print("state counts is greater than 15: ", stateCounts[i])
             # Function input is obsFreq and expFreq

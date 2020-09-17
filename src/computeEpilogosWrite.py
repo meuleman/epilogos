@@ -43,7 +43,7 @@ def writeScores(fileTag, scoreArr, outputDirPath, numStates):
         observationsTxt.write("{}\t{:.5f}\t1\t{:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
 
         # Write to scores
-        for j in range(scoreArr.shape[1]):
+        for j in range(len(scoreArr[i, 3:])):
             scoresTxt.write("{:.5f}\t".format(float(scoreArr[i, j])))
         scoresTxt.write("\n")
 

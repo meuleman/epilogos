@@ -21,8 +21,8 @@ def main():
     with open(file, "r") as f:
         lines = f.readlines()
         for line in lines:
-            
-
+            if int(line.split()[-1]) > 10:
+                print(line)
 
 if __name__ == "__main__":
     main()

@@ -44,7 +44,7 @@ def writeScores(fileTag, scoreArr, outputDirPath, numStates):
 
         # Write to scores
         for j in range(scoreArr.shape[1]):
-            scoresTxt.write("{0:.5f}\t".format(scoreArr[i, j]))
+            scoresTxt.write("{:.5f}\t".format(float(scoreArr[i, j])))
         scoresTxt.write("\n")
 
     observationsTxt.close()

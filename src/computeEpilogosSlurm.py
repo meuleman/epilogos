@@ -106,12 +106,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
                 # Creating the out and err files for the batch job
+                if jobOutPath.exists():
+                    os.remove(jobOutPath)
+                if jobErrPath.exists():
+                    os.remove(jobErrPath)
                 try:
                     jout = open(jobOutPath, 'x')
                     jout.close()
                     jerr = open(jobErrPath, 'x')
                     jerr.close()
                 except FileExistsError:
+                    # This error should never occur because we are deleting the files first
                     print("ERROR: sbatch '.out' or '.err' file already exists")
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
@@ -139,12 +144,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
         # Creating the out and err files for the batch job
+        if jobOutPath.exists():
+            os.remove(jobOutPath)
+        if jobErrPath.exists():
+            os.remove(jobErrPath)
         try:
             jout = open(jobOutPath, 'x')
             jout.close()
             jerr = open(jobErrPath, 'x')
             jerr.close()
         except FileExistsError:
+            # This error should never occur because we are deleting the files first
             print("ERROR: sbatch '.out' or '.err' file already exists")
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
@@ -173,12 +183,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
                 # Creating the out and err files for the batch job
+                if jobOutPath.exists():
+                    os.remove(jobOutPath)
+                if jobErrPath.exists():
+                    os.remove(jobErrPath)
                 try:
                     jout = open(jobOutPath, 'x')
                     jout.close()
                     jerr = open(jobErrPath, 'x')
                     jerr.close()
                 except FileExistsError:
+                    # This error should never occur because we are deleting the files first
                     print("ERROR: sbatch '.out' or '.err' file already exists")
                 
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
@@ -204,12 +219,17 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
         # Creating the out and err files for the batch job
+        if jobOutPath.exists():
+            os.remove(jobOutPath)
+        if jobErrPath.exists():
+            os.remove(jobErrPath)
         try:
             jout = open(jobOutPath, 'x')
             jout.close()
             jerr = open(jobErrPath, 'x')
             jerr.close()
         except FileExistsError:
+            # This error should never occur because we are deleting the files first
             print("ERROR: sbatch '.out' or '.err' file already exists")
 
         computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"

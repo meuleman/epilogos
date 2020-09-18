@@ -12,14 +12,21 @@ import itertools
 import click
 
 @click.command()
-@click.option("-f", "--filename", type=str, required=True, help="Path to file to read from")
+@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (Please ensure that this directory contains only files you want to read from)")
 @click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-l", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
-@click.option("-e", "--store-expected", "storeExpected", is_flag=True, help="Flag: Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
-@click.option("-u", "--use-expected", "useStoredExpected", is_flag=True, help="Flag: Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
-@click.option("-d", "--expected-directory", "expFreqDir", type=str, default="null", help="Path to the stored expected frequency array (Must be used in conjunction with either '-e' or '-u')")
-def main(filename, numStates, saliency, outputDirectory, storeExpected, useStoredExpected, expFreqDir):
+@click.option("-e", "--calculate-expected", "calcExp", is_flag=True, help="[Flag] Just calculate the expected frequencies")
+@click.option("-s", "--calculate-scores", "calcScores", is_flag=True, help="[Flag] Use previously stored expected frequency array to calculate scores")
+@click.option("-d", "--expected-directory", "expFreqDir", type=str, required=True, help="Path to the expected frequency array (Used in conjunction with either '-e' or '-s')")
+def main(filename, numStates, saliency, outputDirectory, calcExp, calcScores, expFreqDir):
+
+    if not calcExp and not calcScores:
+        print()
+        print("ERROR: Please at least one of the --calculate-expected (-e) or --calculate-scores (-s) flags")
+        print()
+        return
+
     tTotal = time.time()
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirectory)
@@ -37,50 +44,43 @@ def main(filename, numStates, saliency, outputDirectory, storeExpected, useStore
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
-    # Variables for opting in to storing/retrieving the expected frequency array
-    global storedExpDir
-    if expFreqDir != "null":
-        expFreqFilename = "exp_freq_" + str(dataArr.shape[1]) + "_" + str(numStates) + "_s" + str(saliency) + ".npy"
-        storedExpDir = Path(expFreqDir) / expFreqFilename
-
-    global storeExp
-    storeExp = storeExpected
-
-    global useStoredExp
-    useStoredExp = useStoredExpected
+    # Adding the expFreq filename to the path
+    expFreqFilename = "exp_freq_" + str(dataArr.shape[1]) + "_" + str(numStates) + "_s" + str(saliency) + ".npy"
+    expFreqDir = Path(expFreqDir) / expFreqFilename
 
     if saliency == 1:
-        scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath)
+        scoreArr = s1Score(dataDF, dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir)
     elif saliency == 2:
-        scoreArr =s2Score(dataArr, numStates, outputDirPath)
+        scoreArr =s2Score(dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir)
     elif saliency == 3:
-        scoreArr = s3Score(dataArr, numStates, outputDirPath)
+        scoreArr = s3Score(dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir)
     else:
         print("Inputed saliency value not supported")
         return
 
-    # Writing the scores to the files
-    print("Writing to files...")
-    tWrite = time.time()
-    writeScores(locationArr, scoreArr, outputDirPath, numStates)
-    print("    Time: ", time.time() - tWrite)
+    # Only write if there are scores to write
+    if calcScores:
+        print("Writing to files...")
+        tWrite = time.time()
+        writeScores(locationArr, scoreArr, outputDirPath, numStates)
+        print("    Time: ", time.time() - tWrite)
 
     print("Total Time: ", time.time() - tTotal)
 
 # Function that calculates the scores for the S1 metric
-def s1Score(dataDF, dataArr, numStates, outputDirPath):
+def s1Score(dataDF, dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir):
     numRows, numCols = dataArr.shape
 
+    print("Calculating expected frequencies...")
+    tExp = time.time()
     # If user desires, use the stored expected frequency array
-    if useStoredExp:
+    if not calcExp:
         try:
-            expFreqArr = np.load(storedExpDir, allow_pickle=False)
+            expFreqArr = np.load(expFreqDir, allow_pickle=False)
         except IOError:
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
     else:
         # Calculate the expected frequencies of each state
-        print("Calculating expected frequencies...")
-        tExp = time.time()
         stateIndices = list(range(1, numStates + 1))
         expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
         dfSize = numRows * numCols
@@ -90,95 +90,135 @@ def s1Score(dataDF, dataArr, numStates, outputDirPath):
                 expFreqSeries.loc[state] += count / dfSize
         expFreqArr = expFreqSeries.to_numpy()
 
-        # If user desires, store away the expected frequency array
-        if storeExp:
-            np.save(storedExpDir, expFreqArr, allow_pickle=False)
-
-        print("    Time: ", time.time() - tExp)
-
-    # Calculate the observed frequencies and final scores in one loop
-    print("Calculating observed frequencies and scores...")
-    tScore = time.time()
-    scoreArr = np.zeros((numRows, numStates))
-    for row in range(numRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i in range(len(uniqueStates)):
-            # Function input is obsFreq and expFreq
-            scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
-    print("    Time: ", time.time() - tScore)
-
-    return scoreArr
-
-# Function that calculates the scores for the S2 metric
-def s2Score(dataArr, numStates, outputDirPath):
-    numRows, numCols = dataArr.shape
-
-    # Calculate the observed frequencies
-    print("Calculating expected and observed frequencies...")
-    tExp = time.time()
-    # expFreqArr = np.zeros((numStates, numStates))
-    obsFreqArr = np.zeros((numRows, numStates, numStates))
-
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
-    # SumOverRows: (Prob of choosing x and y)
-    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    if sys.version_info < (3, 8):
-        print("\nFor maximum efficiency please update python to version 3.8 or later")
-        print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
-        combinations = ncr(numCols, 2)
-        for row in range(numRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = ncr(stateCounts[i], 2) / combinations
-    else:
-        combinations = math.comb(numCols, 2)
-        for row in range(numRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = math.comb(stateCounts[i], 2) / combinations
-
-    # Calculate the expected frequencies by summing the observed frequencies for each row
-    expFreqArr = obsFreqArr.sum(axis=0) / numRows
-
-    # If the user desires, store the expected frequency array
-    if storeExp:
-        np.save(storedExpDir, expFreqArr, allow_pickle=False)
+        np.save(expFreqDir, expFreqArr, allow_pickle=False)
 
     print("    Time: ", time.time() - tExp)
 
-    print("Calculating scores...")
-    # Calculate the KL Scores
-    tScore = time.time()
-    scoreArr = np.zeros((numRows, numStates))
-    for row in range(numRows):
-        scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
-    print("    Time: ", time.time() - tScore)
+    if calcScores:
+        # Calculate the observed frequencies and final scores in one loop
+        print("Calculating observed frequencies and scores...")
+        tScore = time.time()
+        scoreArr = np.zeros((numRows, numStates))
+        for row in range(numRows):
+            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+            for i in range(len(uniqueStates)):
+                # Function input is obsFreq and expFreq
+                scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+        print("    Time: ", time.time() - tScore)
 
-    return scoreArr
+        return scoreArr
+
+    # return a dummy if we did not calculate scores
+    return np.zeros((1,1))
+
+# Function that calculates the scores for the S2 metric
+def s2Score(dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir):
+    numRows, numCols = dataArr.shape
+
+    print("Calculating expected frequencies...")
+    tExp = time.time()
+    if not calcExp:
+        try:
+            expFreqArr = np.load(expFreqDir, allow_pickle=False)
+        except IOError:
+            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
+    else:
+        obsFreqArr = np.zeros((numRows, numStates, numStates))
+
+        # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
+        # SumOverRows: (Prob of choosing x and y)
+        # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
+        if sys.version_info < (3, 8):
+            print("\nFor maximum efficiency please update python to version 3.8 or later")
+            print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
+            combinations = ncr(numCols, 2)
+            for row in range(numRows):
+                uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+                for i in range(len(uniqueStates)):
+                    for j in range(len(uniqueStates)):
+                        if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        elif uniqueStates[i] == uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = ncr(stateCounts[i], 2) / combinations
+        else:
+            combinations = math.comb(numCols, 2)
+            for row in range(numRows):
+                uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
+                for i in range(len(uniqueStates)):
+                    for j in range(len(uniqueStates)):
+                        if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        elif uniqueStates[i] == uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = math.comb(stateCounts[i], 2) / combinations
+
+        # Calculate the expected frequencies by summing the observed frequencies for each row
+        expFreqArr = obsFreqArr.sum(axis=0) / numRows
+
+        # If the user desires, store the expected frequency array
+        np.save(expFreqDir, expFreqArr, allow_pickle=False)
+
+    print("    Time: ", time.time() - tExp)
+
+    if calcScores:
+        print("Calculating scores...")
+        obsFreqArr = np.zeros((numRows, numStates, numStates))
+
+        # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
+        # SumOverRows: (Prob of choosing x and y)
+        # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
+        if sys.version_info < (3, 8):
+            print("\nFor maximum efficiency please update python to version 3.8 or later")
+            print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
+            combinations = ncr(numCols, 2)
+            for row in range(numRows):
+                uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+                for i in range(len(uniqueStates)):
+                    for j in range(len(uniqueStates)):
+                        if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        elif uniqueStates[i] == uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = ncr(stateCounts[i], 2) / combinations
+        else:
+            combinations = math.comb(numCols, 2)
+            for row in range(numRows):
+                uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
+                for i in range(len(uniqueStates)):
+                    for j in range(len(uniqueStates)):
+                        if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                        elif uniqueStates[i] == uniqueStates[j]:
+                            obsFreqArr[row, uniqueStates[i], uniqueStates[j]] = math.comb(stateCounts[i], 2) / combinations
+
+        # Calculate the KL Scores
+        tScore = time.time()
+        scoreArr = np.zeros((numRows, numStates))
+        for row in range(numRows):
+            scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
+        print("    Time: ", time.time() - tScore)
+
+        return scoreArr
     
+    # return a dummy if we did not calculate scores
+    return np.zeros((1,1))
+
 # Function that calculates the scores for the S3 metric
-def s3Score(dataArr, numStates, outputDirPath):
+def s3Score(dataArr, numStates, outputDirPath, calcExp, calcScores, expFreqDir):
     numRows, numCols = dataArr.shape
 
     # FOR TESTING
     rowsToCalculate = range(300)
     # FOR TESTING
 
+    print("Calculating Expected Frequencies...")
+    tExp = time.time()
     # If the user desires, use the stored expected frequency array
-    if useStoredExp:
-        expFreqArr = np.load(storedExpDir, allow_pickle=False)
+    if not calcExp:
+        try:
+            expFreqArr = np.load(expFreqDir, allow_pickle=False)
+        except IOError:
+            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exits")
     else:
         # Calculate expected frequencies
-        print("Calculating Expected Frequencies...")
-        tExp = time.time()
         expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
 
         basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
@@ -190,29 +230,31 @@ def s3Score(dataArr, numStates, outputDirPath):
         # Normalize the array
         expFreqArr /= len(rowsToCalculate) * numCols * (numCols - 1)
 
-        # If the user desires, store the expected frequency array
-        if storeExp:
-            np.save(storedExpDir, expFreqArr, allow_pickle=False)
+        np.save(expFreqDir, expFreqArr, allow_pickle=False)
 
-        print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
+    print("    Time: ", numRows * (time.time() - tExp) / len(rowsToCalculate))
 
-    print("Calculating observed frequencies and scores...")
-    tScore = time.time()
-    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
-    # This saves a lot of time in the loop as we are just looking up references and not calculating
-    scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
+    if calcScores:
+        print("Calculating observed frequencies and scores...")
+        tScore = time.time()
+        # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+        # This saves a lot of time in the loop as we are just looking up references and not calculating
+        scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
 
-    scoreArr = np.zeros((numRows, numStates))
-    for row in rowsToCalculate:
-        # Pull the scores from the precalculated score array
-        rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
-        rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
+        scoreArr = np.zeros((numRows, numStates))
+        for row in rowsToCalculate:
+            # Pull the scores from the precalculated score array
+            rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+            rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
-        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
+            scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
 
-    print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
+        print("    Time: ", numRows * (time.time() - tScore) / len(rowsToCalculate))
 
-    return scoreArr
+        return scoreArr
+
+    # return a dummy if we did not calculate scores
+    return np.zeros((1,1))
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):
@@ -267,19 +309,3 @@ def ncr(n, r):
 
 if __name__ == "__main__":
     main()
-
-    # # Checking that the arguments are all correct
-    # if len(sys.argv) - 1 < 4:
-    #     # Argument info if wrong number
-    #     print("\nYou must provide at least 4 arguments:\n")
-    #     print("   1. Filename to read from\n")
-    #     print("   2. Number of states in chromatin state model (only supports up to 15)\n")
-    #     print("   3. Saliency metric (1-3)\n")
-    #     print("   4. Output directory\n")
-    #     print("NOTE: Please make sure you are have Python 3.8 or later installed for maximum efficiency (Python 3.6 is the oldest possible version)")
-    # elif int(sys.argv[2]) != 15:
-    #     print("We currently only offer support for a 15-state chromatin state model")
-    # elif (not int(sys.argv[3]) == 1) and (not int(sys.argv[3]) == 2) and (not int(sys.argv[3]) == 3):
-    #     print("We currently only offer support for a saliency of 1, 2, or 3")
-    # else:
-    #     main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])

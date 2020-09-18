@@ -15,7 +15,7 @@ import click
 @click.command()
 @click.option("-f", "--filename", type=str, required=True, help="Path to file to read from")
 @click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-s", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
+@click.option("-l", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
 @click.option("-e", "--store-expected", "storeExpected", is_flag=True, help="[Flag] Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
 @click.option("-u", "--use-expected", "useStoredExpected", is_flag=True, help="[Flag] Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")

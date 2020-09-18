@@ -34,7 +34,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
     print("expFreqDir=", expFreqDir)
 
     if not calcExp and not calcScores:
+        print()
         print("ERROR: Please at least one of the --calculate-expected (-e) or --calculate-scores (-s) flags")
+        print()
         return
 
     if not PurePath(outputDirPath).is_absolute():
@@ -47,11 +49,15 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
+        print()
         print("ERROR: Given file path does not exist or is not a directory")
+        print()
         return
 
     if not list(dataFilePath.glob("*")):
+        print()
         print("ERROR: Ensure that file directory is not empty")
+        print()
         return
 
     # If the output directory does not exist yet, make it for the user 

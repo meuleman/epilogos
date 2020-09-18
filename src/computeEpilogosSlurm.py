@@ -11,12 +11,12 @@ from pathlib import PurePath
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (Please ensure that this directory contains only files you want to read from)")
 @click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-s", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
+@click.option("-l", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
-@click.option("-e", "--store-expected", "storeExp", is_flag=True, help="[Flag] Store the expected frequency array for later calculations (Must be used in conjunction with '-d' and cannot be used in conjunction with '-u')")
-@click.option("-u", "--use-expected", "useStoredExp", is_flag=True, help="[Flag] Use previously stored expected frequency array (Must be used in conjunction with '-d' and cannot be used in conjunction with '-e')")
-@click.option("-d", "--expected-directory", "expFreqDir", type=str, default="null", help="Path to the stored expected frequency array (Must be used in conjunction with either '-e' or '-u')")
-def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStoredExp, expFreqDir):
+@click.option("-e", "--calculate-expected", "calcExp", is_flag=True, help="[Flag] Just calculate the expected frequencies")
+@click.option("-s", "--calculate-scores", "calcScores", is_flag=True, help="[Flag] Use previously stored expected frequency array to calculate scores")
+@click.option("-d", "--expected-directory", "expFreqDir", type=str, required=True, help="Path to the expected frequency array (Used in conjunction with either '-e' or '-s')")
+def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScores, expFreqDir):
     tTotal = time.time()
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
@@ -29,9 +29,13 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     print("numStates=", numStates)
     print("saliency=", saliency)
     print("outputDirectory=", outputDirPath)
-    print("storeExp=", storeExp)
-    print("usedStoredExp=", useStoredExp)
+    print("calcExp=", calcExp)
+    print("calcScores=", calcScores)
     print("expFreqDir=", expFreqDir)
+
+    if not calcExp and not calcScores:
+        print("ERROR: Please at least one of the --calculate-expected (-e) or --calculate-scores (-s) flags")
+        return
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
@@ -48,6 +52,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
     if not list(dataFilePath.glob("*")):
         print("ERROR: Ensure that file directory is not empty")
+        return
 
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
@@ -67,10 +72,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         break
 
     # Path for storing/retrieving the expected frequency array
-    # Expected frequency arrays are stored according to the number of epigenomes, number of states, and saliency metric involved in the calculation
-    if expFreqDir != "null":
-        expFreqFilename = "exp_freq_{}.npy".format(fileTag)#.format(numEpigenomes, numStates, saliency)
-        storedExpPath = Path(expFreqDir) / expFreqFilename
+    # Expected frequency arrays are stored according to path of the input file directory
+    expFreqFilename = "exp_freq_{}.npy".format(fileTag)
+    storedExpPath = Path(expFreqDir) / expFreqFilename
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -78,8 +82,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
     else:
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
-    # Check if its already been calculated before
-    if useStoredExp:
+    # Check if user wants to calculate it
+    if not calcExp:
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
@@ -139,10 +143,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
-        if storeExp:
-            pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storeExp, storedExpPath)
-        else:
-            pythonCommand = "python {} {} {} False null".format(computeExpectedCombinationPy, outputDirPath, fileTag)
+        pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
 
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -153,70 +154,68 @@ def main(fileDirectory, numStates, saliency, outputDirectory, storeExp, useStore
         
         combinationJobID = int(sp.stdout.split()[-1])
 
+    if calcScores:
+        # Calculate the observed frequencies and scores
+        print()
+        print("Calculating Scores....")
+        scoreJobIDArr = []
+        for file in dataFilePath.glob("*"):
+            if not file.is_dir():
+                filename = file.name.split(".")[0]
+                jobName = "score_calc_{}_{}".format(fileTag, filename)
+                jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+                jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-    # Calculate the observed frequencies and scores
-    print()
-    print("Calculating Scores....")
-    expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
-    expFreqPath = outputDirPath / expFreqFilename
-    scoreJobIDArr = []
-    for file in dataFilePath.glob("*"):
-        if not file.is_dir():
-            filename = file.name.split(".")[0]
-            jobName = "score_calc_{}_{}".format(fileTag, filename)
-            jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-            jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+                # Creating the out and err files for the batch job
+                try:
+                    jout = open(jobOutPath, 'x')
+                    jout.close()
+                    jerr = open(jobErrPath, 'x')
+                    jerr.close()
+                except FileExistsError:
+                    print("ERROR: sbatch '.out' or '.err' file already exists")
+                
+                computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-            # Creating the out and err files for the batch job
-            try:
-                jout = open(jobOutPath, 'x')
-                jout.close()
-                jerr = open(jobErrPath, 'x')
-                jerr.close()
-            except FileExistsError:
-                print("ERROR: sbatch '.out' or '.err' file already exists")
-            
-            computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
+                pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-            pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, expFreqPath, fileTag)
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-            sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+                if not sp.stdout.startswith("Submitted batch"):
+                    print("ERROR: sbatch not submitted correctly")
+                
+                scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
-            if not sp.stdout.startswith("Submitted batch"):
-                print("ERROR: sbatch not submitted correctly")
-            
-            scoreJobIDArr.append(int(sp.stdout.split()[-1]))
+        # WRITING TO SCORE FILE
+        print()
+        print("Writing to score files....")
+        # create a string for slurm dependency to work
+        jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
 
-    # WRITING TO SCORE FILES
-    print()
-    print("Writing to score files....")
-    # create a string for slurm dependency to work
-    jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
+        jobName = "write_{}".format(fileTag)
+        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-    jobName = "write_{}".format(fileTag)
-    jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-    jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+        # Creating the out and err files for the batch job
+        try:
+            jout = open(jobOutPath, 'x')
+            jout.close()
+            jerr = open(jobErrPath, 'x')
+            jerr.close()
+        except FileExistsError:
+            print("ERROR: sbatch '.out' or '.err' file already exists")
 
-    # Creating the out and err files for the batch job
-    try:
-        jout = open(jobOutPath, 'x')
-        jout.close()
-        jerr = open(jobErrPath, 'x')
-        jerr.close()
-    except FileExistsError:
-        print("ERROR: sbatch '.out' or '.err' file already exists")
+        computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-    computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
+        pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
-    pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-    sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-
-    if not sp.stdout.startswith("Submitted batch"):
-        print("ERROR: sbatch not submitted correctly")
+        if not sp.stdout.startswith("Submitted batch"):
+            print("ERROR: sbatch not submitted correctly")
 
 if __name__ == "__main__":
     main()

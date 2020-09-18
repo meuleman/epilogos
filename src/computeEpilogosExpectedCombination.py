@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-def main(outputDirectory, fileTag, storeExp, storedExpInput):
+def main(outputDirectory, fileTag, storedExpInput):
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
 
@@ -24,15 +24,8 @@ def main(outputDirectory, fileTag, storeExp, storedExpInput):
 
     expFreqArr /= count
 
-    # If user desires, store away the expected frequency array
-    if storeExp == "True":
-        np.save(storedExpPath, expFreqArr, allow_pickle=False)
-
-    # Save somewhere regardless for use in score calculation
-    expFreqFilename = "temp_exp_freq_{}.npy".format(fileTag)
-    expFreqPath = outputDirPath / expFreqFilename
-
-    np.save(expFreqPath, expFreqArr, allow_pickle=False)
+    # Save the expected frequency array
+    np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

@@ -25,9 +25,6 @@ def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
-    print("Num states = ", numStates)
-    print("saliency=", saliency)
-
     if saliency == 1:
         s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     elif saliency == 2:

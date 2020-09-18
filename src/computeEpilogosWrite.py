@@ -7,17 +7,13 @@ import sys
 def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
 
-    # Clean up the saved temporary expected frequency array
-    for file in outputDirPath.glob("temp_exp_freq_{}_*.npy".format(fileTag)):
-        os.remove(file)
-
     # Order matters to us when writing, so use sorted
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
         writeScores(fileTag, combinedArr, outputDirPath, numStates)
         
     # Clean up
-    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
+    for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):
         os.remove(file)
 
 # Helper to write the final scores to files

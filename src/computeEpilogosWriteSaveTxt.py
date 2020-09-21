@@ -48,7 +48,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             np.concatenate((observationArr, fileObservationArr), axis=0)
 
     scoreFMT = "%s\t%s\t%s"
-    for i in numStates:
+    for i in range(numStates):
         scoreFMT += "\t%.5f"
     np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), fmt=scoreFMT)
 

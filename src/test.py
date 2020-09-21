@@ -23,7 +23,13 @@ def main():
 
     print(np.amax(test, axis=1).reshape((test.shape[0], 1)))
     print(np.sum(test, axis=1).reshape((test.shape[0], 1)))
-    print(np.sum(test, axis=0))
+
+    scoreFMT = "%s\t%s\t%s"
+    for i in range(2):
+        scoreFMT += "\t%.5f"
+
+    print(scoreFMT)
+
 
 if __name__ == "__main__":
     main()

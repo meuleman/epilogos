@@ -30,7 +30,8 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
-    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
+    # for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
+    for file in sorted(outputDirPath.glob("temp_scores*.npy")):
         combinedArr = np.load(file, allow_pickle=False)
 
         scoreArr = combinedArr[:, 3:]

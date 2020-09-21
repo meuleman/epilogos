@@ -17,7 +17,13 @@ from pathlib import PurePath
 
 def main():
     
-    print("ajlskfjsdljflkj{:.5f}".format(3.4444454545))
+    test = np.array([[1, 2, 3],
+                    [3, 4, 5],
+                    [5, 6, 7]])
+
+    print(np.amax(test, axis=1).reshape((test.shape[0], 1)))
+    print(np.sum(test, axis=1).reshape((test.shape[0], 1)))
+    print(np.sum(test, axis=0))
 
 if __name__ == "__main__":
     main()

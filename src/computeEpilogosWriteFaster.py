@@ -26,6 +26,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     first = True
     # for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
     for file in sorted(outputDirPath.glob("temp_scores*.npy")):
+        print(file.name)
         combinedArr = np.load(file, allow_pickle=False)
 
         fileScoreArr = combinedArr[:, 3:].astype(float)
@@ -39,6 +40,8 @@ def writeScores(fileTag, outputDirPath, numStates):
         # Splicing all the observation arrays together
         fileObservationArr = np.concatenate((maxContributionsLocs, maxContributions, totalScores), axis=1)
 
+        print("loop")
+
         # Storing the per file arrays into the entire array
         if first:
             scoreArr = fileScoreArr
@@ -46,6 +49,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             observationArr = fileObservationArr
             first = False
         else:
+            print("concatenating onto bottom")
             np.concatenate((scoreArr, fileScoreArr), axis=0)
             np.concatenate((locationArr, fileLocationArr), axis=0)
             np.concatenate((observationArr, fileObservationArr), axis=0)

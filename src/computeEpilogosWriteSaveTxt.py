@@ -47,12 +47,15 @@ def writeScores(fileTag, outputDirPath, numStates):
             np.concatenate((locationArr, fileLocationArr), axis=0)
             np.concatenate((observationArr, fileObservationArr), axis=0)
 
+    scoreArr = np.around(scoreArr, decimals=5)
+    observationArr = np.around(observationArr, decimals=5)
+
     scoreFMT = "%s\t%s\t%s"
     for i in range(int(numStates)):
-        scoreFMT += "\t%.5f"
+        scoreFMT += "\t%s"
     np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), fmt=scoreFMT)
 
-    observationFMT = "%s\t%s\t%s\t%d\t%.5f\t1\t%.5f"
+    observationFMT = "%s\t%s\t%s\t%d\t%s\t1\t%s"
     np.savetxt(observationsTxtPath, np.concatenate((locationArr, observationArr), axis=1), fmt=observationFMT)
 
 if __name__ == "__main__":

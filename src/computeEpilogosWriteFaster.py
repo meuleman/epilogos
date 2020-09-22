@@ -60,7 +60,7 @@ def writeScores(fileTag, outputDirPath, numStates):
         observationsTxt.write("{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
         scoresTxt.write("{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
         
-        observationsTxt.write("{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(int(fileObservationArr[i, 0]), fileObservationArr[i, 1], fileObservationArr[i, 2]))
+        observationsTxt.write("{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(int(observationArr[i, 0]), observationArr[i, 1], observationArr[i, 2]))
 
         # Write to scores
         for j in range(len(scoreArr[i])):

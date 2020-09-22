@@ -9,9 +9,9 @@ def main(fileTag, outputDirectory, numStates):
 
     writeScores(fileTag, outputDirPath, numStates)
         
-    # # Clean up
-    # for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):
-    #     os.remove(file)
+    # Clean up
+    for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):
+        os.remove(file)
 
 # Helper to write the final scores to files
 def writeScores(fileTag, outputDirPath, numStates):
@@ -21,8 +21,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
     first = True
-    # for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
-    for file in sorted(outputDirPath.glob("temp_scores*.npy")):
+    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
 
         fileScoreArr = combinedArr[:, 3:].astype(float)

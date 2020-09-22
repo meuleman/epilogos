@@ -50,9 +50,9 @@ def writeScores(fileTag, outputDirPath, numStates):
             first = False
         else:
             print("concatenating onto bottom")
-            np.concatenate((scoreArr, fileScoreArr), axis=0)
-            np.concatenate((locationArr, fileLocationArr), axis=0)
-            np.concatenate((observationArr, fileObservationArr), axis=0)
+            scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
+            locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
+            observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
 
     # Write each row in both observations and scores
     for i in range(scoreArr.shape[0]):

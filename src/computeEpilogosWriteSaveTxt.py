@@ -43,9 +43,9 @@ def writeScores(fileTag, outputDirPath, numStates):
             observationArr = fileObservationArr
             first = False
         else:
-            np.concatenate((scoreArr, fileScoreArr), axis=0)
-            np.concatenate((locationArr, fileLocationArr), axis=0)
-            np.concatenate((observationArr, fileObservationArr), axis=0)
+            scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
+            locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
+            observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
 
     scoreArr = np.around(scoreArr, decimals=5)
     observationArr = np.around(observationArr, decimals=5)

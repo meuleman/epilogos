@@ -54,7 +54,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     print("Observation Calculation Time:", time.time() - tLoop)
 
     tScore = time.time()
-    np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), delimiter="\t")
+    np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), fmt="%s", delimiter="\t")
     print("Score SaveTxt Time:", time.time() - tScore)
 
     tObs = time.time()

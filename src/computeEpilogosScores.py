@@ -153,6 +153,9 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag):
     # Creating a file path
+
+    # MAKE IT CHROMOSOME AN DLOCATION ON CHROMOSOME
+    
     chromosomeNumber = str(locationArr[0, 0])
     scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, chromosomeNumber)
     scoreFilePath = outputDirPath / scoreFilename

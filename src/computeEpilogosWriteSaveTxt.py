@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import gzip
 import sys
+import time
 
 def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
@@ -20,6 +21,7 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
+    tLoop = time.time()
     first = True
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
@@ -49,13 +51,19 @@ def writeScores(fileTag, outputDirPath, numStates):
     scoreArr = np.around(scoreArr, decimals=5)
     observationArr = np.around(observationArr, decimals=5)
 
+    print("Observation Calculation Time:", time.time() - tLoop)
+
+    tScore = time.time()
     scoreFMT = "%s\t%s\t%s"
     for i in range(int(numStates)):
         scoreFMT += "\t%s"
     np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), fmt=scoreFMT)
+    print("Score SaveTxt Time:", time.time() - tScore)
 
+    tObs = time.time()
     observationFMT = "%s\t%s\t%s\t%s\t%s\t1\t%s"
     np.savetxt(observationsTxtPath, np.concatenate((locationArr, observationArr), axis=1), fmt=observationFMT)
+    print("Observation SaveTxt:", time.time() - tScore)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])

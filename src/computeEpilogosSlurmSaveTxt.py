@@ -9,14 +9,16 @@ import subprocess
 from pathlib import PurePath
 
 @click.command()
-@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (Please ensure that this directory contains only files you want to read from)")
-@click.option("-m", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-l", "--saliency-level", "saliency", type=int, required=True, help="Saliency level (1, 2, or 3)")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory")
-@click.option("-e", "--calculate-expected", "calcExp", is_flag=True, help="[Flag] Just calculate the expected frequencies")
-@click.option("-s", "--calculate-scores", "calcScores", is_flag=True, help="[Flag] Use previously stored expected frequency array to calculate scores")
-@click.option("-d", "--expected-directory", "expFreqDir", type=str, required=True, help="Path to the expected frequency array (Used in conjunction with either '-e' or '-s')")
-def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScores, expFreqDir):
+@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
+@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory\n")
+@click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
+@click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
+@click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]") # default output directory
+def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir):
+    """
+    This script computes scores for chromatin states across the genome.
+    """
     tTotal = time.time()
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
@@ -29,15 +31,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
     print("numStates=", numStates)
     print("saliency=", saliency)
     print("outputDirectory=", outputDirPath)
-    print("calcExp=", calcExp)
-    print("calcScores=", calcScores)
+    print("modeOfOperation=", modeOfOperation)
     print("expFreqDir=", expFreqDir)
 
-    if not calcExp and not calcScores:
-        print()
-        print("ERROR: Please at least one of the --calculate-expected (-e) or --calculate-scores (-s) flags")
-        print()
-        return
+    if expFreqDir == "null":
+        expFreqDir = outputDirectory
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
@@ -89,7 +87,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     # Check if user wants to calculate it
-    if not calcExp:
+    if modeOfOperation == "s":
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
@@ -170,7 +168,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         
         combinationJobID = int(sp.stdout.split()[-1])
 
-    if calcScores:
+    if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
         print()
         print("Calculating Scores....")

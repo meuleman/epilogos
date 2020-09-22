@@ -50,11 +50,15 @@ def writeScores(fileTag, outputDirPath, numStates):
             np.concatenate((locationArr, fileLocationArr), axis=0)
             np.concatenate((observationArr, fileObservationArr), axis=0)
 
+    print("Scaore array", scoreArr.shape)
+    print("location array", locationArr.shape)
+    print("location array", observationArr.shape)
+
     # Write each row in both observations and scores
     for i in range(scoreArr.shape[0]):
         # Write in the coordinates
-        observationsTxt.write("{}\t{}\t{}".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
-        scoresTxt.write("{}\t{}\t{}".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
+        observationsTxt.write("{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
+        scoresTxt.write("{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2]))
         
         observationsTxt.write("{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(int(fileObservationArr[i, 0]), fileObservationArr[i, 1], fileObservationArr[i, 2]))
 

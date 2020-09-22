@@ -27,7 +27,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     for file in sorted(outputDirPath.glob("temp_scores*.npy")):
         combinedArr = np.load(file, allow_pickle=False)
 
-        scoreArr = combinedArr[:, 3:]
+        scoreArr = combinedArr[:, 3:].astype(float)
         locationArr = combinedArr[:, 0:3]
 
         # Write each row in both observations and scores
@@ -38,15 +38,15 @@ def writeScores(fileTag, outputDirPath, numStates):
                 scoresTxt.write("{}\t".format(location))
             
             # Write to observations
-            maxContribution = np.amax(scoreArr[i].astype(float))
-            maxContributionLoc = np.argmax(scoreArr[i].astype(float)) + 1
-            totalScore = np.sum(scoreArr[i].astype(float))
+            maxContribution = np.amax(scoreArr[i])
+            maxContributionLoc = np.argmax(scoreArr[i]) + 1
+            totalScore = np.sum(scoreArr[i])
 
             observationsTxt.write("{}\t{:.5f}\t1\t{:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
 
             # Write to scores
             for j in range(len(scoreArr[i])):
-                scoresTxt.write("{:.5f}\t".format(float(scoreArr[i, j])))
+                scoresTxt.write("{:.5f}\t".format(scoreArr[i, j]))
             scoresTxt.write("\n")
 
     observationsTxt.close()

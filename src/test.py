@@ -17,12 +17,14 @@ from pathlib import PurePath
 
 def main():
     
-    test = np.array([[1, 2, 3],
-                    [3, 4, 5],
-                    [5, 6, 7]])
+    test = np.array([[1.578658568658, 2.46546, 3.35345345],
+                    [3.45345435, 4.4353454, 5.4535435345],
+                    [5.45435, 6, 7]])
 
     print(np.amax(test, axis=1).reshape((test.shape[0], 1)))
     print(np.sum(test, axis=1).reshape((test.shape[0], 1)))
+
+    print(np.around(test, decimals=5))
 
     scoreFMT = "%s\t%s\t%s"
     for i in range(2):

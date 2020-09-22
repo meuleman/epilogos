@@ -25,13 +25,13 @@ def writeScores(fileTag, outputDirPath, numStates):
     for file in sorted(outputDirPath.glob("temp_scores*.npy")):
         combinedArr = np.load(file, allow_pickle=False)
 
-        fileScoreArr = combinedArr[:, 3:]
+        fileScoreArr = combinedArr[:, 3:].astype(float)
         fileLocationArr = combinedArr[:, 0:3]
 
         # Calculating observation values
-        maxContributions = np.amax(fileScoreArr.astype(float), axis=1).reshape((fileScoreArr.shape[0], 1))
-        maxContributionsLocs = np.argmax(fileScoreArr.astype(float), axis=1).reshape((fileScoreArr.shape[0], 1)) + 1
-        totalScores = np.sum(fileScoreArr.astype(float), axis=1).reshape((fileScoreArr.shape[0], 1))
+        maxContributions = np.amax(fileScoreArr, axis=1).reshape((fileScoreArr.shape[0], 1))
+        maxContributionsLocs = np.argmax(fileScoreArr, axis=1).reshape((fileScoreArr.shape[0], 1)) + 1
+        totalScores = np.sum(fileScoreArr, axis=1).reshape((fileScoreArr.shape[0], 1))
 
         # Splicing all the observation arrays together
         fileObservationArr = np.concatenate((maxContributionsLocs, maxContributions, totalScores), axis=1)

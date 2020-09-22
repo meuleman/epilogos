@@ -214,7 +214,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         # create a string for slurm dependency to work
         jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
 
-        jobName = "write_{}".format(fileTag)
+        jobName = "writeSaveTxt_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -236,7 +236,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
 
         pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
-        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mail-type=END --mail-user=jquon@altius.org --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mail-type=END --mail-user=jquon@altius.org --mem-per-cpu=16000 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

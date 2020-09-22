@@ -214,7 +214,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, calcExp, calcScore
         # create a string for slurm dependency to work
         jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
 
-        jobName = "write_{}".format(fileTag)
+        jobName = "writeFaster_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 

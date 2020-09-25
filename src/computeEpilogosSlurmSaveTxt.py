@@ -25,25 +25,22 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
     fileTag = "_".join(str(dataFilePath).split("/")[-5:])
 
-    print("FILETAG: ", fileTag)
-    print("CWD: ", Path.cwd())
-    print("fileDirectory=", dataFilePath)
-    print("numStates=", numStates)
-    print("saliency=", saliency)
-    print("outputDirectory=", outputDirPath)
-    print("modeOfOperation=", modeOfOperation)
-    print("expFreqDir=", expFreqDir)
+    print()
+    print("Input Directory =", dataFilePath)
+    print("State Model =", numStates)
+    print("Saliency level =", saliency)
+    print("Output Directory =", outputDirPath)
+    print("Mode of Operation =", modeOfOperation)
+    print("Background Directory =", expFreqDir)
 
     if expFreqDir == "null":
         expFreqDir = outputDirectory
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
-        print("OUTPUTPATH: ", outputDirPath)
 
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
-        print("FILE PATH: ", dataFilePath)
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -76,15 +73,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("ERROR: Output directory is not a directory")
         return
 
-    # Calculate the number of epigenomes (just read one line of one of the data files)
-    for x in dataFilePath.glob("*"):
-        numEpigenomes = pd.read_table(x, header=None, sep="\t", nrows=1).shape[1] - 3
-        break
-
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
     expFreqFilename = "exp_freq_{}.npy".format(fileTag)
     storedExpPath = Path(expFreqDir) / expFreqFilename
+    print()
+    print("Background Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -101,7 +95,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     else:     
         expJobIDArr = []   
         print()
-        print("Calculating expected frequencies....")
+        print("Submitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -130,9 +124,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 if saliency == 1:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=2000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=2000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -145,10 +139,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         # create a string for slurm dependency to work
         jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
 
-        print("Expected Frequency Jobs:", jobIDStrComb)
+        print("    JobIDs:", jobIDStrComb)
 
         print()
-        print("Combining expected frequencies....")
+        print("Submitting Slurm Job for Combining Background Frequency Arrays....")
 
         jobName = "exp_freq_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -175,9 +169,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         if saliency == 1:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -186,12 +180,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         
         combinationJobID = int(sp.stdout.split()[-1])
 
-        print("Combination Job ID:", combinationJobID)
+        print("    JobID:", combinationJobID)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
         print()
-        print("Calculating Scores....")
+        print("Submitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
@@ -221,9 +215,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 if saliency == 1:
                     slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --cpus-per-task=4 --mem-per-cpu=16000 --mail-type=FAIL --mail-user=jquon@altius.org --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --cpus-per-task=4 --mem-per-cpu=16000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -232,13 +226,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
-        # WRITING TO SCORE FILE
-        print()
-        print("Writing to score files....")
         # create a string for slurm dependency to work
         jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
         
-        print("Score Calculation Job IDs:", jobIDStrWrite)
+        print("    JobIDs:", jobIDStrWrite)
+
+        # WRITING TO SCORE FILE
+        print()
+        print("Submitting Slurm Jobs for Writing to Score Files....")
 
         jobName = "writeSaveTxt_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -269,7 +264,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         if not sp.stdout.startswith("Submitted batch"):
             print("ERROR: sbatch not submitted correctly")
 
-        print("Write Job ID:", int(sp.stdout.split()[-1]))
+        print("    JobID:", int(sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main()

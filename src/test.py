@@ -17,21 +17,16 @@ from pathlib import PurePath
 
 def main():
     
-    test = np.array([[1.578658568658, 2.46546, 3.35345345],
-                    [3.45345435, 4.4353454, 5.4535435345],
-                    [5.45435, 6, 7]])
+    test = np.array(np.arange(30)).reshape(10,3)
 
-    print(np.amax(test, axis=1).reshape((test.shape[0], 1)))
-    print(np.sum(test, axis=1).reshape((test.shape[0], 1)))
+    testlist = [1, 3, 5, 9]
 
-    print(np.around(test, decimals=5))
+    print(test)
+    print(test[testlist])
 
-    scoreFMT = "%s\t%s\t%s"
-    for i in range(2):
-        scoreFMT += "\t%.5f"
+    print(np.sum(test, axis=1))
 
-    print(scoreFMT)
-
+    print( test / 2)
 
 if __name__ == "__main__":
     main()

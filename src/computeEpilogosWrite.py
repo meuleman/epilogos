@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import gzip
 import sys
+import time
 
 def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
@@ -21,6 +22,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
+    tWrite = time.time()
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
@@ -47,6 +49,8 @@ def writeScores(fileTag, outputDirPath, numStates):
             for j in range(len(scoreArr[i])):
                 scoresTxt.write("{:.5f}\t".format(scoreArr[i, j]))
             scoresTxt.write("\n")
+
+    print("write time:", time.time() - tWrite)
 
     observationsTxt.close()
     scoresTxt.close()

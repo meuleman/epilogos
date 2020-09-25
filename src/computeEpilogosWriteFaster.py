@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import gzip
 import sys
+import time
 
 def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
@@ -20,6 +21,8 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
+
+    tCalc = time.time()
 
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
@@ -39,8 +42,6 @@ def writeScores(fileTag, outputDirPath, numStates):
         # Splicing all the observation arrays together
         fileObservationArr = np.concatenate((maxContributionsLocs, maxContributions, totalScores), axis=1)
 
-        print("loop")
-
         # Storing the per file arrays into the entire array
         if first:
             scoreArr = fileScoreArr
@@ -48,11 +49,13 @@ def writeScores(fileTag, outputDirPath, numStates):
             observationArr = fileObservationArr
             first = False
         else:
-            print("concatenating onto bottom")
             scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
             observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
+    print("Calc Time:", time.time() - tCalc)
 
+
+    tWrite = time.time()
     # Write each row in both observations and scores
     for i in range(scoreArr.shape[0]):
         # Write in the coordinates
@@ -66,6 +69,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             scoresTxt.write("{:.5f}\t".format(scoreArr[i, j]))
         scoresTxt.write("\n")
 
+    print("Write Time:", time.time() - tWrite)
     observationsTxt.close()
     scoresTxt.close()
 

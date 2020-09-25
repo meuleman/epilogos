@@ -11,7 +11,7 @@ from pathlib import PurePath
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory\n")
+@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]") # default output directory
@@ -267,7 +267,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("    JobID:", int(sp.stdout.split()[-1]))
 
         print()
-        print("All JobIDs: {}".format(jobIDStrComb + "," + combinationJobID + "," + jobIDStrWrite + "," + int(sp.stdout.split()[-1])))
+        print("All JobIDs: {}".format(jobIDStrComb + "," + combinationJobID + "," + jobIDStrWrite + "," + sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main()

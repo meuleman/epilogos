@@ -8,6 +8,7 @@ import numpy.ma as ma
 import operator as op
 from functools import reduce
 import multiprocessing
+import itertools
 
 def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     dataFilePath = Path(filename)
@@ -97,6 +98,8 @@ def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
 
+    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
+
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
@@ -136,11 +139,8 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag):
     # Creating a file path
-
-    # MAKE IT CHROMOSOME AN DLOCATION ON CHROMOSOME
-    
-    chromosomeNumber = str(locationArr[0, 0])
-    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, chromosomeNumber)
+    locationTag = "{}_{}_{}".format(locationArr[0, 0], locationArr[0,1], locationArr[0,2])
+    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, locationTag)
     scoreFilePath = outputDirPath / scoreFilename
 
     # Concatenating the locationArr and dataArr into one helps writing later

@@ -132,8 +132,8 @@ def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr,
 # Helper to store the expected frequency arrays
 def storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag):
     # Creating a file path
-    chromosomeNumber = str(dataDF.iloc[0, 0])
-    expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, chromosomeNumber)
+    locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
+    expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, locationTag)
     expFreqPath = outputDirPath / expFreqFilename
 
     np.save(expFreqPath, expFreqArr, allow_pickle=False)

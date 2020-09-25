@@ -28,7 +28,6 @@ def writeScores(fileTag, outputDirPath, numStates):
     # Loop over all score files and write them all to scores and observations txt
     first = True
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
-        print(file.name)
         combinedArr = np.load(file, allow_pickle=False)
 
         fileScoreArr = combinedArr[:, 3:].astype(float)

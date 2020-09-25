@@ -48,23 +48,6 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i in range(len(uniqueStates)):
-            if (i > 14):
-                print("i ==", i)
-                print("len(uniqueStates)=", len(uniqueStates))
-                print("row =", row)
-            if (row == 9223372036854775807):
-                print("row = 9223372036854775807")
-                print("len(uniqueStates)=", len(uniqueStates))
-            if (uniqueStates[i] > 15):
-                print("uniqueStates has an errored value")
-                print("uniqueState =", uniqueStates[i])
-                print("row=", row)
-                print("stateCount=",stateCounts[i])
-                print(dataArr[row])
-                print(uniqueStates)
-                print(stateCounts)
-            if (stateCounts[i] > 127):
-                print("state counts is greater than 15: ", stateCounts[i])
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 

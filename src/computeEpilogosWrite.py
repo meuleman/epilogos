@@ -22,7 +22,9 @@ def writeScores(fileTag, outputDirPath, numStates):
     observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
-    tWrite = time.time()
+    tString = time.time()
+    observationStr = ""
+    scoreStr = ""
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
@@ -33,22 +35,23 @@ def writeScores(fileTag, outputDirPath, numStates):
 
         # Write each row in both observations and scores
         for i in range(scoreArr.shape[0]):
-            # Write in the coordinates
-            for location in locationArr[i]:
-                observationsTxt.write("{}\t".format(location))
-                scoresTxt.write("{}\t".format(location))
-            
             # Write to observations
             maxContribution = np.amax(scoreArr[i])
             maxContributionLoc = np.argmax(scoreArr[i]) + 1
             totalScore = np.sum(scoreArr[i])
 
-            observationsTxt.write("{}\t{:.5f}\t1\t{:.5f}\t\n".format(maxContributionLoc, maxContribution, totalScore))
-
-            # Write to scores
+            observationStr += "{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], maxContributionLoc, maxContribution, totalScore)
+            
+            scoreStr += "{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2])
             for j in range(len(scoreArr[i])):
-                scoresTxt.write("{:.5f}\t".format(scoreArr[i, j]))
-            scoresTxt.write("\n")
+                scoreStr += "{:.5f}\t".format(scoreArr[i, j])
+            scoreStr += "\n"
+
+    print("string formation time:", time.time() - tString)
+
+    tWrite = time.time()
+    observationsTxt.write(observationStr)
+    scoresTxt.write(scoreStr)    
 
     print("write time:", time.time() - tWrite)
 

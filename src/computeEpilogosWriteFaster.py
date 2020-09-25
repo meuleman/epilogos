@@ -62,22 +62,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             scoreStr += "{:.5f}\t".format(scoreArr[i, j])
         scoreStr += "\n"
 
-    print("join time:", time.time() - t1)
-
-    t2 = time.time()
-    observationStr2 = ""
-    scoreStr2 = ""
-    for i in range(scoreArr.shape[0]):
-        observationStr2 += "{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], int(observationArr[i, 0]), observationArr[i, 1], observationArr[i, 2])
-        scoreStr2 += "{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2])
-        for j in range(len(scoreArr[i])):
-            scoreStr2 += "{:.5f}\t".format(scoreArr[i, j])
-        scoreStr2 += "\n"
-
-    print("loop time:", time.time() - t2)
-
-    print("score str equal:", scoreStr == scoreStr2)
-    print("observation str equal:", observationStr == observationStr2)
+    print("String creation time:", time.time() - t1)
 
     tWrite = time.time()
     # # Write each row in both observations and scores
@@ -93,7 +78,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     #         scoresTxt.write("{:.5f}\t".format(scoreArr[i, j]))
     #     scoresTxt.write("\n")
     observationsTxt.write(observationStr)
-    scoreStr.write(scoreStr)
+    scoresTxt.write(scoreStr)
 
     print("Write Time:", time.time() - tWrite)
     observationsTxt.close()

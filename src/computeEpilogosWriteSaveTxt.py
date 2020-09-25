@@ -53,13 +53,20 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     print("Observation Calculation Time:", time.time() - tLoop)
 
+    tConcat = time.time()
+    scoreConcatArr = np.concatenate((locationArr, scoreArr), axis=1)
+    obsConcatArr = np.concatenate((locationArr, observationArr), axis=1)
+
+    print("Concatenation Time:", time.time() - tConcat)
+
+
     tScore = time.time()
-    np.savetxt(scoresTxtPath, np.concatenate((locationArr, scoreArr), axis=1), fmt="%s", delimiter="\t")
+    np.savetxt(scoresTxtPath, scoreConcatArr, fmt="%s", delimiter="\t")
     print("Score SaveTxt Time:", time.time() - tScore)
 
     tObs = time.time()
     observationFMT = "%s\t%s\t%s\t%s\t%s\t1\t%s"
-    np.savetxt(observationsTxtPath, np.concatenate((locationArr, observationArr), axis=1), fmt=observationFMT)
+    np.savetxt(observationsTxtPath, obsConcatArr, fmt=observationFMT)
     print("Observation SaveTxt:", time.time() - tScore)
 
 if __name__ == "__main__":

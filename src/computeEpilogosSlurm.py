@@ -134,6 +134,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         # create a string for slurm dependency to work
         jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
 
+        print("Expected Frequency Jobs:", jobIDStrComb)
+
         print()
         print("Combining expected frequencies....")
 
@@ -167,6 +169,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
             print("ERROR: sbatch not submitted correctly")
         
         combinationJobID = int(sp.stdout.split()[-1])
+
+        print("Combination Job ID:", combinationJobID)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
@@ -212,6 +216,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         # create a string for slurm dependency to work
         jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
 
+        print("Score Calculation Job IDs:", jobIDStrWrite)
+
         jobName = "write_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
@@ -240,6 +246,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         if not sp.stdout.startswith("Submitted batch"):
             print("ERROR: sbatch not submitted correctly")
+
+        print("Write Job ID:", int(sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main()

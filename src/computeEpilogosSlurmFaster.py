@@ -11,7 +11,7 @@ from pathlib import PurePath
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory\n")
+@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]") # default output directory
@@ -25,25 +25,22 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
     fileTag = "_".join(str(dataFilePath).split("/")[-5:])
 
-    print("FILETAG: ", fileTag)
-    print("CWD: ", Path.cwd())
-    print("fileDirectory=", dataFilePath)
-    print("numStates=", numStates)
-    print("saliency=", saliency)
-    print("outputDirectory=", outputDirPath)
-    print("modeOfOperation=", modeOfOperation)
-    print("expFreqDir=", expFreqDir)
+    print()
+    print("Input Directory =", dataFilePath)
+    print("State Model =", numStates)
+    print("Saliency level =", saliency)
+    print("Output Directory =", outputDirPath)
+    print("Mode of Operation =", modeOfOperation)
+    print("Background Directory =", expFreqDir)
 
     if expFreqDir == "null":
         expFreqDir = outputDirectory
 
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
-        print("OUTPUTPATH: ", outputDirPath)
 
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
-        print("FILE PATH: ", dataFilePath)
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -55,6 +52,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if not list(dataFilePath.glob("*")):
         print()
         print("ERROR: Ensure that file directory is not empty")
+        print()
+        return
+
+    if saliency != 1 and saliency != 2 and saliency != 3:
+        print()
+        print("ERROR: Ensure that saliency metric is either 1, 2, or 3")
         print()
         return
 
@@ -70,15 +73,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("ERROR: Output directory is not a directory")
         return
 
-    # Calculate the number of epigenomes (just read one line of one of the data files)
-    for x in dataFilePath.glob("*"):
-        numEpigenomes = pd.read_table(x, header=None, sep="\t", nrows=1).shape[1] - 3
-        break
-
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
     expFreqFilename = "exp_freq_{}.npy".format(fileTag)
     storedExpPath = Path(expFreqDir) / expFreqFilename
+    print()
+    print("Background Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -95,7 +95,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     else:     
         expJobIDArr = []   
         print()
-        print("Calculating expected frequencies....")
+        print("Submitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -121,7 +121,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
-                slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                if saliency == 1:
+                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                elif saliency == 2:
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=2000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                elif saliency == 3:
+                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -134,10 +139,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         # create a string for slurm dependency to work
         jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
 
-        print("Expected Frequency Jobs:", jobIDStrComb)
+        print("    JobIDs:", jobIDStrComb)
 
         print()
-        print("Combining expected frequencies....")
+        print("Submitting Slurm Job for Combining Background Frequency Arrays....")
 
         jobName = "exp_freq_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -161,7 +166,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
 
-        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+        if saliency == 1:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+        elif saliency == 2:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
+        elif saliency == 3:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -170,12 +180,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         
         combinationJobID = int(sp.stdout.split()[-1])
 
-        print("Combination Job ID:", combinationJobID)
+        print("    JobID:", combinationJobID)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
         print()
-        print("Calculating Scores....")
+        print("Submitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
@@ -201,7 +211,13 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+
+                if saliency == 1:
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                elif saliency == 2:
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                elif saliency == 3:
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --cpus-per-task=4 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -210,13 +226,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
-        # WRITING TO SCORE FILE
-        print()
-        print("Writing to score files....")
         # create a string for slurm dependency to work
         jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
+        
+        print("    JobIDs:", jobIDStrWrite)
 
-        print("Score Calculation Job IDs:", jobIDStrWrite)
+        # WRITING TO SCORE FILE
+        print()
+        print("Submitting Slurm Jobs for Writing to Score Files....")
 
         jobName = "writeFaster_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -247,7 +264,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         if not sp.stdout.startswith("Submitted batch"):
             print("ERROR: sbatch not submitted correctly")
 
-        print("Write Job ID:", int(sp.stdout.split()[-1]))
+        print("    JobID:", int(sp.stdout.split()[-1]))
+
+        print()
+        print("All JobIDs: {},{},{},{}".format(jobIDStrComb, combinationJobID, jobIDStrWrite, sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main()

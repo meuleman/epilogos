@@ -8,7 +8,7 @@ import time
 def main(fileTag, outputDirectory, numStates):
     outputDirPath = Path(outputDirectory)
 
-    writeScores(fileTag, outputDirPath, numStates)
+    writeScores(fileTag, outputDirPath, int(numStates))
         
     # Clean up
     for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):

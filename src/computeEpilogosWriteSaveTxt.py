@@ -48,8 +48,13 @@ def writeScores(fileTag, outputDirPath, numStates):
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
             observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
 
-    scoreArr = np.around(scoreArr, decimals=5)
+    scoreArr = np.around(scoreArr, decimals=5).astype(str)
     observationArr = np.around(observationArr, decimals=5)
+
+
+    # DO NOT RELY ON SAVETXT FOR FORMATTING, DO IT BEFORE HAND
+
+    
 
     print("Observation Calculation Time:", time.time() - tLoop)
 

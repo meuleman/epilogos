@@ -25,6 +25,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     tString = time.time()
     observationStr = ""
     scoreStr = ""
+    scoresTemplate = "".join("{0[%d]:.5f}\t" % i for i in range(numStates))
     # Order matters to us when writing, so use sorted
     # Loop over all score files and write them all to scores and observations txt
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
@@ -40,12 +41,9 @@ def writeScores(fileTag, outputDirPath, numStates):
             maxContributionLoc = np.argmax(scoreArr[i]) + 1
             totalScore = np.sum(scoreArr[i])
 
-            observationStr += "{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], maxContributionLoc, maxContribution, totalScore)
+            observationStr += "{0[0]}\t{0[1]}\t{0[2]}\t{1:d}\t{2:.5f}\t1\t{3:.5f}\t\n".format(locationArr[i], maxContributionLoc, maxContribution, totalScore)
             
-            scoreStr += "{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2])
-            for j in range(len(scoreArr[i])):
-                scoreStr += "{:.5f}\t".format(scoreArr[i, j])
-            scoreStr += "\n"
+            scoreStr += "{0[0]}\t{0[1]}\t{0[2]}\t".format(locationArr[i]) + scoresTemplate.format(scoreArr[i]) + "\n"
 
     print("string formation time:", time.time() - tString)
 

@@ -55,7 +55,7 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     t1 = time.time()
     observationStr = "".join("{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], int(observationArr[i, 0]), observationArr[i, 1], observationArr[i, 2]) for i in range(scoreArr.shape[0]))
-    scoresTemplate = "".join("{0[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
+    scoresTemplate = "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
     scoreStr = "".join(("{0[0]}\t{0[1]}\t{0[2]}\t" + scoresTemplate).format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
     # for i in range(scoreArr.shape[0]):
     #     scoreStr += "{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2])

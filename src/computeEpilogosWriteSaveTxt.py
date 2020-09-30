@@ -46,13 +46,13 @@ def writeScores(fileTag, outputDirPath, numStates):
         if first:
             scoreArr = np.around(fileScoreArr, decimals=5).astype(str)
             locationArr = fileLocationArr
-            observationArr = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5)).reshape(fileObservationArr.shape[0], 1), axis=1)
+            observationArr = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5).reshape(fileObservationArr.shape[0], 1)), axis=1)
             first = False
         else:
             formattedScore = np.around(fileScoreArr, decimals=5).astype(str)
             scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
-            formattedObs = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5)).reshape(fileObservationArr.shape[0], 1), axis=1)
+            formattedObs = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5).reshape(fileObservationArr.shape[0], 1)), axis=1)
             observationArr = np.concatenate((observationArr, formattedObs), axis=0)
 
     print("Observation Calculation Time:", time.time() - tLoop)

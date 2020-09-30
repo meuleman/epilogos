@@ -56,8 +56,8 @@ def writeScores(fileTag, outputDirPath, numStates):
     print("Observation Calculation Time:", time.time() - tLoop)
 
     tRound = time.time()
-    scoreArr = np.around(scoreArr, decimals=5).astype(str)
-    observationArr = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1).astype(str), np.ones((observationArr.shape[0], 1), dtype=int).astype(str), np.around(observationArr[:,2], decimals=5).reshape(observationArr.shape[0], 1).astype(str)), axis=1)
+    scoreArr1 = np.around(scoreArr, decimals=5).astype(str)
+    observationArr1 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1).astype(str), np.ones((observationArr.shape[0], 1), dtype=int).astype(str), np.around(observationArr[:,2], decimals=5).reshape(observationArr.shape[0], 1).astype(str)), axis=1)
     print("Rounding Time: ", time.time() - tRound)
 
     tRound2 = time.time()
@@ -65,12 +65,12 @@ def writeScores(fileTag, outputDirPath, numStates):
     observationArr2 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1), np.ones((observationArr.shape[0], 1), dtype=int), np.around(observationArr[:,2], decimals=5)).reshape(observationArr.shape[0], 1), axis=1)
     print("Rounding Time Less Casts: ", time.time() - tRound2)
 
-    print((observationArr == observationArr2).all())
-    print(observationArr[0], observationArr2[0])
+    print((observationArr1 == observationArr2).all())
+    print(observationArr1[0], observationArr2[0])
 
     tConcat = time.time()
-    scoreConcatArr = np.concatenate((locationArr, scoreArr), axis=1)
-    obsConcatArr = np.concatenate((locationArr, observationArr), axis=1)
+    scoreConcatArr = np.concatenate((locationArr, scoreArr1), axis=1)
+    obsConcatArr = np.concatenate((locationArr, observationArr1), axis=1)
 
     print("Concatenation Time:", time.time() - tConcat)
 

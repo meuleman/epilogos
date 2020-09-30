@@ -113,7 +113,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     scoresTxtPath2 = outputDirPath / "scoresSAVETXT2_{}.txt.gz".format(fileTag)
 
     tStruct = time.time()
-    scoreTypes = (("U10", "int", "int") + ("int" for i in range(numStates)))
+    scoreTypes = (("U5", "int", "int") + tuple("int" for i in range(numStates)))
     scoreNames = (("chr", "binstart", "binend") + tuple("s{}".format(i) for i in range(numStates)))
     scoreArrStructured = np.zeros((scoreArr.shape[0], scoreArr.shape[1] + 3), dtype={"names":scoreNames, "formats":scoreTypes})
     scoreArrStructured["chr"] = locationArr[:0]
@@ -122,7 +122,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     for i in range(numStates):
         scoreArrStructured["s{}".format(i)] = scoreArr[:,i]
 
-    obsTypes = ("U10", "int", "int", "int", "float", "int", "float")
+    obsTypes = ("U5", "int", "int", "int", "float", "int", "float")
     obsNames = ("chr", "binstart", "binend", "maxloc", "maxval", "one", "totalscore")
     obsArrStructured = np.zeros((observationArr.shape[0], 7), dtype={"names":obsNames, "formats":obsTypes})
     obsArrStructured["chr"] = locationArr[:0]

@@ -93,7 +93,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             obsArrStructured["binend"] = fileLocationArr[:,2]
             obsArrStructured["maxloc"] = fileObservationArr[:,0]
             obsArrStructured["maxval"] = fileObservationArr[:,1]
-            obsArrStructured["one"] = np.ones((fileObservationArr.shape[0], 1), dtype=int)
+            obsArrStructured["one"] = np.ones(fileObservationArr.shape[0], dtype=int)
             obsArrStructured["totalscore"] = fileObservationArr[:,2]
         else:
             fileScoreArrStructured = np.zeros(fileScoreArr.shape[0], dtype={"names":scoreNames, "formats":scoreTypes})
@@ -109,7 +109,7 @@ def writeScores(fileTag, outputDirPath, numStates):
             fileObsArrStructured["binend"] = fileLocationArr[:,2]
             fileObsArrStructured["maxloc"] = fileObservationArr[:,0]
             fileObsArrStructured["maxval"] = fileObservationArr[:,1]
-            fileObsArrStructured["one"] = np.ones((fileObservationArr.shape[0], 1), dtype=int)
+            fileObsArrStructured["one"] = np.ones(fileObservationArr.shape[0], dtype=int)
             fileObsArrStructured["totalscore"] = fileObservationArr[:,2]
 
             scoreArrStructured = np.append(scoreArrStructured, fileScoreArrStructured)

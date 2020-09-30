@@ -31,7 +31,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
 
-        fileScoreArr = np.around(combinedArr[:, 3:].astype(float), decimals=5).astype(str)
+        fileScoreArr = combinedArr[:, 3:].astype(float)
         fileLocationArr = combinedArr[:, 0:3]
 
         # Calculating observation values
@@ -44,12 +44,12 @@ def writeScores(fileTag, outputDirPath, numStates):
 
         # Storing the per file arrays into the entire array
         if first:
-            scoreArr = fileScoreArr
+            scoreArr = np.around(fileScoreArr, decimals=5).astype(str)
             locationArr = fileLocationArr
             observationArr = fileObservationArr
             first = False
         else:
-            scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
+            scoreArr = np.concatenate((scoreArr, np.around(fileScoreArr, decimals=5).astype(str)), axis=0)
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
             observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
 

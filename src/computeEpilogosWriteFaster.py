@@ -6,13 +6,18 @@ import sys
 import time
 
 def main(fileTag, outputDirectory, numStates):
+    tTotal = time.time()
     outputDirPath = Path(outputDirectory)
 
     writeScores(fileTag, outputDirPath, int(numStates))
         
+    tRemove = time.time()
     # Clean up
     for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):
         os.remove(file)
+    print("Remove file time:", time.time() - tRemove)
+
+    print("Total Time:", time.time() - tTotal)
 
 # Helper to write the final scores to files
 def writeScores(fileTag, outputDirPath, numStates):
@@ -53,44 +58,11 @@ def writeScores(fileTag, outputDirPath, numStates):
             observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
     print("Calc Time:", time.time() - tCalc)
 
-    times1 = []
-    times2 = []
-    times3 = []
-    for i in range(3):
-        t1 = time.time()
-        observationStr = "".join("{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], int(observationArr[i, 0]), observationArr[i, 1], observationArr[i, 2]) for i in range(scoreArr.shape[0]))
-        scoresTemplate = "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
-        scoreStr = "".join(("{0[0]}\t{0[1]}\t{0[2]}\t" + scoresTemplate).format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
-        times1.append(time.time() - t1)
-        # print("String creation time:", time.time() - t1)
-
-    for i in range(3):
-        t2 = time.time()
-        observationStr = "".join("{}\t{}\t{}\t{:d}\t{:.5f}\t1\t{:.5f}\t\n".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2], int(observationArr[i, 0]), observationArr[i, 1], observationArr[i, 2]) for i in range(scoreArr.shape[0]))
-        scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
-        scoreStr = "".join(scoresTemplate.format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
-        times2.append(time.time() - t2)
-        # print("String creation time 2:", time.time() - t2)
-
-    for i in range(3):
-        t3 = time.time()
-        observationStr = "".join("{0[0]}\t{0[1]}\t{0[2]}\t{1:d}\t{2[1]:.5f}\t1\t{2[2]:.5f}\t\n".format(locationArr[i], int(observationArr[i, 0]), observationArr[i]) for i in range(scoreArr.shape[0]))
-        scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
-        scoreStr = "".join(scoresTemplate.format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
-        times3.append(time.time() - t3)
-        # print("String creation time 3:", time.time() - t3)
-
-    print("Times 1:",times1, "AVG:", sum(times1) / len(times1))
-
-    print("Times 2:",times2, "AVG:", sum(times2) / len(times2))
-
-    print("Times 3:",times3, "AVG:", sum(times3) / len(times3))
-
-    # for i in range(scoreArr.shape[0]):
-    #     scoreStr += "{}\t{}\t{}\t".format(locationArr[i, 0], locationArr[i, 1], locationArr[i, 2])
-    #     for j in range(len(scoreArr[i])):
-    #         scoreStr += "{:.5f}\t".format(scoreArr[i, j])
-    #     scoreStr += "\n"
+    t1 = time.time()
+    observationStr = "".join("{0[0]}\t{0[1]}\t{0[2]}\t{1:d}\t{2[1]:.5f}\t1\t{2[2]:.5f}\t\n".format(locationArr[i], int(observationArr[i, 0]), observationArr[i]) for i in range(scoreArr.shape[0]))
+    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
+    scoreStr = "".join(scoresTemplate.format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
+    print("String creation time:", time.time() - t1)
 
     tWrite = time.time()
     # # Write each row in both observations and scores

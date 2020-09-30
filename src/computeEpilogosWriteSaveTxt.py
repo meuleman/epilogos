@@ -44,34 +44,22 @@ def writeScores(fileTag, outputDirPath, numStates):
 
         # Storing the per file arrays into the entire array
         if first:
-            scoreArr = fileScoreArr
+            scoreArr = np.around(fileScoreArr, decimals=5).astype(str)
             locationArr = fileLocationArr
-            observationArr = fileObservationArr
+            observationArr = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5)).reshape(fileObservationArr.shape[0], 1), axis=1)
             first = False
         else:
+            formattedScore = np.around(fileScoreArr, decimals=5).astype(str)
             scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
-            observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
+            formattedObs = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5)).reshape(fileObservationArr.shape[0], 1), axis=1)
+            observationArr = np.concatenate((observationArr, formattedObs), axis=0)
 
     print("Observation Calculation Time:", time.time() - tLoop)
 
-    tRound = time.time()
-    scoreArr1 = np.around(scoreArr, decimals=5).astype(str)
-    observationArr1 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1).astype(str), np.ones((observationArr.shape[0], 1), dtype=int).astype(str), np.around(observationArr[:,2], decimals=5).reshape(observationArr.shape[0], 1).astype(str)), axis=1)
-    print("Rounding Time: ", time.time() - tRound)
-
-    print(observationArr1[0])
-
-    tRound2 = time.time()
-    scoreArr1 = np.around(scoreArr, decimals=5).astype(str)
-    observationArr1 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1), np.ones((observationArr.shape[0], 1), dtype=int), np.around(observationArr[:,2], decimals=5)).reshape(observationArr.shape[0], 1), axis=1)
-    print("Rounding Time Less Casts: ", time.time() - tRound2)
-
-    print(observationArr1[0])
-
     tConcat = time.time()
-    scoreConcatArr = np.concatenate((locationArr, scoreArr1), axis=1)
-    obsConcatArr = np.concatenate((locationArr, observationArr1), axis=1)
+    scoreConcatArr = np.concatenate((locationArr, scoreArr), axis=1)
+    obsConcatArr = np.concatenate((locationArr, observationArr), axis=1)
 
     print("Concatenation Time:", time.time() - tConcat)
 

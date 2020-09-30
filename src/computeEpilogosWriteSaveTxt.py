@@ -116,18 +116,18 @@ def writeScores(fileTag, outputDirPath, numStates):
     scoreTypes = (("U5", "int", "int") + tuple("int" for i in range(numStates)))
     scoreNames = (("chr", "binstart", "binend") + tuple("s{}".format(i) for i in range(numStates)))
     scoreArrStructured = np.zeros((scoreArr.shape[0], scoreArr.shape[1] + 3), dtype={"names":scoreNames, "formats":scoreTypes})
-    scoreArrStructured["chr"] = locationArr[:0]
-    scoreArrStructured["binstart"] = locationArr[:1]
-    scoreArrStructured["binend"] = locationArr[:2]
+    scoreArrStructured["chr"] = locationArr[:,0]
+    scoreArrStructured["binstart"] = locationArr[:,1]
+    scoreArrStructured["binend"] = locationArr[:,2]
     for i in range(numStates):
         scoreArrStructured["s{}".format(i)] = scoreArr[:,i]
 
     obsTypes = ("U5", "int", "int", "int", "float", "int", "float")
     obsNames = ("chr", "binstart", "binend", "maxloc", "maxval", "one", "totalscore")
     obsArrStructured = np.zeros((observationArr.shape[0], 7), dtype={"names":obsNames, "formats":obsTypes})
-    obsArrStructured["chr"] = locationArr[:0]
-    obsArrStructured["binstart"] = locationArr[:1]
-    obsArrStructured["binend"] = locationArr[:2]
+    obsArrStructured["chr"] = locationArr[:,0]
+    obsArrStructured["binstart"] = locationArr[:,1]
+    obsArrStructured["binend"] = locationArr[:,2]
     obsArrStructured["maxloc"] = observationArr[:,0]
     obsArrStructured["maxval"] = observationArr[:,1]
     obsArrStructured["one"] = np.ones((observationArr.shape[0], 1), dtype=int)

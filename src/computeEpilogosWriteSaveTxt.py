@@ -101,16 +101,16 @@ def writeScores(fileTag, outputDirPath, numStates):
             fileScoreArrStructured["binstart"] = fileLocationArr[:,1]
             fileScoreArrStructured["binend"] = fileLocationArr[:,2]
             for i in range(numStates):
-                fileScoreArrStructured["s{}".format(i)] = fileScoreArr[:,i]
+                fileScoreArrStructured["s{}".format(i)] = np.around(fileScoreArr[:,i], decimals=5)
 
             fileObsArrStructured = np.zeros(fileObservationArr.shape[0], dtype={"names":obsNames, "formats":obsTypes})
             fileObsArrStructured["chr"] = fileLocationArr[:,0]
             fileObsArrStructured["binstart"] = fileLocationArr[:,1]
             fileObsArrStructured["binend"] = fileLocationArr[:,2]
             fileObsArrStructured["maxloc"] = fileObservationArr[:,0]
-            fileObsArrStructured["maxval"] = fileObservationArr[:,1]
+            fileObsArrStructured["maxval"] = np.around(fileObservationArr[:,1], decimals=5)
             fileObsArrStructured["one"] = np.ones(fileObservationArr.shape[0], dtype=int)
-            fileObsArrStructured["totalscore"] = fileObservationArr[:,2]
+            fileObsArrStructured["totalscore"] = np.around(fileObservationArr[:,2], decimals=5)
 
             scoreArrStructured = np.append(scoreArrStructured, fileScoreArrStructured)
             obsArrStructured = np.append(obsArrStructured, fileObsArrStructured)
@@ -133,11 +133,11 @@ def writeScores(fileTag, outputDirPath, numStates):
     # print("Observation SaveTxt:", time.time() - tObs)
 
     tScoreStruct = time.time()
-    np.savetxt(scoresTxtPath, scoreArrStructured, delimiter="\t")
+    np.savetxt(scoresTxtPath, scoreArrStructured, delimiter="\t", fmt="%s")
     print("Score Structured SaveTxt Time:", time.time() - tScoreStruct)
 
     tObsStruct = time.time()
-    np.savetxt(observationsTxtPath, obsArrStructured, delimiter="\t")
+    np.savetxt(observationsTxtPath, obsArrStructured, delimiter="\t", fmt="%s")
     print("Observation Structured SaveTxt Time:", time.time() - tObsStruct)
 
 

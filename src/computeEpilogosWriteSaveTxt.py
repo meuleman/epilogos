@@ -59,6 +59,10 @@ def writeScores(fileTag, outputDirPath, numStates):
     # Loop over all score files and write them all to scores and observations txt
     tLoop = time.time()
     first = True
+    scoreTypes = (("U5", "int", "int") + tuple("int" for i in range(numStates)))
+    scoreNames = (("chr", "binstart", "binend") + tuple("s{}".format(i) for i in range(numStates)))
+    obsTypes = ("U5", "int", "int", "int", "float", "int", "float")
+    obsNames = ("chr", "binstart", "binend", "maxloc", "maxval", "one", "totalscore")
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
 
@@ -75,20 +79,43 @@ def writeScores(fileTag, outputDirPath, numStates):
 
         # Storing the per file arrays into the entire array
         if first:
-            scoreArr = fileScoreArr
-            locationArr = fileLocationArr
-            observationArr = fileObservationArr
             first = False
-        else:
-            scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
-            locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
-            observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
+            scoreArrStructured = np.zeros(fileScoreArr.shape[0], dtype={"names":scoreNames, "formats":scoreTypes})
+            scoreArrStructured["chr"] = fileLocationArr[:,0]
+            scoreArrStructured["binstart"] = fileLocationArr[:,1]
+            scoreArrStructured["binend"] = fileLocationArr[:,2]
+            for i in range(numStates):
+                scoreArrStructured["s{}".format(i)] = fileScoreArr[:,i]
 
-    scoreArr = np.around(scoreArr, decimals=5).astype(str)
-    observationArr = np.around(observationArr, decimals=5)
+            obsArrStructured = np.zeros(fileObservationArr.shape[0], dtype={"names":obsNames, "formats":obsTypes})
+            obsArrStructured["chr"] = fileLocationArr[:,0]
+            obsArrStructured["binstart"] = fileLocationArr[:,1]
+            obsArrStructured["binend"] = fileLocationArr[:,2]
+            obsArrStructured["maxloc"] = fileObservationArr[:,0]
+            obsArrStructured["maxval"] = fileObservationArr[:,1]
+            obsArrStructured["one"] = np.ones((fileObservationArr.shape[0], 1), dtype=int)
+            obsArrStructured["totalscore"] = fileObservationArr[:,2]
+        else:
+            fileScoreArrStructured = np.zeros(fileScoreArr.shape[0], dtype={"names":scoreNames, "formats":scoreTypes})
+            fileScoreArrStructured["chr"] = fileLocationArr[:,0]
+            fileScoreArrStructured["binstart"] = fileLocationArr[:,1]
+            fileScoreArrStructured["binend"] = fileLocationArr[:,2]
+            for i in range(numStates):
+                fileScoreArrStructured["s{}".format(i)] = fileScoreArr[:,i]
+
+            fileObsArrStructured = np.zeros(fileObservationArr.shape[0], dtype={"names":obsNames, "formats":obsTypes})
+            fileObsArrStructured["chr"] = fileLocationArr[:,0]
+            fileObsArrStructured["binstart"] = fileLocationArr[:,1]
+            fileObsArrStructured["binend"] = fileLocationArr[:,2]
+            fileObsArrStructured["maxloc"] = fileObservationArr[:,0]
+            fileObsArrStructured["maxval"] = fileObservationArr[:,1]
+            fileObsArrStructured["one"] = np.ones((fileObservationArr.shape[0], 1), dtype=int)
+            fileObsArrStructured["totalscore"] = fileObservationArr[:,2]
+
+            scoreArrStructured = np.append(scoreArrStructured, fileScoreArrStructured)
+            obsArrStructured = np.append(obsArrStructured, fileObsArrStructured)
 
     print("Observation Calculation Time:", time.time() - tLoop)
-
 
     # tConcat = time.time()
     # scoreConcatArr = np.concatenate((locationArr, scoreArr), axis=1)
@@ -105,41 +132,12 @@ def writeScores(fileTag, outputDirPath, numStates):
     # np.savetxt(observationsTxtPath, obsConcatArr, delimiter="\t")
     # print("Observation SaveTxt:", time.time() - tObs)
 
-
-    print()
-    print("___STRUCTURED ARRAY TESTS___")
-
-    observationsTxtPath2 = outputDirPath / "observationsSAVETXT2_{}.txt.gz".format(fileTag)
-    scoresTxtPath2 = outputDirPath / "scoresSAVETXT2_{}.txt.gz".format(fileTag)
-
-    tStruct = time.time()
-    scoreTypes = (("U5", "int", "int") + tuple("int" for i in range(numStates)))
-    scoreNames = (("chr", "binstart", "binend") + tuple("s{}".format(i) for i in range(numStates)))
-    scoreArrStructured = np.zeros((scoreArr.shape[0], scoreArr.shape[1] + 3), dtype={"names":scoreNames, "formats":scoreTypes})
-    scoreArrStructured["chr"] = locationArr[:,0]
-    scoreArrStructured["binstart"] = locationArr[:,1]
-    scoreArrStructured["binend"] = locationArr[:,2]
-    for i in range(numStates):
-        scoreArrStructured["s{}".format(i)] = scoreArr[:,i]
-
-    obsTypes = ("U5", "int", "int", "int", "float", "int", "float")
-    obsNames = ("chr", "binstart", "binend", "maxloc", "maxval", "one", "totalscore")
-    obsArrStructured = np.zeros((observationArr.shape[0], 7), dtype={"names":obsNames, "formats":obsTypes})
-    obsArrStructured["chr"] = locationArr[:,0]
-    obsArrStructured["binstart"] = locationArr[:,1]
-    obsArrStructured["binend"] = locationArr[:,2]
-    obsArrStructured["maxloc"] = observationArr[:,0]
-    obsArrStructured["maxval"] = observationArr[:,1]
-    obsArrStructured["one"] = np.ones((observationArr.shape[0], 1), dtype=int)
-    obsArrStructured["totalscore"] = observationArr[:,2]
-    print("Structured Creation Time:", time.time() - tStruct)
-
     tScoreStruct = time.time()
-    np.savetxt(scoresTxtPath2, scoreArrStructured, delimiter="\t")
+    np.savetxt(scoresTxtPath, scoreArrStructured, delimiter="\t")
     print("Score Structured SaveTxt Time:", time.time() - tScoreStruct)
 
     tObsStruct = time.time()
-    np.savetxt(observationsTxtPath2, obsArrStructured, delimiter="\t")
+    np.savetxt(observationsTxtPath, obsArrStructured, delimiter="\t")
     print("Observation Structured SaveTxt Time:", time.time() - tObsStruct)
 
 

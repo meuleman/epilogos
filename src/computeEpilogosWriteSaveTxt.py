@@ -60,13 +60,14 @@ def writeScores(fileTag, outputDirPath, numStates):
     observationArr1 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1).astype(str), np.ones((observationArr.shape[0], 1), dtype=int).astype(str), np.around(observationArr[:,2], decimals=5).reshape(observationArr.shape[0], 1).astype(str)), axis=1)
     print("Rounding Time: ", time.time() - tRound)
 
+    print(observationArr1[0])
+
     tRound2 = time.time()
-    scoreArr2 = np.around(scoreArr, decimals=5).astype(str)
-    observationArr2 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1), np.ones((observationArr.shape[0], 1), dtype=int), np.around(observationArr[:,2], decimals=5)).reshape(observationArr.shape[0], 1), axis=1)
+    scoreArr1 = np.around(scoreArr, decimals=5).astype(str)
+    observationArr1 = np.concatenate((observationArr[:,0].reshape(observationArr.shape[0], 1).astype(int).astype(str), np.around(observationArr[:,1], decimals=5).reshape(observationArr.shape[0], 1), np.ones((observationArr.shape[0], 1), dtype=int), np.around(observationArr[:,2], decimals=5)).reshape(observationArr.shape[0], 1), axis=1)
     print("Rounding Time Less Casts: ", time.time() - tRound2)
 
-    print((observationArr1 == observationArr2).all())
-    print(observationArr1[0], observationArr2[0])
+    print(observationArr1[0])
 
     tConcat = time.time()
     scoreConcatArr = np.concatenate((locationArr, scoreArr1), axis=1)

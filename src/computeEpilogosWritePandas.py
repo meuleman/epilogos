@@ -57,7 +57,7 @@ def writeScores(fileTag, outputDirPath, numStates):
 
     tObs = time.time()
     observationDF.to_csv(observationsTxtPath, sep="\t", float_format="%.5f", index=False, header=False)
-    print("Observation To_CSV Time:", time.time() - tScore)
+    print("Observation To_CSV Time:", time.time() - tObs)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -31,7 +31,7 @@ def writeScores(fileTag, outputDirPath, numStates):
     for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
         combinedArr = np.load(file, allow_pickle=False)
 
-        fileScoreArr = combinedArr[:, 3:].astype(float)
+        fileScoreArr = np.around(combinedArr[:, 3:].astype(float), decimals=5).astype(str)
         fileLocationArr = combinedArr[:, 0:3]
 
         # Calculating observation values
@@ -40,20 +40,18 @@ def writeScores(fileTag, outputDirPath, numStates):
         totalScores = np.sum(fileScoreArr, axis=1).reshape((fileScoreArr.shape[0], 1))
 
         # Splicing all the observation arrays together
-        fileObservationArr = np.concatenate((maxContributionsLocs, maxContributions, totalScores), axis=1)
+        fileObservationArr = np.concatenate((maxContributionsLocs.astype(str), np.around(maxContributions, decimals=5), np.ones((maxContributions.shape[0], 1), dtype=int), np.around(totalScores, decimals=5)), axis=1)
 
         # Storing the per file arrays into the entire array
         if first:
-            scoreArr = np.around(fileScoreArr, decimals=5).astype(str)
+            scoreArr = fileScoreArr
             locationArr = fileLocationArr
-            observationArr = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5).reshape(fileObservationArr.shape[0], 1)), axis=1)
+            observationArr = fileObservationArr
             first = False
         else:
-            formattedScore = np.around(fileScoreArr, decimals=5).astype(str)
             scoreArr = np.concatenate((scoreArr, fileScoreArr), axis=0)
             locationArr = np.concatenate((locationArr, fileLocationArr), axis=0)
-            formattedObs = np.concatenate((fileObservationArr[:,0].reshape(fileObservationArr.shape[0], 1).astype(int).astype(str), np.around(fileObservationArr[:,1], decimals=5).reshape(fileObservationArr.shape[0], 1), np.ones((fileObservationArr.shape[0], 1), dtype=int), np.around(fileObservationArr[:,2], decimals=5).reshape(fileObservationArr.shape[0], 1)), axis=1)
-            observationArr = np.concatenate((observationArr, formattedObs), axis=0)
+            observationArr = np.concatenate((observationArr, fileObservationArr), axis=0)
 
     print("Observation Calculation Time:", time.time() - tLoop)
 

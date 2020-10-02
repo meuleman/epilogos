@@ -14,6 +14,8 @@ def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirPath)
 
+    filename = dataFilePath.name.split(".")[0]
+
     # Read in the data
     print("\nReading data from file...")
     tRead = time.time()
@@ -31,17 +33,17 @@ def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     if saliency == 1:
-        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
+        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     elif saliency == 2:
-        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
+        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     elif saliency == 3:
-        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag)
+        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     else:
         print("Inputed saliency value not supported")
         return
 
 # Function that calculates the scores for the S1 metric
-def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
+def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies and final scores in one loop
@@ -52,10 +54,10 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
+def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -91,10 +93,10 @@ def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     for row in range(numRows):
         scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
 
-    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag):
+def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
 
@@ -125,7 +127,7 @@ def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     for process in obsProcesses:
         process.join()
 
-    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag)
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
 # Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
@@ -137,10 +139,9 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))
 
 # Helper to store the score arrays combined with the location arrays
-def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag):
+def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):
     # Creating a file path
-    locationTag = "{}_{}_{}".format(locationArr[0, 0], locationArr[0,1], locationArr[0,2])
-    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, locationTag)
+    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, filename)
     scoreFilePath = outputDirPath / scoreFilename
 
     # Concatenating the locationArr and dataArr into one helps writing later

@@ -5,30 +5,25 @@ import gzip
 import sys
 import time
 
-def main(fileTag, outputDirectory, numStates, file):
+def main(fileTag, filename, outputDirectory, numStates):
     tTotal = time.time()
     outputDirPath = Path(outputDirectory)
-    filePath = Path(file)
 
-    writeScores(fileTag, outputDirPath, int(numStates), filePath)
-    
-    # Clean Up
-    os.remove(filePath)
+    writeScores(fileTag, filename, outputDirPath, int(numStates))
 
     print("Total Time:", time.time() - tTotal)
 
 # Helper to write the final scores to files
-def writeScores(fileTag, outputDirPath, numStates, filePath):
-    locationTag = '_'.join(filePath.name.split(".")[-2].split("_")[-3:])
-
+def writeScores(fileTag, filename, outputDirPath, numStates):
     # observationsTxtPath = outputDirPath / "observations_{}_{}.txt.gz".format(fileTag, locationTag)
-    scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, locationTag)
+    scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
 
     # observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
     tCalc = time.time()
     # Taking in the the score array
+    filePath = outputDirPath / Path("temp_scores_{}_{}.npy".format(fileTag, filename))
     combinedArr = np.load(filePath, allow_pickle=False)
     scoreArr = combinedArr[:, 3:].astype(float)
     locationArr = combinedArr[:, 0:3]
@@ -59,6 +54,9 @@ def writeScores(fileTag, outputDirPath, numStates, filePath):
     
     # observationsTxt.close()
     scoresTxt.close()
+
+    # Clean Up
+    os.remove(filePath)
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], sys.argv[3])

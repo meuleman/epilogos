@@ -235,38 +235,42 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print()
         print("Submitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []
-        for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
-            filename = file.name.split(".")[0]
-            jobName = "writeFaster_{}_{}".format(fileTag, filename)
-            jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-            jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+        for file in dataFilePath.glob("*"):
+            if not file.is_dir():
+                locationInfo = pd.read_table(dataFilePath, header=None, sep="\t", nrows=1, usecols=[0,1,2])
+                locationTag = "{}_{}_{}".format(locationInfo.iloc[0], locationInfo.iloc[1], locationInfo.iloc[2])
 
-            # Creating the out and err files for the batch job
-            if jobOutPath.exists():
-                os.remove(jobOutPath)
-            if jobErrPath.exists():
-                os.remove(jobErrPath)
-            try:
-                jout = open(jobOutPath, 'x')
-                jout.close()
-                jerr = open(jobErrPath, 'x')
-                jerr.close()
-            except FileExistsError:
-                # This error should never occur because we are deleting the files first
-                print("ERROR: sbatch '.out' or '.err' file already exists")
+                filename = file.name.split(".")[0]
+                jobName = "writeFaster_{}_{}".format(fileTag, filename)
+                jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+                jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-            computeExpectedWritePy = pythonFilesDir / "computeEpilogosWriteFaster.py"
+                # Creating the out and err files for the batch job
+                if jobOutPath.exists():
+                    os.remove(jobOutPath)
+                if jobErrPath.exists():
+                    os.remove(jobErrPath)
+                try:
+                    jout = open(jobOutPath, 'x')
+                    jout.close()
+                    jerr = open(jobErrPath, 'x')
+                    jerr.close()
+                except FileExistsError:
+                    # This error should never occur because we are deleting the files first
+                    print("ERROR: sbatch '.out' or '.err' file already exists")
 
-            pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates, file)
+                computeExpectedWritePy = pythonFilesDir / "computeEpilogosWriteFaster.py"
 
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, fileTag, filename, outputDirPath, numStates)
 
-            sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-            if not sp.stdout.startswith("Submitted batch"):
-                print("ERROR: sbatch not submitted correctly")
+                sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-            writeJobIDArr.append(int(sp.stdout.split()[-1]))
+                if not sp.stdout.startswith("Submitted batch"):
+                    print("ERROR: sbatch not submitted correctly")
+
+                writeJobIDArr.append(int(sp.stdout.split()[-1]))
 
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)

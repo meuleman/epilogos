@@ -237,9 +237,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         writeJobIDArr = []
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
-                locationInfo = pd.read_table(dataFilePath, header=None, sep="\t", nrows=1, usecols=[0,1,2])
-                locationTag = "{}_{}_{}".format(locationInfo.iloc[0], locationInfo.iloc[1], locationInfo.iloc[2])
-
                 filename = file.name.split(".")[0]
                 jobName = "writeFaster_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")

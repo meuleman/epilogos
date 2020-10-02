@@ -28,5 +28,11 @@ def main():
 
     print( test / 2)
 
+    test = "/home/jquon/epilogosoutputfaster/temp_scores__home_jquon_epilogosinput_chr1_100_300.npy"
+    filePath = Path(test)
+
+    locationTag = '_'.join(filePath.name.split(".")[-2].split("_")[-3:])
+    print(locationTag)
+
 if __name__ == "__main__":
     main()

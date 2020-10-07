@@ -63,6 +63,7 @@ def main(file1, file2, distributionNumber, binEnd):
     param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, params)])
     dist_str = '{}({})'.format(distName, param_str)
 
+    print()
     print("File 1:", file1)
     print("File 2:", file2)
     print(dist_str)
@@ -70,6 +71,7 @@ def main(file1, file2, distributionNumber, binEnd):
 
     print()
     print("Time Elapsed:", time.time() - tTotal)
+    print()
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2])

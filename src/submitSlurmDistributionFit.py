@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from pathlib import PurePath
 import os
 import subprocess
 import scipy.stats as st
@@ -16,6 +17,12 @@ def main(file1, file2, outputDir, binEnd):
 
     (outputDirPath / "out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / "err/").mkdir(parents=True, exist_ok=True)
+
+    # Finding the location of the .py files that must be run
+    if PurePath(__file__).is_absolute():
+        pythonFilesDir = Path(__file__).parents[0]
+    else:
+        pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     for distNum in range(len(distributions)):
         jobName = "{}_{}{}".format(distributions[distNum].name, file1.split("/")[-2], file2.split("/")[-2])
@@ -36,7 +43,7 @@ def main(file1, file2, outputDir, binEnd):
             # This error should never occur because we are deleting the files first
             print("ERROR: sbatch '.out' or '.err' file already exists")
 
-        fitDistributionPy = Path.cwd / "fitDistribution.py"
+        fitDistributionPy = pythonFilesDir / "fitDistribution.py"
 
         pythonCommand = "python {} {} {} {} {}".format(fitDistributionPy, file1, file2, distNum, binEnd)
 

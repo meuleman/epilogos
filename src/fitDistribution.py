@@ -74,4 +74,4 @@ def main(file1, file2, distributionNumber, binEnd):
     print()
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))

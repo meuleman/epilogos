@@ -13,6 +13,10 @@ def main(file1, file2, outputDir, binEnd):
 
     outputDirPath = Path(outputDir)
     jobIDArr = []
+
+    (outputDirPath / "out/").mkdir(parents=True, exist_ok=True)
+    (outputDirPath / "err/").mkdir(parents=True, exist_ok=True)
+
     for distNum in range(len(distributions)):
         jobName = "{}_{}{}".format(distributions[distNum].name, file1.split("/")[-2], file2.split("/")[-2])
         jobOutPath = outputDirPath / ("out/" + jobName + ".out")

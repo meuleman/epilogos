@@ -15,8 +15,8 @@ def main(file1, file2, outputDir, binEnd):
     jobIDArr = []
     for distNum in range(len(distributions)):
         jobName = "{}_{}_{}".format(distributions[distNum].name, file1.split(".")[0], file2.split(".")[0])
-        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+        jobOutPath = outputDirPath / ("out/" + jobName + ".out")
+        jobErrPath = outputDirPath / ("err/" + jobName + ".err")
 
         # Creating the out and err files for the batch job
         if jobOutPath.exists():
@@ -36,7 +36,7 @@ def main(file1, file2, outputDir, binEnd):
 
         pythonCommand = "python {} {} {} {} {}".format(fitDistributionPy, file1, file2, distNum, binEnd)
 
-        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=4000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -47,5 +47,6 @@ def main(file1, file2, outputDir, binEnd):
 
     jobIDStr = str(jobIDArr).strip('[]').replace(" ", "")
     print("    JobIDs:", jobIDStr)
+
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

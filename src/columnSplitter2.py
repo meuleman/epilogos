@@ -8,14 +8,14 @@ def main(filename, file1name, file2name):
     with open(file1, 'r') as f1:
         lines = f1.readlines()
         for line in lines:
-            group1.append(line.split("|")[-1]).strip()
+            group1.append(line.split("|")[-1].strip())
 
     file2 = Path(file2name)
     group2 = []
     with open(file2, 'r') as f2:
         lines = f2.readlines()
         for line in lines:
-            group2.append(line.split("|")[-1]).strip()
+            group2.append(line.split("|")[-1].strip())
 
     print(group1)
     print(group2)

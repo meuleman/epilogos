@@ -12,7 +12,7 @@ def main(filename, randomSampling=False, type1="", type2=""):
         genomeNumber = 4
         typeDictionary = {}
         for line in lines:
-            genomeType = line.strip().split("|")[-1]
+            genomeType = line.split("|")[-1].strip()
             if genomeType not in typeDictionary:
                 typeDictionary[genomeType] = [genomeNumber]
             else:

@@ -8,14 +8,14 @@ def main(filename, file1name, file2name):
     with open(file1, 'r') as f1:
         lines = f1.readlines()
         for line in lines:
-            group1.append(line.strip().split("|")[-1])
+            group1.append(line.split("|")[-1]).strip()
 
     file2 = Path(file2name)
     group2 = []
     with open(file2, 'r') as f2:
         lines = f2.readlines()
         for line in lines:
-            group2.append(line.strip().split("|")[-1])
+            group2.append(line.split("|")[-1]).strip()
 
     print(group1)
     print(group2)
@@ -28,7 +28,7 @@ def main(filename, file1name, file2name):
         genomeNumber = 4
         groupDictionary = {"group1": [], "group2": []}
         for line in lines:
-            genomeType = line.strip().split("|")[-1]
+            genomeType = line.split("|")[-1].strip()
             if genomeType in group1:
                 groupDictionary["group1"].append(genomeNumber)
             if genomeType in group2:

@@ -34,5 +34,8 @@ def main():
     locationTag = '_'.join(filePath.name.split(".")[-2].split("_")[-3:])
     print(locationTag)
 
+    print()
+    print(Path(""))
+
 if __name__ == "__main__":
     main()

@@ -17,8 +17,8 @@ def main(filename, file1name, file2name):
         for line in lines:
             group2.append(line.split("|")[-1].strip())
 
-    print(group1)
-    print(group2)
+    print(str(file1).split("/")[-2], group1)
+    print(str(file2).split("/")[-2], group2)
     print()
     print()
 

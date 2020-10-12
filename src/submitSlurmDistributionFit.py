@@ -5,7 +5,11 @@ import os
 import subprocess
 import scipy.stats as st
 
-def main(file1, file2, outputDir, binEnd):
+def main(file1, file2, filterBool, outputDir, binEnd):
+    if filterBool == "ERROR: INVALID BOOL SUBMITTED":
+        print("ERROR: INVALID BOOL SUBMITTED")
+        return
+
     print("Submitting Slurm Jobs....")
 
     distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
@@ -45,7 +49,7 @@ def main(file1, file2, outputDir, binEnd):
 
         fitDistributionPy = pythonFilesDir / "fitDistribution.py"
 
-        pythonCommand = "python {} {} {} {} {}".format(fitDistributionPy, file1, file2, distNum, binEnd)
+        pythonCommand = "python {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, filterBool, distNum, binEnd)
 
         slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -59,5 +63,13 @@ def main(file1, file2, outputDir, binEnd):
     jobIDStr = str(jobIDArr).strip('[]').replace(" ", "")
     print("    JobIDs:", jobIDStr)
 
+def strToBool(string):
+    if string in ["True", "true", "T", "t", "y", "Y", "yes", "Yes"]:
+        return True
+    elif string in ["False", "false", "F", "f", "y", "Y", "yes", "Yes"]:
+        return False
+    else:
+        return "ERROR: INVALID BOOL SUBMITTED"
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main(sys.argv[1], sys.argv[2], strToBool(sys.argv[3]), sys.argv[4], sys.argv[5])

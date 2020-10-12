@@ -34,7 +34,6 @@ def main(filename, randomSampling=False, type1="", type2=""):
             if randomSampling:
                 shuffledList = typeDictionary[type1] + otherList
                 random.shuffle(shuffledList)
-                print(len(typeDictionary[type1]))
                 print("{}\t1,2,3,{}".format(type1, str(shuffledList[:len(typeDictionary[type1])]).strip('[]').replace(" ", "")))
                 print()
                 print("All Others\t1,2,3,{}".format(str(shuffledList[len(typeDictionary[type1]):]).strip('[]').replace(" ", "")))

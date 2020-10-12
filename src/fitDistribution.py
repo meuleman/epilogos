@@ -10,7 +10,11 @@ import statsmodels as sm
 import warnings
 import time
 
-def main(file1, file2, distributionNumber, binEnd):
+def main(file1, file2, filterBool, distributionNumber, binEnd):
+    if filterBool == "ERROR: INVALID BOOL SUBMITTED":
+        print("ERROR: INVALID BOOL SUBMITTED")
+        return
+
     tTotal = time.time()
 
     distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
@@ -38,9 +42,12 @@ def main(file1, file2, distributionNumber, binEnd):
     file2SumArr = np.sum(file2Arr, axis=1)
 
     distances = np.sum(np.square(file1Arr - file2Arr), axis=1)
-    idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
 
-    data = pd.Series(distances[idx])
+    if filterBool:
+        idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
+        data = pd.Series(distances[idx])
+    else:
+        data = pd.Series(distances)
 
     y, x = np.histogram(data, bins=100, range=(0, binEnd), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
@@ -70,8 +77,15 @@ def main(file1, file2, distributionNumber, binEnd):
     print("SSE:", sse)
 
     print()
-    print("Time Elapsed:", time.time() - tTotal)
-    print()
+    print("    Time Elapsed:", time.time() - tTotal)
+
+def strToBool(string):
+    if string in ["True", "true", "T", "t", "y", "Y", "yes", "Yes"]:
+        return True
+    elif string in ["False", "false", "F", "f", "y", "Y", "yes", "Yes"]:
+        return False
+    else:
+        return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]))
+    main(sys.argv[1], sys.argv[2], strToBool(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5]))

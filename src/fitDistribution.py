@@ -10,7 +10,7 @@ import statsmodels as sm
 import warnings
 import time
 
-def main(file1, file2, filterBool, distributionNumber, binEnd):
+def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
@@ -49,8 +49,12 @@ def main(file1, file2, filterBool, distributionNumber, binEnd):
     else:
         data = pd.Series(distances)
 
-    y, x = np.histogram(data, bins=100, range=(0, binEnd), density=True)
-    x = (x + np.roll(x, -1))[:-1] / 2.0
+    if binEnd == "Max" or binEnd == "max":
+        y, x = np.histogram(data, bins=100, range=(0, np.amax(data)), density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
+    else:
+        y, x = np.histogram(data, bins=100, range=(0, float(binEnd)), density=True)
+        x = (x + np.roll(x, -1))[:-1] / 2.0
 
     # Fit the data
     params = distribution.fit(data)
@@ -76,6 +80,14 @@ def main(file1, file2, filterBool, distributionNumber, binEnd):
     print(dist_str)
     print("SSE:", sse)
 
+    allSSEPath = Path(outputDir) / "allSSE.txt"
+    with open(allSSEPath, 'a') as allSSE:
+        allSSE.write("{}\t{}\n".format(distName, sse))
+
+    allParamsPath = Path(outputDir) / "allParams.txt"
+    with open(allParamsPath, 'a') as allParams:
+        allParams.write("{}\n".format(dist_str))
+
     print()
     print("    Time Elapsed:", time.time() - tTotal)
 
@@ -88,4 +100,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], strToBool(sys.argv[3]), int(sys.argv[4]), float(sys.argv[5]))
+    main(sys.argv[1], sys.argv[2], strToBool(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6])

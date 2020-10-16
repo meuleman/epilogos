@@ -49,7 +49,7 @@ def main(file1, file2, filterBool, outputDir, binEnd):
 
         fitDistributionPy = pythonFilesDir / "fitDistribution.py"
 
-        pythonCommand = "python {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, filterBool, distNum, binEnd)
+        pythonCommand = "python {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, filterBool, distNum, binEnd, outputDir)
 
         slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 

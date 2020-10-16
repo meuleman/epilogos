@@ -21,8 +21,8 @@ def main(file1, file2, outputDir, a, b, loc, scale, index):
     file1DF = pd.read_table(file1Path, header=None, sep="\s+", names=names)
     file2DF = pd.read_table(file2Path, header=None, sep="\s+", names=names)
 
-    maleDF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
-    femaleDF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
+    file1DF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
+    file2DF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
 
     file1DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
     file2DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)

@@ -23,7 +23,7 @@ def main(file1, file2, outputDir, a, b, loc, scale):
     else:
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
-    dataLength = pd.read_table(file1Path, header=None, sep="\s+", usecols=[0]).shape[0]
+    # dataLength = pd.read_table(file1Path, header=None, sep="\s+", usecols=[0]).shape[0]
 
     jobIDStr = ""
     # for i in np.arange(0, dataLength, 500000):

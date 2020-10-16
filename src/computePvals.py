@@ -45,7 +45,7 @@ def main(file1, file2, outputDir, a, b, loc, scale, index):
     else:
         subValues = distances[index:].reshape(len(distances) - index, 1)
 
-    pvals = np.concatenate((np.array(np.arange(index, index+50000)).reshape(50000, 1), (rv > subValues).sum(axis=1) / float(size)), axis=1)
+    pvals = np.concatenate((np.array(np.arange(index, index+50000)).reshape(50000, 1), ((rv > subValues).sum(axis=1) / float(size)).reshape(50000, 1)), axis=1)
 
     saveName = outputPath / "pvalarr_{}.npy".format(index)
     np.save(saveName, pvals, allow_pickle=False)

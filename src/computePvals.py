@@ -29,6 +29,7 @@ def main(file1, file2, outputDir, a, b, loc, scale, index):
 
     file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=float)
     file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=float)
+    locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
 
 
     file1SumArr = np.sum(file1Arr, axis=1)
@@ -42,10 +43,10 @@ def main(file1, file2, outputDir, a, b, loc, scale, index):
 
     if index + 50000 < len(distances):
         subValues = distances[index:index+50000].reshape(50000, 1)
+        pvals = np.concatenate((locationArr[:,index:index+50000], (-np.log10((rv > subValues).sum(axis=1) / float(size))).reshape(50000, 1)), axis=1)
     else:
         subValues = distances[index:].reshape(len(distances) - index, 1)
-
-    pvals = np.concatenate((np.array(np.arange(index, index+50000)).reshape(50000, 1), ((rv > subValues).sum(axis=1) / float(size)).reshape(50000, 1)), axis=1)
+        pvals = np.concatenate((locationArr[:,index:], (-np.log10((rv > subValues).sum(axis=1) / float(size))).reshape(len(distances) - index, 1)), axis=1)
 
     saveName = outputPath / "pvalarr_{}.npy".format(index)
     np.save(saveName, pvals, allow_pickle=False)

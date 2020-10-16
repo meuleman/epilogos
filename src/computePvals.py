@@ -36,14 +36,16 @@ def main(file1, file2, outputDir, a, b, loc, scale, index):
 
     distances = np.sum(np.square(file1Arr - file2Arr), axis=1)
 
-    rv = st.betaprime.rvs(a,b,loc=loc,scale=scale, size=len(distances))
+    size = 1000000
 
-    if index + 5000 < len(distances):
-        subValues = distances[index:index+5000].reshape(5000, 1)
+    rv = st.betaprime.rvs(a,b,loc=loc,scale=scale, size=size)
+
+    if index + 50000 < len(distances):
+        subValues = distances[index:index+50000].reshape(50000, 1)
     else:
         subValues = distances[index:].reshape(len(distances) - index, 1)
 
-    pvals = np.concatenate((np.array(np.arange(index, index+5000)).reshape(5000, 1), (rv > subValues).sum(axis=1) / float(len(distances))), axis=1)
+    pvals = np.concatenate((np.array(np.arange(index, index+50000)).reshape(50000, 1), (rv > subValues).sum(axis=1) / float(size)), axis=1)
 
     saveName = outputPath / "pvalarr_{}.npy".format(index)
     np.save(saveName, pvals, allow_pickle=False)

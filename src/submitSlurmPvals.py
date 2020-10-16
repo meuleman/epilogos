@@ -26,11 +26,11 @@ def main(file1, file2, outputDir, a, b, loc, scale):
     # dataLength = pd.read_table(file1Path, header=None, sep="\s+", usecols=[0]).shape[0]
 
     jobIDStr = ""
-    # for i in np.arange(0, dataLength, 500000):
+    # for i in np.arange(0, dataLength, 1500000):
     for i in range(1):
         jobIDArr = []
         print(jobIDStr)
-        # for j in np.arange(i, i+500000, 5000):
+        # for j in np.arange(i, i + 1500000, 50000):
         for j in range(1):
             jobName = "pval_{}".format(j)
             jobOutPath = outputDirPath / ("out/" + jobName + ".out")
@@ -55,9 +55,9 @@ def main(file1, file2, outputDir, a, b, loc, scale):
             pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computePvalsPy, file1, file2, outputDir, a, b, loc, scale, j)
 
             if i == 0:
-                slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=40000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
             else:
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=40000 --wrap='{}'".format(jobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

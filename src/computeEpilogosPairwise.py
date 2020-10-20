@@ -14,8 +14,8 @@ def main(file1, file2, outputDirectory):
     # Read in the data
     print("\nReading data from files...")
     tRead = time.time()
-    dataDF1 = pd.read_table(filepath1, header=None, sep="\t")
-    dataDF2 = pd.read_table(filepath2, header=None, sep="\t")
+    dataDF1 = pd.read_table(filepath1, header=None, sep="\s+")
+    dataDF2 = pd.read_table(filepath2, header=None, sep="\s+")
     print("    Time: ", time.time() - tRead)
     
     if dataDF1.shape != dataDF2.shape:

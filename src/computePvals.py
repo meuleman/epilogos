@@ -53,4 +53,4 @@ def main(file1, file2, outputDir, numStates, a, b, loc, scale, index):
     np.save(saveName, pvals, allow_pickle=False)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6]), float(sys.argv[7]), float(sys.argv[8]), int(sys.argv[]))
+    main(sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), float(sys.argv[5]), float(sys.argv[6]), float(sys.argv[7]), float(sys.argv[8]), int(sys.argv[9]))

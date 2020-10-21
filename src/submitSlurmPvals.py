@@ -7,7 +7,7 @@ import scipy.stats as st
 import pandas as pd
 import numpy as np
 
-def main(file1, file2, outputDir, a, b, loc, scale):
+def main(file1, file2, outputDir, numStates, a, b, loc, scale):
     print("Submitting Slurm Jobs....")
 
     outputDirPath = Path(outputDir)
@@ -51,7 +51,7 @@ def main(file1, file2, outputDir, a, b, loc, scale):
 
                 computePvalsPy = pythonFilesDir / "computePvals.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computePvalsPy, file1, file2, outputDir, a, b, loc, scale, j)
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computePvalsPy, file1, file2, outputDir, numStates, a, b, loc, scale, j)
 
                 if i == 0:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
@@ -102,4 +102,4 @@ def main(file1, file2, outputDir, a, b, loc, scale):
         jobIDStr = str(jobIDArr).strip('[]').replace(" ", "")
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8])

@@ -86,7 +86,7 @@ def main(file1, file2, outputDir, numStates, a, b, loc, scale):
 
                 computePvalsPy = pythonFilesDir / "computePvals.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computePvalsPy, file1, file2, outputDir, numStates a, b, loc, scale, j)
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computePvalsPy, file1, file2, outputDir, numStates, a, b, loc, scale, j)
 
                 if i == 0:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)

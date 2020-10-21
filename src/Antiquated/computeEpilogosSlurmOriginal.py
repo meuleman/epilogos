@@ -122,7 +122,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
                     slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=2000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 3:
@@ -137,9 +137,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         # Combining all the different chromosome expected frequency arrays into one
         # create a string for slurm dependency to work
-        expJobIDStr = str(expJobIDArr).strip('[]').replace(" ", "")
+        jobIDStrComb = str(expJobIDArr).strip('[]').replace(" ", "")
 
-        print("    JobIDs:", expJobIDStr)
+        print("    JobIDs:", jobIDStrComb)
 
         print()
         print("Submitting Slurm Job for Combining Background Frequency Arrays....")
@@ -167,11 +167,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
 
         if saliency == 1:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobIDStrComb, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -213,7 +213,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
                     slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 3:
@@ -227,52 +227,47 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
         # create a string for slurm dependency to work
-        scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
+        jobIDStrWrite = str(scoreJobIDArr).strip('[]').replace(" ", "")
         
-        print("    JobIDs:", scoreJobIDStr)
+        print("    JobIDs:", jobIDStrWrite)
 
         # WRITING TO SCORE FILE
         print()
         print("Submitting Slurm Jobs for Writing to Score Files....")
-        writeJobIDArr = []
-        for file in dataFilePath.glob("*"):
-            if not file.is_dir():
-                filename = file.name.split(".")[0]
-                jobName = "writeFaster_{}_{}".format(fileTag, filename)
-                jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-                jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-                # Creating the out and err files for the batch job
-                if jobOutPath.exists():
-                    os.remove(jobOutPath)
-                if jobErrPath.exists():
-                    os.remove(jobErrPath)
-                try:
-                    jout = open(jobOutPath, 'x')
-                    jout.close()
-                    jerr = open(jobErrPath, 'x')
-                    jerr.close()
-                except FileExistsError:
-                    # This error should never occur because we are deleting the files first
-                    print("ERROR: sbatch '.out' or '.err' file already exists")
+        jobName = "write_{}".format(fileTag)
+        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-                computeExpectedWritePy = pythonFilesDir / "computeEpilogosWriteFaster.py"
+        # Creating the out and err files for the batch job
+        if jobOutPath.exists():
+            os.remove(jobOutPath)
+        if jobErrPath.exists():
+            os.remove(jobErrPath)
+        try:
+            jout = open(jobOutPath, 'x')
+            jout.close()
+            jerr = open(jobErrPath, 'x')
+            jerr.close()
+        except FileExistsError:
+            # This error should never occur because we are deleting the files first
+            print("ERROR: sbatch '.out' or '.err' file already exists")
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, fileTag, filename, outputDirPath, numStates)
+        computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        pythonCommand = "python {} {} {} {}".format(computeExpectedWritePy, fileTag, outputDirPath, numStates)
 
-                sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mail-type=END --mail-user=jquon@altius.org --mem-per-cpu=8000 --wrap='{}'".format(jobIDStrWrite, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-                if not sp.stdout.startswith("Submitted batch"):
-                    print("ERROR: sbatch not submitted correctly")
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-                writeJobIDArr.append(int(sp.stdout.split()[-1]))
+        if not sp.stdout.startswith("Submitted batch"):
+            print("ERROR: sbatch not submitted correctly")
 
-        writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
-        print("    JobIDs:", writeJobIDStr)
+        print("    JobID:", int(sp.stdout.split()[-1]))
+
         print()
-        print("All JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
+        print("All JobIDs: {},{},{},{}".format(jobIDStrComb, combinationJobID, jobIDStrWrite, sp.stdout.split()[-1]))
 
 if __name__ == "__main__":
     main()

@@ -5,65 +5,59 @@ import gzip
 import sys
 import time
 
-def main(fileTag, outputDirectory, numStates):
+def main(fileTag, filename, outputDirectory, numStates):
     tTotal = time.time()
     outputDirPath = Path(outputDirectory)
 
-    writeScores(fileTag, outputDirPath, int(numStates))
-        
-    tRemove = time.time()
-    # Clean up
-    for file in outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag)):
-        os.remove(file)
-    print("Remove file time:", time.time() - tRemove)
+    writeScores(fileTag, filename, outputDirPath, int(numStates))
 
     print("Total Time:", time.time() - tTotal)
 
-
 # Helper to write the final scores to files
-def writeScores(fileTag, outputDirPath, numStates):
-    observationsTxtPath = outputDirPath / "observations_{}.txt.gz".format(fileTag)
-    scoresTxtPath = outputDirPath / "scores_{}.txt.gz".format(fileTag)
+def writeScores(fileTag, filename, outputDirPath, numStates):
+    # observationsTxtPath = outputDirPath / "observations_{}_{}.txt.gz".format(fileTag, locationTag)
+    scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
 
-    observationsTxt = gzip.open(observationsTxtPath, "wt")
+    # observationsTxt = gzip.open(observationsTxtPath, "wt")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
-    tString = time.time()
-    observationStrList = []
-    scoreStrList = []
-    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates)) + "\n"
-    # Order matters to us when writing, so use sorted
-    # Loop over all score files and write them all to scores and observations txt
-    for file in sorted(outputDirPath.glob("temp_scores_{}_*.npy".format(fileTag))):
-        combinedArr = np.load(file, allow_pickle=False)
+    tCalc = time.time()
+    # Taking in the the score array
+    filePath = outputDirPath / Path("temp_scores_{}_{}.npy".format(fileTag, filename))
+    combinedArr = np.load(filePath, allow_pickle=False)
+    scoreArr = combinedArr[:, 3:].astype(float)
+    locationArr = combinedArr[:, 0:3]
 
-        scoreArr = combinedArr[:, 3:].astype(float)
-        locationArr = combinedArr[:, 0:3]
+    # # Calculating observation values
+    # maxContributions = np.amax(scoreArr, axis=1).reshape((scoreArr.shape[0], 1))
+    # maxContributionsLocs = np.argmax(scoreArr, axis=1).reshape((scoreArr.shape[0], 1)) + 1
+    # totalScores = np.sum(scoreArr, axis=1).reshape((scoreArr.shape[0], 1))
 
-        # Write each row in both observations and scores
-        for i in range(scoreArr.shape[0]):
-            # Write to observations
-            maxContribution = np.amax(scoreArr[i])
-            maxContributionLoc = np.argmax(scoreArr[i]) + 1
-            totalScore = np.sum(scoreArr[i])
+    # # Splicing all the observation arrays together
+    # observationArr = np.concatenate((maxContributionsLocs, maxContributions, totalScores), axis=1)
 
-            observationStrList.append("{0[0]}\t{0[1]}\t{0[2]}\t{1:d}\t{2:.5f}\t1\t{3:.5f}\t\n".format(locationArr[i], maxContributionLoc, maxContribution, totalScore))
-            
-            scoreStrList.append(scoresTemplate.format(locationArr[i], scoreArr[i]))
+    print("Calc Time:", time.time() - tCalc)
 
-    observationStr = ''.join(observationStrList)
-    scoreStr = ''.join(scoreStrList)
+    t1 = time.time()
+    # observationStr = "".join("{0[0]}\t{0[1]}\t{0[2]}\t{1:d}\t{2[1]:.5f}\t1\t{2[2]:.5f}\t\n".format(locationArr[i], int(observationArr[i, 0]), observationArr[i]) for i in range(scoreArr.shape[0]))
+    
+    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates-1)) + "{1[%d]:.5f}\n" % (numStates - 1)
+    scoreStr = "".join(scoresTemplate.format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
+    print("String creation time:", time.time() - t1)
 
-    print("string formation time:", time.time() - tString)
+    # tObs = time.time()
+    # observationsTxt.write(observationStr)
+    # print("Observation Write Time:", time.time() - tObs)
 
-    tWrite = time.time()
-    observationsTxt.write(observationStr)
-    scoresTxt.write(scoreStr)    
-
-    print("write time:", time.time() - tWrite)
-
-    observationsTxt.close()
+    tScore = time.time()
+    scoresTxt.write(scoreStr)
+    print("Score Write Time:", time.time() - tScore)
+    
+    # observationsTxt.close()
     scoresTxt.close()
 
+    # Clean Up
+    os.remove(filePath)
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

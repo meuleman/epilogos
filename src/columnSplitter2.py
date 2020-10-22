@@ -47,7 +47,7 @@ def main(filename, file1name, file2name):
     print()
     print()
 
-    print(str(file1).split("/")[-2] + str(file2).split("/")[-2] + ": " + str(listOfBoth).strip('[]').replace(" ", ""))
+    print(str(file1).split("/")[-2] + " + "+ str(file2).split("/")[-2] + ": 1,2,3," + str(listOfBoth).strip('[]').replace(" ", ""))
     print()
     print()
 

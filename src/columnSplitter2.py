@@ -3,6 +3,8 @@ from pathlib import Path
 import random
 
 def main(filename, file1name, file2name):
+
+    # Take in all file 1 genomes
     file1 = Path(file1name)
     group1 = []
     with open(file1, 'r') as f1:
@@ -10,6 +12,7 @@ def main(filename, file1name, file2name):
         for line in lines:
             group1.append(line.split("|")[-1].strip())
 
+    # Take in all file 2 genomes
     file2 = Path(file2name)
     group2 = []
     with open(file2, 'r') as f2:
@@ -22,7 +25,9 @@ def main(filename, file1name, file2name):
     print()
     print()
 
+    # Go through the master genome file and if a genome matches one of the genomes in group 1 or 2, append its column number to a dictionary for the groups
     file = Path(filename)
+    listOfBoth = []
     with open(file, 'r') as f:
         lines = f.readlines()
         genomeNumber = 4
@@ -31,14 +36,22 @@ def main(filename, file1name, file2name):
             genomeType = line.split("|")[-1].strip()
             if genomeType in group1:
                 groupDictionary["group1"].append(genomeNumber)
+                listOfBoth.append(genomeNumber)
             if genomeType in group2:
                 groupDictionary["group2"].append(genomeNumber)
+                listOfBoth.append(genomeNumber)
             genomeNumber += 1
 
     print(str(file1).split("/")[-2], groupDictionary["group1"])
     print(str(file2).split("/")[-2], groupDictionary["group2"])
     print()
     print()
+
+    print(str(file1).split("/")[-2] + str(file2).split("/")[-2] + ": " + str(listOfBoth).strip('[]').replace(" ", ""))
+    print()
+    print()
+
+    # Shuffle the lists
     shuffledList = groupDictionary["group1"] + groupDictionary["group2"]
     random.shuffle(shuffledList)
     print("{}\t1,2,3,{}".format(str(file1).split("/")[-2], str(shuffledList[:len(groupDictionary["group1"])]).strip('[]').replace(" ", "")))

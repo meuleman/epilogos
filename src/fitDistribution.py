@@ -38,13 +38,14 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
     matplotlib.rcParams['figure.figsize'] = (16.0, 12.0)
     matplotlib.style.use('ggplot')
 
-    file1SumArr = np.sum(file1Arr, axis=1)
-    file2SumArr = np.sum(file2Arr, axis=1)
+    # file1SumArr = np.sum(file1Arr, axis=1)
+    # file2SumArr = np.sum(file2Arr, axis=1)
 
     distances = np.sum(np.square(file1Arr - file2Arr), axis=1)
 
     if filterBool:
-        idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
+        # idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
+        idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 3) != 0.572 and round(file2Arr[i][-1], 4) != 0.5942]
         data = pd.Series(distances[idx])
     else:
         data = pd.Series(distances)
@@ -56,29 +57,35 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
         y, x = np.histogram(data, bins=100, range=(0, float(binEnd)), density=True)
         x = (x + np.roll(x, -1))[:-1] / 2.0
 
-    # Fit the data
-    params = distribution.fit(data)
+    # ignore warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    # Separate parts of parameters
-    distArgs = params[:-2]
-    loc = params[-2]
-    scale = params[-1]
+        # Fit the data
+        params = distribution.fit(data)
 
-    # Calculate SSE
-    pdf = distribution.pdf(x, loc=loc, scale=scale, *distArgs)
-    sse = np.sum(np.power(y - pdf, 2.0))
+        # Separate parts of parameters
+        distArgs = params[:-2]
+        loc = params[-2]
+        scale = params[-1]
 
-    distName = distribution.name
+        # Calculate SSE and MLE
+        pdf = distribution.pdf(x, loc=loc, scale=scale, *distArgs)
+        sse = np.sum(np.power(y - pdf, 2.0))
+        mle = distribution.nnlf(params, data)
 
-    param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
-    param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, params)])
-    dist_str = '{}({})'.format(distName, param_str)
+        distName = distribution.name
+
+        param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
+        param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, params)])
+        dist_str = '{}({})'.format(distName, param_str)
 
     print()
     print("File 1:", file1)
     print("File 2:", file2)
     print(dist_str)
     print("SSE:", sse)
+    print("MLE:", mle)
 
     allSSEPath = Path(outputDir) / "allSSE.txt"
     with open(allSSEPath, 'a') as allSSE:
@@ -87,6 +94,10 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
     allParamsPath = Path(outputDir) / "allParams.txt"
     with open(allParamsPath, 'a') as allParams:
         allParams.write("{}\n".format(dist_str))
+
+    allMLEPath = Path(outputDir) / "allMLE.txt"
+    with open(allMLEPath, 'a') as allMLE:
+        allMLE.write("{}\t{}\n".format(distName, mle))
 
     print()
     print("    Time Elapsed:", time.time() - tTotal)

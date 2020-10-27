@@ -45,7 +45,7 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
 
     if filterBool:
         # idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
-        idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 3) != 0.572 and round(file2Arr[i][-1], 4) != 0.5942]
+        idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 3) != 0.572 or round(file2Arr[i][-1], 4) != 0.5942]
         data = pd.Series(distances[idx])
     else:
         data = pd.Series(distances)
@@ -77,7 +77,7 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
         distName = distribution.name
 
         param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
-        param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, params)])
+        param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
         dist_str = '{}({})'.format(distName, param_str)
 
     print()

@@ -51,10 +51,10 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
         data = pd.Series(distances)
 
     if binEnd == "Max" or binEnd == "max":
-        y, x = np.histogram(data, bins=100, range=(0, np.amax(data)), density=True)
+        y, x = np.histogram(data.values, bins=100, range=(0, np.amax(data)), density=True)
         x = (x + np.roll(x, -1))[:-1] / 2.0
     else:
-        y, x = np.histogram(data, bins=100, range=(0, float(binEnd)), density=True)
+        y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
         x = (x + np.roll(x, -1))[:-1] / 2.0
 
     # ignore warnings
@@ -62,7 +62,7 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = distribution.fit(data)
+        params = distribution.fit(data.values)
 
         # Separate parts of parameters
         distArgs = params[:-2]
@@ -72,7 +72,7 @@ def main(file1, file2, filterBool, distributionNumber, binEnd, outputDir):
         # Calculate SSE and MLE
         pdf = distribution.pdf(x, loc=loc, scale=scale, *distArgs)
         sse = np.sum(np.power(y - pdf, 2.0))
-        mle = distribution.nnlf(params, data)
+        mle = distribution.nnlf(params, data.values)
 
         distName = distribution.name
 

@@ -5,7 +5,7 @@ import os
 import subprocess
 import scipy.stats as st
 
-def main(file1, file2, filterBool, outputDir, binEnd):
+def main(file1, file2, observationFile, filterBool, outputDir, binEnd):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
@@ -49,7 +49,7 @@ def main(file1, file2, filterBool, outputDir, binEnd):
 
         fitDistributionPy = pythonFilesDir / "fitDistribution.py"
 
-        pythonCommand = "python {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, filterBool, distNum, binEnd, outputDir)
+        pythonCommand = "python {} {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, observationFile, filterBool, distNum, binEnd, outputDir)
 
         slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -72,4 +72,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], strToBool(sys.argv[3]), sys.argv[4], sys.argv[5])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), sys.argv[5], sys.argv[6])

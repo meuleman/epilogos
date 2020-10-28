@@ -12,9 +12,14 @@ def main(file1, file2, observationFile, filterBool, outputDir, binEnd):
 
     print("Submitting Slurm Jobs....")
 
-    distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
-                    st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
-                    st.nakagami, st.burr, st.ncx2, st.pearson3]
+    # distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
+    #                 st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
+    #                 st.nakagami, st.burr, st.ncx2, st.pearson3]
+
+    distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
+                    st.gumbel_l, st.gausshyper, st.hypsecant, st.johnsonsu, st.loglaplace, 
+                    st.laplace, st.levy_stable, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
+                    st.powerlognorm, st.powernorm, st.lognorm, st.skewnorm]
 
     outputDirPath = Path(outputDir)
     jobIDArr = []

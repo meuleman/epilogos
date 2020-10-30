@@ -10,21 +10,22 @@ import statsmodels as sm
 import warnings
 import time
 
-def main(file1, file2, observationFile, filterBool, distributionNumber, binEnd, outputDir):
+def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber, binEnd, outputDir):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
 
     tTotal = time.time()
 
-    # distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
-    #                 st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
-    #                 st.nakagami, st.burr, st.ncx2, st.pearson3]
-
-    distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
+    if fullBool:
+        distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
                     st.gumbel_l, st.gausshyper, st.hypsecant, st.johnsonsu, st.loglaplace, 
-                    st.laplace, st.levy_stable, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
+                    st.laplace, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
                     st.powerlognorm, st.powernorm, st.lognorm, st.skewnorm]
+    else:
+        distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
+                        st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
+                        st.nakagami, st.burr, st.ncx2, st.pearson3]
 
 
     distribution = distributions[distributionNumber]
@@ -87,7 +88,7 @@ def main(file1, file2, observationFile, filterBool, distributionNumber, binEnd, 
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = distribution.fit(data)
+        params = distribution.fit(data, floc=0)
 
         # Separate parts of parameters
         distArgs = params[:-2]
@@ -145,4 +146,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), int(sys.argv[5]), sys.argv[6], sys.argv[7])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), int(sys.argv[6]), sys.argv[7], sys.argv[8])

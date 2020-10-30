@@ -5,21 +5,22 @@ import os
 import subprocess
 import scipy.stats as st
 
-def main(file1, file2, observationFile, filterBool, outputDir, binEnd):
+def main(file1, file2, observationFile, filterBool, fullBool, outputDir, binEnd):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
 
     print("Submitting Slurm Jobs....")
 
-    # distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
-    #                 st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
-    #                 st.nakagami, st.burr, st.ncx2, st.pearson3]
-
-    distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
+    if fullBool:
+        distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
                     st.gumbel_l, st.gausshyper, st.hypsecant, st.johnsonsu, st.loglaplace, 
-                    st.laplace, st.levy_stable, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
+                    st.laplace, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
                     st.powerlognorm, st.powernorm, st.lognorm, st.skewnorm]
+    else:
+        distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
+                        st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,
+                        st.nakagami, st.burr, st.ncx2, st.pearson3]
 
     outputDirPath = Path(outputDir)
     jobIDArr = []
@@ -54,7 +55,7 @@ def main(file1, file2, observationFile, filterBool, outputDir, binEnd):
 
         fitDistributionPy = pythonFilesDir / "fitDistribution.py"
 
-        pythonCommand = "python {} {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, observationFile, filterBool, distNum, binEnd, outputDir)
+        pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, observationFile, filterBool, fullBool, distNum, binEnd, outputDir)
 
         slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -77,4 +78,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), sys.argv[5], sys.argv[6])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), sys.argv[6], sys.argv[7])

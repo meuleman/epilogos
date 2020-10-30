@@ -10,7 +10,7 @@ import statsmodels as sm
 import warnings
 import time
 
-def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber, binEnd, outputDir):
+def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber, binEnd, numStates, outputDir):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
@@ -35,7 +35,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
     observationPath = Path(observationFile)
 
     names = ["chr", "binStart", "binEnd"]
-    for i in range(1, 16):
+    for i in range(1, numStates + 1):
         names.append("s{}".format(i))
         
     chrOrder = []
@@ -70,8 +70,8 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
         distances = np.sum(np.square(file2Arr - file2Arr), axis=1)
 
     if filterBool:
-        quiescentVal1 = round(file1Arr[i][-1], 5)
-        quiescentVal2 = round(file2Arr[i][-1], 5)
+        quiescentVal1 = round(file1Arr[0][-1], 5)
+        quiescentVal2 = round(file2Arr[0][-1], 5)
         idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 5) != quiescentVal1 or round(file2Arr[i][-1], 5) != quiescentVal2]
         data = pd.Series(distances[idx])
     else:
@@ -147,4 +147,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), int(sys.argv[6]), sys.argv[7], sys.argv[8])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), int(sys.argv[6]), sys.argv[7], int(sys.argv[8]), sys.argv[9])

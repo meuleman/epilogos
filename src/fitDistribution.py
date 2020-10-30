@@ -71,7 +71,9 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
 
     if filterBool:
         # idx = [i for i in range(file1SumArr.shape[0]) if file1SumArr[i] > 1 or file2SumArr[i] > 1]
-        idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 3) != 0.572 or round(file2Arr[i][-1], 4) != 0.5942]
+        quiescentVal1 = round(file1Arr[i][-1], 5)
+        quiescentVal2 = round(file2Arr[i][-1], 5)
+        idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 5) != quiescentVal1 or round(file2Arr[i][-1], 5) != quiescentVal2]
         data = pd.Series(distances[idx])
     else:
         data = pd.Series(distances)

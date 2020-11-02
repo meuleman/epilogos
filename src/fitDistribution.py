@@ -11,18 +11,6 @@ import warnings
 import time
 
 def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber, binEnd, numStates, outputDir):
-    print("INPUTS:")
-    print(file1)
-    print(file2)
-    print(observationFile)
-    print(filterBool)
-    print(fullBool)
-    print(distributionNumber)
-    print(binEnd)
-    print(numStates)
-    print(outputDir)
-    print()
-
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
@@ -57,9 +45,6 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
         chrOrder.append("chr{}".format(i))
     chrOrder.append("chrX")
 
-    print("Col Names:", names)
-    print("Chr Order:", chrOrder)
-
     # Read in the data
     file1DF = pd.read_table(file1Path, header=None, sep="\s+", names=names)
     file2DF = pd.read_table(file2Path, header=None, sep="\s+", names=names)
@@ -82,95 +67,83 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
     plt.rcParams['agg.path.chunksize'] = 10000
 
     if fullBool:
-        print("Distances created according to full distribution")
         distances = np.sum(np.square(file1Arr - file2Arr), axis=1) * observationArr[:,2]
     else:
-        print("Distances created according to half distribtuion")
-        distances = np.sum(np.square(file2Arr - file2Arr), axis=1)
+        distances = np.sum(np.square(file1Arr - file2Arr), axis=1)
 
     if filterBool:
-        print("Data Being filtered")
         quiescentVal1 = round(file1Arr[0][-1], 5)
         quiescentVal2 = round(file2Arr[0][-1], 5)
         idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 5) != quiescentVal1 or round(file2Arr[i][-1], 5) != quiescentVal2]
         data = pd.Series(distances[idx])
-        print("quiescent filter val", quiescentVal1)
-        print("Quiescent filter val", quiescentVal2)
-        print("data length", len(data))
     else:
-        print("data not being filtered")
         data = pd.Series(distances)
-        print("data length",len(data))
 
     if fullBool:
         if binEnd == "Max" or binEnd == "max":
             y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
             x = (x + np.roll(x, -1))[:-1] / 2.0
-            print("full data histogram from {} to {}".format(np.amin(data), np.amax(data)))
         else:
             y, x = np.histogram(data.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
             x = (x + np.roll(x, -1))[:-1] / 2.0
-            print("full data histogram from {} to {}".format(-float(binEnd), float(binEnd)))
     else:
         if binEnd == "Max" or binEnd == "max":
             y, x = np.histogram(data.values, bins=100, range=(0, np.amax(data)), density=True)
             x = (x + np.roll(x, -1))[:-1] / 2.0
-            print("Half data histogram from {} to {}".format(0, np.amax(data)))
         else:
             y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
             x = (x + np.roll(x, -1))[:-1] / 2.0
-            print("Half data histogram from {} to {}".format(0, float(binEnd)))
 
-    # # ignore warnings
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore")
+    # ignore warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    #     # Fit the data
-    #     params = distribution.fit(data, floc=0)
+        # Fit the data
+        params = distribution.fit(data, floc=0)
 
-    #     # Separate parts of parameters
-    #     distArgs = params[:-2]
-    #     loc = params[-2]
-    #     scale = params[-1]
+        # Separate parts of parameters
+        distArgs = params[:-2]
+        loc = params[-2]
+        scale = params[-1]
 
-    #     # Calculate SSE and MLE
-    #     pdf = distribution.pdf(x, loc=loc, scale=scale, *distArgs)
-    #     sse = np.sum(np.power(y - pdf, 2.0))
-    #     mle = distribution.nnlf(params, data)
+        # Calculate SSE and MLE
+        pdf = distribution.pdf(x, loc=loc, scale=scale, *distArgs)
+        sse = np.sum(np.power(y - pdf, 2.0))
+        mle = distribution.nnlf(params, data)
 
-    #     distName = distribution.name
+        distName = distribution.name
 
-    #     param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
-    #     param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
-    #     dist_str = '{}({})'.format(distName, param_str)
-    #     dist_str_comma = ", ".join("{:0.5f}".format(v) for v in params)
+        param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
+        param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
+        dist_str = '{}({})'.format(distName, param_str)
+        dist_str_comma = ", ".join("{:0.5f}".format(v) for v in params)
 
-    # print()
-    # print("File 1:", file1)
-    # print("File 2:", file2)
-    # print("Dist Args:", distArgs)
-    # print("loc:", loc)
-    # print("scale:", scale)
-    # print(dist_str)
-    # print(dist_str_comma)
-    # print("SSE:", sse)
-    # print("MLE:", mle)
+    print()
+    print("File 1:", file1)
+    print("File 2:", file2)
+    print("Dist Args:", distArgs)
+    print("loc:", loc)
+    print("scale:", scale)
+    print(dist_str)
+    print(dist_str_comma)
+    print("SSE:", sse)
+    print("MLE:", mle)
 
-    # allSSEPath = Path(outputDir) / "allSSE.txt"
-    # with open(allSSEPath, 'a') as allSSE:
-    #     allSSE.write("{}\t{}\n".format(distName, sse))
+    allSSEPath = Path(outputDir) / "allSSE.txt"
+    with open(allSSEPath, 'a') as allSSE:
+        allSSE.write("{}\t{}\n".format(distName, sse))
 
-    # allParamsPath = Path(outputDir) / "allParams.txt"
-    # with open(allParamsPath, 'a') as allParams:
-    #     allParams.write("{}\n".format(dist_str))
+    allParamsPath = Path(outputDir) / "allParams.txt"
+    with open(allParamsPath, 'a') as allParams:
+        allParams.write("{}\n".format(dist_str))
 
-    # allMLEPath = Path(outputDir) / "allMLE.txt"
-    # with open(allMLEPath, 'a') as allMLE:
-    #     allMLE.write("{}\t{}\n".format(distName, mle))
+    allMLEPath = Path(outputDir) / "allMLE.txt"
+    with open(allMLEPath, 'a') as allMLE:
+        allMLE.write("{}\t{}\n".format(distName, mle))
 
-    # allParamsCommaPath = Path(outputDir) / "allParamsComma.txt"
-    # with open(allParamsCommaPath, 'a') as allParamsComma:
-    #     allParamsComma.write("{}: {}\n".format(distName, dist_str_comma))
+    allParamsCommaPath = Path(outputDir) / "allParamsComma.txt"
+    with open(allParamsCommaPath, 'a') as allParamsComma:
+        allParamsComma.write("{}: {}\n".format(distName, dist_str_comma))
 
     print()
     print("    Time Elapsed:", time.time() - tTotal)

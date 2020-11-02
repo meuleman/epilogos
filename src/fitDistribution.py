@@ -77,12 +77,20 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
     else:
         data = pd.Series(distances)
 
-    if binEnd == "Max" or binEnd == "max":
-        y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
-        x = (x + np.roll(x, -1))[:-1] / 2.0
+    if fullBool:
+        if binEnd == "Max" or binEnd == "max":
+            y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
+            x = (x + np.roll(x, -1))[:-1] / 2.0
+        else:
+            y, x = np.histogram(data.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
+            x = (x + np.roll(x, -1))[:-1] / 2.0
     else:
-        y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
-        x = (x + np.roll(x, -1))[:-1] / 2.0
+        if binEnd == "Max" or binEnd == "max":
+            y, x = np.histogram(data.values, bins=100, range=(0, np.amax(data)), density=True)
+            x = (x + np.roll(x, -1))[:-1] / 2.0
+        else:
+            y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
+            x = (x + np.roll(x, -1))[:-1] / 2.0
 
     # ignore warnings
     with warnings.catch_warnings():

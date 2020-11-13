@@ -99,7 +99,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = distribution.fit(data, floc=0)
+        params = distribution.fit(data)
 
         # Separate parts of parameters
         distArgs = params[:-2]

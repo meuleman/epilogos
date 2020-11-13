@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import random
 
-def main(filename, randomSampling=False, type1="", type2=""):
+def main(filename, randomSampling=False, equalSize=False, type1="", type2=""):
     if type(randomSampling) != type(True):
         return
 
@@ -34,9 +34,19 @@ def main(filename, randomSampling=False, type1="", type2=""):
             if randomSampling:
                 shuffledList = typeDictionary[type1] + otherList
                 random.shuffle(shuffledList)
-                print("{}\t1,2,3,{}".format(type1, str(shuffledList[:len(typeDictionary[type1])]).strip('[]').replace(" ", "")))
-                print()
-                print("All Others\t1,2,3,{}".format(str(shuffledList[len(typeDictionary[type1]):]).strip('[]').replace(" ", "")))
+                if equalSize:
+                    allOtherLen = 0
+                    for k in typeDictionary:
+                        if k != type1:
+                            allOtherLen += len(typeDictionary[k])
+                    size = min((len(typeDictionary[type1]), allOtherLen))
+                    print("{}\t1,2,3,{}".format(type1, str(shuffledList[:size]).strip('[]').replace(" ", "")))
+                    print()
+                    print("All Others\t1,2,3,{}".format(str(shuffledList[size:2*size]).strip('[]').replace(" ", "")))
+                else:
+                    print("{}\t1,2,3,{}".format(type1, str(shuffledList[:len(typeDictionary[type1])]).strip('[]').replace(" ", "")))
+                    print()
+                    print("All Others\t1,2,3,{}".format(str(shuffledList[len(typeDictionary[type1]):]).strip('[]').replace(" ", "")))
             else:
                 print("{}\t1,2,3,{}".format(type1, str(typeDictionary[type1]).strip('[]').replace(" ", "")))
                 print()
@@ -45,9 +55,15 @@ def main(filename, randomSampling=False, type1="", type2=""):
             if randomSampling:
                 shuffledList = typeDictionary[type1] + typeDictionary[type2]
                 random.shuffle(shuffledList)
-                print("{}\t1,2,3,{}".format(type1, str(shuffledList[:len(typeDictionary[type1])]).strip('[]').replace(" ", "")))
-                print()
-                print("{}\t1,2,3,{}".format(type2, str(shuffledList[len(typeDictionary[type1]):]).strip('[]').replace(" ", "")))
+                if equalSize:
+                    size = min((len(typeDictionary[type1]), len(typeDictionary[type2])))
+                    print("{}\t1,2,3,{}".format(type1, str(shuffledList[:size]).strip('[]').replace(" ", "")))
+                    print()
+                    print("{}\t1,2,3,{}".format(type2, str(shuffledList[size:2*size]).strip('[]').replace(" ", "")))
+                else:
+                    print("{}\t1,2,3,{}".format(type1, str(shuffledList[:len(typeDictionary[type1])]).strip('[]').replace(" ", "")))
+                    print()
+                    print("{}\t1,2,3,{}".format(type2, str(shuffledList[len(typeDictionary[type1]):]).strip('[]').replace(" ", "")))
             else:
                 print("{}\t1,2,3,{}".format(type1, str(typeDictionary[type1]).strip('[]').replace(" ", "")))
                 print()
@@ -64,9 +80,9 @@ def strToBool(string):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 3:
+    if len(sys.argv) <= 4:
         main(sys.argv[1])
-    elif len(sys.argv) <= 4:
-        main(sys.argv[1], strToBool(sys.argv[2]), sys.argv[3])
+    elif len(sys.argv) <= 5:
+        main(sys.argv[1], strToBool(sys.argv[2]), strToBool(sys.argv[3]), sys.argv[4])
     else:
-        main(sys.argv[1], strToBool(sys.argv[2]), sys.argv[3], sys.argv[4])
+        main(sys.argv[1], strToBool(sys.argv[2]), strToBool(sys.argv[3]), sys.argv[4], sys.argv[5])

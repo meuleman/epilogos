@@ -63,17 +63,19 @@ def main():
 
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
-    rand = np.random.rand(1000000, 721)
+    
 
     argsortTimes = []
     partTimes = []
 
     for i in range(10):
+        rand = np.random.rand(1000000, 721)
         tSort = time.time()
         rand.argsort(axis=1)
         argsortTimes.append(time.time() - tSort)
 
     for i in range(10):
+        rand = np.random.rand(1000000, 721)
         tPart = time.time()
         np.argpartition(rand,0,axis=1)
         partTimes.append(time.time() - tPart)

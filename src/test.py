@@ -63,7 +63,7 @@ def main():
 
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
-    rand = np.random.rand((15181508, 721))
+    rand = np.random.rand(15181508, 721)
 
     tSort = time.time()
     rand.argsort(axis=1)

@@ -65,13 +65,21 @@ def main():
 
     rand = np.random.rand(1000000, 721)
 
-    tSort = time.time()
-    rand.argsort(axis=1)
-    print("Argsort Time:", time.time() - tSort)
+    argsortTimes = []
+    partTimes = []
 
-    tPart = time.time()
-    np.argpartition(rand,0,axis=1)
-    print("Partition Time:", time.time() - tPart)
+    for i in range(10):
+        tSort = time.time()
+        rand.argsort(axis=1)
+        argsortTimes.append(time.time() - tSort)
+
+    for i in range(10):
+        tPart = time.time()
+        np.argpartition(rand,0,axis=1)
+        partTimes.append(time.time() - tPart)
+
+    print("ArgSort Mean: {}\t|\tAll: {}".format(sum(argsortTimes)/len(argsortTimes), argsortTimes))
+    print("Partition Mean: {}\t|\tAll: {}".format(sum(partTimes)/len(partTimes), partTimes))
 
 
 if __name__ == "__main__":

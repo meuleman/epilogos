@@ -16,26 +16,63 @@ import subprocess
 from pathlib import PurePath
 
 def main():
-    
-    test = np.array(np.arange(30)).reshape(10,3)
+    # tsvPath = Path("C:/Users/User/Downloads/adsera_dataset.tsv")
+    # comparisonPath = Path("C:/Users/user/Desktop/epilogos/adsera_matrix_columns.txt")
 
-    testlist = [1, 3, 5, 9]
+    # # Reading in the data
+    # colList = [i for i in range(15)]
+    # names = ["id", "type"]
 
-    print(test)
-    print(test[testlist])
+    # dataDF = pd.read_table(tsvPath, header=0, sep="\t", usecols=colList)
+    # comparisonDF = pd.read_table(comparisonPath, header=None, sep="\s[|]\s", names=names, dtype=str)
 
-    print(np.sum(test, axis=1))
+    # print()
+    # print(dataDF.shape)
+    # print()
 
-    print( test / 2)
+    # dataDF.drop_duplicates(subset=['id'], keep='first', inplace=True, ignore_index=True)
 
-    test = "/home/jquon/epilogosoutputfaster/temp_scores__home_jquon_epilogosinput_chr1_100_300.npy"
-    filePath = Path(test)
+    # print()
+    # print(dataDF.shape)
+    # print()
 
-    locationTag = '_'.join(filePath.name.split(".")[-2].split("_")[-3:])
-    print(locationTag)
+    # cut = []
 
-    print()
-    print(Path(""))
+    # for i in range(len(dataDF)):
+    #     if dataDF['id'][i] not in comparisonDF['id'].values:
+    #         cut.append(dataDF['id'][i])
+    #         dataDF.drop(i, inplace=True)
+            
+
+    # print()
+    # print(dataDF.shape)
+    # print()
+    # print(cut)
+
+    # idOrder = comparisonDF['id'].values
+
+    # dataDF['id'] = pd.Categorical(dataDF['id'], categories=idOrder, ordered=True)
+
+    # dataDF.sort_values(by=['id'], inplace=True)
+
+    # dataDF.reset_index(drop=True, inplace=True)
+
+    # outPath = Path("C:/Users/user/Desktop/epilogos/new_adsera_columns.txt")
+
+    # print(dataDF.head(10))
+
+    # dataDF.to_csv(outPath, sep="\t", index=False)
+
+    rand = np.random.rand((15181508, 721))
+
+    tSort = time.time()
+    rand.argsort(axis=1)
+    print("Argsort Time:", time.time() - tSort)
+
+    tPart = time.time()
+    np.argpartition(rand,0,axis=1)
+    print("Partition Time:", time.time() - tPart)
+
 
 if __name__ == "__main__":
     main()

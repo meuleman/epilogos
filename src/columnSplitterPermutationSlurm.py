@@ -31,6 +31,9 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
             jobOutPath = outputDir1Path / ("out/" + jobName + ".out")
             jobErrPath = outputDir1Path / ("err/" + jobName + ".err")
 
+            print(file1)
+            print(file2)
+            
             # Creating the out and err files for the batch job
             if jobOutPath.exists():
                 os.remove(jobOutPath)

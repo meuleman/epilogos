@@ -63,26 +63,9 @@ def main():
 
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
-    
+    arr1 = np.array(np.arange(9)).reshape((3,3))
+    arr2 = np.array(np.arange(9)).reshape((3,3))
 
-    argsortTimes = []
-    partTimes = []
-
-    for i in range(10):
-        rand = np.random.rand(1000000, 721)
-        tSort = time.time()
-        rand.argsort(axis=1)
-        argsortTimes.append(time.time() - tSort)
-
-    for i in range(10):
-        rand = np.random.rand(1000000, 721)
-        tPart = time.time()
-        np.argpartition(rand,0,axis=1)
-        partTimes.append(time.time() - tPart)
-
-    print("ArgSort Mean: {}\t|\tAll: {}".format(sum(argsortTimes)/len(argsortTimes), argsortTimes))
-    print("Partition Mean: {}\t|\tAll: {}".format(sum(partTimes)/len(partTimes), partTimes))
-
-
+    print(np.concatenate((arr1, arr2), axis=1))
 if __name__ == "__main__":
     main()

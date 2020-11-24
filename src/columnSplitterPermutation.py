@@ -51,8 +51,8 @@ def main(file1, file2, outputDir1, outputDir2):
     print("    file2 =", file2OutputArr.shape)
 
     # Writing out the shuffled arrays
-    np.savetxt(outputDir1Path / filename1, file1OutputArr, delimiter="\t", format="%s")
-    np.savetxt(outputDir2Path / filename2, file2OutputArr, delimiter="\t", format="%s")
+    np.savetxt(outputDir1Path / filename1, file1OutputArr, delimiter="\t", fmt="%s")
+    np.savetxt(outputDir2Path / filename2, file2OutputArr, delimiter="\t", fmt="%s")
 
     # file1Txt = gzip.open(outputDir1Path / filename1, "wt")
     # file2Txt = gzip.open(outputDir2Path / filename2, "wt")

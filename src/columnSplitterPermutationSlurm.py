@@ -28,7 +28,7 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
         # Only want the matching part of the to genome
         filename = file1.name.split(".")[0]
         for file2 in inputDir2Path.glob(filename + "*"):
-            jobName = "shuffle_{}".format(filename)
+            jobName = "shuffle_{}".format(filename.split(".")[0].split("_")[-1])
             jobOutPath = outputDir1Path / ("out/" + jobName + ".out")
             jobErrPath = outputDir1Path / ("err/" + jobName + ".err")
 
@@ -46,9 +46,9 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
                 # This error should never occur because we are deleting the files first
                 print("ERROR: sbatch '.out' or '.err' file already exists")
 
-            fitDistributionPy = pythonFilesDir / "fitDistribution.py"
+            splitPermutationPy = pythonFilesDir / "columnSplitterPermutation.py"
 
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, observationFile, filterBool, fullBool, distNum, binEnd, numStates, outputDir)
+            pythonCommand = "python {} {} {} {} {}".format(splitPermutationPy, file1, file2, outputDir1, outputDir2)
 
             slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 

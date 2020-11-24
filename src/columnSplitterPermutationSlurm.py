@@ -25,13 +25,13 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
     print("Submitting Slurm Jobs....")
     jobIDArr = []
     for file1 in inputDir1Path.glob("*"):
+        print(file1)
         # Only want the matching part of the to genome
         for file2 in inputDir2Path.glob(file1.name):
             jobName = "shuffle_{}".format(file1.name.split(".")[0].split("_")[-1])
             jobOutPath = outputDir1Path / ("out/" + jobName + ".out")
             jobErrPath = outputDir1Path / ("err/" + jobName + ".err")
 
-            print(file1)
             print(file2)
 
             # Creating the out and err files for the batch job

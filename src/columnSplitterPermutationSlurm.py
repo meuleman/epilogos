@@ -45,6 +45,10 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
             except FileExistsError:
                 # This error should never occur because we are deleting the files first
                 print("ERROR: sbatch '.out' or '.err' file already exists")
+                print(jobOutPath)
+                print(jobErrPath)
+                print(file1)
+                print(file2)
 
             splitPermutationPy = pythonFilesDir / "columnSplitterPermutation.py"
 
@@ -57,7 +61,7 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
             if not sp.stdout.startswith("Submitted batch"):
                 print("ERROR: sbatch not submitted correctly")
                 
-                jobIDArr.append(int(sp.stdout.split()[-1]))
+            jobIDArr.append(int(sp.stdout.split()[-1]))
 
     jobIDStr = str(jobIDArr).strip('[]').replace(" ", "")
 

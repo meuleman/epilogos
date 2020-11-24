@@ -26,9 +26,8 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
     jobIDArr = []
     for file1 in inputDir1Path.glob("*"):
         # Only want the matching part of the to genome
-        filename = file1.name.split(".")[0]
-        for file2 in inputDir2Path.glob(filename + "*"):
-            jobName = "shuffle_{}".format(filename.split(".")[0].split("_")[-1])
+        for file2 in inputDir2Path.glob(file1.name):
+            jobName = "shuffle_{}".format(file1.name.split(".")[0].split("_")[-1])
             jobOutPath = outputDir1Path / ("out/" + jobName + ".out")
             jobErrPath = outputDir1Path / ("err/" + jobName + ".err")
 

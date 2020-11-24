@@ -33,7 +33,7 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
 
             print(file1)
             print(file2)
-            
+
             # Creating the out and err files for the batch job
             if jobOutPath.exists():
                 os.remove(jobOutPath)
@@ -56,7 +56,7 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
 
             pythonCommand = "python {} {} {} {} {}".format(splitPermutationPy, file1, file2, outputDir1, outputDir2)
 
-            slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

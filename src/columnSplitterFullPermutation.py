@@ -42,12 +42,17 @@ def main(file1, file2, outputDir1, outputDir2):
     file1OutputArr = np.concatenate((locationArr, shuffledArr[:,:file1Arr.shape[1]]), axis=1)
     file2OutputArr = np.concatenate((locationArr, shuffledArr[:,file1Arr.shape[1]:]), axis=1)
 
-    print("Output arrays correct size: ", file1OutputArr.shape == file1DF.shape and file2OutputArr == file2DF.shape)
-    
+    print("input arrays sizes: ")
+    print("    file1 =", file1Arr.shape)
+    print("    file2 =", file2Arr.shape)
+    print("    LocationArr =", locationArr.shape)
+    print("Output arrays sizes: ")
+    print("    file1 =", file1OutputArr)
+    print("    file2 =", file2OutputArr)
 
     # Writing out the shuffled arrays
-    np.savetxt(outputDir1Path / filename1, delimiter="\t")
-    np.savetxt(outputDir2Path / filename2, delimiter="\t")
+    np.savetxt(outputDir1Path / filename1, file1OutputArr, delimiter="\t")
+    np.savetxt(outputDir2Path / filename2, file2OutputArr, delimiter="\t")
 
     # file1Txt = gzip.open(outputDir1Path / filename1, "wt")
     # file2Txt = gzip.open(outputDir2Path / filename2, "wt")

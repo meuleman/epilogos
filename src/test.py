@@ -65,21 +65,43 @@ def main():
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
     dataFilePath = Path("/home/jquon/EpilogosInput_AdseraMF/male/split/epilogos_matrix_chr10.txt.gz")
+    pairwisePath = Path("/home/jquon/EpilogosInput_AdseraMF/female/split/epilogos_matrix_chr10.txt.gz")
 
-    print("\nReading data from file...")
-    tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+
+    print("\nReading data from file 1...")
+    tRead1 = time.time()
+    file1DF = pd.read_table(dataFilePath, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead1)
+
+    print("\nReading data from file 2...")
+    tRead2 = time.time()
+    file2DF = pd.read_table(pairwisePath, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead2)
 
     # Converting to a np array for faster functions later
-    print("Converting to numpy array...")
+    print("Converting to numpy arrays...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
+    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+    locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
+
+    # Combining the arrays for per row shuffling
+    dataArr = np.concatenate((file1Arr, file2Arr), axis=1)
+    dataDF = pd.concat((file1DF, file2DF.iloc[:,3:]), axis=1, ignore_index=True)
+
+    print("File 1 DF Shape:", file1DF.shape)
+    print("File 2 DF Shape:", file2DF.shape)
+    print("Combined DF Shape:", dataDF.shape)
+    print("File 1 Arr Shape:", file1Arr.shape)
+    print("File 2 Arr Shape:", file2Arr.shape)
+    print("Combined Arr Shape:", dataArr.shape)
+
+    numStates=18
 
     numRows, numCols = dataArr.shape
 
-    numStates=18
+    print(list(dataDF.columns))
 
     print("numRows", numRows)
     print("numCols", numCols)
@@ -90,7 +112,6 @@ def main():
     dfSize = numRows * numCols
     for i in range(3, numCols + 3):
         stateCounts = dataDF[i].value_counts()
-        print("Len(dataDF[i]): ", len(dataDF[i]))
         for state, count in stateCounts.items():
             expFreqSeries.loc[state] += count / dfSize
 

@@ -14,6 +14,7 @@ import os
 import sys
 import subprocess
 from pathlib import PurePath
+import glob
 
 def main():
     # tsvPath = Path("C:/Users/User/Downloads/adsera_dataset.tsv")
@@ -63,9 +64,36 @@ def main():
 
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
-    arr1 = np.array(np.arange(9)).reshape((3,3))
-    arr2 = np.array(np.arange(9)).reshape((3,3))
+    dataFilePath = Path("/home/jquon/EpilogosInput_AdseraMF/male/split/epilogos_matrix_chr10.txt.gz")
 
-    print(np.concatenate((arr1, arr2), axis=1))
+    print("\nReading data from file...")
+    tRead = time.time()
+    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead)
+
+    # Converting to a np array for faster functions later
+    print("Converting to numpy array...")
+    tConvert = time.time()
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    print("    Time: ", time.time() - tConvert)
+
+    numRows, numCols = dataArr.shape
+
+    numStates=18
+
+    print("numRows", numRows)
+    print("numCols", numCols)
+
+    # Calculate the expected frequencies of each state
+    stateIndices = list(range(1, numStates + 1))
+    expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
+    dfSize = numRows * numCols
+    for i in range(3, numCols + 3):
+        stateCounts = dataDF[i].value_counts()
+        print("Len(dataDF[i]): ", len(dataDF[i]))
+        for state, count in stateCounts.items():
+            expFreqSeries.loc[state] += count / dfSize
+
+
 if __name__ == "__main__":
     main()

@@ -10,40 +10,87 @@ from functools import reduce
 import multiprocessing
 import itertools
 
-def main(filename, numStates, saliency, outputDirPath, expFreqPath, fileTag):
-    dataFilePath = Path(filename)
+def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag, pairwiseFileTag):
+    dataFilePath = Path(file1)
     outputDirPath = Path(outputDirPath)
-
     filename = dataFilePath.name.split(".")[0]
 
-    # Read in the data
-    print("\nReading data from file...")
-    tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    if file2 == "null":
+        # Read in the data
+        print("\nReading data from file...")
+        tRead = time.time()
+        dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
+        print("    Time: ", time.time() - tRead)
 
-    # Converting to a np array for faster functions later
-    print("Converting to numpy array...")
-    tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
-    print("    Time: ", time.time() - tConvert)
+        # Converting to a np array for faster functions later
+        print("Converting to numpy array...")
+        tConvert = time.time()
+        dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+        locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
+        print("    Time: ", time.time() - tConvert)
+    else:
+        pairwisePath = Path(file2)
+        # Read in the data
+        print("\nReading data from file 1...")
+        tRead1 = time.time()
+        file1DF = pd.read_table(dataFilePath, header=None, sep="\t")
+        print("    Time: ", time.time() - tRead1)
+
+        print("\nReading data from file 2...")
+        tRead2 = time.time()
+        file2DF = pd.read_table(pairwisePath, header=None, sep="\t")
+        print("    Time: ", time.time() - tRead2)
+
+        # Converting to a np array for faster functions later
+        print("Converting to numpy arrays...")
+        tConvert = time.time()
+        file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
+        file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+        locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
+        print("    Time: ", time.time() - tConvert)
+
+        # Combining the arrays for per row shuffling
+        combinedArr = np.concatenate((file1Arr, file2Arr), axis=1)
+
+        # Row independent vectorized shuffling of the 2 arrays
+        randomIndices = np.argpartition(np.random.rand(*combinedArr.shape), 1, axis=1)
+        shuffledArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
+        dataArr = shuffledArr[:,:file1Arr.shape[1]]
+        pairwiseArr = shuffledArr[:,file1Arr.shape[1]:]
+        print("input arrays sizes: ")
+        print("    file1 =", file1Arr.shape)
+        print("    file2 =", file2Arr.shape)
+        print("    LocationArr =", locationArr.shape)
+        print("Output arrays sizes: ")
+        print("    file1 =", dataArr.shape)
+        print("    file2 =", pairwiseArr.shape)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     if saliency == 1:
-        s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     elif saliency == 2:
-        s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     elif saliency == 3:
-        s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
     else:
         print("Inputed saliency value not supported")
         return
 
+    if file2 != "null":
+        if saliency == 1:
+            s1Score(pairwiseArr, locationArr, numStates, outputDirPath, expFreqArr, pairwiseFileTag, filename)
+        elif saliency == 2:
+            s2Score(pairwiseArr, locationArr, numStates, outputDirPath, expFreqArr, pairwiseFileTag, filename)
+        elif saliency == 3:
+            s3Score(pairwiseArr, locationArr, numStates, outputDirPath, expFreqArr, pairwiseFileTag, filename)
+        else:
+            print("Inputed saliency value not supported")
+            return
+
 # Function that calculates the scores for the S1 metric
-def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies and final scores in one loop
@@ -57,7 +104,7 @@ def s1Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
 # Function that calculates the scores for the S2 metric
-def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
@@ -96,7 +143,7 @@ def s2Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, 
     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
     
 # Function that calculates the scores for the S3 metric
-def s3Score(dataDF, dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
     numProcesses = multiprocessing.cpu_count()
 
@@ -168,4 +215,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6])
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8])

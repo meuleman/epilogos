@@ -24,7 +24,6 @@ def main(inputDir1, inputDir2, outputDir1, outputDir2):
     print()
     print("Submitting Slurm Jobs....")
     jobIDArr = []
-    print(inputDir1Path.glob("*"))
     for file1 in inputDir1Path.glob("*"):
         print(file1)
         # Only want the matching part of the to genome

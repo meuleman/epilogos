@@ -106,10 +106,10 @@ def strToBool(string):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 4:
+    if len(sys.argv) <= 2:
         main(sys.argv[1], column="")
     elif len(sys.argv) <= 5:
-        main(sys.argv[1], column=str(sys.argv[4]))
+        main(sys.argv[1], column=str(sys.argv[-1]))
     elif len(sys.argv) <= 6:
         main(sys.argv[1], randomSampling=strToBool(sys.argv[2]), equalSize=int(sys.argv[3]), column=sys.argv[4], type1=sys.argv[5])
     else:

@@ -44,8 +44,8 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         # Converting to a np array for faster functions later
         print("Converting to numpy arrays...")
         tConvert = time.time()
-        file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
-        file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+        file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
+        file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
         locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
         print("    Time: ", time.time() - tConvert)
 

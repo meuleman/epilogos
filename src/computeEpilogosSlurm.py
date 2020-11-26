@@ -49,9 +49,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
 
-    if not PurePath(pairwiseDirPath).is_absolute():
-        pairwiseDirPath = Path.cwd() / pairwiseDirPath
-
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
         print()
@@ -64,18 +61,22 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("ERROR: Ensure that file directory is not empty")
         print()
         return
+        
+    if pairwiseDir != "null":
+        if not PurePath(pairwiseDirPath).is_absolute():
+            pairwiseDirPath = Path.cwd() / pairwiseDirPath
 
-    if not pairwiseDirPath.exists() or not pairwiseDirPath.is_dir():
-        print()
-        print("ERROR: Given pairwise path does not exist or is not a directory")
-        print()
-        return
+        if not pairwiseDirPath.exists() or not pairwiseDirPath.is_dir():
+            print()
+            print("ERROR: Given pairwise path does not exist or is not a directory")
+            print()
+            return
 
-    if not list(pairwiseDirPath.glob("*")):
-        print()
-        print("ERROR: Ensure that pairwise directory is not empty")
-        print()
-        return
+        if not list(pairwiseDirPath.glob("*")):
+            print()
+            print("ERROR: Ensure that pairwise directory is not empty")
+            print()
+            return
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         print()

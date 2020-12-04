@@ -59,7 +59,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         combinedArr = np.concatenate((unshuffledFile1Arr, unshuffledFile2Arr), axis=1)
 
         # Row independent vectorized shuffling of the 2 arrays
-        randomIndices = np.argpartition(np.random.rand(*combinedArr.shape), 1, axis=1)
+        randomIndices = np.argsort(np.random.rand(*combinedArr.shape), axis=1)
         shuffledCombinedArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
         file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
         file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
@@ -81,7 +81,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         print(combinedArr[654403])
         print()
         print("RandomIndices")
-        print(randomIndices)
+        print(randomIndices[654403])
         print()
         print("ShuffledCombinedArr")
         print(shuffledCombinedArr[654403])

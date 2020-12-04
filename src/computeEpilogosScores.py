@@ -82,9 +82,6 @@ def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, 
 def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
 
-    print("Data Arr")
-    print(dataArr[654403])
-
     # Calculate the observed frequencies and final scores in one loop
     scoreArr = np.zeros((numRows, numStates))
     for row in range(numRows):

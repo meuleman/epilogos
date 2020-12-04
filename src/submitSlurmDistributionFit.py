@@ -13,11 +13,10 @@ def main(file1, file2, observationFile, filterBool, fullBool, outputDir, binEnd,
     print("Submitting Slurm Jobs....")
 
     if fullBool:
-        distributions = [st.gennorm]
-        # distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
-        #             st.gumbel_l, st.gausshyper, st.hypsecant, st.johnsonsu, st.loglaplace, 
-        #             st.laplace, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
-        #             st.powerlognorm, st.powernorm, st.lognorm, st.skewnorm]
+        distributions = [st.cauchy, st.exponnorm, st.t, st.genlogistic, st.gennorm, st.gumbel_r, 
+                    st.gumbel_l, st.gausshyper, st.hypsecant, st.johnsonsu, st.loglaplace, 
+                    st.laplace, st.logistic, st.foldnorm, st.norm, st.norminvgauss, 
+                    st.powerlognorm, st.powernorm, st.lognorm, st.skewnorm]
     else:
         distributions = [st.betaprime, st.halfgennorm, st.pareto, st.lomax, st.genpareto, st.gamma, 
                         st.genexpon, st.expon, st.mielke, st.exponweib, st.loglaplace, st.chi, st.chi2,

@@ -67,9 +67,9 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
     plt.rcParams['agg.path.chunksize'] = 10000
 
     if fullBool:
-        distances = np.sum(np.square(file1Arr - file2Arr), axis=1) * observationArr[:,2]
+        distances = np.sqrt(np.sum(np.square(file1Arr - file2Arr), axis=1)) * observationArr[:,2]
     else:
-        distances = np.sum(np.square(file1Arr - file2Arr), axis=1)
+        distances = np.sqrt(np.sum(np.square(file1Arr - file2Arr), axis=1))
 
     if filterBool:
         quiescentVal1 = round(file1Arr[0][-1], 5)

@@ -131,7 +131,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
 
     allSSEPath = Path(outputDir) / "allSSE.txt"
     with open(allSSEPath, 'a') as allSSE:
-        allSSE.write("{}\t{}\n".format(distName, sse))
+        allSSE.write("{}    {}\n".format(distName, sse))
 
     allParamsPath = Path(outputDir) / "allParams.txt"
     with open(allParamsPath, 'a') as allParams:
@@ -139,7 +139,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
 
     allMLEPath = Path(outputDir) / "allMLE.txt"
     with open(allMLEPath, 'a') as allMLE:
-        allMLE.write("{}\t{}\n".format(distName, mle))
+        allMLE.write("{}    {}\n".format(distName, mle))
 
     allParamsCommaPath = Path(outputDir) / "allParamsComma.txt"
     with open(allParamsCommaPath, 'a') as allParamsComma:

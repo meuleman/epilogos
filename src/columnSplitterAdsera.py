@@ -81,7 +81,6 @@ def main(filename, randomSampling=False, equalSize=-1, column="Group", type1="",
                     print()
                     print("{}\t1,2,3,{}".format(type2, str(shuffledList[size:2*size]).strip('[]').replace(" ", "")))
                 elif equalSize > 0:
-                    size = min((len(typeDictionary[type1]), len(typeDictionary[type2])))
                     print("{}\t1,2,3,{}".format(type1, str(shuffledList[:equalSize]).strip('[]').replace(" ", "")))
                     print()
                     print("{}\t1,2,3,{}".format(type2, str(shuffledList[equalSize:2*equalSize]).strip('[]').replace(" ", "")))

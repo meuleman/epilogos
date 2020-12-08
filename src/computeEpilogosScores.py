@@ -64,7 +64,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         # file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
         # file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
 
-        size = min((unshuffledFile1Arr.shape[1], unshuffledFile2Arr.shape[2]))
+        size = min((unshuffledFile1Arr.shape[1], unshuffledFile2Arr.shape[1]))
         file1Arr = shuffledCombinedArr[:,:size]
         file2Arr = shuffledCombinedArr[:,size:2*size]
 

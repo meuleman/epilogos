@@ -61,10 +61,11 @@ def writeScores(locationArr, scoreArr, outputDirPath):
         # Write to observations
         maxDifference = np.amax(np.absolute(scoreArr[i]))
         maxDifferenceLoc = np.argmax(np.absolute(scoreArr[i])) + 1
-        differenceSign = np.sign(scoreArr[i, maxDifferenceLoc - 1])
+        # differenceSign = np.sign(scoreArr[i, maxDifferenceLoc - 1])
+        differenceSign2 = np.sign(np.sum(scoreArr[i]))
         totalAbsoluteDifference = np.sum(np.absolute(scoreArr[i]))
 
-        observationsTxt.write("{}\t{:.5f}\t{}\t{:.5f}\t\n".format(maxDifferenceLoc, maxDifference, differenceSign, totalAbsoluteDifference))
+        observationsTxt.write("{}\t{:.5f}\t{}\t{:.5f}\t\n".format(maxDifferenceLoc, maxDifference, differenceSign2, totalAbsoluteDifference))
 
         # Write to scores
         for j in range(scoreArr.shape[1]):

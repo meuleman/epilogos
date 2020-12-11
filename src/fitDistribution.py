@@ -75,25 +75,151 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
         quiescentVal1 = round(file1Arr[0][-1], 5)
         quiescentVal2 = round(file2Arr[0][-1], 5)
         idx = [i for i in range(file1Arr.shape[0]) if round(file1Arr[i][-1], 5) != quiescentVal1 or round(file2Arr[i][-1], 5) != quiescentVal2]
-        data = pd.Series(distances[idx])
+        # data = pd.Series(distances[idx])
+        
+        distancesPositive = distances[idx][np.where(distances[idx] >= 0)[0]]
+        distancesNegative = -distances[idx][np.where(distances[idx] <= 0)[0]]
+        dataPositive = pd.Series(distancesPositive)
+        dataNegative = pd.Series(distancesNegative)
     else:
         data = pd.Series(distances)
 
     if fullBool:
         if binEnd == "Max" or binEnd == "max":
-            y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
-            x = (x + np.roll(x, -1))[:-1] / 2.0
+            # y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
+            # x = (x + np.roll(x, -1))[:-1] / 2.0
+
+            yPos, xPos = np.histogram(dataPositive.values, bins=100, range=(np.amin(dataPositive), np.amax(dataPositive)), density=True)
+            xPos = (xPos + np.roll(xPos, -1))[:-1] / 2.0
+
+            yNeg, xNeg = np.histogram(dataNegative.values, bins=100, range=(np.amin(dataNegative), np.amax(dataNegative)), density=True)
+            xNeg = (xNeg + np.roll(xNeg, -1))[:-1] / 2.0
         else:
-            y, x = np.histogram(data.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
-            x = (x + np.roll(x, -1))[:-1] / 2.0
+            # y, x = np.histogram(data.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
+            # x = (x + np.roll(x, -1))[:-1] / 2.0
+
+            yPos, xPos = np.histogram(dataPositive.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
+            xPos = (xPos + np.roll(xPos, -1))[:-1] / 2.0
+
+            yNeg, xNeg = np.histogram(dataNegative.values, bins=100, range=(-float(binEnd), float(binEnd)), density=True)
+            xNeg = (xNeg + np.roll(xNeg, -1))[:-1] / 2.0
     else:
         if binEnd == "Max" or binEnd == "max":
-            y, x = np.histogram(data.values, bins=100, range=(0, np.amax(data)), density=True)
-            x = (x + np.roll(x, -1))[:-1] / 2.0
-        else:
-            y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
-            x = (x + np.roll(x, -1))[:-1] / 2.0
+            # y, x = np.histogram(data.values, bins=100, range=(0, np.amax(data)), density=True)
+            # x = (x + np.roll(x, -1))[:-1] / 2.0
 
+            yPos, xPos = np.histogram(dataPositive.values, bins=100, range=(0, np.amax(dataPositive)), density=True)
+            xPos = (xPos + np.roll(xPos, -1))[:-1] / 2.0
+
+            yNeg, xNeg = np.histogram(dataNegative.values, bins=100, range=(0, np.amax(dataNegative)), density=True)
+            xNeg = (xNeg + np.roll(xNeg, -1))[:-1] / 2.0
+        else:
+            # y, x = np.histogram(data.values, bins=100, range=(0, float(binEnd)), density=True)
+            # x = (x + np.roll(x, -1))[:-1] / 2.0
+
+            yPos, xPos = np.histogram(dataPositive.values, bins=100, range=(0, float(binEnd)), density=True)
+            xPos = (xPos + np.roll(xPos, -1))[:-1] / 2.0
+
+            yNeg, xNeg = np.histogram(dataNegative.values, bins=100, range=(0, float(binEnd)), density=True)
+            xNeg = (xNeg + np.roll(xNeg, -1))[:-1] / 2.0
+
+
+    #####################################
+    #                                   #
+    #      Positive Side Fitting        #
+    #                                   #
+    #####################################
+    params, sse, mle = fit(distribution, dataPositive, xPos, yPos)
+
+    distArgs = params[:-2]
+    loc = params[-2]
+    scale = params[-1]
+    distName = distribution.name
+
+    param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
+    param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
+    dist_str = '{}({})'.format(distName, param_str)
+    dist_str_comma = ", ".join("{:0.5f}".format(v) for v in params)
+
+    print()
+    print("File 1:", file1)
+    print("File 2:", file2)
+    print("POSITIVE")
+    print("Dist Args:", distArgs)
+    print("loc:", loc)
+    print("scale:", scale)
+    print(dist_str)
+    print(dist_str_comma)
+    print("SSE:", sse)
+    print("MLE:", mle)
+
+    allSSEPath = Path(outputDir) / "allPositiveSSE.txt"
+    with open(allSSEPath, 'a') as allSSE:
+        allSSE.write("{}    {}\n".format(distName, sse))
+
+    allParamsPath = Path(outputDir) / "allPositiveParams.txt"
+    with open(allParamsPath, 'a') as allParams:
+        allParams.write("{}\n".format(dist_str))
+
+    allMLEPath = Path(outputDir) / "allPositiveMLE.txt"
+    with open(allMLEPath, 'a') as allMLE:
+        allMLE.write("{}    {}\n".format(distName, mle))
+
+    allParamsCommaPath = Path(outputDir) / "allPositiveParamsComma.txt"
+    with open(allParamsCommaPath, 'a') as allParamsComma:
+        allParamsComma.write("{}: {}\n".format(distName, dist_str_comma))
+
+
+    #####################################
+    #                                   #
+    #      Negative Side Fitting        #
+    #                                   #
+    #####################################
+    params, sse, mle = fit(distribution, dataNegative, xNeg, yNeg)
+
+    distArgs = params[:-2]
+    loc = params[-2]
+    scale = params[-1]
+    distName = distribution.name
+
+    param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
+    param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
+    dist_str = '{}({})'.format(distName, param_str)
+    dist_str_comma = ", ".join("{:0.5f}".format(v) for v in params)
+
+    print()
+    print("File 1:", file1)
+    print("File 2:", file2)
+    print("NEGATIVE")
+    print("Dist Args:", distArgs)
+    print("loc:", loc)
+    print("scale:", scale)
+    print(dist_str)
+    print(dist_str_comma)
+    print("SSE:", sse)
+    print("MLE:", mle)
+
+    allSSEPath = Path(outputDir) / "allNegativeSSE.txt"
+    with open(allSSEPath, 'a') as allSSE:
+        allSSE.write("{}    {}\n".format(distName, sse))
+
+    allParamsPath = Path(outputDir) / "allNegativeParams.txt"
+    with open(allParamsPath, 'a') as allParams:
+        allParams.write("{}\n".format(dist_str))
+
+    allMLEPath = Path(outputDir) / "allNegativeMLE.txt"
+    with open(allMLEPath, 'a') as allMLE:
+        allMLE.write("{}    {}\n".format(distName, mle))
+
+    allParamsCommaPath = Path(outputDir) / "allNegativeParamsComma.txt"
+    with open(allParamsCommaPath, 'a') as allParamsComma:
+        allParamsComma.write("{}: {}\n".format(distName, dist_str_comma))
+
+
+    print()
+    print("    Time Elapsed:", time.time() - tTotal)
+
+def fit(distribution, data, x, y):
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -111,42 +237,8 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
         sse = np.sum(np.power(y - pdf, 2.0))
         mle = distribution.nnlf(params, data)
 
-        distName = distribution.name
+        return params, sse, mle
 
-        param_names = (distribution.shapes + ', loc, scale').split(', ') if distribution.shapes else ['loc', 'scale']
-        param_str = ', '.join(['{}={:0.5f}'.format(k,v) for k,v in zip(param_names, params)])
-        dist_str = '{}({})'.format(distName, param_str)
-        dist_str_comma = ", ".join("{:0.5f}".format(v) for v in params)
-
-    print()
-    print("File 1:", file1)
-    print("File 2:", file2)
-    print("Dist Args:", distArgs)
-    print("loc:", loc)
-    print("scale:", scale)
-    print(dist_str)
-    print(dist_str_comma)
-    print("SSE:", sse)
-    print("MLE:", mle)
-
-    allSSEPath = Path(outputDir) / "allSSE.txt"
-    with open(allSSEPath, 'a') as allSSE:
-        allSSE.write("{}    {}\n".format(distName, sse))
-
-    allParamsPath = Path(outputDir) / "allParams.txt"
-    with open(allParamsPath, 'a') as allParams:
-        allParams.write("{}\n".format(dist_str))
-
-    allMLEPath = Path(outputDir) / "allMLE.txt"
-    with open(allMLEPath, 'a') as allMLE:
-        allMLE.write("{}    {}\n".format(distName, mle))
-
-    allParamsCommaPath = Path(outputDir) / "allParamsComma.txt"
-    with open(allParamsCommaPath, 'a') as allParamsComma:
-        allParamsComma.write("{}: {}\n".format(distName, dist_str_comma))
-
-    print()
-    print("    Time Elapsed:", time.time() - tTotal)
 
 def strToBool(string):
     if string in ["True", "true", "T", "t", "y", "Y", "yes", "Yes"]:

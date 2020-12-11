@@ -61,13 +61,8 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         # Row independent vectorized shuffling of the 2 arrays
         randomIndices = np.argsort(np.random.rand(*combinedArr.shape), axis=1)
         shuffledCombinedArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
-        # file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
-        # file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
-
-        size = min((unshuffledFile1Arr.shape[1], unshuffledFile2Arr.shape[1]))
-        file1Arr = shuffledCombinedArr[:,:size]
-        file2Arr = shuffledCombinedArr[:,size:2*size]
-
+        file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
+        file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
 
         determineSaliency(saliency, file1Arr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
         determineSaliency(saliency, file2Arr, locationArr, numStates, outputDirPath, expFreqArr, pairwiseFileTag, filename)

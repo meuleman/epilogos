@@ -10,7 +10,7 @@ import statsmodels as sm
 import warnings
 import time
 
-def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber, numStates, outputDir):
+def main(file1, file2, observationFile, filterBool, fullBool, distanceMetric, distributionNumber, numStates, outputDir):
     if filterBool == "ERROR: INVALID BOOL SUBMITTED":
         print("ERROR: INVALID BOOL SUBMITTED")
         return
@@ -65,7 +65,12 @@ def main(file1, file2, observationFile, filterBool, fullBool, distributionNumber
 
     plt.rcParams['agg.path.chunksize'] = 10000
 
-    distances = np.sqrt(np.sum(np.square(file1Arr - file2Arr), axis=1)) * observationArr[:,2]
+    if distanceMetric == "sqrt":
+        distances = np.sqrt(np.sum(np.square(file1Arr - file2Arr), axis=1)) * observationArr[:,2]
+    elif distanceMetric == "nonsqrt":
+        distances = np.sum(np.square(file1Arr - file2Arr), axis=1) * observationArr[:,2]
+    elif distanceMetric == "cosine":
+        distances = (np.einsum('ij, ij->i', file1Arr, file2Arr) / (np.linalg.norm(file1Arr) * np.linalg.norm(file2Arr))) * observationArr[:,2]
 
     if fullBool:
         fittingToFull(distances, filterBool, file1Arr, file2Arr, outputDir, distribution, file1, file2)
@@ -102,10 +107,6 @@ def fittingPosNeg(distances, filterBool, file1Arr, file2Arr, outputDir, distribu
         dataPositive = pd.Series(distancesPositive)
         dataNegative = pd.Series(distancesNegative)
 
-        print(len(distancesPositive))
-        print(len(distancesNegative))
-        print(distancesPositive[:10])
-        print(distancesNegative[:10])
     else:
         distancesPositive = distances[np.where(distances >= 0)[0]]
         distancesNegative = -distances[np.where(distances <= 0)[0]]
@@ -124,8 +125,6 @@ def fittingPosNeg(distances, filterBool, file1Arr, file2Arr, outputDir, distribu
     params, sse, mle = fit(distribution, dataNegative, xNeg, yNeg)
     writeOut(outputDir, "Negative", file1, file2, distribution, params, sse, mle)
 
-    print(xPos)
-    print(xNeg)
 
 def writeOut(outputDir, sign, file1, file2, distribution, params, sse, mle):
     distArgs = params[:-2]
@@ -138,6 +137,7 @@ def writeOut(outputDir, sign, file1, file2, distribution, params, sse, mle):
     dist_str = '{}({})'.format(distName, param_str)
     dist_str_comma = ", ".join(str(v) for v in params)
 
+    print()
     print("File 1:", file1)
     print("File 2:", file2)
     print(sign)
@@ -196,4 +196,4 @@ def strToBool(string):
         return "ERROR: INVALID BOOL SUBMITTED"
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), int(sys.argv[6]), int(sys.argv[7]), sys.argv[8])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]), strToBool(sys.argv[5]), sys.argv[6], int(sys.argv[7]), int(sys.argv[8]), sys.argv[9])

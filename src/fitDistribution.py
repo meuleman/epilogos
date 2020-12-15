@@ -70,7 +70,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distanceMetric, di
     elif distanceMetric == "nonsqrt":
         distances = np.sum(np.square(file1Arr - file2Arr), axis=1) * observationArr[:,2]
     elif distanceMetric == "cosine":
-        distances = (np.einsum('ij, ij->i', file1Arr, file2Arr) / (np.linalg.norm(file1Arr) * np.linalg.norm(file2Arr))) * observationArr[:,2]
+        distances = (np.einsum('ij, ij->i', file1Arr, file2Arr) / (np.linalg.norm(file1Arr, axis=1) * np.linalg.norm(file2Arr, axis=1))) * observationArr[:,2]
 
     if fullBool:
         fittingToFull(distances, filterBool, file1Arr, file2Arr, outputDir, distribution, file1, file2)

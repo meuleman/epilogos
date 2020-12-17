@@ -57,7 +57,7 @@ def main(file1, file2, observationFile, filterBool, fullBool, distanceMetric, ou
 
         pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(fitDistributionPy, file1, file2, observationFile, filterBool, fullBool, distanceMetric, distNum, numStates, outputDir)
 
-        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --partition=queue2 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=16000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

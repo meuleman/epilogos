@@ -64,56 +64,65 @@ def main():
 
     # dataDF.to_csv(outPath, sep="\t", index=False)
 
-    dataFilePath = Path("/home/jquon/EpilogosInput_AdseraMF/male/split/epilogos_matrix_chr10.txt.gz")
-    pairwisePath = Path("/home/jquon/EpilogosInput_AdseraMF/female/split/epilogos_matrix_chr10.txt.gz")
+    # dataFilePath = Path("/home/jquon/EpilogosInput_AdseraMF/male/split/epilogos_matrix_chr10.txt.gz")
+    # pairwisePath = Path("/home/jquon/EpilogosInput_AdseraMF/female/split/epilogos_matrix_chr10.txt.gz")
 
 
-    print("\nReading data from file 1...")
-    tRead1 = time.time()
-    file1DF = pd.read_table(dataFilePath, header=None, sep="\t")
-    print("    Time: ", time.time() - tRead1)
+    # print("\nReading data from file 1...")
+    # tRead1 = time.time()
+    # file1DF = pd.read_table(dataFilePath, header=None, sep="\t")
+    # print("    Time: ", time.time() - tRead1)
 
-    print("\nReading data from file 2...")
-    tRead2 = time.time()
-    file2DF = pd.read_table(pairwisePath, header=None, sep="\t")
-    print("    Time: ", time.time() - tRead2)
+    # print("\nReading data from file 2...")
+    # tRead2 = time.time()
+    # file2DF = pd.read_table(pairwisePath, header=None, sep="\t")
+    # print("    Time: ", time.time() - tRead2)
 
-    # Converting to a np array for faster functions later
-    print("Converting to numpy arrays...")
-    tConvert = time.time()
-    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
-    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
-    locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
-    print("    Time: ", time.time() - tConvert)
+    # # Converting to a np array for faster functions later
+    # print("Converting to numpy arrays...")
+    # tConvert = time.time()
+    # file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
+    # file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+    # locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
+    # print("    Time: ", time.time() - tConvert)
 
-    # Combining the arrays for per row shuffling
-    dataArr = np.concatenate((file1Arr, file2Arr), axis=1)
-    dataDF = pd.concat((file1DF, file2DF.iloc[:,3:]), axis=1, ignore_index=True)
+    # # Combining the arrays for per row shuffling
+    # dataArr = np.concatenate((file1Arr, file2Arr), axis=1)
+    # dataDF = pd.concat((file1DF, file2DF.iloc[:,3:]), axis=1, ignore_index=True)
 
-    print("File 1 DF Shape:", file1DF.shape)
-    print("File 2 DF Shape:", file2DF.shape)
-    print("Combined DF Shape:", dataDF.shape)
-    print("File 1 Arr Shape:", file1Arr.shape)
-    print("File 2 Arr Shape:", file2Arr.shape)
-    print("Combined Arr Shape:", dataArr.shape)
+    # print("File 1 DF Shape:", file1DF.shape)
+    # print("File 2 DF Shape:", file2DF.shape)
+    # print("Combined DF Shape:", dataDF.shape)
+    # print("File 1 Arr Shape:", file1Arr.shape)
+    # print("File 2 Arr Shape:", file2Arr.shape)
+    # print("Combined Arr Shape:", dataArr.shape)
 
-    numStates=18
+    # numStates=18
 
-    numRows, numCols = dataArr.shape
+    # numRows, numCols = dataArr.shape
 
-    print(list(dataDF.columns))
+    # print(list(dataDF.columns))
 
-    print("numRows", numRows)
-    print("numCols", numCols)
+    # print("numRows", numRows)
+    # print("numCols", numCols)
 
-    # Calculate the expected frequencies of each state
-    stateIndices = list(range(1, numStates + 1))
-    expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
-    dfSize = numRows * numCols
-    for i in range(3, numCols + 3):
-        stateCounts = dataDF[i].value_counts()
-        for state, count in stateCounts.items():
-            expFreqSeries.loc[state] += count / dfSize
+    # # Calculate the expected frequencies of each state
+    # stateIndices = list(range(1, numStates + 1))
+    # expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
+    # dfSize = numRows * numCols
+    # for i in range(3, numCols + 3):
+    #     stateCounts = dataDF[i].value_counts()
+    #     for state, count in stateCounts.items():
+    #         expFreqSeries.loc[state] += count / dfSize
+
+    arr = np.array(np.arange(4, 837)).tolist()
+    print(arr)
+    random.shuffle(arr)
+    size = int(len(arr)/2)
+    print("{}\t1,2,3,{}".format("ARR 1", str(arr[:size]).strip('[]').replace(" ", "")))
+    print()
+    print("{}\t1,2,3,{}".format("ARR 2", str(arr[size:2*size]).strip('[]').replace(" ", "")))
+
 
 
 if __name__ == "__main__":

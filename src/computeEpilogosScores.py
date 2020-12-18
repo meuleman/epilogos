@@ -167,9 +167,9 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 
 # Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
+    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
     for row in rowsToCalculate:
         # Pull the scores from the precalculated score array
-        rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
         rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))

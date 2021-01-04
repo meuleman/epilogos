@@ -133,12 +133,16 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     expQueue = multiprocessing.Queue()
     expProcesses = []
 
+    print("Num Processes:", numProcesses)
+
     # Creating the expected frequency processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
         p = multiprocessing.Process(target=s3ExpMulti, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue))
         expProcesses.append(p)
         p.start()
+
+    print("Queue Size:", expQueue.qsize())
 
     # Combine all the calculated expvalue arrays into one
     for process in expProcesses:
@@ -156,6 +160,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
 # Helper function for the multiprocessing
 def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
+    print("Rows in Multiprocess:", rowsToCalculate)
     for row in rowsToCalculate:
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1])
     queue.put(expFreqArr)

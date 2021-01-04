@@ -147,6 +147,8 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     obsQueue = multiprocessing.Queue()
     obsProcesses = []
 
+    print("Num Processes:", numProcesses)
+
     # Creating the observed frequency/score processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
@@ -155,6 +157,7 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         p.start()
 
     # Move all the scores from the queue to the score array
+    print("Number of loops", obsQueue.qsize())
     for i in range(numRows):
         scoreRow = obsQueue.get()
         scoreArr[scoreRow[0]] = scoreRow[1]
@@ -168,6 +171,7 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 # Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
     rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+    print("Rows in Multiprocess:", rowsToCalculate)
     for row in rowsToCalculate:
         # Pull the scores from the precalculated score array
         rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]

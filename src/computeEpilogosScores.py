@@ -157,10 +157,9 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         p.start()
 
     # Move all the scores from the queue to the score array
-    print("Number of loops", obsQueue.qsize())
-    print(obsQueue)
     for i in range(numRows):
         scoreRow = obsQueue.get()
+        print(scoreRow)
         scoreArr[scoreRow[0]] = scoreRow[1]
 
     # Shut down all the processes
@@ -173,12 +172,14 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
     rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
     print("Rows in Multiprocess:", rowsToCalculate)
+    count =0 
     for row in rowsToCalculate:
         # Pull the scores from the precalculated score array
         rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
         queue.put((row, rowScoreArr.sum(axis=(0,1,2))))
-        print(queue)
+        count += 1
+    print(count)
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):

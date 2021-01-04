@@ -142,12 +142,11 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
         expProcesses.append(p)
         p.start()
 
-    print("Queue Size:", expQueue.qsize())
-    print(expQueue)
-
     # Combine all the calculated expvalue arrays into one
     for process in expProcesses:
         expFreqArr += expQueue.get()
+
+    print(expFreqArr)
 
     # Shut down all the processes
     for process in expProcesses:
@@ -162,8 +161,11 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
 def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
     print("Rows in Multiprocess:", rowsToCalculate)
+    count = 0
     for row in rowsToCalculate:
+        count += 1
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1])
+    print(count)
     queue.put(expFreqArr)
 
 # Helper to store the expected frequency arrays

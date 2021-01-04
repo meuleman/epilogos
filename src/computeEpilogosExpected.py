@@ -121,7 +121,7 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
 # Function that calculates the expected frequencies for the S3 metric
 def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
+    numProcesses = 1 #multiprocessing.cpu_count()
 
     # Use multiprocessing to speed up expected frequency calculation time
     # Calculate expected frequencies
@@ -143,6 +143,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
         p.start()
 
     print("Queue Size:", expQueue.qsize())
+    print(expQueue)
 
     # Combine all the calculated expvalue arrays into one
     for process in expProcesses:

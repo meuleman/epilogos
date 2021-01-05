@@ -146,6 +146,10 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     for process in expProcesses:
         expFreqArr += expQueue.get()
 
+    expFreqArr2 = sum(expQueue)
+
+    print("QUEUES EQUAL: ", np.all(expFreqArr == expFreqArr2))
+
     # Shut down all the processes
     for process in expProcesses:
         process.join()

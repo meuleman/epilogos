@@ -134,7 +134,7 @@ def s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 # Function that calculates the scores for the S3 metric
 def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
-    numProcesses = 2 #multiprocessing.cpu_count()
+    numProcesses = 10 #multiprocessing.cpu_count()
 
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 

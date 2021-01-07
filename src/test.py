@@ -123,6 +123,11 @@ def main():
     # print()
     # print("{}\t1,2,3,{}".format("ARR 2", str(arr[size:2*size]).strip('[]').replace(" ", "")))
 
+    print("Removing Directory")
+    b = os.system("rm -rf /home/jquon/osSystemTest/")
+    print("done", b)
+    print()
+
     print("Making new dir")
     x = os.system("mkdir -p /home/jquon/osSystemTest/")
     print("done", x)
@@ -139,7 +144,7 @@ def main():
     print()
 
     print("zip in new dir")
-    a = os.system("gzip /home/jquon/EpilogosOutput_Adsera/bloodTCell/combined.txt")
+    a = os.system("gzip /home/jquon/osSystemTest/combined.txt")
     print("done", a)
     print()
 

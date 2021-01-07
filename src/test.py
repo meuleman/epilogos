@@ -123,14 +123,25 @@ def main():
     # print()
     # print("{}\t1,2,3,{}".format("ARR 2", str(arr[size:2*size]).strip('[]').replace(" ", "")))
 
+    print("Making new dir")
+    x = os.system("mkdir -p /home/jquon/osSystemTest/")
+    print("done", x)
+    print()
 
-    expFreqPath = Path("/home/jquon/epilogosoutputs3/exp_freq__home_jquon_epilogosinput.npy")
+    print("Cp to new dir")
+    y = os.system("cp /home/jquon/EpilogosOutput_Adsera/bloodTCell/scores_home_jquon_AdseraStateByGroup_bloodTCell_split_epilogos_matrix_chr* /home/jquon/osSystemTest/")
+    print("done", y)
+    print()
 
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    print("combine in new dir")
+    z = os.system("gzip -cd /home/jquon/osSystemTest/scores_home_jquon_AdseraStateByGroup_bloodTCell_split_epilogos_matrix_chr* > /home/jquon/osSystemTest/combined.txt")
+    print("done", z)
+    print()
 
-    print("Max:", np.max(expFreqArr))
-
-
+    print("zip in new dir")
+    a = os.system("gzip /home/jquon/EpilogosOutput_Adsera/bloodTCell/combined.txt")
+    print("done", a)
+    print()
 
 
 if __name__ == "__main__":

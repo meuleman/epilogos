@@ -365,7 +365,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)
         print()
-        print("All JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
+        if modeOfOperation == "both":
+            print("All JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
+        elif modeOfOperation == "s":
+            print("All JobIDs: {},{},{},{}".format(scoreJobIDStr, writeJobIDStr))
+        elif modeOfOperation == "bg":
+            print("All JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID))
 
 if __name__ == "__main__":
     main()

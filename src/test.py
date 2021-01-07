@@ -115,13 +115,21 @@ def main():
     #     for state, count in stateCounts.items():
     #         expFreqSeries.loc[state] += count / dfSize
 
-    arr = np.array(np.arange(4, 837)).tolist()
-    print(arr)
-    random.shuffle(arr)
-    size = int(len(arr)/2)
-    print("{}\t1,2,3,{}".format("ARR 1", str(arr[:size]).strip('[]').replace(" ", "")))
-    print()
-    print("{}\t1,2,3,{}".format("ARR 2", str(arr[size:2*size]).strip('[]').replace(" ", "")))
+    # arr = np.array(np.arange(4, 837)).tolist()
+    # print(arr)
+    # random.shuffle(arr)
+    # size = int(len(arr)/2)
+    # print("{}\t1,2,3,{}".format("ARR 1", str(arr[:size]).strip('[]').replace(" ", "")))
+    # print()
+    # print("{}\t1,2,3,{}".format("ARR 2", str(arr[size:2*size]).strip('[]').replace(" ", "")))
+
+
+    expFreqPath = Path("/home/jquon/epilogosoutputs3/exp_freq__home_jquon_epilogosinput.npy")
+
+    expFreqArr = np.load(expFreqPath, allow_pickle=False)
+
+    print("Max:", np.max(expFreqArr))
+
 
 
 

@@ -185,13 +185,13 @@ def ncr(n, r):
 # Helper for creating output array
 def determineDistance(locationArr, score1Arr, score2Arr, diffArr):
     # Calculate the maximum contributing state to the difference of a bin
-    maxDiffState = (np.argmax(np.absolute(diffArr), axis=1) + 1).reshape(locationArr.shape[0])
+    maxDiffState = (np.argmax(np.absolute(diffArr), axis=1) + 1).reshape(diffArr.shape[0], 1)
 
     # Calculate the sign of the difference within a bin
-    diffSign = np.sign(np.sum(diffArr, axis=1)).reshape(locationArr.shape[0])  
+    diffSign = np.sign(np.sum(diffArr, axis=1))
 
     # Calculate the squared Euclidean distance of the bin      
-    distanceArr = np.sum(np.square(score1Arr - score2Arr), axis=1) * diffSign
+    distanceArr = (np.sum(np.square(diffArr), axis=1) * diffSign).reshape(diffArr.shape[0], 1)
 
     return np.concatenate((locationArr, maxDiffState, distanceArr), axis=1) 
 

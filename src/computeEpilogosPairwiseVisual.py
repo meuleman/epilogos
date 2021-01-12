@@ -264,7 +264,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
 
     ax.set_yticks(yticks)
     print(yticks)
-    ax.set_yticklabels([str(np.abs(round(val, 1))) for val in yticks])
+    ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
     axR = ax.twinx()
     axR.set_ylabel("P-Value")
@@ -337,7 +337,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
 
             ax.set_yticks(yticks)
-            ax.set_yticklabels([str(np.abs(round(val, 1))) for val in yticks])
+            ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
             axR = ax.twinx()
             axR.set_ylabel("P-Value")
@@ -392,7 +392,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
 
             ax.set_yticks(yticks)
-            ax.set_yticklabels([str(np.abs(round(val, 1))) for val in yticks])
+            ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
             axR = ax.twinx()
             axR.set_ylabel("P-Value")
@@ -470,6 +470,9 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             yticksFinal.append(yticks[i])
             ytickLabelsFinal.append(ytickLabels[i])
             
+    print(yticks)
+    print(yticksFinal)
+    
     return (yticksFinal, ytickLabelsFinal)
     
 

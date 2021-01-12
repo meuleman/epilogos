@@ -17,7 +17,7 @@ def main(filename1, filename2, numStates, saliency, outputDirPath):
     outputDirPath = Path(outputDirPath)
 
     # For distinguishing the chunkwise output files
-    fileTag = "{}_{}_{}_{}".format(file1Path.parent, file2Path.parent, file1Path.name.split(".")[0], file2Path.name.split(".")[0])
+    fileTag = "{}_{}_{}".format(file1Path.parent.name, file2Path.parent.name, file1Path.name.split(".")[0])
 
     # Read in the data
     print("\nReading data from file 1...")

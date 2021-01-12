@@ -20,7 +20,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     outputDirPath = Path(outputDirPath)
 
     # For distinguishing the chunkwise output files
-    fileTag = "{}_{}_{}_{}".format(file1Path.parent, file2Path.parent, file1Path.name.split(".")[0], file2Path.name.split(".")[0])
+    fileTag = "{}_{}_{}".format(file1Path.parent.name, file2Path.parent.name, file1Path.name.split(".")[0])
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)

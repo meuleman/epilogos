@@ -131,7 +131,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
             # Create a string for the python command
             computeExpectedPy = pythonFilesDir / "computeEpilogosPairwiseExpected.py"
-            pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file1, file2, numStates, saliency, outputDirPath)
+            pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file1, file2, numStates, saliency, outputDirPath)
 
             # Create a string for the slurm command
             if saliency == 1:

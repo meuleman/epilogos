@@ -43,11 +43,11 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
 
-    # Creating Diagnostic Figures
-    print("Creating diagnostic figures...")
-    tDiagnostic = time.time()
-    createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath)
-    print("    Time:", time.time() - tDiagnostic)
+    # # Creating Diagnostic Figures
+    # print("Creating diagnostic figures...")
+    # tDiagnostic = time.time()
+    # createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath)
+    # print("    Time:", time.time() - tDiagnostic)
 
     # Calculating PValues
     print("Calculating P-Values...")
@@ -263,6 +263,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
 
     ax.set_yticks(yticks)
+    print(yticks)
     ax.set_yticklabels([str(np.abs(round(val, 1))) for val in yticks])
 
     axR = ax.twinx()

@@ -43,11 +43,11 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
 
-    # # Creating Diagnostic Figures
-    # print("Creating diagnostic figures...")
-    # tDiagnostic = time.time()
-    # createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath)
-    # print("    Time:", time.time() - tDiagnostic)
+    # Creating Diagnostic Figures
+    print("Creating diagnostic figures...")
+    tDiagnostic = time.time()
+    createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath)
+    print("    Time:", time.time() - tDiagnostic)
 
     # Calculating PValues
     print("Calculating P-Values...")
@@ -161,6 +161,7 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-max(abs), max(abs)))
     fig = plt.figure(figsize=(16,9))
@@ -171,6 +172,7 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
     # Real vs Null distance scatter plot
     fig = plt.figure(figsize=(12,12))
@@ -184,11 +186,12 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.title("Real Distances vs Null Distances")
     figPath = diagnosticDirPath / "real_vs_null_scatter.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
     # Fit on data (range=(min, max))
     y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
     dataNull.plot(kind='hist', bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
@@ -196,11 +199,12 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_minToMax.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
     # Fit on data (range=(-1, 1))
     y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
     dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
@@ -208,11 +212,12 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_n1to1.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
     # Fit on data (range=(-0.1, 0.1))
     y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
     dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
@@ -221,6 +226,7 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    plt.close(fig)
 
 
 # Helper to find the P-Values of all the distances
@@ -263,7 +269,6 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
 
     ax.set_yticks(yticks)
-    print(yticks)
     ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
     axR = ax.twinx()
@@ -305,7 +310,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
 
     figPath = manhattanDirPath / "manhattan_plot_genome.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
-
+    plt.close(fig)
 
 # Helper for generating individual chromosome manhattan plots
 def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArrReal, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
@@ -372,7 +377,8 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             
             figPath = manhattanDirPath / "manhattan_plot_chrX.png"
             fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
-        
+            plt.close(fig)
+
         else:
             fig = plt.figure(figsize=(16,9))
             ax = fig.add_subplot(111)
@@ -427,6 +433,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             
             figPath = manhattanDirPath / "manhattan_plot_chr{}.png".format(i+1)
             fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+            plt.close(fig)
 
 
 # Helper function for generating proper tick marks on the manhattan plots
@@ -434,11 +441,6 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     yticks = []
     ytickLabels = ["$10^{-16}$", "$10^{-15}$", "$10^{-14}$", "$10^{-13}$", "$10^{-12}$", "$10^{-11}$", "$10^{-10}$", "$10^{-9}$", "$10^{-8}$", "$10^{-7}$", "$10^{-6}$", "$10^{-5}$", "$10^{-4}$", "$1$", "$10^{-4}$", "$10^{-5}$", "$10^{-6}$", "$10^{-7}$", "$10^{-8}$", "$10^{-9}$", "$10^{-10}$", "$10^{-11}$", "$10^{-12}$", "$10^{-13}$", "$10^{-14}$", "$10^{-15}$", "$10^{-16}$"]
     
-    print(-st.gennorm.isf(10**-16/2, beta, loc=loc, scale=scale))
-    print(-st.gennorm.isf(10**-8/2, beta, loc=loc, scale=scale))
-    print(st.gennorm.isf(10**-8/2, beta, loc=loc, scale=scale))
-    print(st.gennorm.isf(10**-13/2, beta, loc=loc, scale=scale))
-
     yticks.append(-st.gennorm.isf(10**-16/2, beta, loc=loc, scale=scale))
     yticks.append(-st.gennorm.isf(10**-15/2, beta, loc=loc, scale=scale))
     yticks.append(-st.gennorm.isf(10**-14/2, beta, loc=loc, scale=scale))
@@ -475,9 +477,6 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             yticksFinal.append(float(yticks[i]))
             ytickLabelsFinal.append(ytickLabels[i])
             
-    print(yticks)
-    print(yticksFinal)
-    
     return (yticksFinal, ytickLabelsFinal)
     
 

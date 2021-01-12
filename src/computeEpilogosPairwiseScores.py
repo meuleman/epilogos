@@ -31,7 +31,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     file1DF = pd.read_table(file1Path, header=None, sep="\t")
     print("    Time: ", time.time() - tRead1)
 
-    print("\nReading data from file 2...")
+    print("Reading data from file 2...")
     tRead2 = time.time()
     file2DF = pd.read_table(file2Path, header=None, sep="\t")
     print("    Time: ", time.time() - tRead2)

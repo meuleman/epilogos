@@ -29,7 +29,7 @@ def main(group1Name, group2Name, numStates, outputDir):
         return
 
     # Read in observation files
-    print("Reading in observation files...")
+    print("\nReading in observation files...")
     tRead = time.time()
     locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull = readInData(outputDirPath)
     print("    Time:", time.time() - tRead)
@@ -52,7 +52,7 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Calculating PValues
     print("Calculating P-Values...")
     tPVal = time.time()
-    pvals = calculatePVals(distanceArrReal)
+    pvals = calculatePVals(distanceArrReal, beta, loc, scale)
     print("    Time:", time.time() - tPVal)
 
     # Determine Significance Threshold (based on n*)
@@ -108,20 +108,12 @@ def readInData(outputDirPath):
     observationDFReal.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
     observationDFNull.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
-    print("observationDFReal Length:", observationDFReal.shape)
-    print("observationDFNull Length:", observationDFNull.shape)
-
     # Split the locations, distances, and maximum difference state
     locationArr     = observationDFReal.iloc[:,0:3].to_numpy(dtype=str)
     distanceArrReal = observationDFReal.iloc[:,4].to_numpy(dtype=float).flatten()
     distanceArrNull = observationDFNull.iloc[:,4].to_numpy(dtype=float).flatten()
     maxDiffArrReal  = observationDFReal.iloc[:,3].to_numpy(dtype=float).flatten()
     maxDiffArrNull  = observationDFNull.iloc[:,3].to_numpy(dtype=float).flatten()
-
-    print("distanceArrReal Length:", distanceArrReal.shape)
-    print("distanceArrNull Length:", distanceArrNull.shape)
-    print("maxDiffArrReal Length:", maxDiffArrReal.shape)
-    print("maxDiffArrNull Length:", maxDiffArrNull.shape)
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull
 

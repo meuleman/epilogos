@@ -258,11 +258,11 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
             # Create a string for the slurm commands
             if saliency == 1:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommandNull)
+                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, pythonCommandReal)
+                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, pythonCommandNull)
             elif saliency == 2:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommandNull)
+                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, pythonCommandReal)
+                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, pythonCommandNull)
 
             spReal = subprocess.run(slurmCommandReal, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)

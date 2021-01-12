@@ -434,6 +434,11 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     yticks = []
     ytickLabels = ["$10^{-16}$", "$10^{-15}$", "$10^{-14}$", "$10^{-13}$", "$10^{-12}$", "$10^{-11}$", "$10^{-10}$", "$10^{-9}$", "$10^{-8}$", "$10^{-7}$", "$10^{-6}$", "$10^{-5}$", "$10^{-4}$", "$1$", "$10^{-4}$", "$10^{-5}$", "$10^{-6}$", "$10^{-7}$", "$10^{-8}$", "$10^{-9}$", "$10^{-10}$", "$10^{-11}$", "$10^{-12}$", "$10^{-13}$", "$10^{-14}$", "$10^{-15}$", "$10^{-16}$"]
     
+    print(-st.gennorm.isf(10**-16/2, beta, loc=loc, scale=scale))
+    print(-st.gennorm.isf(10**-8/2, beta, loc=loc, scale=scale))
+    print(st.gennorm.isf(10**-8/2, beta, loc=loc, scale=scale))
+    print(st.gennorm.isf(10**-13/2, beta, loc=loc, scale=scale))
+
     yticks.append(-st.gennorm.isf(10**-16/2, beta, loc=loc, scale=scale))
     yticks.append(-st.gennorm.isf(10**-15/2, beta, loc=loc, scale=scale))
     yticks.append(-st.gennorm.isf(10**-14/2, beta, loc=loc, scale=scale))
@@ -467,7 +472,7 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     
     for i in range(len(yticks)):
         if yticks[i] >= -ylim and yticks[i] <= ylim:
-            yticksFinal.append(yticks[i])
+            yticksFinal.append(float(yticks[i]))
             ytickLabelsFinal.append(ytickLabels[i])
             
     print(yticks)

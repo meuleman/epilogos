@@ -231,6 +231,8 @@ def writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, re
     observationTxt.write(observationStr)
     observationTxt.close()
 
+    print(realOrNull + " ObservationArr Length: ", len(observationArr.shape))
+
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):

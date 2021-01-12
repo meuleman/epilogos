@@ -91,7 +91,6 @@ def readInData(outputDirPath):
     # Data frames to dump inputed data into
     observationDFReal = pd.DataFrame(columns=names)
     observationDFNull = pd.DataFrame(columns=names)
-
     
     # Take in all the real distances
     for file in outputDirPath.glob("pairwiseObservations_*.txt.gz"):
@@ -109,12 +108,20 @@ def readInData(outputDirPath):
     observationDFReal.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
     observationDFNull.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
+    print("observationDFReal Length:", observationDFReal.shape)
+    print("observationDFNull Length:", observationDFNull.shape)
+
     # Split the locations, distances, and maximum difference state
     locationArr     = observationDFReal.iloc[:,0:3].to_numpy(dtype=str)
     distanceArrReal = observationDFReal.iloc[:,4].to_numpy(dtype=float).flatten()
     distanceArrNull = observationDFNull.iloc[:,4].to_numpy(dtype=float).flatten()
     maxDiffArrReal  = observationDFReal.iloc[:,3].to_numpy(dtype=float).flatten()
     maxDiffArrNull  = observationDFNull.iloc[:,3].to_numpy(dtype=float).flatten()
+
+    print("distanceArrReal Length:", distanceArrReal.shape)
+    print("distanceArrNull Length:", distanceArrNull.shape)
+    print("maxDiffArrReal Length:", maxDiffArrReal.shape)
+    print("maxDiffArrNull Length:", maxDiffArrNull.shape)
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull
 
@@ -175,6 +182,8 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
 
     # Real vs Null distance scatter plot
     fig = plt.figure(figsize=(12,12))
+    print("distanceArrReal Length:", distanceArrReal.shape)
+    print("distanceArrNull Length:", distanceArrNull.shape)
     plt.scatter(distanceArrReal, distanceArrNull, color='r')
     plt.xlim(-rangeLim, rangeLim)
     plt.ylim(-rangeLim, rangeLim)

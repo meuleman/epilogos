@@ -20,7 +20,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     """
     This script computes scores for chromatin states across the genome.
     """
-    tTotal = time.time()
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
     if pairwiseDir != "null":
@@ -88,13 +87,15 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
     
+    if not outputDirPath.is_dir():
+        print()
+        print("ERROR: Output directory is not a directory")
+        print()
+        return
+
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
-
-    if not outputDirPath.is_dir():
-        print("ERROR: Output directory is not a directory")
-        return
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
@@ -115,6 +116,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
             print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists")
+            return
     else:     
         expJobIDArr = []   
         print()
@@ -155,6 +157,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print(jobErrPath)
                     print(file)
                     print(file2)
+                    return
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
@@ -171,6 +174,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 if not sp.stdout.startswith("Submitted batch"):
                     print("ERROR: sbatch not submitted correctly")
+                    return
                 
                 expJobIDArr.append(int(sp.stdout.split()[-1]))
 
@@ -200,6 +204,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         except FileExistsError:
             # This error should never occur because we are deleting the files first
             print("ERROR: sbatch '.out' or '.err' file already exists")
+            return
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
@@ -216,6 +221,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         if not sp.stdout.startswith("Submitted batch"):
             print("ERROR: sbatch not submitted correctly")
+            return
         
         combinationJobID = int(sp.stdout.split()[-1])
 
@@ -258,6 +264,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 except FileExistsError:
                     # This error should never occur because we are deleting the files first
                     print("ERROR: sbatch '.out' or '.err' file already exists")
+                    return
                 
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
@@ -282,6 +289,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 if not sp.stdout.startswith("Submitted batch"):
                     print("ERROR: sbatch not submitted correctly")
+                    return
                 
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
@@ -314,6 +322,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 except FileExistsError:
                     # This error should never occur because we are deleting the files first
                     print("ERROR: sbatch '.out' or '.err' file already exists")
+                    return
 
                 computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
@@ -325,6 +334,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 if not sp.stdout.startswith("Submitted batch"):
                     print("ERROR: sbatch not submitted correctly")
+                    return
 
                 writeJobIDArr.append(int(sp.stdout.split()[-1]))
         if pairwiseDir != "null":
@@ -348,6 +358,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     except FileExistsError:
                         # This error should never occur because we are deleting the files first
                         print("ERROR: sbatch '.out' or '.err' file already exists")
+                        return
 
                     computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
@@ -359,6 +370,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                     if not sp.stdout.startswith("Submitted batch"):
                         print("ERROR: sbatch not submitted correctly")
+                        return
 
                     writeJobIDArr.append(int(sp.stdout.split()[-1]))
 

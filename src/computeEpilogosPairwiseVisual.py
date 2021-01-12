@@ -100,7 +100,7 @@ def readInData(outputDirPath):
     # Take in all the null distances
     for file in outputDirPath.glob("pairwiseObservationsNull_*.txt.gz"):
         observationDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=names)
-        observationDFNull = pd.concat((observationDFReal, observationDFChunk), axis=0, ignore_index=True)
+        observationDFNull = pd.concat((observationDFNull, observationDFChunk), axis=0, ignore_index=True)
 
     # Sorting the dataframes by chromosomal location
     observationDFReal["chr"] = pd.Categorical(observationDFReal["chr"], categories=chrOrder, ordered=True)

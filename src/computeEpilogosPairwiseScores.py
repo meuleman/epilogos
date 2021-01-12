@@ -215,7 +215,7 @@ def writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, re
     rawDiffTxt = gzip.open(rawDiffTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
-    rawDiffTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1))
+    rawDiffTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1)) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1)
     rawDiffStr = "".join(rawDiffTemplate.format(locationArr[i], diffArr[i]) for i in range(diffArr.shape[0]))
 
     rawDiffTxt.write(rawDiffStr)

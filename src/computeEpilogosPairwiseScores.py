@@ -24,6 +24,10 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    
+    print("Expected Frequency Array:")
+    print(expFreqArr)
+    print()
 
     # Read in the data
     print("\nReading data from file 1...")
@@ -37,6 +41,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     print("    Time: ", time.time() - tRead2)
 
     if realOrNull.lower() == "real":
+        print("DOING REAL")
         # Converting to a np array for faster functions later
         print("Converting to numpy arrays...")
         tConvert = time.time()
@@ -45,6 +50,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
         locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
         print("    Time: ", time.time() - tConvert)
     elif realOrNull.lower() == "null":
+        print("DOING NULL")
         # Converting to a np array for faster functions later
         print("Converting to numpy arrays...")
         tConvert = time.time()
@@ -78,6 +84,17 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     tDiff = time.time()
     diffArr = score1Arr - score2Arr
     print("    Time:", time.time() - tDiff)
+
+    print("Score Arr 1:")
+    print(score1Arr[:10])
+
+    print()
+    print("Score Arr 2:")
+    print(score2Arr[:10])
+
+    print()
+    print("Diff Arr")
+    print(diffArr[:10])
 
     print("Calculating Squared Euclidean Distance and Maximum Contributing Difference...")
     tDistance = time.time()
@@ -216,6 +233,7 @@ def writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, re
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
     rawDiffTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1)) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1)
+    print("Template", rawDiffTemplate)
     rawDiffStr = "".join(rawDiffTemplate.format(locationArr[i], diffArr[i]) for i in range(diffArr.shape[0]))
 
     rawDiffTxt.write(rawDiffStr)

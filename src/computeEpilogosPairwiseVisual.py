@@ -34,6 +34,23 @@ def main(group1Name, group2Name, numStates, outputDir):
     locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull = readInData(outputDirPath)
     print("    Time:", time.time() - tRead)
 
+    print("                        Distances\tRand Distances")
+    print("Minimum:\t\t{}\t{}".format(np.round(np.amin(distanceArrReal), 5), np.round(np.amin(distanceArrNull), 5)))
+    print("0.0001 Quantile:\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.0001), 5), np.round(np.quantile(distanceArrNull, 0.0001), 5)))
+    print("0.001 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.001), 5), np.round(np.quantile(distanceArrNull, 0.001), 5)))
+    print("0.01 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.01), 5), np.round(np.quantile(distanceArrNull, 0.01), 5)))
+    print("0.05 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.05), 5), np.round(np.quantile(distanceArrNull, 0.05), 5)))
+    print("0.1 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.1), 5), np.round(np.quantile(distanceArrNull, 0.1), 5)))
+    print("0.25 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.25), 5), np.round(np.quantile(distanceArrNull, 0.25), 5)))
+    print("0.5 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.5), 5), np.round(np.quantile(distanceArrNull, 0.5), 5)))
+    print("0.75 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.75), 5), np.round(np.quantile(distanceArrNull, 0.75), 5)))
+    print("0.9 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.9), 5), np.round(np.quantile(distanceArrNull, 0.9), 5)))
+    print("0.95 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.95), 5), np.round(np.quantile(distanceArrNull, 0.95), 5)))
+    print("0.99 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.99), 5), np.round(np.quantile(distanceArrNull, 0.99), 5)))
+    print("0.999 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.999), 5), np.round(np.quantile(distanceArrNull, 0.999), 5)))
+    print("0.9999 Quantile:\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.9999), 5), np.round(np.quantile(distanceArrNull, 0.9999), 5)))
+    print("Maximum:\t\t {}\t {}".format(np.round(np.amax(distanceArrReal), 5), np.round(np.amax(distanceArrNull), 5)))
+
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time.time()
@@ -121,9 +138,12 @@ def readInData(outputDirPath):
 def fitDistances(distanceArrReal, distanceArrNull):
     # Filtering out quiescent values (We know that the first entry from chromosome 1 is quiescent so we use that as base)
     quiescentVal = round(distanceArrReal[0], 5)
-    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i]) != quiescentVal]
+    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != quiescentVal]
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
+
+    print("Length Data Real:", len(dataReal))
+    print("Length Data Null:", len(dataNull))
 
     # y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
     # x = (x + np.roll(x, -1))[:-1] / 2.0

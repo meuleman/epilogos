@@ -17,6 +17,11 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
 
     file1Path = Path(file1)
     file2Path = Path(file2)
+
+    print("______________PATHS______________")
+    print(file1Path)
+    print(file2Path)
+
     outputDirPath = Path(outputDirPath)
 
     # For distinguishing the chunkwise output files
@@ -41,7 +46,6 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     print("    Time: ", time.time() - tRead2)
 
     if realOrNull.lower() == "real":
-        print("DOING REAL")
         # Converting to a np array for faster functions later
         print("Converting to numpy arrays...")
         tConvert = time.time()
@@ -50,7 +54,6 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
         locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
         print("    Time: ", time.time() - tConvert)
     elif realOrNull.lower() == "null":
-        print("DOING NULL")
         # Converting to a np array for faster functions later
         print("Converting to numpy arrays...")
         tConvert = time.time()
@@ -73,6 +76,15 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     else:
         print("Error determing whether score calculation is for real or null data")
         return
+
+    print("FILE 1 ARR_______________")
+    print(file1Arr[:10])
+    print()
+
+    print("FILE2 ARR_________________")
+    print(file2Arr[:10])
+    print()
+
 
     print("Calculating Scores...")
     tScore = time.time()
@@ -233,7 +245,6 @@ def writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, re
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
     rawDiffTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1)) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1)
-    print("Template", rawDiffTemplate)
     rawDiffStr = "".join(rawDiffTemplate.format(locationArr[i], diffArr[i]) for i in range(diffArr.shape[0]))
 
     rawDiffTxt.write(rawDiffStr)

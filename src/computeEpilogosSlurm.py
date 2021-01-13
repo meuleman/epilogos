@@ -15,18 +15,12 @@ from pathlib import PurePath
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]") # default output directory
-@click.option("-p", "--pairwise-directory", "pairwiseDir", type=str, default="null", help="Path to the second directory that contains files to read from for pairwise calculations [default: null]")
-def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir, pairwiseDir):
+def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir):
     """
     This script computes scores for chromatin states across the genome.
     """
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
-    if pairwiseDir != "null":
-        pairwiseDirPath = Path(pairwiseDir)
-        pairwiseFileTag = "_".join(str(pairwiseDirPath).split("/")[-5:])
-    else:
-        pairwiseFileTag = "null"
 
     fileTag = "_".join(str(dataFilePath).split("/")[-5:])
     
@@ -37,7 +31,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     print("Output Directory =", outputDirPath)
     print("Mode of Operation =", modeOfOperation)
     print("Background Directory =", expFreqDir)
-    print("Pairwise Directory =", pairwiseDir)
 
     if expFreqDir == "null":
         expFreqDir = outputDirectory
@@ -47,6 +40,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
+
+    if saliency != 1 and saliency != 2 and saliency != 3:
+        print()
+        print("ERROR: Ensure that saliency metric is either 1, 2, or 3")
+        print()
+        return
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
@@ -58,28 +57,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if not list(dataFilePath.glob("*")):
         print()
         print("ERROR: Ensure that file directory is not empty")
-        print()
-        return
-        
-    if pairwiseDir != "null":
-        if not PurePath(pairwiseDirPath).is_absolute():
-            pairwiseDirPath = Path.cwd() / pairwiseDirPath
-
-        if not pairwiseDirPath.exists() or not pairwiseDirPath.is_dir():
-            print()
-            print("ERROR: Given pairwise path does not exist or is not a directory")
-            print()
-            return
-
-        if not list(pairwiseDirPath.glob("*")):
-            print()
-            print("ERROR: Ensure that pairwise directory is not empty")
-            print()
-            return
-
-    if saliency != 1 and saliency != 2 and saliency != 3:
-        print()
-        print("ERROR: Ensure that saliency metric is either 1, 2, or 3")
         print()
         return
 
@@ -122,18 +99,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print()
         print("Submitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
-            
-            # If we are doing a pairwise comparison, we have to retrieve the proper file to compare against
-            if pairwiseDir != "null":
-                if not list(pairwiseDirPath.glob(file.name)):
-                    print("ERROR: File names do not match in input directory and pairwise directory")
-                    print("No match for {} in pairwise directory".format(file.name))
-                    return
-                else:
-                    file2 = next(pairwiseDirPath.glob(file.name))
-            else:
-                file2 = "null"
-
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
@@ -156,12 +121,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print(jobOutPath)
                     print(jobErrPath)
                     print(file)
-                    print(file2)
                     return
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates, saliency, outputDirPath, fileTag)
+                pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
                 if saliency == 1:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
@@ -233,18 +197,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("Submitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
-
-            # If we are doing a pairwise comparison, we have to retrieve the proper file to compare against
-            if pairwiseDir != "null":
-                if not list(pairwiseDirPath.glob(file.name)):
-                    print("ERROR: File names do not match in input directory and pairwise directory")
-                    print("No match for {} in pairwise directory".format(file.name))
-                    return
-                else:
-                    file2 = next(pairwiseDirPath.glob(file.name))
-            else:
-                file2 = "null"
-
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "score_calc_{}_{}".format(fileTag, filename)
@@ -268,7 +220,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, pairwiseFileTag)
+                pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
 
                 if modeOfOperation == "s":
                     if saliency == 1:
@@ -337,43 +289,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     return
 
                 writeJobIDArr.append(int(sp.stdout.split()[-1]))
-        if pairwiseDir != "null":
-            for file in pairwiseDirPath.glob("*"):
-                if not file.is_dir():
-                    filename = file.name.split(".")[0]
-                    jobName = "writeFaster_{}_{}".format(pairwiseFileTag, filename)
-                    jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-                    jobErrPath = outputDirPath / (".err/" + jobName + ".err")
-
-                    # Creating the out and err files for the batch job
-                    if jobOutPath.exists():
-                        os.remove(jobOutPath)
-                    if jobErrPath.exists():
-                        os.remove(jobErrPath)
-                    try:
-                        jout = open(jobOutPath, 'x')
-                        jout.close()
-                        jerr = open(jobErrPath, 'x')
-                        jerr.close()
-                    except FileExistsError:
-                        # This error should never occur because we are deleting the files first
-                        print("ERROR: sbatch '.out' or '.err' file already exists")
-                        return
-
-                    computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
-
-                    pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, pairwiseFileTag, filename, outputDirPath, numStates)
-
-                    slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
-
-                    sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-
-                    if not sp.stdout.startswith("Submitted batch"):
-                        print("ERROR: sbatch not submitted correctly")
-                        return
-
-                    writeJobIDArr.append(int(sp.stdout.split()[-1]))
-
+                
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)
         print()

@@ -10,7 +10,7 @@ from functools import reduce
 import multiprocessing
 import itertools
 
-def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag, pairwiseFileTag):
+def main(file1, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     file1Path = Path(file1)
     outputDirPath = Path(outputDirPath)
     filename = file1Path.name.split(".")[0]
@@ -18,54 +18,21 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
-    if file2 == "null":
-        # Read in the data
-        print("\nReading data from file...")
-        tRead = time.time()
-        dataDF = pd.read_table(file1Path, header=None, sep="\t")
-        print("    Time: ", time.time() - tRead)
+    # Read in the data
+    print("\nReading data from file...")
+    tRead = time.time()
+    dataDF = pd.read_table(file1Path, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead)
 
-        # Converting to a np array for faster functions later
-        print("Converting to numpy array...")
-        tConvert = time.time()
-        file1Arr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-        locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
-        print("    Time: ", time.time() - tConvert)
+    # Converting to a np array for faster functions later
+    print("Converting to numpy array...")
+    tConvert = time.time()
+    file1Arr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
+    print("    Time: ", time.time() - tConvert)
 
-        determineSaliency(saliency, file1Arr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+    determineSaliency(saliency, file1Arr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
 
-    else:
-        file2Path = Path(file2)
-        # Read in the data
-        print("\nReading data from file 1...")
-        tRead1 = time.time()
-        file1DF = pd.read_table(file1Path, header=None, sep="\t")
-        print("    Time: ", time.time() - tRead1)
-
-        print("\nReading data from file 2...")
-        tRead2 = time.time()
-        file2DF = pd.read_table(file2Path, header=None, sep="\t")
-        print("    Time: ", time.time() - tRead2)
-
-        # Converting to a np array for faster functions later
-        print("Converting to numpy arrays...")
-        tConvert = time.time()
-        unshuffledFile1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        unshuffledFile2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        locationArr = file1DF.iloc[:,0:3].to_numpy(dtype=str)
-        print("    Time: ", time.time() - tConvert)
-
-        # Combining the arrays for per row shuffling
-        combinedArr = np.concatenate((unshuffledFile1Arr, unshuffledFile2Arr), axis=1)
-
-        # Row independent vectorized shuffling of the 2 arrays
-        randomIndices = np.argsort(np.random.rand(*combinedArr.shape), axis=1)
-        shuffledCombinedArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
-        file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
-        file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
-
-        determineSaliency(saliency, file1Arr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
-        determineSaliency(saliency, file2Arr, locationArr, numStates, outputDirPath, expFreqArr, pairwiseFileTag, filename)
 
 def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     if saliency == 1:

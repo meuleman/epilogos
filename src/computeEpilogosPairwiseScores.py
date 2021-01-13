@@ -247,7 +247,7 @@ def writeNull(locationArr, nullDistancesArr, outputDirPath, fileTag):
     nullDistancesTxt = gzip.open(nullDistancesTxtPath, "wt")
 
     # Creating a string to write out the nullDistancess array
-    nullDistancesTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1[0]}\n"
+    nullDistancesTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\n"
     nullDistancesStr = "".join(nullDistancesTemplate.format(locationArr[i], nullDistancesArr[i]) for i in range(len(nullDistancesArr)))
 
     nullDistancesTxt.write(nullDistancesStr)

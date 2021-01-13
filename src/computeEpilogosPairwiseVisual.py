@@ -32,7 +32,7 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time.time()
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numStates)
     print("    Time:", time.time() - tRead)
 
     print("                        Distances\tRand Distances")

@@ -9,6 +9,7 @@ import scipy.stats as st
 import statsmodels as sm
 import warnings
 import time
+import gzip
 
 def main(group1Name, group2Name, numStates, outputDir):
     tTotal = time.time()
@@ -31,7 +32,7 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time.time()
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull = readInData(outputDirPath)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath)
     print("    Time:", time.time() - tRead)
 
     print("                        Distances\tRand Distances")
@@ -54,7 +55,7 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time.time()
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates)
     print("    Time:", time.time() - tFit)
 
     # Splitting the params up
@@ -80,65 +81,76 @@ def main(group1Name, group2Name, numStates, outputDir):
     # Create Genome Manhattan Plot
     print("Creating Genome-Wide Manhattan Plot")
     tGManhattan = time.time()
-    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArrReal, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
+    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
     print("    Time:", time.time() - tGManhattan)
     
     # Create Chromosome Manhattan Plot
     print("Creating Individual Chromosome Manhattan Plots")
     tCManhattan = time.time()
-    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArrReal, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
+    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
     print("    Time:", time.time() - tCManhattan)
 
-    # Create roiURL
-    roiPath = Path("/home/jquon/public_html/roiUrl/largestDistanceLoci_{}_{}.bed".format(group1Name, group2Name))
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArrReal, stateNameList)
-    print("https://epilogos.altius.org/?application=viewer&sampleSet=vC&mode=single&genome=hg19&model=18&complexity=KL&group=all&roiPaddingAbsolute=10000&roiURL=https%3A%2F%2Fencode%3Acollabor8%40resources.altius.org%2F~jquon%2FroiUrl/{}".format(roiPath.name))
+    # Create an output file which summarizes the results
+    print("Writing metrics file...")
+    tMetrics = time.time()
+    writeMetrics(group1Name, group2Name, locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath)
+    print("    Time:", time.time() - tMetrics)
+
+    # Create Bed file of top 1000 loci with adjacent merged
+    roiPath = outputDirPath / "largestDistanceLoci_{}_{}.bed".format(group1Name, group2Name)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
 
     print("Total Time:", time.time() - tTotal)
 
 # Helper to read in the necessary data to fit and visualize pairwise results
-def readInData(outputDirPath):
+def readInData(outputDirPath, numStates):
     # For keeping the data arrays organized correctly
-    names = ["chr", "binStart", "binEnd", "maxDiffState", "distance"]
+    realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, 19)]
+    nullNames = ["chr", "binStart", "binEnd", "distance"]
     chrOrder = []
     for i in range(1, 23):
         chrOrder.append("chr{}".format(i))
     chrOrder.append("chrX")
 
     # Data frames to dump inputed data into
-    observationDFReal = pd.DataFrame(columns=names)
-    observationDFNull = pd.DataFrame(columns=names)
+    diffDF = pd.DataFrame(columns=realNames)
+    nullDistanceDF = pd.DataFrame(columns=nullNames)
     
     # Take in all the real distances
-    for file in outputDirPath.glob("pairwiseObservations_*.txt.gz"):
-        observationDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=names)
-        observationDFReal = pd.concat((observationDFReal, observationDFChunk), axis=0, ignore_index=True)
+    for file in outputDirPath.glob("pairwiseDelta_*.txt.gz"):
+        diffDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=realNames)
+        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Take in all the null distances
-    for file in outputDirPath.glob("pairwiseObservationsNull_*.txt.gz"):
-        observationDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=names)
-        observationDFNull = pd.concat((observationDFNull, observationDFChunk), axis=0, ignore_index=True)
+    for file in outputDirPath.glob("nullDistances_*.txt.gz"):
+        nullDistanceDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=nullNames)
+        nullDistanceDF = pd.concat((nullDistanceDF, nullDistanceDFChunk), axis=0, ignore_index=True)
 
     # Sorting the dataframes by chromosomal location
-    observationDFReal["chr"] = pd.Categorical(observationDFReal["chr"], categories=chrOrder, ordered=True)
-    observationDFNull["chr"] = pd.Categorical(observationDFNull["chr"], categories=chrOrder, ordered=True)
-    observationDFReal.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-    observationDFNull.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
+    nullDistanceDF["chr"] = pd.Categorical(nullDistanceDF["chr"], categories=chrOrder, ordered=True)
+    diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    nullDistanceDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
-    # Split the locations, distances, and maximum difference state
-    locationArr     = observationDFReal.iloc[:,0:3].to_numpy(dtype=str)
-    distanceArrReal = observationDFReal.iloc[:,4].to_numpy(dtype=float).flatten()
-    distanceArrNull = observationDFNull.iloc[:,4].to_numpy(dtype=float).flatten()
-    maxDiffArrReal  = observationDFReal.iloc[:,3].to_numpy(dtype=float).flatten()
-    maxDiffArrNull  = observationDFNull.iloc[:,3].to_numpy(dtype=float).flatten()
+    # Convert dataframes to np arrays for easier manipulation
+    locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
+    diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=float)
+    distanceArrNull = nullDistanceDF.iloc[:,3].to_numpy(dtype=float).flatten()
 
-    return locationArr, distanceArrReal, distanceArrNull, maxDiffArrReal, maxDiffArrNull
+    # Calculate the distance array for the real data
+    diffSign = np.sign(np.sum(diffArr, axis=1))
+    distanceArrReal = np.sum(np.square(diffArr), axis=1) * diffSign
+
+    # Calculate the maximum contributing state for each bin
+    # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
+    maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
+
+    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr
 
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull):
-    # Filtering out quiescent values (We know that the first entry from chromosome 1 is quiescent so we use that as base)
-    quiescentVal = round(distanceArrReal[0], 5)
-    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != quiescentVal]
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
+    # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
+    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
@@ -262,7 +274,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
 
 # Helper to create a genome-wide manhattan plot
-def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArrReal, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
+def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
     manhattanDirPath = outputDirPath / "manhattanPlots"
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
@@ -319,7 +331,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
             
     opaqueSigIndices = np.where(np.abs(pvalsGraph) >= logSignificanceThreshold)[0]
 
-    colorArr=np.array(stateColorList)[maxDiffArrReal[opaqueSigIndices].astype(int) - 1]
+    colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
     opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
@@ -333,7 +345,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     plt.close(fig)
 
 # Helper for generating individual chromosome manhattan plots
-def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArrReal, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
+def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
     manhattanDirPath = outputDirPath / "manhattanPlots"
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
@@ -386,7 +398,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
 
             opaqueSigIndices = np.where((locationOnGenome >= xticks[i]) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
 
-            colorArr=np.array(stateColorList)[maxDiffArrReal[opaqueSigIndices].astype(int) - 1]
+            colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
             opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
             rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
             sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
@@ -442,7 +454,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
 
             opaqueSigIndices = np.where(((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
 
-            colorArr=np.array(stateColorList)[maxDiffArrReal[opaqueSigIndices].astype(int) - 1]
+            colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
             opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
             rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
             sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
@@ -499,6 +511,22 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             
     return (yticksFinal, ytickLabelsFinal)
     
+
+# Helper to write the metrics file to disk
+def writeMetrics(group1Name, group2Name, locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath):
+    if not outputDirPath.exists():
+        outputDirPath.mkdir(parents=True)
+
+    metricsTxtPath = outputDirPath / "pairwiseMetrics_{}_{}.txt.gz".format(group1Name, group2Name)
+    metricsTxt = gzip.open(metricsTxtPath, "wt")
+
+    # Creating a string to write out the raw differences (faster than np.savetxt)
+    metricsTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3:.5e}\n"
+    metricsStr = "".join(metricsTemplate.format(locationArr[i], maxDiffArr, distanceArrReal, pvals) for i in range(len(distanceArrReal)))
+
+    metricsTxt.write(metricsStr)
+    metricsTxt.close()
+
 
 # Helper function to create a roiURL bed file of the top 1000 loci (Adjacent loci are merged)
 def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr):

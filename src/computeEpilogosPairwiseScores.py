@@ -108,14 +108,25 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, realOrNu
     print("Diff Arr")
     print(diffArr[:10])
 
-    print("Calculating Squared Euclidean Distance and Maximum Contributing Difference...")
-    tDistance = time.time()
-    observationArr = determineDistance(locationArr, score1Arr, score2Arr, diffArr)
-    print("    Time:", time.time() - tDistance)
+    # Only calculate the distances for the null data in this step
+    if realOrNull.lower() == "null":
+        print("Calculating Squared Euclidean Distance and Maximum Contributing Difference...")
+        tDistance = time.time()
+        diffSign = np.sign(np.sum(diffArr, axis=1))
+        nullDistancesArr = np.sum(np.square(diffArr), axis=1) * diffSign
+        print("    Time:", time.time() - tDistance)
 
-    print("Writing arrays to disk...")
+    print("Writing output to disk...")
     tWrite = time.time()
-    writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, realOrNull)
+    # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
+    # If it's the null data, we will just write the signed squared euclidean distances
+    if realOrNull.lower() == "real":
+        writeReal(locationArr, diffArr, outputDirPath, fileTag)
+    elif realOrNull.lower() == "null":
+        writeNull(locationArr, nullDistancesArr, outputDirPath, fileTag)
+    else:
+        print("Error determining if writing real or null data")
+        return
     print("    Time:", time.time() - tWrite)
 
     print("Total Time:", time.time() - tTotal)
@@ -211,56 +222,36 @@ def ncr(n, r):
     return numer // denom
 
 
-# Helper for creating output array
-def determineDistance(locationArr, score1Arr, score2Arr, diffArr):
-    # Calculate the maximum contributing state to the difference of a bin
-    maxDiffState = (np.argmax(np.absolute(diffArr), axis=1) + 1).reshape(diffArr.shape[0], 1)
-
-    # Calculate the sign of the difference within a bin
-    diffSign = np.sign(np.sum(diffArr, axis=1))
-
-    # Calculate the squared Euclidean distance of the bin      
-    distanceArr = (np.sum(np.square(diffArr), axis=1) * diffSign).reshape(diffArr.shape[0], 1)
-
-    return np.concatenate((locationArr, maxDiffState, distanceArr), axis=1) 
-
-
-# Helper to write out the calculated arrays
-def writeArrays(locationArr, observationArr, diffArr, outputDirPath, fileTag, realOrNull):
+# Helper for writing when we are working with real data
+def writeReal(locationArr, diffArr, outputDirPath, fileTag):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    if realOrNull.lower() == "real":
-        rawDiffTxtPath = outputDirPath / "rawPairwiseDifferences_{}.txt.gz".format(fileTag)
-        observationTxtPath = outputDirPath / "pairwiseObservations_{}.txt.gz".format(fileTag)
-    elif realOrNull.lower() == "null":
-        rawDiffTxtPath = outputDirPath / "rawPairwiseDifferencesNull_{}.txt.gz".format(fileTag)
-        observationTxtPath = outputDirPath / "pairwiseObservationsNull_{}.txt.gz".format(fileTag)
-    else:
-        print("Error determining if writing real or null data")
-        return
-
-    # Writing the raw differences
-    rawDiffTxt = gzip.open(rawDiffTxtPath, "wt")
+    deltaTxtPath = outputDirPath / "pairwiseDelta_{}.txt.gz".format(fileTag)
+    deltaTxt = gzip.open(deltaTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
-    rawDiffTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1)) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1)
-    rawDiffStr = "".join(rawDiffTemplate.format(locationArr[i], diffArr[i]) for i in range(diffArr.shape[0]))
+    deltaTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(diffArr.shape[1] - 1)) + "{1[%d]:.5f}\n" % (diffArr.shape[1] - 1)
+    deltaStr = "".join(deltaTemplate.format(locationArr[i], diffArr[i]) for i in range(diffArr.shape[0]))
 
-    rawDiffTxt.write(rawDiffStr)
-    rawDiffTxt.close()
+    deltaTxt.write(deltaStr)
+    deltaTxt.close()
 
-    # Writing observations array
-    observationTxt = gzip.open(observationTxtPath, "wt")
 
-    # Creating a string to write out the observations array
-    observationTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{0[3]}\t{0[4]}\n"
-    observationStr = "".join(observationTemplate.format(observationArr[i]) for i in range(observationArr.shape[0]))
+# Helper for writing when we are working with null data
+def writeNull(locationArr, nullDistancesArr, outputDirPath, fileTag):
+    if not outputDirPath.exists():
+        outputDirPath.mkdir(parents=True)
 
-    observationTxt.write(observationStr)
-    observationTxt.close()
+    nullDistancesTxtPath = outputDirPath / "nullDistances_{}.txt.gz".format(fileTag)
+    nullDistancesTxt = gzip.open(nullDistancesTxtPath, "wt")
 
-    print(realOrNull + " ObservationArr Length: ", len(observationArr.shape))
+    # Creating a string to write out the nullDistancess array
+    nullDistancesTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1[0]}\n"
+    nullDistancesStr = "".join(nullDistancesTemplate.format(locationArr[i], nullDistancesArr[i]) for i in range(len(nullDistancesArr)))
+
+    nullDistancesTxt.write(nullDistancesStr)
+    nullDistancesTxt.close()
 
 
 # Helper to store the score arrays combined with the location arrays

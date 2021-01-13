@@ -5,16 +5,16 @@ import gzip
 import sys
 import time
 
-def main(fileTag, filename, outputDirectory, numStates):
+def main(filename, numStates, outputDirectory, fileTag):
     tTotal = time.time()
     outputDirPath = Path(outputDirectory)
 
-    writeScores(fileTag, filename, outputDirPath, int(numStates))
+    writeScores(filename, numStates, outputDirPath, fileTag)
 
     print("Total Time:", time.time() - tTotal)
 
 # Helper to write the final scores to files
-def writeScores(fileTag, filename, outputDirPath, numStates):
+def writeScores(filename, numStates, outputDirPath, fileTag):
     # observationsTxtPath = outputDirPath / "observations_{}_{}.txt.gz".format(fileTag, locationTag)
     scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
 
@@ -60,4 +60,4 @@ def writeScores(fileTag, filename, outputDirPath, numStates):
     os.remove(filePath)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])

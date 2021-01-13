@@ -278,7 +278,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, fileTag, filename, outputDirPath, numStates)
+                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, filename, numStates, outputDirPath, fileTag)
 
                 slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -289,7 +289,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     return
 
                 writeJobIDArr.append(int(sp.stdout.split()[-1]))
-                
+
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)
         print()

@@ -10,10 +10,10 @@ from functools import reduce
 import multiprocessing
 import itertools
 
-def main(file1, numStates, saliency, outputDirPath, expFreqPath, fileTag):
-    file1Path = Path(file1)
+def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
+    filePath = Path(file)
     outputDirPath = Path(outputDirPath)
-    filename = file1Path.name.split(".")[0]
+    filename = filePath.name.split(".")[0]
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -21,17 +21,17 @@ def main(file1, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     # Read in the data
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(file1Path, header=None, sep="\t")
+    dataDF = pd.read_table(filePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    file1Arr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    fileArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
-    determineSaliency(saliency, file1Arr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+    determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
 
 
 def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
@@ -178,4 +178,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8])
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6])

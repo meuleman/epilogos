@@ -12,7 +12,7 @@ import itertools
 def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirPath)
-    
+
     # Reading in the data
     print("\nReading data from file...")
     tRead = time.time()
@@ -152,4 +152,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6])
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5])

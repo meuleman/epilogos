@@ -522,7 +522,7 @@ def writeMetrics(group1Name, group2Name, locationArr, maxDiffArr, distanceArrRea
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
     metricsTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3:.5e}\n"
-    metricsStr = "".join(metricsTemplate.format(locationArr[i], maxDiffArr, distanceArrReal, pvals) for i in range(len(distanceArrReal)))
+    metricsStr = "".join(metricsTemplate.format(locationArr[i], maxDiffArr[i], distanceArrReal[i], pvals[i]) for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
     metricsTxt.close()

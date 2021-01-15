@@ -23,10 +23,10 @@ def writeScores(filename, numStates, outputDirPath, fileTag):
 
     tCalc = time.time()
     # Taking in the the score array
-    filePath = outputDirPath / Path("temp_scores_{}_{}.npy".format(fileTag, filename))
-    combinedArr = np.load(filePath, allow_pickle=False)
-    scoreArr = combinedArr[:, 3:].astype(float)
-    locationArr = combinedArr[:, 0:3]
+    filePath = outputDirPath / Path("temp_scores_{}_{}.npz".format(fileTag, filename))
+    npzFile = np.load(filePath)
+    scoreArr = npzFile['scoreArr']
+    locationArr = npzFile['locationArr']
 
     # # Calculating observation values
     # maxContributions = np.amax(scoreArr, axis=1).reshape((scoreArr.shape[0], 1))
@@ -57,7 +57,7 @@ def writeScores(filename, numStates, outputDirPath, fileTag):
     scoresTxt.close()
 
     # Clean Up
-    os.remove(filePath)
+    # os.remove(filePath)
 
 if __name__ == "__main__":
     main(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])

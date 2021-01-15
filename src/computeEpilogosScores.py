@@ -151,13 +151,14 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):
     # Creating a file path
-    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, filename)
+    scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
     scoreFilePath = outputDirPath / scoreFilename
 
-    # Concatenating the locationArr and dataArr into one helps writing later
-    combinedArr = np.concatenate((locationArr, scoreArr), axis=1)
+    print("LOC ARR TYPE:", locationArr.dtype)
+    print("SCORE ARR TYPE:", scoreArr.dtype)
 
-    np.save(scoreFilePath, combinedArr, allow_pickle=False)
+    # Savez saves space allowing location to be stored as string and scoreArr as float
+    np.savez(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):

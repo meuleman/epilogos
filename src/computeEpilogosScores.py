@@ -50,7 +50,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies and final scores in one loop
-    scoreArr = np.zeros((numRows, numStates))
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i in range(len(uniqueStates)):
@@ -64,7 +64,7 @@ def s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     numRows, numCols = dataArr.shape
 
     # Calculate the observed frequencies
-    obsFreqArr = np.zeros((numRows, numStates, numStates))
+    obsFreqArr = np.zeros((numRows, numStates, numStates), dtype=np.float32)
 
     # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
@@ -92,7 +92,7 @@ def s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
                     elif uniqueStates[i] == uniqueStates[j]:
                         obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = math.comb(stateCounts[i], 2) / combinations
 
-    scoreArr = np.zeros((numRows, numStates))
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
     for row in range(numRows):
         scoreArr[row] = klScoreND(obsFreqArr[row], expFreqArr).sum(axis=0)
 
@@ -101,7 +101,7 @@ def s2Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 # Function that calculates the scores for the S3 metric
 def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     numRows, numCols = dataArr.shape
-    numProcesses = 10 #multiprocessing.cpu_count()
+    numProcesses = multiprocessing.cpu_count()
 
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 
@@ -110,7 +110,7 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates)) / (numCols * (numCols - 1)), expFreqArr)
 
     # Initializing necessary variables
-    scoreArr = np.zeros((numRows, numStates))
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
     obsQueue = multiprocessing.Queue()
     obsProcesses = []
 
@@ -137,7 +137,7 @@ def s3Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 
 # Helper for the multiprocessing implemented in s3
 def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scoreArrOnes, queue):
-    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates))
+    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
     print("Rows in Multiprocess:", rowsToCalculate)
     count =0 
     for row in rowsToCalculate:
@@ -153,9 +153,6 @@ def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename
     # Creating a file path
     scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
     scoreFilePath = outputDirPath / scoreFilename
-
-    print("LOC ARR TYPE:", locationArr.dtype)
-    print("SCORE ARR TYPE:", scoreArr.dtype)
 
     # Savez saves space allowing location to be stored as string and scoreArr as float
     np.savez(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)

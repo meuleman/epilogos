@@ -57,7 +57,7 @@ def writeScores(filename, numStates, outputDirPath, fileTag):
     scoresTxt.close()
 
     # Clean Up
-    os.remove(filePath)
+    # os.remove(filePath)
 
 if __name__ == "__main__":
     main(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])

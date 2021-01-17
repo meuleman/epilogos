@@ -32,6 +32,9 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
+    print("main DataArr Type:", fileArr.dtype)
+
+
     determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
 
 
@@ -98,6 +101,8 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     scoreArr = multiprocessing.Array(c.c_float, numRows * numStates)
     obsProcesses = []
     
+    print("s1Score DataArr Type:", dataArr.dtype)
+
     # Creating the observed frequency/score processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
@@ -116,10 +121,15 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, scoreArr):
     bufferArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32)
     processScoreArr = bufferArr.reshape((numRows, numStates))
+    print("s1Obs DataArr Type:", dataArr.dtype)
     # Calculate the observed frequencies and final scores for the designated rows
     for row in rowsToCalculate:
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        print("uniqueStates Type:", type(uniqueStates))
         for i in range(len(uniqueStates)):
+            print("i type:", type(i))
+            print("row type:", type(row))
+            print("uniqueStates[i] type:", uniqueStates[i])
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 

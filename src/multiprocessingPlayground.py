@@ -96,6 +96,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 
     # Initializing necessary variables
     scoreArr = multiprocessing.Array(c.c_float, numRows * numStates)
+
     obsProcesses = []
     
     # Creating the observed frequency/score processes and starting them
@@ -108,6 +109,10 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     # Shut down all the processes
     for process in obsProcesses:
         process.join()
+
+    # Turn the scoreArr into a np array for proper outputting
+    bufferArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32)
+    scoreArr = bufferArr.reshape((numRows, numStates))
 
     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 

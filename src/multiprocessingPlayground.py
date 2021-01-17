@@ -106,6 +106,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     # Creating the observed frequency/score processes and starting them
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
+        print("rows to calculate:", rowsToCalculate)
         p = multiprocessing.Process(target=s1Obs, args=(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, scoreArr))
         obsProcesses.append(p)
         p.start()
@@ -129,7 +130,7 @@ def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, sco
         for i in range(len(uniqueStates)):
             print("i type:", type(i))
             print("row type:", type(row))
-            print("uniqueStates[i] type:", uniqueStates[i])
+            print("uniqueStates[i] type:", type(uniqueStates[i]))
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 

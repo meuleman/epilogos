@@ -218,9 +218,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print("ERROR: sbatch '.out' or '.err' file already exists")
                     return
                 
-                # computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
+                computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-                computeScorePy = pythonFilesDir / "multiprocessingPlayground.py"
+                # computeScorePy = pythonFilesDir / "multiprocessingPlayground.py"
 
 
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)

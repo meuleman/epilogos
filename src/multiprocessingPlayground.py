@@ -138,7 +138,7 @@ def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, sco
             x = stateCounts[i]
             x = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-            scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+            processScoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
 
 # Function that calculates the scores for the S2 metric

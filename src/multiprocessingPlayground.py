@@ -132,6 +132,12 @@ def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, sco
             print("row type:", type(row))
             print("uniqueStates[i] type:", type(uniqueStates[i]))
             # Function input is obsFreq and expFreq
+            x = uniqueStates[i]
+            x = scoreArr[row, uniqueStates[i]]
+            x = expFreqArr[uniqueStates[i]]
+            x = stateCounts[i]
+            x = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
 

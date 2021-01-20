@@ -154,7 +154,7 @@ def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
     processScoreArr = np.zeros((len(rowsToCalculate), numStates))
     print(processScoreArr.shape)
     # Calculate the observed frequencies and final scores for the designated rows
-    for dataRow, scoreRow in enumerate(rowsToCalculate):
+    for scoreRow, dataRow in enumerate(rowsToCalculate):
         uniqueStates, stateCounts = np.unique(dataArr[dataRow], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq

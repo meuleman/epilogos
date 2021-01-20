@@ -138,18 +138,21 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
         rowList.append(rowsToCalculate)
 
+    print(rowList)
+
     results = [pool.apply(s1Obs, args=(dataArr, numCols, numStates, x, expFreqArr)) for x in rowList]
 
     # results.sort(key = lambda x: x[0])
-    resultsArrs = zip(*results)[1]
+    # resultsArrs = zip(*results)[1]
 
-    scoreArr = np.concatenate(resultsArrs, axis=0)
+    scoreArr = np.concatenate(results, axis=0)
 
     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
 # Helper for the multiprocessing implementation of s1
 def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
     processScoreArr = np.zeros(len(rowsToCalculate), numStates)
+    print(processScoreArr.shape)
     # Calculate the observed frequencies and final scores for the designated rows
     for dataRow, scoreRow in enumerate(rowsToCalculate):
         uniqueStates, stateCounts = np.unique(dataArr[dataRow], return_counts=True)
@@ -157,7 +160,7 @@ def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
             # Function input is obsFreq and expFreq
             processScoreArr[scoreRow, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-    return (rowsToCalculate[0], processScoreArr)
+    return processScoreArr
 
 
 # Function that calculates the scores for the S2 metric

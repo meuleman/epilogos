@@ -111,8 +111,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         process.join()
 
     # Turn the scoreArr into a np array for proper outputting
-    bufferArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32)
-    scoreArr = bufferArr.reshape((numRows, numStates))
+    scoreArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
 
     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
@@ -120,8 +119,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 # Helper for the multiprocessing implementation of s1
 def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, scoreArr):
     # with scoreArr.get_lock():
-    bufferArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32)
-    processScoreArr = bufferArr.reshape((numRows, numStates))
+    processScoreArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
     # Calculate the observed frequencies and final scores for the designated rows
     for row in rowsToCalculate:
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)

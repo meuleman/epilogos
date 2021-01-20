@@ -151,7 +151,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 
 # Helper for the multiprocessing implementation of s1
 def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
-    processScoreArr = np.zeros(len(rowsToCalculate), numStates)
+    processScoreArr = np.zeros((len(rowsToCalculate), numStates))
     print(processScoreArr.shape)
     # Calculate the observed frequencies and final scores for the designated rows
     for dataRow, scoreRow in enumerate(rowsToCalculate):

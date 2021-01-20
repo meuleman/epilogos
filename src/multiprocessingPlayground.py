@@ -47,48 +47,47 @@ def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, 
         return
 
 
-# Function that calculates the scores for the S1 metric
-def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
-    numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
+# # Function that calculates the scores for the S1 metric
+# def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+#     numRows, numCols = dataArr.shape
+#     numProcesses = multiprocessing.cpu_count()
 
-    # Initializing necessary variables
-    scoreArr = np.zeros((numRows, numStates))
-    obsQueue = multiprocessing.Queue()
-    obsProcesses = []
+#     # Initializing necessary variables
+#     scoreArr = np.zeros((numRows, numStates))
+#     obsQueue = multiprocessing.Queue()
+#     obsProcesses = []
     
-    # Creating the observed frequency/score processes and starting them
-    for i in range(numProcesses):
-        rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
-        p = multiprocessing.Process(target=s1Obs, args=(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, obsQueue))
-        obsProcesses.append(p)
-        p.start()
+#     # Creating the observed frequency/score processes and starting them
+#     for i in range(numProcesses):
+#         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
+#         p = multiprocessing.Process(target=s1Obs, args=(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, obsQueue))
+#         obsProcesses.append(p)
+#         p.start()
 
-    # Move all the scores from the queue to the score array
-    for i in range(numRows):
-        scoreRow = obsQueue.get()
-        scoreArr[scoreRow[0]] = scoreRow[1]
+#     # Move all the scores from the queue to the score array
+#     for i in range(numRows):
+#         scoreRow = obsQueue.get()
+#         scoreArr[scoreRow[0]] = scoreRow[1]
 
-    # Shut down all the processes
-    for process in obsProcesses:
-        process.join()
+#     # Shut down all the processes
+#     for process in obsProcesses:
+#         process.join()
 
-    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
+#     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
 
 
-# Helper for the multiprocessing implementation of s1
-def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, queue):
-    rowScoreArr = np.zeros(numStates)
-    # Calculate the observed frequencies and final scores for the designated rows
-    for row in rowsToCalculate:
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i in range(len(uniqueStates)):
-            # Function input is obsFreq and expFreq
-            rowScoreArr[uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
-        # Put a tuple of the rownumber and the score in the multiprocessing queue so it can be retrieved later
-        queue.put((row, rowScoreArr))
+# # Helper for the multiprocessing implementation of s1
+# def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, queue):
+#     rowScoreArr = np.zeros(numStates)
+#     # Calculate the observed frequencies and final scores for the designated rows
+#     for row in rowsToCalculate:
+#         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+#         for i in range(len(uniqueStates)):
+#             # Function input is obsFreq and expFreq
+#             rowScoreArr[uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+#         # Put a tuple of the rownumber and the score in the multiprocessing queue so it can be retrieved later
+#         queue.put((row, rowScoreArr))
         
-
 # # Function that calculates the scores for the S1 metric
 # def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
 #     numRows, numCols = dataArr.shape
@@ -126,6 +125,39 @@ def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, queue):
 #         for i in range(len(uniqueStates)):
 #             # Function input is obsFreq and expFreq
 #             processScoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+
+# Function that calculates the scores for the S1 metric
+def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+    numRows, numCols = dataArr.shape
+    numProcesses = multiprocessing.cpu_count()
+
+    pool = multiprocessing.Pool(processes=numProcesses)
+
+    rowList = []
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
+        rowList.append(rowsToCalculate)
+
+    results = [pool.apply(s1Obs, args=(dataArr, numCols, numStates, x, expFreqArr)) for x in rowList]
+
+    # results.sort(key = lambda x: x[0])
+    resultsArrs = zip(*results)[1]
+
+    scoreArr = np.concatenate(resultsArrs, axis=0)
+
+    storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
+
+# Helper for the multiprocessing implementation of s1
+def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr):
+    processScoreArr = np.zeros(len(rowsToCalculate), numStates)
+    # Calculate the observed frequencies and final scores for the designated rows
+    for dataRow, scoreRow in enumerate(rowsToCalculate):
+        uniqueStates, stateCounts = np.unique(dataArr[dataRow], return_counts=True)
+        for i in range(len(uniqueStates)):
+            # Function input is obsFreq and expFreq
+            processScoreArr[scoreRow, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+
+    return (rowsToCalculate[0], processScoreArr)
 
 
 # Function that calculates the scores for the S2 metric

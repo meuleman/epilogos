@@ -135,37 +135,48 @@ def _init(sharedArr_, inputInfo_):
     global inputInfo
     sharedArr = sharedArr_
     inputInfo = inputInfo_
+    print(6)
 
 def sharedToNumpy(sharedArr, numRows, numStates):
+    print(8)
     return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
 
 # Function that calculates the scores for the S1 metric
 def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+    print(0)
     numRows, numCols = dataArr.shape
+    print(1)
     numProcesses = multiprocessing.cpu_count()
-
+    print(2)
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), numRows * numStates)
-
+    print(3)
     rowList = []
+    print(4)
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
         rowList.append(rowsToCalculate)
+    print(5)
 
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, numRows, numStates), (dataArr, expFreqArr, numCols)))) as pool:
         pool.map(s1Obs, rowList)
     pool.join()
 
+    print(11)
     storeScores(dataArr, sharedToNumpy(sharedArr, numRows, numStates), locationArr, outputDirPath, fileTag, filename)
+    print(16)
 
 # Helper for the multiprocessing implementation of s1
 def s1Obs(rowsToCalculate):
+    print(7)
     scoreArr = sharedToNumpy(*sharedArr)
+    print(9)
     # Calculate the observed frequencies and final scores for the designated rows
     for row in rowsToCalculate:
         uniqueStates, stateCounts = np.unique(inputInfo[0][row], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq
             scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (inputInfo[2]), inputInfo[1][uniqueStates[i]])
+    print(10)
 
 
 # Function that calculates the scores for the S2 metric
@@ -253,11 +264,15 @@ def s3Obs(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, scor
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):
     # Creating a file path
+    print(12)
     scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
+    print(13)
     scoreFilePath = outputDirPath / scoreFilename
+    print(14)
 
     # Savez saves space allowing location to be stored as string and scoreArr as float
     np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
+    print(15)
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):

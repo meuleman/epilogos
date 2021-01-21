@@ -133,7 +133,7 @@ def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, 
 def _init(sharedArr_, inputInfo_):
     global sharedArr
     global inputInfo
-    sharedArr = sharedToNumpy(*sharedArr_)
+    sharedArr = sharedArr_
     inputInfo = inputInfo_
 
 def sharedToNumpy(sharedArr, numRows, numStates):
@@ -152,19 +152,20 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         rowList.append(rowsToCalculate)
 
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, numRows, numStates), (dataArr, expFreqArr, numCols)))) as pool:
-        results = pool.map(s1Obs, rowList)
+        pool.map(s1Obs, rowList)
     pool.join()
 
     storeScores(dataArr, sharedToNumpy(sharedArr, numRows, numStates), locationArr, outputDirPath, fileTag, filename)
 
 # Helper for the multiprocessing implementation of s1
 def s1Obs(rowsToCalculate):
+    scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
-    for scoreRow, dataRow in enumerate(rowsToCalculate):
-        uniqueStates, stateCounts = np.unique(inputInfo[0][dataRow], return_counts=True)
+    for row in enumerate(rowsToCalculate):
+        uniqueStates, stateCounts = np.unique(inputInfo[0][row], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq
-            sharedArr[scoreRow, uniqueStates[i]] = klScore(stateCounts[i] / (inputInfo[2]), inputInfo[1][uniqueStates[i]])
+            scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (inputInfo[2]), inputInfo[1][uniqueStates[i]])
 
 
 # Function that calculates the scores for the S2 metric

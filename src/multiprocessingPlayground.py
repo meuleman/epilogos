@@ -146,7 +146,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
     print(0)
     numRows, numCols = dataArr.shape
     print(1)
-    numProcesses = multiprocessing.cpu_count()
+    numProcesses = 4 #multiprocessing.cpu_count()
     print(2)
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), numRows * numStates)
     print(3)

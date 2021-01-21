@@ -130,9 +130,6 @@ def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, 
 #             # Function input is obsFreq and expFreq
 #             processScoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
-sharedArr=None
-inputInfo=None
-
 def _init(sharedArr_, inputInfo_):
     global sharedArr
     global inputInfo
@@ -154,7 +151,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
         rowList.append(rowsToCalculate)
 
-    with closing(multiprocessing.pool(numProcesses, initializer=_init, initargs=((sharedArr, numRows, numStates), (dataArr, expFreqArr, numCols)))) as pool:
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, numRows, numStates), (dataArr, expFreqArr, numCols)))) as pool:
         results = pool.map(s1Obs, rowList)
     pool.join()
 

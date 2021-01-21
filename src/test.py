@@ -19,12 +19,24 @@ import glob
 
 def main():
 
-    scoreArr = multiprocessing.Array(c.c_float, 10)
+    numProcesses = multiprocessing.cpu_count()
 
-    print(np.all(scoreArr == 0))
+    pool = multiprocessing.Pool(processes=numProcesses)
 
-    for i in range(10):
-        print(scoreArr[i])
+    rangeList = [range(2, 4), range(1, 8), range(5, 9)]
+
+    y = 10
+    z = 20
+
+    results = [pool.apply(dummy, args=(y, x, z)) for x in rangeList]
+
+    print(results)
+
+def dummy(y, x, z):
+    lst = []
+    for i in x:
+        lst.append(i+y+z)
+    return lst
 
 if __name__ == "__main__":
     main()

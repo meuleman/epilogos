@@ -11,12 +11,15 @@ import multiprocessing
 import itertools
 
 def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
+    tTotal = time.time()
     filePath = Path(file)
     outputDirPath = Path(outputDirPath)
     filename = filePath.name.split(".")[0]
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
+
+    print("FILE:", filename)
 
     # Read in the data
     print("\nReading data from file...")
@@ -33,6 +36,7 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
 
     determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
 
+    print("Total Time:", time.time() - tTotal)
 
 def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
     if saliency == 1:

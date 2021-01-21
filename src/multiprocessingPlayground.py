@@ -161,7 +161,7 @@ def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag,
 def s1Obs(rowsToCalculate):
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
-    for row in enumerate(rowsToCalculate):
+    for row in rowsToCalculate:
         uniqueStates, stateCounts = np.unique(inputInfo[0][row], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq

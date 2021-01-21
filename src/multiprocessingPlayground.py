@@ -133,7 +133,7 @@ def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, 
 def _init(sharedArr_, inputInfo_):
     global sharedArr
     global inputInfo
-    sharedArr = (sharedToNumpy(*sharedArr_), sharedArr_[1], sharedArr_[2])
+    sharedArr = sharedToNumpy(*sharedArr_)
     inputInfo = inputInfo_
 
 def sharedToNumpy(sharedArr, numRows, numStates):
@@ -164,7 +164,7 @@ def s1Obs(rowsToCalculate):
         uniqueStates, stateCounts = np.unique(inputInfo[0][dataRow], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq
-            sharedArr[0][scoreRow, uniqueStates[i]] = klScore(stateCounts[i] / (inputInfo[2]), inputInfo[1][uniqueStates[i]])
+            sharedArr[scoreRow, uniqueStates[i]] = klScore(stateCounts[i] / (inputInfo[2]), inputInfo[1][uniqueStates[i]])
 
 
 # Function that calculates the scores for the S2 metric

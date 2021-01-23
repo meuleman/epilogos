@@ -149,7 +149,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag, numProcesses):
     storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
-def s3Calc(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
+def s3Calc(rowsToCalculate):
     # inputInfo[0] is dataArr
     # inputInfo[1] is basePermutationArr
     # inputInfo[2] is numStates

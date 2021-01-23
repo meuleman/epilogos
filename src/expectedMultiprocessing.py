@@ -8,6 +8,7 @@ import operator as op
 from functools import reduce
 import multiprocessing
 import itertools
+from contextlib import closing
 
 def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataFilePath = Path(filename)
@@ -35,11 +36,21 @@ def main(filename, numStates, saliency, outputDirPath, fileTag):
         print("Inputed saliency value not supported")
         return
 
+sharedArr=None
+inputInfo=None
+
+# initiliazer for multiprocessing
+def _init(inputInfo_):
+    global inputInfo
+    inputInfo = inputInfo_
+
+
 # Function that calculates the expected frequencies for the S1 metric
 def s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
 
     # Calculate the expected frequencies of each state
+    # Done column-wise instead of row-wise thus we don't multiprocess as it provides negligible efficiency bonus
     stateIndices = list(range(1, numStates + 1))
     expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
     dfSize = numRows * numCols
@@ -51,11 +62,36 @@ def s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
 
     storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
-# Function that calculates the expected frequencies for the S2 metric
+# Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also call function to store expected frequency
 def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
+    numProcesses = multiprocessing.cpu_count()
+    print("NUM PROCESSES:", numProcesses)
 
-    expFreqArr = np.zeros((numStates, numStates))
+    # Split the rows up according to the number of cores we have available
+    rowList = []
+    for i in range(numProcesses):
+        rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
+        rowList.append(rowsToCalculate)
+
+    # Start the processes
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, numStates, numCols)))) as pool:
+        results = pool.map(s2Calc, rowList)
+    pool.join()
+
+    # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
+    expFreqArr = np.sum(results, axis = 0) / numRows
+
+    storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
+
+
+# Function that calculates the expected frequencies for the S2 metric over a chunk of the data
+def s2Calc(rowsToCalculate):
+    # inputInfo[0] is dataArr
+    # inputInfo[1] is numStates
+    # inputInfo[2] is numCols
+
+    expFreqArr = np.zeros((inputInfo[1], inputInfo[1]))
 
     # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
@@ -63,9 +99,9 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     if (sys.version_info < (3, 8)):
         print("\nFor maximum efficiency please update python to version 3.8 or later")
         print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
-        combinations = ncr(numCols, 2)
-        for row in range(numRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        combinations = ncr(inputInfo[2], 2)
+        for row in rowsToCalculate:
+            uniqueStates, stateCounts = np.unique(inputInfo[0][row], return_counts=True)
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
                     if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
@@ -73,9 +109,9 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
                     elif uniqueStates[i] == uniqueStates[j]:
                         expFreqArr[uniqueStates[i], uniqueStates[j]] += ncr(stateCounts[i], 2) / combinations
     else:
-        combinations = math.comb(numCols, 2)
-        for row in range(numRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
+        combinations = math.comb(inputInfo[2], 2)
+        for row in rowsToCalculate:
+            uniqueStates, stateCounts = np.unique(inputInfo[0][row], return_counts=True) 
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
                     if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
@@ -83,57 +119,47 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
                     elif uniqueStates[i] == uniqueStates[j]:
                         expFreqArr[uniqueStates[i], uniqueStates[j]] += math.comb(stateCounts[i], 2) / combinations
 
-    expFreqArr = expFreqArr / numRows
+    return expFreqArr
 
-    storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
-
-# Function that calculates the expected frequencies for the S3 metric
+# Function that deploys the processes used to calculate the expected frequencies for the s3 metric. Also call function to store expected frequency
 def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     numRows, numCols = dataArr.shape
-    numProcesses = 10 #multiprocessing.cpu_count()
+    numProcesses = multiprocessing.cpu_count()
+    print("NUM PROCESSES:", numProcesses)
 
-    # Use multiprocessing to speed up expected frequency calculation time
-    # Calculate expected frequencies
-
+    # Gives us everyway to combine the column numbers in numpy indexing form
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
 
-    # Initializing needed variables
-    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
-    expQueue = multiprocessing.Queue()
-    expProcesses = []
-
-    print("Num Processes:", numProcesses)
-
-    # Creating the expected frequency processes and starting them
+    # Split the rows up according to the number of cores we have available
+    rowList = []
     for i in range(numProcesses):
         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
-        p = multiprocessing.Process(target=s3ExpMulti, args=(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, expQueue))
-        expProcesses.append(p)
-        p.start()
+        rowList.append(rowsToCalculate)
 
-    # Combine all the calculated expvalue arrays into one
-    for process in expProcesses:
-        expFreqArr += expQueue.get()
+    # Start the processes
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, basePermutationArr, numStates, numCols)))) as pool:
+        results = pool.map(s3Calc, rowList)
+    pool.join()
 
-    # Shut down all the processes
-    for process in expProcesses:
-        process.join()
-
-    # Normalize the array
-    expFreqArr /= numRows * numCols * (numCols - 1)
+    # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
+    expFreqArr = np.sum(results, axis = 0) / numRows * numCols * (numCols - 1)
 
     storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
-# Helper function for the multiprocessing
-def s3ExpMulti(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
-    expFreqArr = np.zeros((numCols, numCols, numStates, numStates))
-    print("Rows in Multiprocess:", rowsToCalculate)
-    count = 0
+# Function that calculates the expected frequencies for the S3 metric over a chunk of the data
+def s3Calc(dataArr, numCols, numStates, rowsToCalculate, basePermutationArr, queue):
+    # inputInfo[0] is dataArr
+    # inputInfo[1] is basePermutationArr
+    # inputInfo[2] is numStates
+    # inputInfo[3] is numCols
+
+    expFreqArr = np.zeros((inputInfo[3], inputInfo[3], inputInfo[2], inputInfo[2]))
+    
+    # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in rowsToCalculate:
-        count += 1
-        expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1])
-    print(count)
-    queue.put(expFreqArr)
+        expFreqArr[inputInfo[1][0], inputInfo[1][1], inputInfo[0][row, inputInfo[1][0]], inputInfo[0][row, inputInfo[1][1]]] += np.ones(inputInfo[1].shape[1])
+
+    return expFreqArr
 
 # Helper to store the expected frequency arrays
 def storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag):

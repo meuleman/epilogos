@@ -123,16 +123,18 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print(file)
                     return
 
-                computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
+                # computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
+
+                computeExpectedPy = pythonFilesDir / "expectedMultiprocessing.py"
 
                 pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=2000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -175,11 +177,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
 
         if saliency == 1:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

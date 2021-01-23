@@ -22,8 +22,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
-    fileTag = "_".join(str(dataFilePath).split("/")[-5:])
-    
     print()
     print("Input Directory =", dataFilePath)
     print("State Model =", numStates)
@@ -32,14 +30,18 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     print("Mode of Operation =", modeOfOperation)
     print("Background Directory =", expFreqDir)
 
+    # If user does not specificy a directory to look for expected frequencies default the output directory
     if expFreqDir == "null":
         expFreqDir = outputDirectory
 
+    # Making paths absolute
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
-
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
+
+    # For making sure all files are consistently named
+    fileTag = "_".join(str(dataFilePath).split("/")[-5:])
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         print()
@@ -87,7 +89,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     else:
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
-    # Check if user wants to calculate it
+    # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
     if modeOfOperation == "s":
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
@@ -224,7 +226,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 computeScorePy = pythonFilesDir / "multiprocessingPlayground.py"
 
-
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
 
                 if modeOfOperation == "s":
@@ -250,12 +251,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
 
-        # create a string for slurm dependency to work
+        # Create a string for slurm dependency to work
         scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
         
         print("    JobIDs:", scoreJobIDStr)
 
-        # WRITING TO SCORE FILE
+        # Write scores out to gzipped text files
         print()
         print("Submitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []

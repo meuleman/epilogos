@@ -292,7 +292,7 @@ def s3Score(rowsToCalculate):
         rowScoreArr[inputInfo[1][0], inputInfo[1][1], inputInfo[0][row, inputInfo[1][0]], inputInfo[0][row, inputInfo[1][1]]] = inputInfo[2][inputInfo[1][0], inputInfo[1][1], inputInfo[0][row, inputInfo[1][0]], inputInfo[0][row, inputInfo[1][1]]]
 
         # Flatten the scores and put them into the shared score array
-        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2)
+        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):

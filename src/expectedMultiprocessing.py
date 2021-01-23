@@ -75,7 +75,7 @@ def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
         rowList.append(rowsToCalculate)
 
     # Start the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, numStates, numCols)))) as pool:
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, numStates, numCols), ))) as pool:
         results = pool.map(s2Calc, rowList)
     pool.join()
 
@@ -137,7 +137,7 @@ def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
         rowList.append(rowsToCalculate)
 
     # Start the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, basePermutationArr, numStates, numCols)))) as pool:
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((dataArr, basePermutationArr, numStates, numCols), ))) as pool:
         results = pool.map(s3Calc, rowList)
     pool.join()
 

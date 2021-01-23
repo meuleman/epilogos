@@ -6,6 +6,8 @@ import computeEpilogosExpected
 import computeEpilogosExpectedCombination
 import computeEpilogosScores
 import computeEpilogosWrite
+import multiprocessingPlayground
+import expectedMultiprocessing
 
 
 @click.command()
@@ -15,7 +17,8 @@ import computeEpilogosWrite
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]") # default output directory
-def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir):
+@click.option("-c", "--num-cores", "numProcesses", type=int, default=0, help="The number of cores to run on [default: 0 = Uses all cores]")
+def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir, numProcesses):
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
@@ -67,6 +70,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print()
         return
 
+    if numProcesses < 0:
+        print()
+        print("ERROR: Number of cores must be positive or zero (0 means use all cores)")
+        print()
+
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
@@ -96,7 +104,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("Calculating Per Datafile Background Frequency Arrays...")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
-                computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag)
+                # computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag)
+                expectedMultiprocessing.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
         print()
         print("Combining Per Datafile Background Frequency Arrays....")
@@ -107,7 +116,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("Calculating Per Datafile Scores...")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
-                computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
+                # computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
+                multiprocessingPlayground.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
         print()
         print("Writing to Score Files....")

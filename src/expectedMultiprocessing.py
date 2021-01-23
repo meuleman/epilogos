@@ -10,7 +10,7 @@ import multiprocessing
 import itertools
 from contextlib import closing
 
-def main(filename, numStates, saliency, outputDirPath, fileTag):
+def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirPath)
 
@@ -26,13 +26,17 @@ def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
+    # If user doesn't want to choose number of cores use as many as available
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
+
     # Determine saliency and calculate expected frequencies
     if saliency == 1:
         s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     elif saliency == 2:
-        s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
+        s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag, numProcesses)
     elif saliency == 3:
-        s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
+        s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag, numProcesses)
     else:
         print("Inputed saliency value not supported")
         return
@@ -63,9 +67,8 @@ def s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
     storeExpArray(dataDF, expFreqArr, outputDirPath, fileTag)
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also call function to store expected frequency
-def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
+def s2Exp(dataDF, dataArr, numStates, outputDirPath, fileTag, numProcesses):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
     print("NUM PROCESSES:", numProcesses)
 
     # Split the rows up according to the number of cores we have available
@@ -122,9 +125,8 @@ def s2Calc(rowsToCalculate):
     return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s3 metric. Also call function to store expected frequency
-def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):
+def s3Exp(dataDF, dataArr, numStates, outputDirPath, fileTag, numProcesses):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
     print("NUM PROCESSES:", numProcesses)
 
     # Gives us everyway to combine the column numbers in numpy indexing form
@@ -178,4 +180,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5])
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], int(sys.argv[6]))

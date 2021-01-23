@@ -12,7 +12,7 @@ import itertools
 import ctypes as c
 from contextlib import closing
 
-def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
+def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses):
     tTotal = time.time()
     filePath = Path(file)
     outputDirPath = Path(outputDirPath)
@@ -36,99 +36,25 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag):
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
-    determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+    # If user doesn't want to choose number of cores use as many as available
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
+
+    determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses)
 
     print("Total Time:", time.time() - tTotal)
 
-def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def determineSaliency(saliency, fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses):
     if saliency == 1:
-        s1Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s1Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses)
     elif saliency == 2:
-        s2Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s2Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses)
     elif saliency == 3:
-        s3Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename)
+        s3Multi(fileArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses)
     else:
         print("Inputed saliency value not supported")
         return
 
-
-# # Function that calculates the scores for the S1 metric
-# def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
-#     numRows, numCols = dataArr.shape
-#     numProcesses = multiprocessing.cpu_count()
-
-#     # Initializing necessary variables
-#     scoreArr = np.zeros((numRows, numStates))
-#     obsQueue = multiprocessing.Queue()
-#     obsProcesses = []
-    
-#     # Creating the observed frequency/score processes and starting them
-#     for i in range(numProcesses):
-#         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
-#         p = multiprocessing.Process(target=s1Obs, args=(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, obsQueue))
-#         obsProcesses.append(p)
-#         p.start()
-
-#     # Move all the scores from the queue to the score array
-#     for i in range(numRows):
-#         scoreRow = obsQueue.get()
-#         scoreArr[scoreRow[0]] = scoreRow[1]
-
-#     # Shut down all the processes
-#     for process in obsProcesses:
-#         process.join()
-
-#     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
-
-
-# # Helper for the multiprocessing implementation of s1
-# def s1Obs(dataArr, numCols, numStates, rowsToCalculate, expFreqArr, queue):
-#     rowScoreArr = np.zeros(numStates)
-#     # Calculate the observed frequencies and final scores for the designated rows
-#     for row in rowsToCalculate:
-#         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-#         for i in range(len(uniqueStates)):
-#             # Function input is obsFreq and expFreq
-#             rowScoreArr[uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
-#         # Put a tuple of the rownumber and the score in the multiprocessing queue so it can be retrieved later
-#         queue.put((row, rowScoreArr))
-        
-# # Function that calculates the scores for the S1 metric
-# def s1Score(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
-#     numRows, numCols = dataArr.shape
-#     numProcesses = multiprocessing.cpu_count()
-
-#     # Initializing necessary variables
-#     scoreArr = multiprocessing.Array(c.c_float, numRows * numStates)
-
-#     obsProcesses = []
-    
-#     # Creating the observed frequency/score processes and starting them
-#     for i in range(numProcesses):
-#         rowsToCalculate = range(i * numRows // numProcesses, (i+1) * numRows // numProcesses)
-#         p = multiprocessing.Process(target=s1Obs, args=(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, scoreArr))
-#         obsProcesses.append(p)
-#         p.start()
-
-#     # Shut down all the processes
-#     for process in obsProcesses:
-#         process.join()
-
-#     # Turn the scoreArr into a np array for proper outputting
-#     scoreArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
-
-#     storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename)
-
-# # Helper for the multiprocessing implementation of s1
-# def s1Obs(dataArr, numRows, numCols, numStates, rowsToCalculate, expFreqArr, scoreArr):
-#     # with scoreArr.get_lock():
-#     processScoreArr = np.frombuffer(scoreArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
-#     # Calculate the observed frequencies and final scores for the designated rows
-#     for row in rowsToCalculate:
-#         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-#         for i in range(len(uniqueStates)):
-#             # Function input is obsFreq and expFreq
-#             processScoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
@@ -145,9 +71,8 @@ def _init(sharedArr_, inputInfo_):
     inputInfo = inputInfo_
 
 # Function that deploys the processes used to calculate the scores for the s1 metric. Also call function to store scores
-def s1Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s1Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), numRows * numStates)
@@ -181,9 +106,8 @@ def s1Score(rowsToCalculate):
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
-def s2Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s2Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), numRows * numStates)
@@ -246,9 +170,8 @@ def s2Score(rowsToCalculate):
     
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
-def s3Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename):
+def s3Multi(dataArr, locationArr, numStates, outputDirPath, expFreqArr, fileTag, filename, numProcesses):
     numRows, numCols = dataArr.shape
-    numProcesses = multiprocessing.cpu_count()
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), numRows * numStates)
@@ -322,4 +245,4 @@ def ncr(n, r):
     return numer // denom
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6])
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], int(sys.argv[7]))

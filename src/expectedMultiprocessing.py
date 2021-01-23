@@ -26,6 +26,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
+    # Determine saliency and calculate expected frequencies
     if saliency == 1:
         s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag)
     elif saliency == 2:
@@ -39,11 +40,10 @@ def main(filename, numStates, saliency, outputDirPath, fileTag):
 sharedArr=None
 inputInfo=None
 
-# initiliazer for multiprocessing
+# Initiliazer for multiprocessing
 def _init(inputInfo_):
     global inputInfo
     inputInfo = inputInfo_
-
 
 # Function that calculates the expected frequencies for the S1 metric
 def s1Exp(dataDF, dataArr, numStates, outputDirPath, fileTag):

@@ -170,7 +170,7 @@ def s2Score(dataArr, numStates, expFreqArr):
     # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    if sys.version_info < (3, 8):
+    if (sys.version_info < (3, 8)):
         print("\nFor maximum efficiency please update python to version 3.8 or later")
         print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
         combinations = ncr(numCols, 2)

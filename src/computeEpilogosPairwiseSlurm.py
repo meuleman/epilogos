@@ -11,8 +11,8 @@ from pathlib import PurePath
 @click.command()
 @click.option("-i", "--directory-one", "fileDirectory1", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-n", "--directory-two", "fileDirectory2", type=str, required=True, help="")
-@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory (CANNOT be the same as input directory)\n")
+@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1 or 2)")
 def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
     """

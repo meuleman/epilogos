@@ -10,13 +10,14 @@ from pathlib import PurePath
 
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
-@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory (CANNOT be the same as input directory)\n")
+@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
 @click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=0, help="The number of cores to run on [default: 0 = Uses all cores]")
-def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir, numProcesses):
+@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
+def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir, numProcesses, exitBool):
     """
     This script computes scores for chromatin states across the genome.
     """
@@ -42,7 +43,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         dataFilePath = Path.cwd() / dataFilePath
 
     # For making sure all files are consistently named
-    fileTag = "_".join(str(dataFilePath).split("/")[-5:])
+    fileTag = dataFilePath.name
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         print()
@@ -140,9 +141,9 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 if saliency == 1:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -236,18 +237,18 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 if modeOfOperation == "s":
                     if saliency == 1:
-                        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                 else:
                     if saliency == 1:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks=48 --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -312,5 +313,22 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         elif modeOfOperation == "bg":
             print("All JobIDs: {},{}".format(expJobIDStr, combinationJobID))
 
+    # If the user wants to exit upon job completion rather than submission
+    if exitBool:
+        # The last job is different depending on mode of operation
+        if modeOfOperation == "s" or modeOfOperation == "both":
+            lastJob = writeJobIDArr[-1]
+        else:
+            lastJob = combinationJobID
+
+        lastJobCheckStr = "sacct --format=State --jobs {}".format(lastJob)
+
+        # Every ten seconds check if the final job is done, if it is exit the program
+        while True:
+            time.sleep(10)
+            sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            if not (sp.stdout.strip().endswith("RUNNING") or sp.stdout.strip().endswith("PENDING")):
+                break
+                
 if __name__ == "__main__":
     main()

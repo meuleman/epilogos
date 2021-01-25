@@ -40,15 +40,21 @@ Rather than just read in one input file, Epilogos reads the contents of an entir
 
 The argument to this flag is the path to the directory which contains the files to be read in. Note that ALL files in this directory will be read in.
 
+<a name="output-directory"></a>
+
 #### Output Directory (-o, --output-directory)
 
 The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format `scores_{}_[].txt.gz` where {} is replaced with the input directory name and [] is replaced with the name of the corresponding input file (extensions removed).
 
 The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.
 
+<a name="state-model"></a>
+
 #### State Model (-s, --state-model)
 
 The argument to this flag specifies the number of distinct labels (chromatin states) provided in the input data.
+
+<a name="saliency-level"></a>
 
 #### Saliency Level (-l, --saliency-level)
 
@@ -61,11 +67,15 @@ Note that each increase in saliency level involves much more computation and thu
 
 The arguement to this flag must be an integer 1, 2, or 3. Note that Epilogos defaults to a saliency of 1.
 
+<a name="mode-of-operation"></a>
+
 #### Mode of Operation (-m, --mode-of-operation)
 
 As epilogos has 2 different types of output files, we allow the user to designate which they would like to receive and thus minimize potentially repeated computation.
 
 The argument to this flag must be one of three strings: `bg`, `s`, `both`. If you would like to calculate only the background frequencies of the chromatin statesm use `bg`. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use `s`. If you would like to calculate both the background frequencies and the scores, use `both`. Note that Epilogos defaults to `both`.
+
+<a name="background-directory"></a>
 
 #### Background Directory (-b, --background-directory)
 
@@ -73,11 +83,15 @@ In the case that the user chooses `s` as the mode of operation, the argument to 
 
 In the case that the user chooses either `bg`" or `both` as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.
 
+<a name="number-of-cores"></a>
+
 #### Number of Cores (-c, --num-cores)
 
 Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library.
 
 The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to `-c 0`).
+
+<a name="exit-when-complete"></a>
 
 #### Exit When Complete (-x, --exit-when-complete)
 

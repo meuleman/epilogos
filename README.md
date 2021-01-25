@@ -32,6 +32,8 @@ A single python script, `src/computeEpilogosSlurm.py`, controls all of the proce
 
 The script, `src/computeEpilogosSlurm.py`, requires access to a computational cluster managed by [SLURM](https://slurm.schedmd.com/). A minimal version of epilogos, `src/minimalEpilogos.py`, has been created for those without access to a SLURM cluster. It functions identically to `src/computeEpilogosSlurm.py` but runs everything within one terminal command.
 
+<a name="input-directory"></a>
+
 #### Input Directory (-f, --file-directory)
 
 Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)

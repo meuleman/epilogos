@@ -2,160 +2,98 @@
 
 1. [About](#about)
 2. [Prerequisites](#prerequisites)
-3. [Running epilogos](#running-epilogos)
-    * [Modes of operation](#modes-operation)
-    * [Output](#output)
-    * [Minimal example](#minimal-example)
-4. [Visualizing results](#visualizing-results)
-5. [Support](#support)
+3. [Running Epilogos](#running-epilogos)
+    * [Input Directory](#input-directory)
+    * [Output Directory](#output-directory)
+    * [State Model](#state-model)
+    * [Saliency Level](#saliency-level)
+    * [Mode of Operation](#mode-of-operation)
+    * [Background Directory](#background-directory)
+    * [Number of Cores](#number-of-cores)
+    * [Exit When Complete](#exit-when-complete)
+4. [Minimal example](#minimal-example)
 
 ## About
 
-Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, 
-with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
+Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
 
-The software provided in this repository implements the methods underlying Epilogos, using a combination of C++ and bash.
-We provide a proof-of-principle dataset based on chromatin state calls from the Roadmap Epigenomics project.
+The software provided in this repository implements the methods underlying Epilogos using only python. We provide a proof-of-principle dataset based on chromatin state calls from the BOIX dataset.
 
 ## Prerequisites
 
-To compute epilogos, we recommend installing the external programs `bgzip` and `starch`, for efficient storage and manipulation of output files.
-The `bgzip` tool is part of the [htslib](https://github.com/samtools/htslib) kit, 
-and `starch` is part of [BEDOPS](https://github.com/bedops/bedops).
-Both binaries must be accessible through your `PATH` environment variable.
-
-## Running epilogos
-
-A single bash script, `scripts/computeEpilogos.sh`, coordinates all the processing.
-Run the script with no arguments to see documentation on the list of arguments it requires.
-
-The script calls three executables that need to be compiled, by running `make` from this directory.
-This will compile the three programs and output the result in `bin`.
-To allow the script to find this `bin` directory, add it to your PATH environment variable, e.g. using
+To compute epilogos, you will need to have the following python libraries: [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), and [pandas](https://pandas.pydata.org/). These can be installed with the following command.
 ```bash
-$ export PATH=${PWD}/bin:${PATH}
+$ pip install click, numpy, pandas
 ```
 
-By default, the script assumes the availability of a compute cluster managed by [SLURM](https://slurm.schedmd.com/).
-See [below](#minimal-example) for a more elementary implementation of the script for use on a single machine, using data from a single chromosome only.
+## Running Epilogos:
 
-The first argument to `computeEpilogos.sh` must be the name of the cluster/queue.
+A single python script, `src/computeEpilogosSlurm.py`, controls all of the processing. To be presented with minimal documentation of arguments needed to run epilogos, simply run python `src/computeEpilogosSlurm.py --help` (More in-depth explanation is given [below](#input-directory))
 
-The second argument is a text file with paths to *uncompressed* input data files (one per chromosome).
-The first three columns of each input file must specify genomic coordinates (`seqname`, `start`, `end`),
-and the remaining columns contain labels (e.g. chromatin state calls), representing (chromatin state) annotations -- one column per biosample.
+The script, `src/computeEpilogosSlurm.py`, requires access to a computational cluster managed by [SLURM](https://slurm.schedmd.com/). A minimal version of epilogos, `src/minimalEpilogos.py`, has been created for those without access to a SLURM cluster. It functions identically to `src/computeEpilogosSlurm.py` but runs everything within one terminal command.
 
-The third argument, `numStates`, specifies the number of distinct labels (chromatin states) provided in the input data,
-to prevent having to scan through the full input dataset.
+### Input Directory (-f, --file-directory)
 
-### Modes of operation
+Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)
 
-Epilogos implements information-theoretic metrics to quantify saliency levels of datasets.
-The fourth argument to the coordination script allows one to choose one of three possible metrics:
-1. Metric S1, implementing a standard Kullback-Leibler relative entropy 
+The argument to this flag is the path to the directory which contains the files to be read in. Note that ALL files in this directory will be read in.
+
+### Output Directory (-o, --output-directory)
+
+The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format `scores_{}_[].txt.gz` where {} is replaced with the input directory name and [] is replaced with the name of the corresponding input file (extensions removed).
+
+The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.
+
+### State Model (-s, --state-model)
+
+The argument to this flag specifies the number of distinct labels (chromatin states) provided in the input data.
+
+### Saliency Level (-l, --saliency-level)
+
+Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The -l flag to the coordination script allows one to choose one of three possible metrics:
+1. Metric S1, implementing a standard Kullback-Leibler relative entropy
 2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
 3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
 
-The fifth argument, `groupSpec`, specifies which biosamples, i.e. columns in the input data, are to be used in the computation.
-This argument can be specified as comma- and/or hyphen-delimited list (e.g. "1,3,6-10,12,13").
-For instance, "1,2,3" corresponds to the first 3 samples, which are in columns 4,5,6 of the input data.
+Note that each increase in saliency level involves much more computation and thus each increase requires more time and computational power.
 
-Importantly, Epilogos implements the possibility for comparing annotations between two groups of biosamples.
-This pairwise comparison mode can be enabled with a sixth argument, denoting a separate set of columns/biosamples to compare the first set to.
-The sixth argument has the same format as the fifth argument.
+The arguement to this flag must be an integer 1, 2, or 3. Note that Epilogos defaults to a saliency of 1.
 
-### Output
+### Mode of Operation (-m, --mode-of-operation)
 
-Regardless of the mode of operation, upon successful completion of execution, 
-three output files will be produced: `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt`.
-In case of errors during the exuction of the code, error messages will be collected in separate log files.
+As epilogos has 2 different types of output files, we allow the user to designate which they would like to receive and thus minimize potentially repeated computation.
 
-`observations.starch` is a compressed file (uncompress it using `unstarch` from the `bedops` tool suite) containing one line of summary statistics for each input site.
-Its exact format depends on the specified mode of operation (see below).
-Regardless, the value that is likely of most interest to typical users are the overal (S1, S2 or S3) metric scores for each genomic coordinate.
+The argument to this flag must be one of three strings: `bg`, `s`, `both`. If you would like to calculate only the background frequencies of the chromatin statesm use `bg`. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use `s`. If you would like to calculate both the background frequencies and the scores, use `both`. Note that Epilogos defaults to `both`.
 
-`scores.txt.gz` is a compressed file (compressed using `bgzip`) containing all sites and the signed contributions from each state to the metric at each site.
-Columns 1-3 hold the site's coordinates.
-Column 4 holds the contribution from state 1, column 5 holds the contribution from state 2, etcetera; if there are *n* states, the file will contain *n* + 3 columns.
-This file can be used for downstream analyses or visualization.
+### Background Directory (-b, --background-directory)
 
-`exemplarRegions.txt` is a text file containing single sites or contiguous stretches of sites where the highest saliency scores were observed, sorted in descending order by score.
-Its format is identical to the corresponding `observations.starch` file.
+In the case that the user chooses `s` as the mode of operation, the argument to this flag is the directory in which the background frequency file resides. Note that the file must maintain the same name as it was given upon original output. The format for this name is `exp_freq_{}.npy` where {} is replace with the name of the input directory. Note that Epilogos defaults to the ouput directory.
 
-#### Single group of biosamples
+In the case that the user chooses either `bg`" or `both` as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.
 
-For saliency metric S1 (standard relative entropy), `observations.starch` will contain 7 columns, e.g.:
-``chr1	2468800	     2469000	 13	    2.56266  1	3.79557``
-The specifications of the columns are as follows:
-1. Chromosome
-2. Start coordinate
-3. End coordinate
-4. Label/state with the largest contribution to the S1 metric score (i.e, largest relative information content)
-5. Magnitude of this state's contribution.
-6. Constant value of `1` (used in other modes of operation, see below).
-7. Overall S1 metric score, i.e. the relative entropy of the specified genomic region.
+### Number of Cores (-c, --num-cores)
 
-For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 10 columns, e.g.:
-``chr3		     125932600	    125932800 13   3.65048  1	    (2,11)	 2.27667	1    20.2829``
-The first 6 columns are specified identical to the S1 metric, and the remainder of the columns are specified as follows:
-<ol start="7">
-<li>The label/state pair with the largest contribution to the S2 or S3 metric</li>
-<li>Magnitude of the contribution of this pair</li>
-<li>Constant value of `1` (used in other modes of operation, see below).</li>
-<li>Overall S2 or S3 metric score</li>
-</ol>
+Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library.
 
-#### Pairwise comparison between groups of biosamples
+The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to `-c 0`).
 
-For saliency metric S1 (standard relative entropy), `observations.starch` will contain 8 columns, 
-the first 7 columns are specified similarly to the single-group case, with the following exceptions and additional column:
-<ol start="4">
-<li>Label/state with the largest difference in information between the two groups of biosamples.</li>
-<li>Absolute magnitude of this difference</li>
-<li>Sign of the difference, i.e. wether the first (`1`) or second (`-1`) group of biosamples contributes more information.</li>
-<li>Overall differential S1 metric score, i.e. the sum of all absolute per-state information differences between the two groups.</li>
-<li>Empirical p-value of this differential S1 metric score.</li>
-</ol>
+### Exit Timing (-x, --exit-when-complete)
 
-P-values are obtained by creating an empirical null distribution of differential S1 metric values by randomly shuffling state and epigenome labels.
-These are nominal p-values *not* adjusted for multiple hypothesis testing; an external procedure must be used to estimate false discovery rates (FDRs) from these p-values.
+By default `src/computeEpilogosSlurm.py` exits after it has submitted all slurm jobs. This allows the user to continue use of their terminal while the jobs are running. If you would like the program to instead exit when all jobs are done, enable this flag.
 
-For saliency metrics S2 and S3, which both deal with co-occurrence patterns of pairs of labels/states, `observations.starch` contains 11 columns, 
-specified analogous to what is described above for pairwise metric S1 and single-group S2 and S3, with an additional empirical p-value column.
+## Minimal Example
 
-<!--
-the appearance of -1 in column 9 means that for state pair (2,11), the contribution from *B* increased DKL\*\* while *A* decreased it, with a next contribution of 2.27667 (column 8) from state pair (2,11).
-In this case, it was estimated that p < 6.58697e-08 for observing a DKL\*\* score of 20.2829 or higher due to random chance alone.
--->
+Sample data has been provided under `~/epilogos/data/pyData/male/`. The file, `epilogos_matrix_chr1.txt.gz`, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the [BOIX dataset](https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486) and contains only those epigenomes which are tagged `Male` under the `Sex` column
 
-### Minimal example
-
-A smaller version of the script, `computeEpilogos_minimal.sh`, has been provided for running epilogos without access to a SLURM cluster, on data from a single chromosome only.
-
-The following sample input data are provided in the `data` directory:
-* The file `chr1_127epigenomes_15observedStates.txt.gz` contains ChromHMM chromatin state calls for a 15-state chromatin state model, across 200bp genomic bins spanning human chromosome 1.
-* The file `Blood_T-cellGroupSpec.txt` contains the column specifications for a group of blood and T-cell biosamples in the input data (33-34,37-45,47-48,61).
-* The file `HSC_B-cellGroupSpec.txt` contains the column specifications for a group of hematopoietic stem cell (HSC) and B-cell samples in the input data (29-32,35-36,46,50-51).
-
-To compute epilogos (using the S1 saliency metric) for blood and T-cell biosamples only, run the following command from the `data` subdirectory:
+To compute epilogos (using the S1 saliency metric) for this sample data run one of the following commands (depending on if you want to use SLURM or not) within the `~/epilogos/` directory.
 ```bash
-$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt.gz 15 1 OUTPUTDIR "33-34,37-45,47-48,61"
+$ python ./src/computeEpilogosSlurm.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
 ```
-The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR` should match the corresponding files in `data/results_Blood_T-cell/KL`.
-
-To compute differential epilogos (using the differential S1 saliency metric) between two groups of biosamples, run the following command, again from the epilogos `data` subdirectory:
 ```bash
-$ ../scripts/computeEpilogos_minimal.sh chr1_127epigenomes_15observedStates.txt 15 1 OUTPUTDIR2 "29-32,35-36,46,50-51" "33-34,37-45,47-48,61"
+$ python ./src/minimalEpilogos.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
 ```
-The resulting output files `observations.starch`, `scores.txt.gz`, and `exemplarRegions.txt` in directory `OUTPUTDIR2` should match the corresponding files in `data/results_HSC_B-cell_vs_Blood_T-cell/DKL`.
+Replacing `OUTPUTDIR` with the output directory of your choice. 
 
-## Visualizing results
+Upon completion of the run, you should see the files `exp_freq_male.npy` and `scores_male_epilogos_matrix_chr1.txt.gz` in `OUTPUTDIR`
 
-We recommend using [HiGlass](https://higlass.io) to visualize the per-site per-state results written to the file `scores.txt.gz`.
-Further instructions are forthcoming.
-
-## Support
-
-To get additional help or if you have questions about this software, open an [issue ticket](https://github.com/Altius/epilogos/issues).
-
-
+To customize your run of epilogos see the [Running Epilogos](#running-epilogos) of the `README`

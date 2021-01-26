@@ -15,9 +15,19 @@ import sys
 import subprocess
 from pathlib import PurePath
 import glob
+import gzip
 
 
 def main():
+    t = time.time()
+
+    with gzip.open(Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz"), 'rb') as f:
+        for i, l in enumerate(f):
+            pass
+    print("File {1} contain {0} lines".format(i, "matrix"))
+
+    print(time.time() - t)
+
 
     t = time.time()
     number_lines = sum(1 for line in open(Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")))

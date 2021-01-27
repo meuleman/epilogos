@@ -22,7 +22,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
-    fileTag = "_".join(str(dataFilePath).split("/")[-5:])
+    # For making sure all files are consistently named
+    fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
 
     print()
     print("Input Directory =", dataFilePath)
@@ -42,22 +43,16 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         dataFilePath = Path.cwd() / dataFilePath
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print()
-        print("ERROR: Ensure that saliency metric is either 1, 2, or 3")
-        print()
+        print("\nERROR: Ensure that saliency metric is either 1, 2, or 3\n")
         return
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
-        print()
-        print("ERROR: Given file path does not exist or is not a directory")
-        print()
+        print("\nERROR: Given file path does not exist or is not a directory\n")
         return
 
     if not list(dataFilePath.glob("*")):
-        print()
-        print("ERROR: Ensure that file directory is not empty")
-        print()
+        print("\nERROR: Ensure that file directory is not empty\n")
         return
 
     # If the output directory does not exist yet, make it for the user 
@@ -65,15 +60,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         outputDirPath.mkdir(parents=True)
     
     if not outputDirPath.is_dir():
-        print()
-        print("ERROR: Output directory is not a directory")
-        print()
+        print("\nERROR: Output directory is not a directory\n")
         return
 
     if numProcesses < 0:
-        print()
-        print("ERROR: Number of cores must be positive or zero (0 means use all cores)")
-        print()
+        print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
+        return
 
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
@@ -83,8 +75,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     # Expected frequency arrays are stored according to path of the input file directory
     expFreqFilename = "exp_freq_{}.npy".format(fileTag)
     storedExpPath = Path(expFreqDir) / expFreqFilename
-    print()
-    print("Background Frequency Array Location:", storedExpPath)
+    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -97,30 +88,26 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
-            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists")
+            print("\nERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists\n")
             return
     else:
-        print()
-        print("Calculating Per Datafile Background Frequency Arrays...")
+        print("\nCalculating Per Datafile Background Frequency Arrays...")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 # computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag)
                 expectedMultiprocessing.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
-        print()
-        print("Combining Per Datafile Background Frequency Arrays....")
+        print("\nCombining Per Datafile Background Frequency Arrays....")
         computeEpilogosExpectedCombination.main(outputDirPath, fileTag, storedExpPath)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
-        print()
-        print("Calculating Per Datafile Scores...")
+        print("\nCalculating Per Datafile Scores...")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 # computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
                 multiprocessingPlayground.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
-        print()
-        print("Writing to Score Files....")
+        print("\nWriting to Score Files....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]

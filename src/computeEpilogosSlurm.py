@@ -43,25 +43,19 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         dataFilePath = Path.cwd() / dataFilePath
 
     # For making sure all files are consistently named
-    fileTag = dataFilePath.name
+    fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print()
-        print("ERROR: Ensure that saliency metric is either 1, 2, or 3")
-        print()
+        print("\nERROR: Ensure that saliency metric is either 1, 2, or 3\n")
         return
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():
-        print()
-        print("ERROR: Given file path does not exist or is not a directory")
-        print()
+        print("\nERROR: Given file path does not exist or is not a directory\n")
         return
 
     if not list(dataFilePath.glob("*")):
-        print()
-        print("ERROR: Ensure that file directory is not empty")
-        print()
+        print("\nERROR: Ensure that file directory is not empty\n")
         return
 
     # If the output directory does not exist yet, make it for the user 
@@ -69,15 +63,12 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         outputDirPath.mkdir(parents=True)
     
     if not outputDirPath.is_dir():
-        print()
-        print("ERROR: Output directory is not a directory")
-        print()
+        print("\nERROR: Output directory is not a directory\n")
         return
 
     if numProcesses < 0:
-        print()
-        print("ERROR: Number of cores must be positive or zero (0 means use all cores)")
-        print()
+        print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
+        return
 
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
@@ -87,8 +78,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     # Expected frequency arrays are stored according to path of the input file directory
     expFreqFilename = "exp_freq_{}.npy".format(fileTag)
     storedExpPath = Path(expFreqDir) / expFreqFilename
-    print()
-    print("Background Frequency Array Location:", storedExpPath)
+    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -101,12 +91,11 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
         except IOError:
-            print("ERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists")
+            print("\nERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists\n")
             return
     else:     
         expJobIDArr = []   
-        print()
-        print("Submitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
+        print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -126,10 +115,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     jerr.close()
                 except FileExistsError:
                     # This error should never occur because we are deleting the files first
-                    print("ERROR: sbatch '.out' or '.err' file already exists")
-                    print(jobOutPath)
-                    print(jobErrPath)
-                    print(file)
+                    print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                     return
 
                 # computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
@@ -148,7 +134,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
                 if not sp.stdout.startswith("Submitted batch"):
-                    print("ERROR: sbatch not submitted correctly")
+                    print("\nERROR: sbatch not submitted correctly\n")
                     return
                 
                 expJobIDArr.append(int(sp.stdout.split()[-1]))
@@ -159,8 +145,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         print("    JobIDs:", expJobIDStr)
 
-        print()
-        print("Submitting Slurm Job for Combining Background Frequency Arrays....")
+        print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
 
         jobName = "exp_freq_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -178,7 +163,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
             jerr.close()
         except FileExistsError:
             # This error should never occur because we are deleting the files first
-            print("ERROR: sbatch '.out' or '.err' file already exists")
+            print("\nERROR: sbatch '.out' or '.err' file already exists\n")
             return
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
@@ -195,7 +180,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
         if not sp.stdout.startswith("Submitted batch"):
-            print("ERROR: sbatch not submitted correctly")
+            print("\nERROR: sbatch not submitted correctly\n")
             return
         
         combinationJobID = int(sp.stdout.split()[-1])
@@ -204,8 +189,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
-        print()
-        print("Submitting Slurm Jobs for Score Calculation....")
+        print("\nSubmitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
@@ -226,7 +210,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     jerr.close()
                 except FileExistsError:
                     # This error should never occur because we are deleting the files first
-                    print("ERROR: sbatch '.out' or '.err' file already exists")
+                    print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                     return
                 
                 # computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
@@ -253,7 +237,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
                 if not sp.stdout.startswith("Submitted batch"):
-                    print("ERROR: sbatch not submitted correctly")
+                    print("\nERROR: sbatch not submitted correctly\n")
                     return
                 
                 scoreJobIDArr.append(int(sp.stdout.split()[-1]))
@@ -264,8 +248,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("    JobIDs:", scoreJobIDStr)
 
         # Write scores out to gzipped text files
-        print()
-        print("Submitting Slurm Jobs for Writing to Score Files....")
+        print("\nSubmitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []
         for file in dataFilePath.glob("*"):
             if not file.is_dir():
@@ -286,7 +269,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     jerr.close()
                 except FileExistsError:
                     # This error should never occur because we are deleting the files first
-                    print("ERROR: sbatch '.out' or '.err' file already exists")
+                    print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                     return
 
                 computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
@@ -298,20 +281,19 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
                 if not sp.stdout.startswith("Submitted batch"):
-                    print("ERROR: sbatch not submitted correctly")
+                    print("\nERROR: sbatch not submitted correctly\n")
                     return
 
                 writeJobIDArr.append(int(sp.stdout.split()[-1]))
 
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)
-        print()
         if modeOfOperation == "both":
-            print("All JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
+            print("\nAll JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
         elif modeOfOperation == "s":
-            print("All JobIDs: {},{}".format(scoreJobIDStr, writeJobIDStr))
+            print("\nAll JobIDs: {},{}".format(scoreJobIDStr, writeJobIDStr))
         elif modeOfOperation == "bg":
-            print("All JobIDs: {},{}".format(expJobIDStr, combinationJobID))
+            print("\nAll JobIDs: {},{}".format(expJobIDStr, combinationJobID))
 
     # If the user wants to exit upon job completion rather than submission
     if exitBool:

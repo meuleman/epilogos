@@ -30,9 +30,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
     print("Output Directory =", outputDirPath)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print()
-        print("ERROR: Ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
-        print()
+        print("\nERROR: Ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison\n")
         return
 
     # Making paths absolute
@@ -45,24 +43,16 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
     # Check that paths are valid before doing anything
     if not file1Path.exists() or not file1Path.is_dir():
-        print()
-        print("ERROR: Given file path does not exist or is not a directory")
-        print()
+        print("\nERROR: Given file path does not exist or is not a directory\n")
         return
     if not list(file1Path.glob("*")):
-        print()
-        print("ERROR: Ensure that file directory 1 is not empty")
-        print()
+        print("\nERROR: Ensure that file directory 1 is not empty\n")
         return
     if not file2Path.exists() or not file2Path.is_dir():
-        print()
-        print("ERROR: Given file path does not exist or is not a directory")
-        print()
+        print("\nERROR: Given file path does not exist or is not a directory\n")
         return
     if not list(file2Path.glob("*")):
-        print()
-        print("ERROR: Ensure that file directory 2 is not empty")
-        print()
+        print("\nERROR: Ensure that file directory 2 is not empty\n")
         return
 
     # If the output directory does not exist yet, make it for the user 
@@ -70,9 +60,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
         outputDirPath.mkdir(parents=True)
 
     if not outputDirPath.is_dir():
-        print()
-        print("ERROR: Output directory is not a directory")
-        print()
+        print("\nERROR: Output directory is not a directory\n")
         return
 
     # For slurm output and error later
@@ -81,8 +69,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
     # Path for storing/retrieving the expected frequency array
     storedExpPath = outputDirPath / "exp_freq_{}_{}.npy".format(file1Path.name, file2Path.name)
-    print()
-    print("Background Frequency Array Location:", storedExpPath)
+    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -91,15 +78,12 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     expJobIDArr = []   
-    print()
-    print("Submitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
+    print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
     for file1 in file1Path.glob("*"):
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
-            print()
-            print("ERROR: File names do not match in input directory and pairwise directory")
-            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name".format(file1.name))
-            print()
+            print("\nERROR: File names do not match in input directory and pairwise directory")
+            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name\n".format(file1.name))
             return
         else:
             file2 = next(file2Path.glob(file1.name))
@@ -122,11 +106,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
                 jerr.close()
             except FileExistsError:
                 # This error should never occur because we are deleting the files first
-                print("ERROR: sbatch '.out' or '.err' file already exists")
-                print(jobOutPath)
-                print(jobErrPath)
-                print(file1)
-                print(file2)
+                print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                 return
 
             # Create a string for the python command
@@ -142,9 +122,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             if not sp.stdout.startswith("Submitted batch"):
-                print()
-                print("ERROR: sbatch not submitted correctly")
-                print()
+                print("\nERROR: sbatch not submitted correctly\n")
                 return
             
             expJobIDArr.append(int(sp.stdout.split()[-1]))
@@ -155,8 +133,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
     print("    JobIDs:", expJobIDStr)
 
-    print()
-    print("Submitting Slurm Job for Combining Background Frequency Arrays....")
+    print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
 
     jobName = "exp_freq_comb_{}_{}".format(file1Path.name, file2Path.name)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -174,9 +151,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
         jerr.close()
     except FileExistsError:
         # This error should never occur because we are deleting the files first
-        print()
-        print("ERROR: sbatch '.out' or '.err' file already exists")
-        print()
+        print("\nERROR: sbatch '.out' or '.err' file already exists\n")
         return
 
     # Create a string for the python commmand
@@ -192,9 +167,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):
-        print()
-        print("ERROR: sbatch not submitted correctly")
-        print()
+        print("\nERROR: sbatch not submitted correctly\n")
         return
     
     combinationJobID = int(sp.stdout.split()[-1])
@@ -202,17 +175,14 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
 
 
     # Calculate the observed frequencies and scores
-    print()
-    print("Submitting Slurm Jobs for Score Calculation....")
+    print("\nSubmitting Slurm Jobs for Score Calculation....")
     scoreRealJobIDArr = []
     scoreNullJobIDArr = []
     for file1 in file1Path.glob("*"):
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
-            print()
-            print("ERROR: File names do not match in input directory and pairwise directory")
-            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name".format(file1.name))
-            print()
+            print("\nERROR: File names do not match in input directory and pairwise directory")
+            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name\n".format(file1.name))
             return
         else:
             file2 = next(file2Path.glob(file1.name))
@@ -246,9 +216,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
                 jerr.close()
             except FileExistsError:
                 # This error should never occur because we are deleting the files first
-                print()
-                print("ERROR: sbatch '.out' or '.err' file already exists")
-                print()
+                print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                 return
             
             # Create a string for the python commands
@@ -268,9 +236,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
             spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             if not spReal.stdout.startswith("Submitted batch") or not spNull.stdout.startswith("Submitted batch"):
-                print()
-                print("ERROR: sbatch not submitted correctly")
-                print()
+                print("\nERROR: sbatch not submitted correctly\n")
                 return
 
             scoreRealJobIDArr.append(int(spReal.stdout.split()[-1]))
@@ -284,8 +250,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
     print("    Null JobIDs:", scoreNullJobIDStr)
 
     # Fitting, calculating p-values, and visualizing pairiwse differences
-    print()
-    print("Submitting Slurm Jobs for data visualization....")
+    print("\nSubmitting Slurm Jobs for data visualization....")
 
     jobName = "visual_{}_{}".format(file1Path.name, file2Path.name)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -303,9 +268,7 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
         jerr.close()
     except FileExistsError:
         # This error should never occur because we are deleting the files first
-        print()
-        print("ERROR: sbatch '.out' or '.err' file already exists")
-        print()
+        print("\nERROR: sbatch '.out' or '.err' file already exists\n")
         return
 
     # Create a string for the python commmand
@@ -321,16 +284,13 @@ def main(fileDirectory1, fileDirectory2, numStates, saliency, outputDirectory):
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):
-        print()
-        print("ERROR: sbatch not submitted correctly")
-        print()
+        print("\nERROR: sbatch not submitted correctly\n")
         return
     
     visualJobID = int(sp.stdout.split()[-1])
     print("    JobID:", visualJobID)
 
-    print()
-    print("All JobIDs: {},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID))
+    print("\nAll JobIDs: {},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID))
 
 if __name__ == "__main__":
     main()

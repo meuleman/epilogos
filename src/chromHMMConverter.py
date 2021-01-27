@@ -52,8 +52,12 @@ def main(inputDir, outputDir):
         # loop over all rows which contain chromosome in question
         for row in directoryDF.loc[directoryDF["Chromosome"] == chromosome].itertuples():
             # Use the stored filename to read and store all but first 2 lines
+            print(row)
+            print(row.Filename)
             print(row[0])
             print(Path(row[0]))
+            print(row.Chromosome)
+            print(row.Genome)
             with gzip.open(row[0], "rb") as f:
                 stateList.append(f.readlines[2:])
         

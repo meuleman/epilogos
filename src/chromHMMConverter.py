@@ -48,13 +48,8 @@ def main(inputDir, outputDir):
         # loop over all rows which contain chromosome in question
         for row in directoryDF.loc[directoryDF["Chromosome"] == chromosome].itertuples(index=False, name=None):
             # Use the stored filename to read and store all but first 2 lines
-            print(row)
-            print(row[0])
-            print(Path(row[0]))
-            print(row[1])
-            print(row[2])
             with gzip.open(row[0], "rb") as f:
-                stateList.append(f.readlines[2:])
+                stateList.append(f.readlines()[2:])
         
         # Because we appended all the lines from each file at once to the list, we must take the transpose so the array has 200bp bins as rows
         stateArr = np.array(stateList).T

@@ -91,7 +91,7 @@ def s2Exp(dataArrList, rowList, numRows, numCols, numStates, outputDirPath, file
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((numStates, numCols), ))) as pool:
-        results = pool.map(s2Calc, rowList, dataArrList)
+        results = pool.starmap(s2Calc, zip(rowList, dataArrList))
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
@@ -142,7 +142,7 @@ def s3Exp(dataArrList, rowList, numRows, numCols, numStates, outputDirPath, file
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((basePermutationArr, numStates, numCols), ))) as pool:
-        results = pool.map(s3Calc, rowList, dataArrList)
+        results = pool.starmap(s3Calc, zip(rowList, dataArrList))
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing

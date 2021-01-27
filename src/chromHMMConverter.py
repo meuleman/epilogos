@@ -32,8 +32,8 @@ def main(inputDir, outputDir):
     valueCounts = directoryDF["Genome"].value_counts()
     missingBool = False
     for genome, count in valueCounts.iteritems():
-        if count != len(genomeList):
-            print("{} has {} chromosomes. {} were expected".format(genome, count, len(genomeList)))
+        if count != len(chromosomeList):
+            print("{} has {} chromosomes. {} were expected".format(genome, count, len(chromosomeList)))
             missingBool = True
     if missingBool:
         return

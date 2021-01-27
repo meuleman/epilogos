@@ -112,7 +112,7 @@ def s2Calc(rowsToCalculate, dataArr):
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
     if (sys.version_info < (3, 8)):
         combinations = ncr(inputInfo[1], 2)
-        for row in rowsToCalculate:
+        for row in range(len(rowsToCalculate)):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
@@ -122,7 +122,7 @@ def s2Calc(rowsToCalculate, dataArr):
                         expFreqArr[uniqueStates[i], uniqueStates[j]] += ncr(stateCounts[i], 2) / combinations
     else:
         combinations = math.comb(inputInfo[1], 2)
-        for row in rowsToCalculate:
+        for row in  range(len(rowsToCalculate)):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
@@ -159,7 +159,7 @@ def s3Calc(rowsToCalculate, dataArr):
     expFreqArr = np.zeros((inputInfo[2], inputInfo[2], inputInfo[1], inputInfo[1]))
     
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
-    for row in rowsToCalculate:
+    for row in  range(len(rowsToCalculate)):
         expFreqArr[inputInfo[0][0], inputInfo[0][1], dataArr[row, inputInfo[0][0]], dataArr[row, inputInfo[0][1]]] += np.ones(inputInfo[0].shape[1])
 
     return expFreqArr

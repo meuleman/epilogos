@@ -19,20 +19,17 @@ import gzip
 
 
 def main():
-    t = time.time()
+    tRead = time.time()
+    # Taking in the the score array
+    filePath = Path("/home/jquon/chromHMMConversionTest/18state_b'chr3'.npz")
+    npzFile = np.load(filePath)
+    scoreArr = npzFile['scoreArr']
+    locationArr = npzFile['locationArr']
 
-    with gzip.open(Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz"), 'rb') as f:
-        for i, l in enumerate(f):
-            pass
-    print("File {1} contain {0} lines".format(i, "matrix"))
+    print(scoreArr[:10])
+    print(locationArr[:10])
 
-    print(time.time() - t)
-
-
-    t = time.time()
-    number_lines = sum(1 for line in open(Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")))
-    print(number_lines)
-    print(time.time() - t)
+    print("Read Time:", time.time() - tRead)
 
 if __name__ == "__main__":
     main()

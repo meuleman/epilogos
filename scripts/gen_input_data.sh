@@ -1,7 +1,13 @@
 #!/bin/bash
 
+### The ${GENOME}.genome file contains chromosome sizes, and can be obtained in several ways, including:
+### wget -q -O - ftp://hgdownload.cse.ucsc.edu/goldenPath/${GENOME}/database/chromInfo.txt.gz | gunzip - | cut -f 1-2
 GENOME=$1
+
+### the METADATA file is expected to contain a header line
 METADATA=$2
+
+### Directory where all STATEBYLINE ChromHMM output is stored, one file per biosample-chromosome combination.
 DIR="/home/meuleman/work/projects/imputation//WM20191003_curated_data_mixed/public_ChromHMM_released/observed_aux_18_hg19/CALLS/STATEBYLINE/"
 
 for CHR in $(cut -f1 ${GENOME}.genome); do

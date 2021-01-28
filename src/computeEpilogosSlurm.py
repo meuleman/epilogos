@@ -70,6 +70,15 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
         return
 
+    ######################################################
+    #
+    #     need to find out way to find number of multiprocess cores
+    #
+    #######################################################
+
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
+
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
@@ -127,7 +136,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 if saliency == 1:
                     slurmCommand = "sbatch --job-name={}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=4 --ntasks=4 --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    # slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                 elif saliency == 3:
                     slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
 
@@ -230,7 +240,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     if saliency == 1:
                         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=4 --ntasks=4 --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, pythonCommand)
+                        # slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
                     elif saliency == 3:
                         slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --error={} --nodes=1 --ntasks={} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numProcesses, pythonCommand)
 

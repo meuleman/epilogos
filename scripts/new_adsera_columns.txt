@@ -1,0 +1,834 @@
+id	Biosample.Summary	Biosample	GROUP	SECONDARY	COLOR	category	infoline	age	sex	type	origin	perturb	lifestage	Project2
+BSS01667	subcutaneous abdominal adipose tissue nuclear fraction female adult (49 years)	subcutaneous abdominal adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	49	female	tissue			adult	Roadmap 2015
+BSS01665	subcutaneous abdominal adipose tissue nuclear fraction female adult (25 years)	subcutaneous abdominal adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	25	female	tissue			adult	Roadmap 2015
+BSS01666	subcutaneous abdominal adipose tissue nuclear fraction female adult (41 year)	subcutaneous abdominal adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	41	female	tissue			adult	Roadmap 2015
+BSS01668	subcutaneous abdominal adipose tissue nuclear fraction female adult (59 years)	subcutaneous abdominal adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	59	female	tissue			adult	Roadmap 2015
+BSS01669	subcutaneous abdominal adipose tissue nuclear fraction female adult (81 year)	subcutaneous abdominal adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	81	female	tissue			adult	Roadmap 2015
+BSS01393	omental fat pad female adult (51 year)	omental fat pad	Adipose		#AF5B39	Tissue	OMENTAL FAT PAD	51	female	tissue			adult	ENCODE
+BSS00038	adipocyte	adipocyte	Adipose		#AF5B39	Tissue	ADIPOCYTE	unknown	unknown/mixed	in vitro differentiated cells			unknown/mixed	ENCODE
+BSS00043	adipose tissue male adult (34 years)	adipose tissue	Adipose		#AF5B39	Tissue	ADIPOSE TISSUE	34	male	tissue			adult	Roadmap (Novel)
+BSS01394	omental fat pad female adult (53 years)	omental fat pad	Adipose		#AF5B39	Tissue	OMENTAL FAT PAD	53	female	tissue			adult	ENCODE
+BSS01397	osteoblast	osteoblast	Bone		#6FB7EB	Tissue	OSTEOBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00084	arm bone male embryo (81 day)	arm bone	Bone		#6FB7EB	Tissue	BONE ARM	81	male	tissue			embryonic	ENCODE
+BSS00330	femur female embryo (98 days)	femur	Bone		#6FB7EB	Tissue	BONE FEMUR	98	female	tissue			embryonic	ENCODE
+BSS00705	HS-5	HS-5	Bone		#6FB7EB	Tissue	BONE MARROW STROMA	unknown	male	cell line			adult	ENCODE
+BSS01154	leg bone male embryo (81 day)	leg bone	Bone		#6FB7EB	Tissue	BONE LEG	81	male	tissue			embryonic	ENCODE
+BSS01426	Peyer's patch female adult (53 years)	Peyer's patch	Digestive		#C58DAA	Tissue	PEYERS PATCH	53	female	tissue			adult	ENCODE
+BSS01639	stomach female adult (53 years)	stomach	Digestive		#C58DAA	Tissue	STOMACH	53	female	tissue			adult	ENCODE
+BSS00227	colonic mucosa female adult (56 years)	colonic mucosa	Digestive		#C58DAA	Tissue	COLON MUCOSA	56	female	tissue			adult	Roadmap (Novel)
+BSS00228	colonic mucosa female adult (73 years)	colonic mucosa	Digestive		#C58DAA	Tissue	COLON MUCOSA	73	female	tissue			adult	Roadmap 2015
+BSS00270	duodenal mucosa male adult (59 years)	duodenal mucosa	Digestive		#C58DAA	Tissue	DUODENUM MUCOSA	59	male	tissue			adult	Roadmap (Novel)
+BSS01119	large intestine male embryo (108 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	108	male	tissue			embryonic	Roadmap 2015
+BSS01282	mucosa of rectum female adult (50 years)	mucosa of rectum	Digestive		#C58DAA	Tissue	RECTUM MUCOSA	50	female	tissue			adult	Roadmap 2015
+BSS01283	mucosa of rectum female adult (61 year)	mucosa of rectum	Digestive		#C58DAA	Tissue	RECTUM MUCOSA	61	female	tissue			adult	Roadmap 2015
+BSS01601	small intestine male embryo (108 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	108	male	tissue			embryonic	Roadmap 2015
+BSS01651	stomach male adult (34 years)	stomach	Digestive		#C58DAA	Tissue	STOMACH	34	male	tissue			adult	Roadmap 2015
+BSS01850	transverse colon male adult (37 years)	transverse colon	Digestive		#C58DAA	Tissue	TRANSVERSE COLON	37	male	tissue			adult	ENCODE
+BSS00271	duodenal mucosa male adult (76 years)	duodenal mucosa	Digestive		#C58DAA	Tissue	DUODENUM MUCOSA	76	male	tissue			adult	Roadmap 2015
+BSS00316	esophagus female adult (30 years)	esophagus	Digestive		#C58DAA	Tissue	ESOPHAGUS	30	female	tissue			adult	Roadmap (Novel)
+BSS00318	esophagus male adult (34 years)	esophagus	Digestive		#C58DAA	Tissue	ESOPHAGUS	34	male	tissue			adult	Roadmap 2015
+BSS00321	esophagus muscularis mucosa female adult (53 years)	esophagus muscularis mucosa	Digestive		#C58DAA	Tissue	ESOPHAGUS MUSCULARIS MUCOSA	53	female	tissue			adult	ENCODE
+BSS00325	esophagus squamous epithelium female adult (53 years)	esophagus squamous epithelium	Digestive		#C58DAA	Tissue	ESOPHAGUS SQUAMOUS EPITHELIUM	53	female	tissue			adult	ENCODE
+BSS01284	mucosa of stomach male adult (59 years)	mucosa of stomach	Digestive		#C58DAA	Tissue	STOMACH MUCOSA	59	male	tissue			adult	Roadmap 2015
+BSS01543	sigmoid colon female adult (53 years)	sigmoid colon	Digestive		#C58DAA	Tissue	SIGMOID COLON	53	female	tissue			adult	ENCODE
+BSS01545	sigmoid colon male adult (34 years)	sigmoid colon	Digestive		#C58DAA	Tissue	SIGMOID COLON	34	male	tissue			adult	Roadmap 2015
+BSS01548	sigmoid colon male child (3 years)	sigmoid colon	Digestive		#C58DAA	Tissue	SIGMOID COLON	3	male	tissue			child	Roadmap 2015
+BSS01588	small intestine female adult (30 years)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	30	female	tissue			adult	Roadmap (Novel)
+BSS01849	transverse colon female adult (53 years)	transverse colon	Digestive		#C58DAA	Tissue	TRANSVERSE COLON	53	female	tissue			adult	ENCODE
+BSS00381	gastroesophageal sphincter female adult (53 years)	gastroesophageal sphincter	Digestive		#C58DAA	Tissue	GASTROESOPHAGEAL SPHINCTER	53	female	tissue			adult	ENCODE
+BSS01599	small intestine male child (3 years)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	3	male	tissue			child	Roadmap 2015
+BSS01649	stomach female embryo (96 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	96	female	tissue			embryonic	Roadmap 2015
+BSS01654	stomach male child (3 years)	stomach	Digestive		#C58DAA	Tissue	STOMACH	3	male	tissue			child	Roadmap (Novel)
+BSS01851	transverse colon male adult (54 years)	transverse colon	Digestive		#C58DAA	Tissue	TRANSVERSE COLON	54	male	tissue			adult	ENCODE
+BSS01597	small intestine male adult (34 years)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	34	male	tissue			adult	Roadmap 2015
+BSS01650	stomach female embryo (98 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	98	female	tissue			embryonic	Roadmap 2015
+BSS01542	sigmoid colon female adult (51 year)	sigmoid colon	Digestive		#C58DAA	Tissue	SIGMOID COLON	51	female	tissue			adult	ENCODE
+BSS01547	sigmoid colon male adult (54 years)	sigmoid colon	Digestive		#C58DAA	Tissue	SIGMOID COLON	54	male	tissue			adult	ENCODE
+BSS01653	stomach male adult (54 years)	stomach	Digestive		#C58DAA	Tissue	STOMACH	54	male	tissue			adult	ENCODE
+BSS01848	transverse colon female adult (51 year)	transverse colon	Digestive		#C58DAA	Tissue	TRANSVERSE COLON	51	female	tissue			adult	ENCODE
+BSS00322	esophagus muscularis mucosa male adult (37 years)	esophagus muscularis mucosa	Digestive		#C58DAA	Tissue	ESOPHAGUS MUSCULARIS MUCOSA	37	male	tissue			adult	ENCODE
+BSS00326	esophagus squamous epithelium male adult (37 years)	esophagus squamous epithelium	Digestive		#C58DAA	Tissue	ESOPHAGUS SQUAMOUS EPITHELIUM	37	male	tissue			adult	ENCODE
+BSS01109	large intestine female embryo (103 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	103	female	tissue			embryonic	Roadmap (Novel)
+BSS01110	large intestine female embryo (105 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01111	large intestine female embryo (107 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01112	large intestine female embryo (108 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01113	large intestine female embryo (110 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	110	female	tissue			embryonic	Roadmap (Novel)
+BSS01114	large intestine female embryo (120 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	120	female	tissue			embryonic	Roadmap (Novel)
+BSS01116	large intestine female embryo (91 day)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	91	female	tissue			embryonic	Roadmap (Novel)
+BSS01117	large intestine female embryo (98 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01118	large intestine male embryo (105 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01120	large intestine male embryo (113 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	113	male	tissue			embryonic	Roadmap (Novel)
+BSS01121	large intestine male embryo (115 days)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01122	large intestine male embryo (91 day)	large intestine	Digestive		#C58DAA	Tissue	LARGE INTESTINE	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01427	Peyer's patch female adult (51 year)	Peyer's patch	Digestive		#C58DAA	Tissue	PEYERS PATCH	37,51	male	tissue			adult	ENCODE
+BSS01428	Peyer's patch male adult (54 years)	Peyer's patch	Digestive		#C58DAA	Tissue	PEYERS PATCH	54	male	tissue			adult	ENCODE
+BSS01590	small intestine female embryo (105 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01591	small intestine female embryo (107 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01592	small intestine female embryo (108 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01593	small intestine female embryo (110 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	110	female	tissue			embryonic	Roadmap (Novel)
+BSS01594	small intestine female embryo (120 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	120	female	tissue			embryonic	Roadmap (Novel)
+BSS01595	small intestine female embryo (91 day)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	91	female	tissue			embryonic	Roadmap (Novel)
+BSS01596	small intestine female embryo (98 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01600	small intestine male embryo (105 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01602	small intestine male embryo (115 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01603	small intestine male embryo (87 days)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01604	small intestine male embryo (91 day)	small intestine	Digestive		#C58DAA	Tissue	SMALL INTESTINE	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01636	stomach embryo (101 day)	stomach	Digestive		#C58DAA	Tissue	STOMACH	101	unknown/mixed	tissue			embryonic	Roadmap 2015
+BSS01637	stomach female adult (30 years)	stomach	Digestive		#C58DAA	Tissue	STOMACH	30	female	tissue			adult	Roadmap (Novel)
+BSS01638	stomach female adult (51 year)	stomach	Digestive		#C58DAA	Tissue	STOMACH	51	female	tissue			adult	ENCODE
+BSS01641	stomach female embryo	stomach	Digestive		#C58DAA	Tissue	STOMACH	unknown	female	tissue			embryonic	Roadmap 2015
+BSS01642	stomach female embryo (105 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	105	female	tissue			embryonic	Roadmap 2015
+BSS01643	stomach female embryo (107 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	107	female	tissue			embryonic	Roadmap 2015
+BSS01644	stomach female embryo (108 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	108	female	tissue			embryonic	Roadmap 2015
+BSS01646	stomach female embryo (121 day)	stomach	Digestive		#C58DAA	Tissue	STOMACH	121	female	tissue			embryonic	Roadmap 2015
+BSS01647	stomach female embryo (147 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	147	female	tissue			embryonic	Roadmap 2015
+BSS01655	stomach male embryo (108 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	108	male	tissue			embryonic	Roadmap 2015
+BSS01656	stomach male embryo (127 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	127	male	tissue			embryonic	Roadmap 2015
+BSS01657	stomach male embryo (58 days) and male embryo (76 days)	stomach	Digestive		#C58DAA	Tissue	STOMACH	76,58	male	tissue			embryonic	ENCODE
+BSS01658	stomach male embryo (91 day)	stomach	Digestive		#C58DAA	Tissue	STOMACH	91	male	tissue			embryonic	Roadmap 2015
+BSS01835	thyroid gland male adult (54 years)	thyroid gland	Endocrine		#99C1FF	Tissue	THYROID GLAND	54	male	tissue			adult	ENCODE
+BSS00055	adrenal gland male adult (37 years)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	37	male	tissue			adult	ENCODE
+BSS00056	adrenal gland male adult (54 years)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	54	male	tissue			adult	ENCODE
+BSS01399	ovary female adult (30 years)	ovary	Endocrine	Reproductive	#99C1FF	Tissue	OVARY	30	female	tissue			adult	Roadmap 2015
+BSS01832	thyroid gland female adult (53 years)	thyroid gland	Endocrine		#99C1FF	Tissue	THYROID GLAND	53	female	tissue			adult	ENCODE
+BSS01834	thyroid gland male adult (37 years)	thyroid gland	Endocrine		#99C1FF	Tissue	THYROID GLAND	37	male	tissue			adult	ENCODE
+BSS00054	adrenal gland male adult (34 years)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	34	male	tissue			adult	Roadmap (Novel)
+BSS00060	adrenal gland male embryo (97 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	97	male	tissue			embryonic	Roadmap 2015
+BSS00281	endocrine pancreas adult (59 years)	endocrine pancreas	Endocrine	Pancreas	#99C1FF	Tissue	ENDOCRINE PANCREAS	59	unknown/mixed	tissue			adult	Roadmap (Novel)
+BSS00284	endocrine pancreas male adult (46 years)	endocrine pancreas	Endocrine	Pancreas	#99C1FF	Tissue	ENDOCRINE PANCREAS	46	male	tissue			adult	Roadmap 2015
+BSS00046	adrenal gland female adult (30 years)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	30	female	tissue			adult	Roadmap (Novel)
+BSS01715	testis male adult (37 years)	testis	Endocrine	Reproductive	#99C1FF	Tissue	TESTIS	37	male	tissue			adult	ENCODE
+BSS00048	adrenal gland female adult (53 years)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	53	female	tissue			adult	ENCODE
+BSS01402	ovary female adult (53 years)	ovary	Endocrine	Reproductive	#99C1FF	Tissue	OVARY	53	female	tissue			adult	ENCODE
+BSS01831	thyroid gland female adult (51 year)	thyroid gland	Endocrine		#99C1FF	Tissue	THYROID GLAND	51	female	tissue			adult	ENCODE
+BSS00047	adrenal gland female adult (51 year)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	51	female	tissue			adult	ENCODE
+BSS00283	endocrine pancreas male adult (45 years)	endocrine pancreas	Endocrine	Pancreas	#99C1FF	Tissue	ENDOCRINE PANCREAS	45	male	tissue			adult	Roadmap 2015
+BSS00045	adrenal gland embryo (96 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	96	unknown/mixed	tissue			embryonic	Roadmap 2015
+BSS00050	adrenal gland female embryo (108 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	108	female	tissue			embryonic	Roadmap (Novel)
+BSS00051	adrenal gland female embryo (113 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	113	female	tissue			embryonic	Roadmap (Novel)
+BSS00052	adrenal gland female embryo (85 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	85	female	tissue			embryonic	Roadmap (Novel)
+BSS00057	adrenal gland male embryo (101 day)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	101	male	tissue			embryonic	Roadmap (Novel)
+BSS00058	adrenal gland male embryo (108 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	108	male	tissue			embryonic	Roadmap (Novel)
+BSS00059	adrenal gland male embryo (85 days)	adrenal gland	Endocrine		#99C1FF	Tissue	ADRENAL GLAND	85	male	tissue			embryonic	Roadmap (Novel)
+BSS00282	endocrine pancreas male	endocrine pancreas	Endocrine	Pancreas	#99C1FF	Tissue	ENDOCRINE PANCREAS	unknown	male	tissue			unknown/mixed	Roadmap 2015
+BSS01401	ovary female adult (51 year)	ovary	Endocrine	Reproductive	#99C1FF	Tissue	OVARY	51	female	tissue			adult	ENCODE
+BSS01403	ovary female embryo	ovary	Endocrine	Reproductive	#99C1FF	Tissue	OVARY	unknown	female	tissue			embryonic	Roadmap (Novel)
+BSS01718	testis male adult (54 years)	testis	Endocrine	Reproductive	#99C1FF	Tissue	TESTIS	54	male	tissue			adult	ENCODE
+BSS01719	testis male embryo	testis	Endocrine	Reproductive	#99C1FF	Tissue	TESTIS	unknown	male	tissue			embryonic	Roadmap (Novel)
+BSS00507	heart left ventricle female adult (53 years)	heart left ventricle	Heart		#D56F80	Tissue	HEART LEFT VENTRICLE	53	female	tissue			adult	ENCODE
+BSS00087	ascending aorta female adult (51 year)	ascending aorta	Heart		#D56F80	Tissue	ASCENDING AORTA	51	female	tissue			adult	ENCODE
+BSS00080	aorta male adult (34 years)	aorta	Heart		#D56F80	Tissue	AORTA	34	male	tissue			adult	Roadmap 2015
+BSS00088	ascending aorta female adult (53 years)	ascending aorta	Heart		#D56F80	Tissue	ASCENDING AORTA	53	female	tissue			adult	ENCODE
+BSS00512	heart left ventricle male adult (34 years)	heart left ventricle	Heart		#D56F80	Tissue	HEART LEFT VENTRICLE	34	male	tissue			adult	Roadmap 2015
+BSS00513	heart left ventricle male child (3 years)	heart left ventricle	Heart		#D56F80	Tissue	HEART LEFT VENTRICLE	3	male	tissue			child	Roadmap 2015
+BSS00525	heart right ventricle male child (3 years)	heart right ventricle	Heart		#D56F80	Tissue	HEART RIGHT VENTRICLE	3	male	tissue			child	Roadmap 2015
+BSS01507	right atrium auricular region female adult (53 years)	right atrium auricular region	Heart		#D56F80	Tissue	HEART RIGHT ATRIUM	53	female	tissue			adult	ENCODE
+BSS01814	thoracic aorta male adult (37 years)	thoracic aorta	Heart		#D56F80	Tissue	THORACIC AORTA	37	male	tissue			adult	ENCODE
+BSS01815	thoracic aorta male adult (54 years)	thoracic aorta	Heart		#D56F80	Tissue	THORACIC AORTA	54	male	tissue			adult	ENCODE
+BSS00079	aorta female adult (30 years)	aorta	Heart		#D56F80	Tissue	AORTA	30	female	tissue			adult	Roadmap (Novel)
+BSS00524	heart right ventricle male adult (34 years)	heart right ventricle	Heart		#D56F80	Tissue	HEART RIGHT VENTRICLE	34	male	tissue			adult	Roadmap 2015
+BSS01508	right cardiac atrium male adult (34 years)	right cardiac atrium	Heart		#D56F80	Tissue	HEART RIGHT ATRIUM	34	male	tissue			adult	Roadmap 2015
+BSS01837	tibial artery female adult (53 years)	tibial artery	Heart		#D56F80	Tissue	TIBIAL ARTERY	53	female	tissue			adult	ENCODE
+BSS00493	heart embryo (101 day)	heart	Heart		#D56F80	Tissue	HEART	101	unknown/mixed	tissue			embryonic	Roadmap 2015
+BSS00243	coronary artery female adult (53 years)	coronary artery	Heart		#D56F80	Tissue	CORONARY ARTERY	53	female	tissue			adult	ENCODE
+BSS00517	heart male embryo (105 days)	heart	Heart		#D56F80	Tissue	HEART	105	male	tissue			embryonic	Roadmap 2015
+BSS00242	coronary artery female adult (51 year)	coronary artery	Heart		#D56F80	Tissue	CORONARY ARTERY	51	female	tissue			adult	ENCODE
+BSS00521	heart male embryo (91 day)	heart	Heart		#D56F80	Tissue	HEART	91	male	tissue			embryonic	Roadmap 2015
+BSS01506	right atrium auricular region female adult (51 year)	right atrium auricular region	Heart		#D56F80	Tissue	HEART RIGHT ATRIUM	51	female	tissue			adult	ENCODE
+BSS00494	heart embryo (59 days) and female embryo (76 days)	heart	Heart		#D56F80	Tissue	HEART	59,76	unknown/mixed	tissue			embryonic	ENCODE
+BSS00495	heart embryo (80 days)	heart	Heart		#D56F80	Tissue	HEART	80	unknown/mixed	tissue			embryonic	ENCODE
+BSS00496	heart embryo (96 days)	heart	Heart		#D56F80	Tissue	HEART	96	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS00498	heart female embryo (103 days)	heart	Heart		#D56F80	Tissue	HEART	103	female	tissue			embryonic	Roadmap (Novel)
+BSS00499	heart female embryo (105 days)	heart	Heart		#D56F80	Tissue	HEART	105	female	tissue			embryonic	Roadmap (Novel)
+BSS00500	heart female embryo (110 days)	heart	Heart		#D56F80	Tissue	HEART	110	female	tissue			embryonic	Roadmap (Novel)
+BSS00501	heart female embryo (116 days) and female embryo (98 days)	heart	Heart		#D56F80	Tissue	HEART	116,98	female	tissue			embryonic	ENCODE
+BSS00502	heart female embryo (117 days)	heart	Heart		#D56F80	Tissue	HEART	117	female	tissue			embryonic	Roadmap (Novel)
+BSS00503	heart female embryo (147 days)	heart	Heart		#D56F80	Tissue	HEART	147	female	tissue			embryonic	Roadmap (Novel)
+BSS00505	heart female embryo (91 day)	heart	Heart		#D56F80	Tissue	HEART	91	female	tissue			embryonic	Roadmap (Novel)
+BSS00508	heart left ventricle female embryo (101 day) and female embryo (103 days)	heart left ventricle	Heart		#D56F80	Tissue	HEART LEFT VENTRICLE	103,101	female	tissue			embryonic	ENCODE
+BSS00509	heart left ventricle female embryo (136 days)	heart left ventricle	Heart		#D56F80	Tissue	HEART LEFT VENTRICLE	136	female	tissue			embryonic	ENCODE
+BSS00514	heart male adult (27 years) and male adult (35 years)	heart	Heart		#D56F80	Tissue	HEART	35,27	male	tissue			adult	ENCODE
+BSS00516	heart male child (3 years)	heart	Heart		#D56F80	Tissue	HEART	3	male	tissue			child	Roadmap (Novel)
+BSS00518	heart male embryo (110 days)	heart	Heart		#D56F80	Tissue	HEART	110	male	tissue			embryonic	Roadmap (Novel)
+BSS00519	heart male embryo (120 days)	heart	Heart		#D56F80	Tissue	HEART	120	male	tissue			embryonic	Roadmap (Novel)
+BSS00520	heart male embryo (72 days) and male embryo (76 days)	heart	Heart		#D56F80	Tissue	HEART	72,76	male	tissue			embryonic	ENCODE
+BSS00522	heart male embryo (96 days)	heart	Heart		#D56F80	Tissue	HEART	96	male	tissue			embryonic	Roadmap 2015
+BSS00523	heart right ventricle female embryo (101 day) and female embryo (103 days)	heart right ventricle	Heart		#D56F80	Tissue	HEART RIGHT VENTRICLE	101,103	female	tissue			embryonic	ENCODE
+BSS01127	left cardiac atrium female embryo (101 day)	left cardiac atrium	Heart		#D56F80	Tissue	HEART LEFT ATRIUM	101	female	tissue			embryonic	ENCODE
+BSS01838	tibial artery male adult (37 years)	tibial artery	Heart		#D56F80	Tissue	TIBIAL ARTERY	37	male	tissue			adult	ENCODE
+BSS01088	kidney female embryo (120 days)	kidney	Kidney		#660000	Tissue	KIDNEY	120	female	tissue			embryonic	Roadmap 2015
+BSS01096	kidney male adult (50 years)	kidney	Kidney		#660000	Tissue	KIDNEY	50	male	tissue			adult	Roadmap (Novel)
+BSS01097	kidney male adult (67 years)	kidney	Kidney		#660000	Tissue	KIDNEY	67	male	tissue			adult	Roadmap (Novel)
+BSS00526	HEK293	HEK293	Kidney		#660000	Tissue	KIDNEY CELL	unknown	female	cell line			embryonic	ENCODE
+BSS00528	HEK293T	HEK293T	Kidney		#660000	Tissue	KIDNEY CELL	unknown	female	cell line			embryonic	ENCODE
+BSS01078	kidney embryo (59 days) and female embryo (59 days)	kidney	Kidney		#660000	Tissue	KIDNEY	59	unknown/mixed	tissue			embryonic	ENCODE
+BSS01079	kidney embryo (80 days)	kidney	Kidney		#660000	Tissue	KIDNEY	80	unknown/mixed	tissue			embryonic	ENCODE
+BSS01084	kidney female embryo (105 days)	kidney	Kidney		#660000	Tissue	KIDNEY	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01085	kidney female embryo (108 days)	kidney	Kidney		#660000	Tissue	KIDNEY	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01086	kidney female embryo (113 days)	kidney	Kidney		#660000	Tissue	KIDNEY	113	female	tissue			embryonic	Roadmap (Novel)
+BSS01089	kidney female embryo (121 day)	kidney	Kidney		#660000	Tissue	KIDNEY	121	female	tissue			embryonic	Roadmap (Novel)
+BSS01090	kidney female embryo (76 days) and male embryo (76 days)	kidney	Kidney		#660000	Tissue	KIDNEY	76	unknown/mixed	tissue			embryonic	ENCODE
+BSS01091	kidney female embryo (85 days)	kidney	Kidney		#660000	Tissue	KIDNEY	85	female	tissue			embryonic	Roadmap (Novel)
+BSS01099	kidney male embryo (105 days)	kidney	Kidney		#660000	Tissue	KIDNEY	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01100	kidney male embryo (85 days)	kidney	Kidney		#660000	Tissue	KIDNEY	85	male	tissue			embryonic	Roadmap (Novel)
+BSS01101	kidney male embryo (87 days)	kidney	Kidney		#660000	Tissue	KIDNEY	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01128	left kidney female embryo (107 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01129	left kidney female embryo (110 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	110	female	tissue			embryonic	Roadmap (Novel)
+BSS01130	left kidney female embryo (147 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	147	female	tissue			embryonic	Roadmap (Novel)
+BSS01131	left kidney female embryo (59 days) and male embryo (91 day)	left kidney	Kidney		#660000	Tissue	KIDNEY	91,59	unknown/mixed	tissue			embryonic	ENCODE
+BSS01132	left kidney female embryo (87 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	87	female	tissue			embryonic	Roadmap (Novel)
+BSS01133	left kidney female embryo (98 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01134	left kidney male embryo (115 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01135	left kidney male embryo (87 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01136	left kidney male embryo (96 days)	left kidney	Kidney		#660000	Tissue	KIDNEY	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01150	left renal cortex interstitium male embryo (105 days)	left renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01151	left renal cortex interstitium male embryo (120 days)	left renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01152	left renal pelvis male embryo (105 days)	left renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01153	left renal pelvis male embryo (120 days)	left renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01482	renal cortex interstitium female embryo (103 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	103	female	tissue			embryonic	Roadmap (Novel)
+BSS01483	renal cortex interstitium female embryo (120 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	120	female	tissue			embryonic	Roadmap (Novel)
+BSS01484	renal cortex interstitium female embryo (89 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	89	female	tissue			embryonic	Roadmap (Novel)
+BSS01485	renal cortex interstitium female embryo (96 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	96	female	tissue			embryonic	Roadmap (Novel)
+BSS01486	renal cortex interstitium male embryo (108 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	108	male	tissue			embryonic	Roadmap (Novel)
+BSS01487	renal cortex interstitium male embryo (113 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	113	male	tissue			embryonic	Roadmap (Novel)
+BSS01488	renal cortex interstitium male embryo (127 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	127	male	tissue			embryonic	Roadmap (Novel)
+BSS01489	renal cortex interstitium male embryo (91 day)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01490	renal cortex interstitium male embryo (97 days)	renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	97	male	tissue			embryonic	Roadmap (Novel)
+BSS01493	renal pelvis female embryo (103 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	103	female	tissue			embryonic	Roadmap (Novel)
+BSS01494	renal pelvis female embryo (105 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01495	renal pelvis female embryo (89 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	89	female	tissue			embryonic	Roadmap (Novel)
+BSS01496	renal pelvis female embryo (96 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	96	female	tissue			embryonic	Roadmap (Novel)
+BSS01497	renal pelvis male embryo (108 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	108	male	tissue			embryonic	Roadmap (Novel)
+BSS01498	renal pelvis male embryo (113 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	113	male	tissue			embryonic	Roadmap (Novel)
+BSS01499	renal pelvis male embryo (127 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	127	male	tissue			embryonic	Roadmap (Novel)
+BSS01500	renal pelvis male embryo (91 day)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01501	renal pelvis male embryo (97 days)	renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	97	male	tissue			embryonic	Roadmap (Novel)
+BSS01509	right kidney female embryo (107 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01510	right kidney female embryo (117 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	117	female	tissue			embryonic	Roadmap (Novel)
+BSS01511	right kidney female embryo (147 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	147	female	tissue			embryonic	Roadmap (Novel)
+BSS01512	right kidney female embryo (87 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	87	female	tissue			embryonic	Roadmap (Novel)
+BSS01513	right kidney female embryo (98 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01514	right kidney male embryo (108 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	108	male	tissue			embryonic	Roadmap (Novel)
+BSS01515	right kidney male embryo (115 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01516	right kidney male embryo (87 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01517	right kidney male embryo (91 day)	right kidney	Kidney		#660000	Tissue	KIDNEY	91	male	tissue			embryonic	ENCODE
+BSS01518	right kidney male embryo (96 days)	right kidney	Kidney		#660000	Tissue	KIDNEY	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01531	right renal cortex interstitium male embryo (105 days)	right renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01532	right renal cortex interstitium male embryo (120 days)	right renal cortex interstitium	Kidney		#660000	Tissue	RENAL CORTEX INTERSTITIUM	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01533	right renal pelvis male embryo (105 days)	right renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01534	right renal pelvis male embryo (120 days)	right renal pelvis	Kidney		#660000	Tissue	RENAL PELVIS	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01159	liver female adult (25 years)	liver	Liver		#5151E7	Tissue	LIVER	25	female	tissue			adult	Roadmap 2015
+BSS01168	liver male adult (31 year)	liver	Liver		#5151E7	Tissue	LIVER	31	male	tissue			adult	Roadmap 2015
+BSS01519	right lobe of liver female adult (53 years)	right lobe of liver	Liver		#5151E7	Tissue	LIVER	53	female	tissue			adult	ENCODE
+BSS01169	liver male adult (32 years)	liver	Liver		#5151E7	Tissue	LIVER	32	male	tissue			adult	Roadmap (Novel)
+BSS01170	liver male adult (78 years)	liver	Liver		#5151E7	Tissue	LIVER	78	male	tissue			adult	Roadmap 2015
+BSS00511	liver male adult (32 years)	liver	Liver		#5151E7	Tissue	LIVER	32	male	tissue			adult	Roadmap (Novel)
+BSS00553	hepatic stellate cell female adult (59 years)	hepatic stellate cell	Liver		#5151E7	Tissue	HEPATIC STELLATE CELL	59	female	primary cell			adult	ENCODE
+BSS00554	hepatocyte	hepatocyte	Liver		#5151E7	Tissue	HEPATOCYTE	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01158	liver embryo (59 days) and embryo (80 days)	liver	Liver		#5151E7	Tissue	LIVER	59,80	unknown/mixed	tissue			embryonic	ENCODE
+BSS01164	liver female embryo (101 day) and female embryo (113 days)	liver	Liver		#5151E7	Tissue	LIVER	101,113	female	tissue			embryonic	ENCODE
+BSS01193	lung female embryo (120 days)	lung	Lung		#D9D2E9	Tissue	LUNG	120	female	tissue			embryonic	Roadmap 2015
+BSS01190	lung female adult (30 years)	lung	Lung		#D9D2E9	Tissue	LUNG	30	female	tissue			adult	Roadmap 2015
+BSS01201	lung male child (3 years)	lung	Lung		#D9D2E9	Tissue	LUNG	3	male	tissue			child	Roadmap (Novel)
+BSS01870	upper lobe of left lung female adult (53 years)	upper lobe of left lung	Lung		#D9D2E9	Tissue	LUNG	53	female	tissue			adult	ENCODE
+BSS01196	lung female embryo (82 days)	lung	Lung		#D9D2E9	Tissue	LUNG	82	female	tissue			embryonic	Roadmap 2015
+BSS01197	lung female embryo (85 days)	lung	Lung		#D9D2E9	Tissue	LUNG	85	female	tissue			embryonic	Roadmap 2015
+BSS01198	lung female embryo (96 days)	lung	Lung		#D9D2E9	Tissue	LUNG	96	female	tissue			embryonic	Roadmap 2015
+BSS01137	left lung female embryo (105 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01138	left lung female embryo (107 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01139	left lung female embryo (108 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01140	left lung female embryo (110 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	110	female	tissue			embryonic	Roadmap (Novel)
+BSS01141	left lung female embryo (117 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	117	female	tissue			embryonic	Roadmap (Novel)
+BSS01142	left lung female embryo (91 day)	left lung	Lung		#D9D2E9	Tissue	LUNG	91	female	tissue			embryonic	Roadmap (Novel)
+BSS01143	left lung female embryo (98 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01144	left lung male embryo (105 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01145	left lung male embryo (113 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	113	male	tissue			embryonic	Roadmap (Novel)
+BSS01146	left lung male embryo (115 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01147	left lung male embryo (87 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01148	left lung male embryo (91 day)	left lung	Lung		#D9D2E9	Tissue	LUNG	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01149	left lung male embryo (96 days)	left lung	Lung		#D9D2E9	Tissue	LUNG	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01186	lung embryo (101 day)	lung	Lung		#D9D2E9	Tissue	LUNG	101	unknown/mixed	tissue			embryonic	Roadmap 2015
+BSS01187	lung embryo (112 days)	lung	Lung		#D9D2E9	Tissue	LUNG	112	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS01188	lung embryo (67 days)	lung	Lung		#D9D2E9	Tissue	LUNG	67	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS01189	lung embryo (80 days) and male embryo (76 days)	lung	Lung		#D9D2E9	Tissue	LUNG	80,76	male	tissue			embryonic	ENCODE
+BSS01192	lung female embryo (108 days)	lung	Lung		#D9D2E9	Tissue	LUNG	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01195	lung female embryo (76 days)	lung	Lung		#D9D2E9	Tissue	LUNG	76	female	tissue			embryonic	ENCODE
+BSS01202	lung male embryo (103 days)	lung	Lung		#D9D2E9	Tissue	LUNG	103	male	tissue			embryonic	Roadmap (Novel)
+BSS01203	lung male embryo (108 days)	lung	Lung		#D9D2E9	Tissue	LUNG	108	male	tissue			embryonic	Roadmap (Novel)
+BSS01204	lung male embryo (54 days) and male embryo (58 days)	lung	Lung		#D9D2E9	Tissue	LUNG	58,54	male	tissue			embryonic	ENCODE
+BSS01205	lung male embryo (82 days)	lung	Lung		#D9D2E9	Tissue	LUNG	82	male	tissue			embryonic	Roadmap (Novel)
+BSS01520	right lung female embryo (105 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01521	right lung female embryo (107 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	107	female	tissue			embryonic	Roadmap (Novel)
+BSS01522	right lung female embryo (108 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01523	right lung female embryo (110 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	110	female	tissue			embryonic	Roadmap (Novel)
+BSS01524	right lung female embryo (117 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	117	female	tissue			embryonic	Roadmap (Novel)
+BSS01525	right lung female embryo (91 day)	right lung	Lung		#D9D2E9	Tissue	LUNG	91	female	tissue			embryonic	Roadmap (Novel)
+BSS01526	right lung female embryo (98 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01527	right lung male embryo (105 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01528	right lung male embryo (115 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01529	right lung male embryo (87 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	87	male	tissue			embryonic	Roadmap (Novel)
+BSS01530	right lung male embryo (96 days)	right lung	Lung		#D9D2E9	Tissue	LUNG	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01869	upper lobe of left lung female adult (51 year)	upper lobe of left lung	Lung		#D9D2E9	Tissue	LUNG	51	female	tissue			adult	ENCODE
+BSS01871	upper lobe of left lung male adult (37 years)	upper lobe of left lung	Lung		#D9D2E9	Tissue	LUNG	37	male	tissue			adult	ENCODE
+BSS00039	adipocyte originated from mesenchymal stem cell	adipocyte	Mesench	Adipose	#B65C73	Tissue	ADIPOCYTE FROM MSC	41,59	female	in vitro differentiated cells			adult	Roadmap 2015
+BSS01260	mesenchymal stem cell originated from adipose tissue	mesenchymal stem cell	Mesench		#B65C73	Tissue	MESENCHYMAL STEM CELL	41,59,unknown	female	in vitro differentiated cells			adult	Roadmap 2015
+BSS00250	dedifferentiated amniotic fluid mesenchymal stem cell male embryo (15 weeks)	dedifferentiated amniotic fluid mesenchymal stem cell	Mesench		#B65C73	Tissue	AMNIOTIC FLUID FROM MSC	15	male	primary cell			embryonic	ENCODE
+BSS00279	embryonic facial prominence embryo (53 days) and embryo (58 days)	embryonic facial prominence	Mesench		#B65C73	Tissue	EMBRYONIC FACIAL PROMINENCE	58,53	unknown/mixed	tissue			embryonic	ENCODE
+BSS00378	gastrocnemius medialis male adult (37 years)	gastrocnemius medialis	Muscle		#C2655D	Tissue	GASTROCNEMIUS MEDIALIS	37	male	tissue			adult	ENCODE
+BSS00379	gastrocnemius medialis male adult (54 years)	gastrocnemius medialis	Muscle		#C2655D	Tissue	GASTROCNEMIUS MEDIALIS	54	male	tissue			adult	ENCODE
+BSS00377	gastrocnemius medialis female adult (53 years)	gastrocnemius medialis	Muscle		#C2655D	Tissue	GASTROCNEMIUS MEDIALIS	53	female	tissue			adult	ENCODE
+BSS01463	psoas muscle male child (3 years)	psoas muscle	Muscle		#C2655D	Tissue	PSOAS MUSCLE	3	male	tissue			child	Roadmap 2015
+BSS01578	skeletal muscle tissue female adult (72 years)	skeletal muscle tissue	Muscle		#C2655D	Tissue	SKELETAL MUSCLE	72	female	tissue			adult	Roadmap 2015
+BSS01319	muscle of leg female embryo (110 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	110	female	tissue			embryonic	Roadmap 2015
+BSS01332	muscle of trunk female embryo (115 days)	muscle of trunk	Muscle		#C2655D	Tissue	TRUNK MUSCLE	115	female	tissue			embryonic	Roadmap 2015
+BSS01577	skeletal muscle tissue	skeletal muscle tissue	Muscle		#C2655D	Tissue	SKELETAL MUSCLE	unknown	unknown/mixed	tissue			unknown/mixed	Roadmap (Novel)
+BSS01581	skeletal muscle tissue male adult (54 years)	skeletal muscle tissue	Muscle		#C2655D	Tissue	SKELETAL MUSCLE	54	male	tissue			adult	Roadmap 2015
+BSS01462	psoas muscle male adult (34 years)	psoas muscle	Muscle		#C2655D	Tissue	PSOAS MUSCLE	34	male	tissue			adult	Roadmap 2015
+BSS00170	cardiac muscle cell	cardiac muscle cell	Muscle		#C2655D	Tissue	CARDIAC MYOCYTE	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00376	gastrocnemius medialis female adult (51 year)	gastrocnemius medialis	Muscle		#C2655D	Tissue	GASTROCNEMIUS MEDIALIS	51	female	tissue			adult	ENCODE
+BSS01572	skeletal muscle cell	skeletal muscle cell	Muscle		#C2655D	Tissue	SKELETAL MUSCLE CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00352	forelimb muscle female embryo (108 days)	forelimb muscle	Muscle		#C2655D	Tissue	ARM MUSCLE	108	female	tissue			embryonic	Roadmap (Novel)
+BSS00700	hindlimb muscle male embryo (120 days)	hindlimb muscle	Muscle		#C2655D	Tissue	LEG MUSCLE	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01289	muscle of arm embryo (101 day)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	101	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS01290	muscle of arm female embryo (105 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01291	muscle of arm female embryo (115 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	115	female	tissue			embryonic	Roadmap (Novel)
+BSS01292	muscle of arm female embryo (120 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	120	female	tissue			embryonic	Roadmap (Novel)
+BSS01293	muscle of arm female embryo (85 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	85	female	tissue			embryonic	Roadmap (Novel)
+BSS01294	muscle of arm female embryo (98 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01295	muscle of arm male embryo (101 day)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	101	male	tissue			embryonic	Roadmap (Novel)
+BSS01296	muscle of arm male embryo (104 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	104	male	tissue			embryonic	Roadmap (Novel)
+BSS01297	muscle of arm male embryo (105 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01298	muscle of arm male embryo (113 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	113	male	tissue			embryonic	Roadmap (Novel)
+BSS01299	muscle of arm male embryo (115 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	115	male	tissue			embryonic	Roadmap (Novel)
+BSS01300	muscle of arm male embryo (120 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	120	male	tissue			embryonic	Roadmap (Novel)
+BSS01301	muscle of arm male embryo (127 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	127	male	tissue			embryonic	Roadmap (Novel)
+BSS01303	muscle of arm male embryo (96 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01304	muscle of arm male embryo (97 days)	muscle of arm	Muscle		#C2655D	Tissue	ARM MUSCLE	97	male	tissue			embryonic	Roadmap (Novel)
+BSS01305	muscle of back female embryo (105 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01306	muscle of back female embryo (113 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	113	female	tissue			embryonic	Roadmap (Novel)
+BSS01307	muscle of back female embryo (115 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	115	female	tissue			embryonic	Roadmap (Novel)
+BSS01308	muscle of back female embryo (85 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	85	female	tissue			embryonic	Roadmap (Novel)
+BSS01309	muscle of back female embryo (98 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	98	female	tissue			embryonic	Roadmap (Novel)
+BSS01310	muscle of back male embryo (101 day)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	101	male	tissue			embryonic	Roadmap (Novel)
+BSS01311	muscle of back male embryo (104 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	104	male	tissue			embryonic	Roadmap (Novel)
+BSS01312	muscle of back male embryo (105 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01313	muscle of back male embryo (108 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	108	male	tissue			embryonic	Roadmap (Novel)
+BSS01314	muscle of back male embryo (127 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	127	male	tissue			embryonic	Roadmap (Novel)
+BSS01315	muscle of back male embryo (91 day)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	91	male	tissue			embryonic	Roadmap (Novel)
+BSS01316	muscle of back male embryo (96 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01317	muscle of back male embryo (97 days)	muscle of back	Muscle		#C2655D	Tissue	BACK MUSCLE	97	male	tissue			embryonic	Roadmap (Novel)
+BSS01318	muscle of leg female embryo (105 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01320	muscle of leg female embryo (113 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	113	female	tissue			embryonic	Roadmap 2015
+BSS01321	muscle of leg female embryo (115 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	115	female	tissue			embryonic	Roadmap 2015
+BSS01322	muscle of leg female embryo (85 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	85	female	tissue			embryonic	Roadmap (Novel)
+BSS01323	muscle of leg male embryo (101 day)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	101	male	tissue			embryonic	Roadmap 2015
+BSS01324	muscle of leg male embryo (104 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	104	male	tissue			embryonic	Roadmap 2015
+BSS01325	muscle of leg male embryo (105 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	105	male	tissue			embryonic	Roadmap 2015
+BSS01327	muscle of leg male embryo (115 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	115	male	tissue			embryonic	Roadmap 2015
+BSS01328	muscle of leg male embryo (127 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	127	male	tissue			embryonic	Roadmap 2015
+BSS01329	muscle of leg male embryo (96 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	96	male	tissue			embryonic	Roadmap 2015
+BSS01330	muscle of leg male embryo (97 days)	muscle of leg	Muscle		#C2655D	Tissue	LEG MUSCLE	97	male	tissue			embryonic	Roadmap 2015
+BSS01331	muscle of trunk female embryo (113 days)	muscle of trunk	Muscle		#C2655D	Tissue	TRUNK MUSCLE	113	female	tissue			embryonic	Roadmap 2015
+BSS01333	muscle of trunk female embryo (120 days)	muscle of trunk	Muscle		#C2655D	Tissue	TRUNK MUSCLE	120	female	tissue			embryonic	Roadmap 2015
+BSS01334	muscle of trunk female embryo (121 day)	muscle of trunk	Muscle		#C2655D	Tissue	TRUNK MUSCLE	121	female	tissue			embryonic	Roadmap 2015
+BSS01460	psoas muscle female adult (30 years)	psoas muscle	Muscle		#C2655D	Tissue	PSOAS MUSCLE	30	female	tissue			adult	Roadmap (Novel)
+BSS01461	psoas muscle male adult (27 years) and male adult (35 years)	psoas muscle	Muscle		#C2655D	Tissue	PSOAS MUSCLE	27,35	male	tissue			adult	ENCODE
+BSS01845	tongue female embryo (59 days) and female embryo (76 days)	tongue	Muscle		#C2655D	Tissue	TONGUE	76,59	female	tissue			embryonic	ENCODE
+BSS01846	tongue male embryo (72 days)	tongue	Muscle		#C2655D	Tissue	TONGUE	72	male	tissue			embryonic	ENCODE
+BSS01344	myotube originated from skeletal muscle myoblast	myotube	Myosat		#E67326	Tissue	MYOTUBE	22	male	in vitro differentiated cells			adult	ENCODE 2012
+BSS01574	skeletal muscle myoblast male adult (22 years)	skeletal muscle myoblast	Myosat		#E67326	Tissue	SKELETAL MUSCLE MYOBLAST	22	male	primary cell			adult	ENCODE 2012
+BSS01576	skeletal muscle satellite cell female adult originated from mesodermal cell	skeletal muscle satellite cell	Myosat		#E67326	Tissue	SKELETAL MUSCLE SATELLITE CELL	unknown	female	primary cell			adult	Roadmap 2015
+BSS01155	LHCN-M2	LHCN-M2	Myosat		#E67326	Tissue	SKELETAL MUSCLE MYOBLAST	41	male	cell line			adult	ENCODE
+BSS01338	myocyte originated from LHCN-M2	myocyte	Myosat		#E67326	Tissue	MYOCYTE	41	male	in vitro differentiated cells			adult	ENCODE
+BSS01573	skeletal muscle myoblast	skeletal muscle myoblast	Myosat		#E67326	Tissue	SKELETAL MUSCLE MYOBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00123	body of pancreas male adult (37 years)	body of pancreas	Pancreas		#87A3E1	Tissue	BODY OF PANCREAS	37	male	tissue			adult	ENCODE
+BSS00124	body of pancreas male adult (54 years)	body of pancreas	Pancreas		#87A3E1	Tissue	BODY OF PANCREAS	54	male	tissue			adult	ENCODE
+BSS01406	pancreas female adult (30 years)	pancreas	Pancreas		#87A3E1	Tissue	PANCREAS	30	female	tissue			adult	Roadmap (Novel)
+BSS01407	pancreas male adult (34 years)	pancreas	Pancreas		#87A3E1	Tissue	PANCREAS	34	male	tissue			adult	Roadmap 2015
+BSS00122	body of pancreas female adult (53 years)	body of pancreas	Pancreas		#87A3E1	Tissue	BODY OF PANCREAS	53	female	tissue			adult	ENCODE
+BSS00121	body of pancreas female adult (51 year)	body of pancreas	Pancreas		#87A3E1	Tissue	BODY OF PANCREAS	51	female	tissue			adult	ENCODE
+BSS00758	islet precursor cell	islet precursor cell	Pancreas		#87A3E1	Tissue	ISLET PRECURSOR CELL	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS01438	placenta female embryo (113 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	113	female	tissue			embryonic	Roadmap 2015
+BSS00074	amnion male embryo (16 weeks)	amnion	Placenta & EEM		#E10000	Tissue	AMNION	16	male	tissue			embryonic	Roadmap 2015
+BSS00214	chorionic villus embryo (16 weeks)	chorionic villus	Placenta & EEM		#E10000	Tissue	CHORIONIC VILLUS	16	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS00215	chorionic villus female embryo (40 weeks)	chorionic villus	Placenta & EEM		#E10000	Tissue	CHORIONIC VILLUS	40	female	tissue			embryonic	Roadmap (Novel)
+BSS00216	chorionic villus male embryo (16 weeks)	chorionic villus	Placenta & EEM		#E10000	Tissue	CHORIONIC VILLUS	16	male	tissue			embryonic	Roadmap (Novel)
+BSS00217	chorionic villus male embryo (38 weeks)	chorionic villus	Placenta & EEM		#E10000	Tissue	CHORIONIC VILLUS	38	male	tissue			embryonic	Roadmap (Novel)
+BSS01431	placenta embryo (16 weeks)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	16	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS01441	placenta male embryo (16 weeks)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	16	male	tissue			embryonic	Roadmap (Novel)
+BSS01446	placental basal plate female embryo (40 weeks)	placental basal plate	Placenta & EEM		#E10000	Tissue	PLACENTA	40	female	tissue			embryonic	Roadmap (Novel)
+BSS00211	chorion female embryo (40 weeks)	chorion	Placenta & EEM		#E10000	Tissue	CHORION	40	female	tissue			embryonic	Roadmap (Novel)
+BSS00212	chorion male embryo (16 weeks)	chorion	Placenta & EEM		#E10000	Tissue	CHORION	16	male	tissue			embryonic	Roadmap (Novel)
+BSS01859	trophoblast female embryo (20 weeks)	trophoblast	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	20	female	tissue			embryonic	Roadmap (Novel)
+BSS01860	trophoblast female embryo (40 weeks)	trophoblast	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	40	female	tissue			embryonic	Roadmap (Novel)
+BSS01448	placental basal plate male embryo (38 weeks)	placental basal plate	Placenta & EEM		#E10000	Tissue	PLACENTA	38	male	tissue			embryonic	Roadmap (Novel)
+BSS00076	amniotic stem cell male embryo (15 weeks)	amniotic stem cell	Placenta & EEM		#E10000	Tissue	AMNION STEM CELL	15	male	primary cell			embryonic	ENCODE
+BSS00209	chorion	chorion	Placenta & EEM		#E10000	Tissue	CHORION	unknown	unknown/mixed	tissue			unknown/mixed	ENCODE
+BSS00714	HTR-8/SVneo	HTR-8/SVneo	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	6-12	unknown/mixed	cell line			embryonic	ENCODE
+BSS01430	placenta embryo (102 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	102	unknown/mixed	tissue			embryonic	ENCODE
+BSS01432	placenta embryo (53 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	53	unknown/mixed	tissue			embryonic	ENCODE
+BSS01433	placenta embryo (56 days) and embryo (59 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	56,59	unknown/mixed	tissue			embryonic	ENCODE
+BSS01435	placenta female embryo (101 day) and male embryo (105 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	101,105	unknown/mixed	tissue			embryonic	ENCODE
+BSS01436	placenta female embryo (105 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	105	female	tissue			embryonic	Roadmap (Novel)
+BSS01437	placenta female embryo (108 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	108	female	tissue			embryonic	Roadmap 2015
+BSS01440	placenta female embryo (85 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	85	female	tissue			embryonic	Roadmap 2015
+BSS01443	placenta male embryo (85 days)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	85	male	tissue			embryonic	Roadmap (Novel)
+BSS01444	placenta male embryo (91 day)	placenta	Placenta & EEM		#E10000	Tissue	PLACENTA	91	male	tissue			embryonic	Roadmap 2015
+BSS01852	trophoblast cell embryo (17 weeks) and embryo (18 weeks)	trophoblast cell	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	18,17	unknown/mixed	primary cell			embryonic	ENCODE
+BSS01853	trophoblast cell embryo (21 week)	trophoblast cell	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	21	unknown/mixed	primary cell			embryonic	ENCODE
+BSS01855	trophoblast cell embryo (23 weeks)	trophoblast cell	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	23	unknown/mixed	primary cell			embryonic	ENCODE
+BSS01856	trophoblast cell embryo (39 weeks) and embryo (40 weeks)	trophoblast cell	Placenta & EEM		#E10000	Tissue	TROPHOBLAST	40,39	unknown/mixed	primary cell			embryonic	ENCODE
+BSS01867	umbilical cord embryo (59 days) and male embryo (76 days)	umbilical cord	Placenta & EEM		#E10000	Tissue	UMBILICAL CORD	76,59	unknown/mixed	tissue			embryonic	ENCODE
+BSS01459	prostate gland male adult (54 years)	prostate gland	Reproductive		#3383FF	Tissue	PROSTATE GLAND	54	male	tissue			adult	ENCODE
+BSS01887	vagina female adult (53 years)	vagina	Reproductive		#3383FF	Tissue	VAGINA	53	female	tissue			adult	ENCODE
+BSS01884	uterus female adult (53 years)	uterus	Reproductive		#3383FF	Tissue	UTERUS	53	female	tissue			adult	ENCODE
+BSS01456	prostate gland male adult (37 years)	prostate gland	Reproductive		#3383FF	Tissue	PROSTATE GLAND	37	male	tissue			adult	ENCODE
+BSS01886	vagina female adult (51 year)	vagina	Reproductive		#3383FF	Tissue	VAGINA	51	female	tissue			adult	ENCODE
+BSS01659	stomach smooth muscle female adult (84 years)	stomach smooth muscle	Sm. Muscle	Digestive	#F182BC	Tissue	STOMACH MUSCLE	84	female	tissue			adult	Roadmap 2015
+BSS01286	muscle layer of colon female adult (77 years)	muscle layer of colon	Sm. Muscle	Digestive	#F182BC	Tissue	COLON MUSCLE	77	female	tissue			adult	Roadmap 2015
+BSS01287	muscle layer of duodenum male adult (59 years)	muscle layer of duodenum	Sm. Muscle	Digestive	#F182BC	Tissue	DUODENUM MUSCLE	59	male	tissue			adult	Roadmap 2015
+BSS01475	rectal smooth muscle tissue female adult (50 years)	rectal smooth muscle tissue	Sm. Muscle	Digestive	#F182BC	Tissue	RECTUM MUSCLE	50	female	tissue			adult	Roadmap 2015
+BSS01285	muscle layer of colon female adult (56 years)	muscle layer of colon	Sm. Muscle	Digestive	#F182BC	Tissue	COLON MUSCLE	56	female	tissue			adult	Roadmap 2015
+BSS01288	muscle layer of duodenum male adult (73 years)	muscle layer of duodenum	Sm. Muscle	Digestive	#F182BC	Tissue	DUODENUM MUSCLE	73	male	tissue			adult	Roadmap 2015
+BSS01660	stomach smooth muscle male adult (59 years)	stomach smooth muscle	Sm. Muscle	Digestive	#F182BC	Tissue	STOMACH MUSCLE	59	male	tissue			adult	Roadmap (Novel)
+BSS01606	smooth muscle cell of the brain vasculature female	smooth muscle cell of the brain vasculature	Sm. Muscle	Brain	#F182BC	Tissue	BRAIN VASCULATURE SMOOTH MUSCLE CELL	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS01876	urinary bladder male adult (34 years)	urinary bladder	Urinary		#A783D6	Tissue	URINARY BLADDER	34	male	tissue			adult	Roadmap (Novel)
+BSS01878	urinary bladder male embryo (76 days)	urinary bladder	Urinary		#A783D6	Tissue	URINARY BLADDER	76	male	tissue			embryonic	ENCODE
+BSS01879	urothelium cell line	urothelium cell line	Urinary		#A783D6	Tissue	UROTHELIUM CELL	12	female	cell line			child	ENCODE
+BSS00296	endothelial cell of umbilical vein male newborn	endothelial cell of umbilical vein	Endothelial	Placenta & EEM	#FFCA0C	Primary Cell	UMBILICAL VEIN ENDOTHELIAL CELL	unknown	male	primary cell			newborn	ENCODE 2012
+BSS00143	brain microvascular endothelial cell	brain microvascular endothelial cell	Endothelial	Brain	#FFCA0C	Primary Cell	BRAIN MICROVASCULAR ENDOTHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00258	dermis blood vessel endothelial cell female adult	dermis blood vessel endothelial cell	Endothelial		#FFCA0C	Primary Cell	DERMIS BLOOD VESSEL ENDOTHELIAL CELL	unknown	female	primary cell			adult	ENCODE
+BSS00260	dermis blood vessel endothelial cell male newborn	dermis blood vessel endothelial cell	Endothelial		#FFCA0C	Primary Cell	DERMIS BLOOD VESSEL ENDOTHELIAL CELL	unknown	male	primary cell			newborn	ENCODE
+BSS00262	dermis microvascular lymphatic vessel endothelial cell female	dermis microvascular lymphatic vessel endothelial cell	Endothelial		#FFCA0C	Primary Cell	DERMIS LYMPHATIC VESSEL ENDOTHELIAL CELL	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS00264	dermis microvascular lymphatic vessel endothelial cell male	dermis microvascular lymphatic vessel endothelial cell	Endothelial		#FFCA0C	Primary Cell	DERMIS LYMPHATIC VESSEL ENDOTHELIAL CELL	unknown	male	primary cell			unknown/mixed	ENCODE
+BSS00298	endothelial cell of umbilical vein newborn	endothelial cell of umbilical vein	Endothelial	Placenta & EEM	#FFCA0C	Primary Cell	UMBILICAL VEIN ENDOTHELIAL CELL	unknown	unknown/mixed	primary cell			newborn	ENCODE 2012
+BSS00387	glomerular endothelial cell	glomerular endothelial cell	Endothelial	Kidney	#FFCA0C	Primary Cell	GLOMERULUS ENDOTHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01077	kidney capillary endothelial cell female embryo (113 days)	kidney capillary endothelial cell	Endothelial	Kidney	#FFCA0C	Primary Cell	KIDNEY CAPILLARY ENDOTHELIAL CELL	113	female	primary cell			embryonic	ENCODE
+BSS01206	lung microvascular endothelial cell female	lung microvascular endothelial cell	Endothelial	Lung	#FFCA0C	Primary Cell	LUNG MICROVASCULAR ENDOTHELIAL CELL	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS01465	pulmonary artery endothelial cell female	pulmonary artery endothelial cell	Endothelial	Lung	#FFCA0C	Primary Cell	PULMONARY ARTERY ENDOTHELIAL CELL	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS01068	keratinocyte female	keratinocyte	Epithelial		#FF9D0C	Primary Cell	KERATINOCYTE	unknown	female	primary cell			unknown/mixed	ENCODE 2012
+BSS01213	mammary epithelial cell female adult (50 years)	mammary epithelial cell	Epithelial		#FF9D0C	Primary Cell	MAMMARY EPITHELIAL CELL	50	female	primary cell			adult	ENCODE 2012
+BSS00354	foreskin keratinocyte male newborn	foreskin keratinocyte	Epithelial		#FF9D0C	Primary Cell	FORESKIN KERATINOCYTE	unknown	male	primary cell			newborn	Roadmap 2015
+BSS01211	mammary epithelial cell female adult (18 years)	mammary epithelial cell	Epithelial		#FF9D0C	Primary Cell	MAMMARY EPITHELIAL CELL	18	female	primary cell			adult	Roadmap 2015
+BSS01340	myoepithelial cell of mammary gland female adult (33 years)	myoepithelial cell of mammary gland	Epithelial		#FF9D0C	Primary Cell	MAMMARY MYOEPITHELIAL CELL	33	female	primary cell			adult	Roadmap 2015
+BSS01341	myoepithelial cell of mammary gland female adult (36 years)	myoepithelial cell of mammary gland	Epithelial		#FF9D0C	Primary Cell	MAMMARY MYOEPITHELIAL CELL	36	female	primary cell			adult	Roadmap 2015
+BSS00150	bronchial epithelial cell	bronchial epithelial cell	Epithelial	Lung	#FF9D0C	Primary Cell	BRONCHIAL EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00355	foreskin keratinocyte male newborn (2-4 days)	foreskin keratinocyte	Epithelial		#FF9D0C	Primary Cell	FORESKIN KERATINOCYTE	2-4	male	primary cell			newborn	GGR
+BSS00361	foreskin keratinocyte male newborn (2-4 days) treated with 1.2 mM calcium for 2.5 days	foreskin keratinocyte	Epithelial		#FF9D0C	Primary Cell	FORESKIN KERATINOCYTE	2-4	male	primary cell	foreskin_keratinocyte_male_newborn_(2-4_days)	1.2_mM_calcium_for_2.5_days	newborn	GGR
+BSS00367	foreskin keratinocyte male newborn (2-4 days) treated with 1.2 mM calcium for 5.5 days	foreskin keratinocyte	Epithelial		#FF9D0C	Primary Cell	FORESKIN KERATINOCYTE	2-4	male	primary cell	foreskin_keratinocyte_male_newborn_(2-4_days)	1.2_mM_calcium_for_5.5_days	newborn	GGR
+BSS01080	kidney epithelial cell	kidney epithelial cell	Epithelial	Kidney	#FF9D0C	Primary Cell	KIDNEY EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01185	luminal epithelial cell of mammary gland female adult (33 years)	luminal epithelial cell of mammary gland	Epithelial		#FF9D0C	Primary Cell	MAMMARY LUMINAL EPITHELIAL CELL	33	female	primary cell			adult	Roadmap (Novel)
+BSS01209	mammary epithelial cell female	mammary epithelial cell	Epithelial		#FF9D0C	Primary Cell	MAMMARY EPITHELIAL CELL	unknown	female	primary cell			unknown/mixed	ENCODE 2012
+BSS00218	choroid plexus epithelial cell	choroid plexus epithelial cell	Epithelial	Brain	#FF9D0C	Primary Cell	CHOROID PLEXUS EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00307	epithelial cell of esophagus	epithelial cell of esophagus	Epithelial	Digestive	#FF9D0C	Primary Cell	ESOPHAGUS EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00310	epithelial cell of proximal tubule	epithelial cell of proximal tubule	Epithelial	Kidney	#FF9D0C	Primary Cell	PROXIMAL TUBULE EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01505	retinal pigment epithelial cell	retinal pigment epithelial cell	Epithelial	Kidney	#FF9D0C	Primary Cell	RETINAL EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01538	RWPE1	RWPE1	Epithelial	Reproductive	#FF9D0C	Primary Cell	PROSTATE EPITHELIAL CELL	54	male	cell line			adult	ENCODE
+BSS00075	amniotic epithelial cell	amniotic epithelial cell	Epithelial	Placenta & EEM	#FF9D0C	Primary Cell	AMNION EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00153	bronchial epithelial cell female treated with 6 μM retinoic acid for 48 hours	bronchial epithelial cell	Epithelial	Lung	#FF9D0C	Primary Cell	BRONCHIAL EPITHELIAL CELL	unknown	female	primary cell	bronchial_epithelial_cell_female	retinoic_acid	unknown/mixed	ENCODE
+BSS00223	HCEC 1CT	HCEC 1CT	Epithelial	Digestive	#FF9D0C	Primary Cell	COLON EPITHELIAL CELL	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS00308	epithelial cell of prostate	epithelial cell of prostate	Epithelial	Reproductive	#FF9D0C	Primary Cell	PROSTATE EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00309	epithelial cell of prostate male	epithelial cell of prostate	Epithelial	Reproductive	#FF9D0C	Primary Cell	PROSTATE EPITHELIAL CELL	unknown	male	primary cell			unknown/mixed	ENCODE
+BSS00389	glomerular visceral epithelial cell child (3 years)	glomerular visceral epithelial cell	Epithelial	Kidney	#FF9D0C	Primary Cell	GLOMERULUS VISCERAL EPITHELIAL CELL	3	unknown/mixed	primary cell			child	ENCODE
+BSS00701	HK-2	HK-2	Epithelial	Kidney	#FF9D0C	Primary Cell	PROXIMAL TUBULE EPITHELIAL CELL	unknown	male	cell line			unknown/mixed	ENCODE
+BSS00703	HPDE6-E6E7	HPDE6-E6E7	Epithelial	Pancreas	#FF9D0C	Primary Cell	PANCREATIC DUCT EPITHELIAL CELL	63	female	cell line			adult	ENCODE
+BSS00704	HS-27A	HS-27A	Epithelial	Bone	#FF9D0C	Primary Cell	BONE MARROW EPITHELIAL CELL	unknown	male	cell line			adult	ENCODE
+BSS00743	iris pigment epithelial cell	iris pigment epithelial cell	Epithelial	Eye	#FF9D0C	Primary Cell	IRIS PIGMENT EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01071	keratinocyte male	keratinocyte	Epithelial		#FF9D0C	Primary Cell	KERATINOCYTE	unknown	male	primary cell			unknown/mixed	ENCODE 2012
+BSS01092	kidney glomerular epithelial cell male adult (43 years) and male adult (62 years)	kidney glomerular epithelial cell	Epithelial	Kidney	#FF9D0C	Primary Cell	GLOMERULUS EPITHELIAL CELL	43,62	male	primary cell			adult	ENCODE
+BSS01102	kidney tubule cell female adult (80 years) and male adult (62 years)	kidney tubule cell	Epithelial	Kidney	#FF9D0C	Primary Cell	TUBULE CELL	80,62	unknown/mixed	primary cell			adult	ENCODE
+BSS01103	kidney tubule cell female adult (80 years) treated with 5 μM cisplatin	kidney tubule cell	Epithelial	Kidney	#FF9D0C	Primary Cell	TUBULE CELL	80	female	primary cell	kidney_tubule_cell_female_adult_(80_years)	5_mM_cisplatin	adult	ENCODE
+BSS01181	lower leg skin female adult (53 years)	lower leg skin	Epithelial		#FF9D0C	Primary Cell	SKIN LEG	53	female	tissue			adult	ENCODE
+BSS01182	lower leg skin male adult (37 years)	lower leg skin	Epithelial		#FF9D0C	Primary Cell	SKIN LEG	37	male	tissue			adult	ENCODE
+BSS01217	MCF 10A	MCF 10A	Epithelial		#FF9D0C	Primary Cell	BREAST EPITHELIAL CELL	36	female	cell line			adult	ENCODE
+BSS01224	MCF 10A treated with 1 μM tamoxifen for 24 hours	MCF 10A	Epithelial		#FF9D0C	Primary Cell	BREAST EPITHELIAL CELL	36	female	cell line	MCF_10A	1_mM_tamoxifen_for_24_hours	adult	ENCODE
+BSS01225	MCF 10A treated with 1 μM tamoxifen for 6 hours	MCF 10A	Epithelial		#FF9D0C	Primary Cell	BREAST EPITHELIAL CELL	36	female	cell line	MCF_10A	1_mM_tamoxifen_for_6_hours	adult	ENCODE
+BSS01385	non-pigmented ciliary epithelial cell	non-pigmented ciliary epithelial cell	Epithelial	Eye	#FF9D0C	Primary Cell	NON-PIGMENTED CILIARY EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01491	renal cortical epithelial cell	renal cortical epithelial cell	Epithelial	Kidney	#FF9D0C	Primary Cell	RENAL CORTICAL EPITHELIAL CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01539	RWPE2	RWPE2	Epithelial	Reproductive	#FF9D0C	Primary Cell	PROSTATE EPITHELIAL CELL	54	male	cell line			adult	ENCODE
+BSS01587	skin of body female embryo (82 days)	skin of body	Epithelial		#FF9D0C	Primary Cell	SKIN OF BODY	82	female	tissue			embryonic	Roadmap (Novel)
+BSS00720	IMR-90	IMR-90	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	16	female	cell line			embryonic	Roadmap 2015
+BSS00476	GM23248	GM23248	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	53	male	cell line			adult	ENCODE
+BSS00341	fibroblast of lung female child (11 year) and male adult (45 years)	fibroblast of lung	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	11,45	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00334	fibroblast of dermis	fibroblast of dermis	Stromal		#FF720C	Primary Cell	DERMIS FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00353	foreskin fibroblast male newborn	foreskin fibroblast	Stromal		#FF720C	Primary Cell	FORESKIN FIBROBLAST	unknown	male	primary cell			newborn	Roadmap 2015
+BSS00333	fibroblast of breast female adult (26 years)	fibroblast of breast	Stromal		#FF720C	Primary Cell	BREAST FIBROBLAST	26	female	primary cell			adult	Roadmap (Novel)
+BSS00062	AG04450	AG04450	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	12	male	cell line			embryonic	ENCODE
+BSS00332	fibroblast of breast female adult (17 years)	fibroblast of breast	Stromal		#FF720C	Primary Cell	BREAST FIBROBLAST	17	female	primary cell			adult	Roadmap (Novel)
+BSS00113	BJ	BJ	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	unknown	male	cell line			newborn	ENCODE
+BSS00061	AG04449	AG04449	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	12	male	cell line			embryonic	ENCODE
+BSS00066	AG09309	AG09309	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	21	female	cell line			adult	ENCODE
+BSS00067	AG09319	AG09319	Stromal	Other	#FF720C	Primary Cell	GINGIVAL FIBROBLAST	24	female	cell line			adult	ENCODE
+BSS00068	AG10803	AG10803	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	22	male	cell line			adult	ENCODE
+BSS00166	cardiac fibroblast	cardiac fibroblast	Stromal	Heart	#FF720C	Primary Cell	CARDIAC FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00167	cardiac fibroblast female adult	cardiac fibroblast	Stromal	Heart	#FF720C	Primary Cell	CARDIAC FIBROBLAST	unknown	female	primary cell			adult	ENCODE
+BSS00337	fibroblast of dermis NONE and female adult	fibroblast of dermis	Stromal		#FF720C	Primary Cell	DERMIS FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00339	fibroblast of lung	fibroblast of lung	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00342	fibroblast of lung male adult (45 years)	fibroblast of lung	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	45	male	primary cell			adult	ENCODE 2012
+BSS00343	fibroblast of mammary gland female	fibroblast of mammary gland	Stromal		#FF720C	Primary Cell	MAMMARY FIBROBLAST	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS00345	fibroblast of pulmonary artery	fibroblast of pulmonary artery	Stromal	Lung	#FF720C	Primary Cell	PULMONARY ARTERY FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00347	fibroblast of the aortic adventitia female	fibroblast of the aortic adventitia	Stromal	Heart	#FF720C	Primary Cell	AORTA FIBROBLAST	unknown	female	primary cell			unknown/mixed	ENCODE
+BSS00350	fibroblast of villous mesenchyme	fibroblast of villous mesenchyme	Stromal	Placenta & EEM	#FF720C	Primary Cell	VILLOUS MESENCHYME FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00697	HFF-Myc originated from foreskin fibroblast	HFF-Myc	Stromal		#FF720C	Primary Cell	FORESKIN FIBROBLAST	unknown	male	cell line			newborn	ENCODE
+BSS00063	AG08395	AG08395	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	85	female	cell line			adult	ENCODE
+BSS00064	AG08396	AG08396	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	85	female	cell line			adult	ENCODE
+BSS00069	AG20443	AG20443	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	71	male	cell line			adult	ENCODE
+BSS00144	brain pericyte	brain pericyte	Stromal	Brain	#FF720C	Primary Cell	PERICYTE	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00168	cardiac fibroblast female embryo (94 days) and female embryo (98 days)	cardiac fibroblast	Stromal	Heart	#FF720C	Primary Cell	CARDIAC FIBROBLAST	94,98	female	primary cell			embryonic	ENCODE
+BSS00275	EH	EH	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	unknown	male	cell line			newborn	ENCODE
+BSS00276	EL	EL	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	unknown	male	cell line			newborn	ENCODE
+BSS00278	ELR	ELR	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	unknown	male	cell line			newborn	ENCODE
+BSS00335	fibroblast of dermis female adult	fibroblast of dermis	Stromal		#FF720C	Primary Cell	DERMIS FIBROBLAST	unknown	female	primary cell			adult	ENCODE 2012
+BSS00338	fibroblast of gingiva	fibroblast of gingiva	Stromal	Other	#FF720C	Primary Cell	GINGIVAL FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00344	fibroblast of peridontal ligament male	fibroblast of peridontal ligament	Stromal	Other	#FF720C	Primary Cell	PERIDONTAL LIGAMENT FIBROBLAST	unknown	male	primary cell			unknown/mixed	ENCODE
+BSS00346	fibroblast of skin of abdomen male embryo (97 days)	fibroblast of skin of abdomen	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	97	male	primary cell			embryonic	Roadmap (Novel)
+BSS00349	fibroblast of the conjunctiva	fibroblast of the conjunctiva	Stromal	Eye	#FF720C	Primary Cell	CONJUNCTIVA FIBROBLAST	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00390	GM03348	GM03348	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	10	male	cell line			child	ENCODE
+BSS00393	GM04503	GM04503	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	31	female	cell line			adult	ENCODE
+BSS00394	GM04504	GM04504	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	31	female	cell line			adult	ENCODE
+BSS01583	skin fibroblast male embryo (97 days)	skin fibroblast	Stromal		#FF720C	Primary Cell	SKIN FIBROBLAST	97	male	primary cell			embryonic	Roadmap (Novel)
+BSS01661	stromal cell of bone marrow male	stromal cell of bone marrow	Stromal	Bone	#FF720C	Primary Cell	BONE MARROW STROMAL CELL	unknown	male	primary cell			unknown/mixed	ENCODE
+BSS01891	WI38	WI38	Stromal	Lung	#FF720C	Primary Cell	LUNG FIBROBLAST	unknown	female	cell line			unknown/mixed	ENCODE
+BSS00197	CD8-positive, alpha-beta T cell male adult (21 year)	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	21	male	primary cell			adult	Roadmap 2015
+BSS01346	naive thymus-derived CD4-positive, alpha-beta T cell	naive thymus-derived CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	NAIVE T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00183	CD4-positive, alpha-beta memory T cell	CD4-positive, alpha-beta memory T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00186	CD4-positive, alpha-beta T cell	CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00191	CD4-positive, alpha-beta T cell treated with phorbol 13-acetate 12-myristate , ionomycin	CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell	CD4-positive,_alpha-beta_T_cell	phorbol_13-acetate_12-myristate_,_ionomycin	unknown/mixed	Roadmap 2015
+BSS00192	CD4-positive, CD25-positive, alpha-beta regulatory T cell	CD4-positive, CD25-positive, alpha-beta regulatory T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00193	CD8-positive, alpha-beta memory T cell	CD8-positive, alpha-beta memory T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00194	CD8-positive, alpha-beta T cell	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00274	effector memory CD4-positive, alpha-beta T cell	effector memory CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS01423	peripheral blood mononuclear cell male adult (32 years)	peripheral blood mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	32	male	primary cell			adult	Roadmap 2015
+BSS01424	peripheral blood mononuclear cell male adult (39 years)	peripheral blood mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	39	male	primary cell			adult	Roadmap (Novel)
+BSS01684	T-cell	T-cell	Blood & T-cell		#678C69	Immune	T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS01695	T-helper 17 cell treated with phorbol 13-acetate 12-myristate , ionomycin	T-helper 17 cell	Blood & T-cell		#678C69	Immune	T17 CELL	unknown	unknown/mixed	primary cell	T-helper_17_cell	phorbol_13-acetate_12-myristate_,_ionomycin	unknown/mixed	Roadmap 2015
+BSS01419	peripheral blood mononuclear cell female adult (28 years)	peripheral blood mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	28	female	primary cell			adult	Roadmap 2015
+BSS00189	CD4-positive, alpha-beta T cell male adult (21 year)	CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	21	male	primary cell			adult	Roadmap (Novel)
+BSS00190	CD4-positive, alpha-beta T cell male adult (37 years)	CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	37	male	primary cell			adult	Roadmap (Novel)
+BSS00200	CD8-positive, alpha-beta T cell male adult (37 years)	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	37	male	primary cell			adult	Roadmap (Novel)
+BSS01279	mononuclear cell male	mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	unknown	male	primary cell			unknown/mixed	ENCODE
+BSS01420	peripheral blood mononuclear cell male adult (27 years)	peripheral blood mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	27	male	primary cell			adult	Roadmap 2015
+BSS01421	peripheral blood mononuclear cell male adult (28 years)	peripheral blood mononuclear cell	Blood & T-cell		#678C69	Immune	MONONUCLEAR CELL	28	male	primary cell			adult	Roadmap 2015
+BSS01480	regulatory T cell originated from blood cell	regulatory T cell	Blood & T-cell		#678C69	Immune	TREG CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap (Novel)
+BSS01687	T-cell male adult (21 year)	T-cell	Blood & T-cell		#678C69	Immune	T CELL	21	male	primary cell			adult	Roadmap 2015
+BSS01689	T-cell male adult (37 years)	T-cell	Blood & T-cell		#678C69	Immune	T CELL	37	male	primary cell			adult	Roadmap 2015
+BSS00185	CD4-positive, alpha-beta memory T cell originated from blood cell	CD4-positive, alpha-beta memory T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00188	CD4-positive, alpha-beta T cell female adult (33 years)	CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD4 T CELL	33	female	primary cell			adult	Roadmap (Novel)
+BSS00195	CD8-positive, alpha-beta T cell female adult (33 years)	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	33	female	primary cell			adult	Roadmap (Novel)
+BSS00196	CD8-positive, alpha-beta T cell female adult (34 years)	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	34	female	primary cell			adult	Roadmap (Novel)
+BSS00198	CD8-positive, alpha-beta T cell male adult (28 years)	CD8-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	CD8 T CELL	28	male	primary cell			adult	Roadmap 2015
+BSS01347	naive thymus-derived CD4-positive, alpha-beta T cell female adult (35 years)	naive thymus-derived CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	NAIVE T CELL	35	female	primary cell			adult	ENCODE
+BSS01348	naive thymus-derived CD4-positive, alpha-beta T cell male adult (26 years)	naive thymus-derived CD4-positive, alpha-beta T cell	Blood & T-cell		#678C69	Immune	NAIVE T CELL	26	male	primary cell			adult	ENCODE
+BSS01478	regulatory T cell female adult (35 years)	regulatory T cell	Blood & T-cell		#678C69	Immune	TREG CELL	35	female	primary cell			adult	ENCODE
+BSS01479	regulatory T cell male adult (28 years)	regulatory T cell	Blood & T-cell		#678C69	Immune	TREG CELL	28	male	primary cell			adult	ENCODE
+BSS01688	T-cell male adult (36 years)	T-cell	Blood & T-cell		#678C69	Immune	T CELL	36	male	primary cell			adult	Roadmap (Novel)
+BSS01690	T-helper 1 cell	T-helper 1 cell	Blood & T-cell		#678C69	Immune	T1 CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01691	T-helper 1 cell female adult (26 years)	T-helper 1 cell	Blood & T-cell		#678C69	Immune	T1 CELL	26	female	primary cell			adult	ENCODE
+BSS01692	T-helper 1 cell male adult (33 years)	T-helper 1 cell	Blood & T-cell		#678C69	Immune	T1 CELL	33	male	primary cell			adult	ENCODE
+BSS01693	T-helper 17 cell	T-helper 17 cell	Blood & T-cell		#678C69	Immune	T17 CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01694	T-helper 17 cell originated from blood cell	T-helper 17 cell	Blood & T-cell		#678C69	Immune	T17 CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap (Novel)
+BSS01696	T-helper 2 cell	T-helper 2 cell	Blood & T-cell		#678C69	Immune	T2 CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01697	T-helper 2 cell female adult (26 years)	T-helper 2 cell	Blood & T-cell		#678C69	Immune	T2 CELL	26	female	primary cell			adult	ENCODE
+BSS01698	T-helper 2 cell male adult (33 years)	T-helper 2 cell	Blood & T-cell		#678C69	Immune	T2 CELL	33	male	primary cell			adult	ENCODE
+BSS00178	CD14-positive monocyte female	CD14-positive monocyte	HSC & B-cell		#55A354	Immune	CD14 MONOCYTE	unknown	female	primary cell			unknown/mixed	ENCODE 2012
+BSS00095	B cell female adult (27 years)	B cell	HSC & B-cell		#55A354	Immune	B CELL	27	female	primary cell			adult	ENCODE
+BSS00231	common myeloid progenitor, CD34-positive female adult (27 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	27	female	primary cell			adult	Roadmap 2015
+BSS00232	common myeloid progenitor, CD34-positive female adult (33 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	33	female	primary cell			adult	Roadmap 2015
+BSS00180	CD14-positive monocyte male adult (21 year)	CD14-positive monocyte	HSC & B-cell		#55A354	Immune	CD14 MONOCYTE	21	male	primary cell			adult	Roadmap 2015
+BSS00237	common myeloid progenitor, CD34-positive male adult (36 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	36	male	primary cell			adult	Roadmap 2015
+BSS00239	common myeloid progenitor, CD34-positive male adult (42 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	42	male	primary cell			adult	Roadmap 2015
+BSS01380	neutrophil	neutrophil	HSC & B-cell		#55A354	Immune	NEUTROPHIL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00100	B cell male adult (21 year)	B cell	HSC & B-cell		#55A354	Immune	B CELL	21	male	primary cell			adult	Roadmap 2015
+BSS00101	B cell male adult (37 years)	B cell	HSC & B-cell		#55A354	Immune	B CELL	37	male	primary cell			adult	Roadmap 2015
+BSS00229	common myeloid progenitor, CD34-positive	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS01354	natural killer cell male adult (21 year)	natural killer cell	HSC & B-cell		#55A354	Immune	NK CELL	21	male	primary cell			adult	Roadmap 2015
+BSS01381	neutrophil male	neutrophil	HSC & B-cell		#55A354	Immune	NEUTROPHIL	unknown	male	primary cell			unknown/mixed	Roadmap 2015
+BSS00093	B cell	B cell	HSC & B-cell		#55A354	Immune	B CELL	unknown	unknown/mixed	primary cell			unknown/mixed	Roadmap 2015
+BSS00096	B cell female adult (27 years) and female adult (43 years)	B cell	HSC & B-cell		#55A354	Immune	B CELL	27,43	female	primary cell			adult	ENCODE
+BSS00098	B cell female adult (43 years)	B cell	HSC & B-cell		#55A354	Immune	B CELL	43	female	primary cell			adult	ENCODE
+BSS01355	natural killer cell male adult (37 years)	natural killer cell	HSC & B-cell		#55A354	Immune	NK CELL	37	male	primary cell			adult	Roadmap 2015
+BSS00181	CD14-positive monocyte male adult (37 years)	CD14-positive monocyte	HSC & B-cell		#55A354	Immune	CD14 MONOCYTE	37	male	primary cell			adult	Roadmap 2015
+BSS00235	common myeloid progenitor, CD34-positive male adult	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	unknown	male	primary cell			adult	Roadmap (Novel)
+BSS00760	Jurkat clone E61	Jurkat clone E61	HSC & B-cell		#55A354	Immune	LYMPHOCYTE	14	male	cell line			child	ENCODE
+BSS00097	B cell female adult (34 years)	B cell	HSC & B-cell		#55A354	Immune	B CELL	34	female	primary cell			adult	Roadmap (Novel)
+BSS00179	CD14-positive monocyte female adult (34 years)	CD14-positive monocyte	HSC & B-cell		#55A354	Immune	CD14 MONOCYTE	34	female	primary cell			adult	Roadmap 2015
+BSS00182	CD1c-positive myeloid dendritic cell	CD1c-positive myeloid dendritic cell	HSC & B-cell		#55A354	Immune	CD1C MYELOID DENDRITIC CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00230	common myeloid progenitor, CD34-positive female	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	unknown	female	primary cell			unknown/mixed	Roadmap (Novel)
+BSS00233	common myeloid progenitor, CD34-positive female adult (50 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	50	female	primary cell			adult	Roadmap (Novel)
+BSS00234	common myeloid progenitor, CD34-positive male	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	unknown	male	primary cell			unknown/mixed	Roadmap (Novel)
+BSS00236	common myeloid progenitor, CD34-positive male adult (23 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	23	male	primary cell			adult	Roadmap (Novel)
+BSS00238	common myeloid progenitor, CD34-positive male adult (37 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	37	male	primary cell			adult	Roadmap (Novel)
+BSS00240	common myeloid progenitor, CD34-positive male adult (43 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	43	male	primary cell			adult	Roadmap (Novel)
+BSS00241	common myeloid progenitor, CD34-positive male adult (49 years)	common myeloid progenitor, CD34-positive	HSC & B-cell		#55A354	Immune	CD34 CMP	49	male	primary cell			adult	Roadmap (Novel)
+BSS00384	germinal center	germinal center	HSC & B-cell		#55A354	Immune	GERMINAL CENTER	unknown	unknown/mixed	tissue			unknown/mixed	ENCODE
+BSS00543	hematopoietic multipotent progenitor cell	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	unknown	unknown/mixed	in vitro differentiated cells			unknown/mixed	Roadmap (Novel)
+BSS00544	hematopoietic multipotent progenitor cell treated with erythropoietin for 20 days, hydrocortisone succinate for 20 days, kit ligand for 20 days, interleukin-3 for 20 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell_male_adult_(25_years)	erythropoietin_for_20_days,_hydrocortisone_succinate_for_20_days,_kit_ligand_for_20_days,_interleukin-3_for_20_days	adult	ENCODE
+BSS00545	hematopoietic multipotent progenitor cell treated with interleukin-3 for 11 day, kit ligand for 11 day, hydrocortisone succinate for 11 day, erythropoietin for 11 day	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_11_day,_kit_ligand_for_11_day,_hydrocortisone_succinate_for_11_day,_erythropoietin_for_11_day	adult	ENCODE
+BSS00546	hematopoietic multipotent progenitor cell treated with interleukin-3 for 13 days, kit ligand for 13 days, hydrocortisone succinate for 13 days, erythropoietin for 13 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_13_days,_kit_ligand_for_13_days,_hydrocortisone_succinate_for_13_days,_erythropoietin_for_13_days	adult	ENCODE
+BSS00547	hematopoietic multipotent progenitor cell treated with interleukin-3 for 15 days, kit ligand for 15 days, hydrocortisone succinate for 15 days, erythropoietin for 15 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_15_days,_kit_ligand_for_15_days,_hydrocortisone_succinate_for_15_days,_erythropoietin_for_15_days	adult	ENCODE
+BSS00548	hematopoietic multipotent progenitor cell treated with interleukin-3 for 17 days, kit ligand for 17 days, hydrocortisone succinate for 17 days, erythropoietin for 17 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_17_days,_kit_ligand_for_17_days,_hydrocortisone_succinate_for_17_days,_erythropoietin_for_17_days	adult	ENCODE
+BSS00549	hematopoietic multipotent progenitor cell treated with interleukin-3 for 18 days, kit ligand for 18 days, hydrocortisone succinate for 18 days, erythropoietin for 18 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_18_days,_kit_ligand_for_18_days,_hydrocortisone_succinate_for_18_days,_erythropoietin_for_18_days	adult	ENCODE
+BSS00550	hematopoietic multipotent progenitor cell treated with interleukin-3 for 4 days, kit ligand for 4 days, hydrocortisone succinate for 4 days, erythropoietin for 4 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_4_days,_kit_ligand_for_4_days,_hydrocortisone_succinate_for_4_days,_erythropoietin_for_4_days	adult	ENCODE
+BSS00551	hematopoietic multipotent progenitor cell treated with interleukin-3 for 6 days, kit ligand for 6 days, hydrocortisone succinate for 6 days, erythropoietin for 6 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_6_days,_kit_ligand_for_6_days,_hydrocortisone_succinate_for_6_days,_erythropoietin_for_6_days	adult	ENCODE
+BSS00552	hematopoietic multipotent progenitor cell treated with interleukin-3 for 8 days, kit ligand for 8 days, hydrocortisone succinate for 8 days, erythropoietin for 8 days	hematopoietic multipotent progenitor cell	HSC & B-cell		#55A354	Immune	MPP	25	male	in vitro differentiated cells	hematopoietic_multipotent_progenitor_cell	interleukin-3_for_8_days,_kit_ligand_for_8_days,_hydrocortisone_succinate_for_8_days,_erythropoietin_for_8_days	adult	ENCODE
+BSS01345	naive B cell	naive B cell	HSC & B-cell		#55A354	Immune	B CELL	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01353	natural killer cell female adult (34 years)	natural killer cell	HSC & B-cell		#55A354	Immune	NK CELL	34	female	primary cell			adult	Roadmap (Novel)
+BSS00439	GM12878	GM12878	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			adult	ENCODE 2012
+BSS00395	GM06990	GM06990	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			unknown/mixed	ENCODE
+BSS00427	GM12864	GM12864	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	male	cell line			unknown/mixed	ENCODE
+BSS00428	GM12865	GM12865	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			unknown/mixed	ENCODE
+BSS00403	GM08714	GM08714	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	1	female	cell line			child	ENCODE
+BSS00404	GM10248	GM10248	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	32	male	cell line			adult	ENCODE
+BSS00405	GM10266	GM10266	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	38	male	cell line			adult	ENCODE
+BSS00438	GM12875	GM12875	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			adult	ENCODE
+BSS00452	GM12891	GM12891	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	male	cell line			unknown/mixed	ENCODE
+BSS00454	GM12892	GM12892	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			unknown/mixed	ENCODE
+BSS00462	GM18507	GM18507	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE		male	cell line			unknown/mixed	ENCODE
+BSS00471	GM19238	GM19238	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE		female	cell line			adult	ENCODE
+BSS00472	GM19239	GM19239	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	male	cell line			adult	ENCODE
+BSS00473	GM19240	GM19240	Lymphoblastoid		#4D9C8D	Immune	LYMPHOBLASTOID CELL LINE	unknown	female	cell line			adult	ENCODE
+BSS01630	spleen female adult (53 years)	spleen	Spleen		#85CF66	Immune	SPLEEN	53	female	tissue			adult	ENCODE
+BSS01631	spleen male adult (34 years)	spleen	Spleen		#85CF66	Immune	SPLEEN	34	male	tissue			adult	Roadmap 2015
+BSS01634	spleen male child (3 years)	spleen	Spleen		#85CF66	Immune	SPLEEN	3	male	tissue			child	Roadmap (Novel)
+BSS01628	spleen female adult (30 years)	spleen	Spleen		#85CF66	Immune	SPLEEN	30	female	tissue			adult	Roadmap (Novel)
+BSS01625	spleen embryo (112 days)	spleen	Spleen		#85CF66	Immune	SPLEEN	112	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS01633	spleen male adult (54 years)	spleen	Spleen		#85CF66	Immune	SPLEEN	54	male	tissue			adult	ENCODE
+BSS01820	thymus female embryo (110 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	110	female	tissue			embryonic	Roadmap 2015
+BSS01825	thymus male child (3 years)	thymus	Thymus		#DAB92E	Immune	THYMUS	3	male	tissue			child	Roadmap 2015
+BSS01818	thymus female embryo	thymus	Thymus		#DAB92E	Immune	THYMUS	unknown	female	tissue			embryonic	Roadmap 2015
+BSS01819	thymus female embryo (105 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	105	female	tissue			embryonic	Roadmap 2015
+BSS01821	thymus female embryo (113 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	113	female	tissue			embryonic	Roadmap 2015
+BSS01823	thymus female embryo (147 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	147	female	tissue			embryonic	Roadmap 2015
+BSS01824	thymus female embryo (98 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	98	female	tissue			embryonic	Roadmap 2015
+BSS01826	thymus male embryo (104 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	104	male	tissue			embryonic	Roadmap (Novel)
+BSS01827	thymus male embryo (108 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	108	male	tissue			embryonic	Roadmap 2015
+BSS01828	thymus male embryo (113 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	113	male	tissue			embryonic	Roadmap 2015
+BSS01829	thymus male embryo (127 days)	thymus	Thymus		#DAB92E	Immune	THYMUS	127	male	tissue			embryonic	Roadmap 2015
+BSS00089	astrocyte	astrocyte	Brain		#C5912B	Neural	ASTROCYTE	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE 2012
+BSS00173	caudate nucleus female adult (75 years)	caudate nucleus	Brain		#C5912B	Neural	CAUDATE NUCLEUS	75	female	tissue			adult	Roadmap 2015
+BSS01124	layer of hippocampus female adult (75 years)	layer of hippocampus	Brain		#C5912B	Neural	HIPPOCAMPUS	75	female	tissue			adult	Roadmap (Novel)
+BSS01712	temporal lobe female adult (75 years)	temporal lobe	Brain		#C5912B	Neural	TEMPORAL LOBE	75	female	tissue			adult	Roadmap 2015
+BSS00077	angular gyrus female adult (75 years)	angular gyrus	Brain		#C5912B	Neural	ANGULAR GYRUS	75	female	tissue			adult	Roadmap 2015
+BSS00078	angular gyrus male adult (81 year)	angular gyrus	Brain		#C5912B	Neural	ANGULAR GYRUS	81	male	tissue			adult	Roadmap 2015
+BSS00175	caudate nucleus male adult (81 year)	caudate nucleus	Brain		#C5912B	Neural	CAUDATE NUCLEUS	81	male	tissue			adult	Roadmap 2015
+BSS00219	cingulate gyrus female adult (75 years)	cingulate gyrus	Brain		#C5912B	Neural	CINGULATE GYRUS	75	female	tissue			adult	Roadmap 2015
+BSS00220	cingulate gyrus male adult (81 year)	cingulate gyrus	Brain		#C5912B	Neural	CINGULATE GYRUS	81	male	tissue			adult	Roadmap 2015
+BSS01125	layer of hippocampus male adult (73 years)	layer of hippocampus	Brain		#C5912B	Neural	HIPPOCAMPUS	73	male	tissue			adult	Roadmap 2015
+BSS01126	layer of hippocampus male adult (81 year)	layer of hippocampus	Brain		#C5912B	Neural	HIPPOCAMPUS	81	male	tissue			adult	Roadmap 2015
+BSS01271	middle frontal area 46 female adult (75 years)	middle frontal area 46	Brain		#C5912B	Neural	MIDDLE FRONTAL AREA	75	female	tissue			adult	Roadmap 2015
+BSS01272	middle frontal area 46 male adult (81 year)	middle frontal area 46	Brain		#C5912B	Neural	MIDDLE FRONTAL AREA	81	male	tissue			adult	Roadmap 2015
+BSS01675	substantia nigra female adult (75 years)	substantia nigra	Brain		#C5912B	Neural	SUBSTANTIA NIGRA	75	female	tissue			adult	Roadmap 2015
+BSS01676	substantia nigra male adult (81 year)	substantia nigra	Brain		#C5912B	Neural	SUBSTANTIA NIGRA	81	male	tissue			adult	Roadmap 2015
+BSS01714	temporal lobe male adult (81 year)	temporal lobe	Brain		#C5912B	Neural	TEMPORAL LOBE	81	male	tissue			adult	Roadmap 2015
+BSS00134	brain female embryo (17 weeks)	brain	Brain		#C5912B	Neural	BRAIN	17	female	tissue			embryonic	Roadmap 2015
+BSS00141	brain male embryo (122 days)	brain	Brain		#C5912B	Neural	BRAIN	122	male	tissue			embryonic	Roadmap 2015
+BSS00385	germinal matrix male embryo (20 weeks)	germinal matrix	Brain		#C5912B	Neural	GERMINAL MATRIX	20	male	tissue			embryonic	Roadmap 2015
+BSS00132	brain female embryo (120 days)	brain	Brain		#C5912B	Neural	BRAIN	120	female	tissue			embryonic	Roadmap 2015
+BSS00090	astrocyte of the cerebellum	astrocyte of the cerebellum	Brain		#C5912B	Neural	ASTROCYTE CEREBELLUM	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00092	astrocyte of the spinal cord	astrocyte of the spinal cord	Brain		#C5912B	Neural	ASTROCYTE SPINAL CORD	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00071	Ammon's horn male adult (84 years)	Ammon's horn	Brain		#C5912B	Neural	AMMONS HORN	84	male	tissue			adult	ENCODE
+BSS00091	astrocyte of the hippocampus	astrocyte of the hippocampus	Brain		#C5912B	Neural	ASTROCYTE HIPPOCAMPUS	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS00125	brain embryo (112 days)	brain	Brain		#C5912B	Neural	BRAIN	112	unknown/mixed	tissue			embryonic	Roadmap (Novel)
+BSS00126	brain embryo (56 days) and male embryo (58 days)	brain	Brain		#C5912B	Neural	BRAIN	58,56	unknown/mixed	tissue			embryonic	ENCODE
+BSS00127	brain embryo (80 days)	brain	Brain		#C5912B	Neural	BRAIN	80	unknown/mixed	tissue			embryonic	ENCODE
+BSS00129	brain female embryo (105 days)	brain	Brain		#C5912B	Neural	BRAIN	105	female	tissue			embryonic	Roadmap (Novel)
+BSS00130	brain female embryo (109 days)	brain	Brain		#C5912B	Neural	BRAIN	109	female	tissue			embryonic	Roadmap (Novel)
+BSS00131	brain female embryo (117 days)	brain	Brain		#C5912B	Neural	BRAIN	117	female	tissue			embryonic	Roadmap 2015
+BSS00133	brain female embryo (142 days)	brain	Brain		#C5912B	Neural	BRAIN	142	female	tissue			embryonic	Roadmap (Novel)
+BSS00135	brain female embryo (85 days)	brain	Brain		#C5912B	Neural	BRAIN	85	female	tissue			embryonic	Roadmap (Novel)
+BSS00136	brain female embryo (96 days)	brain	Brain		#C5912B	Neural	BRAIN	96	female	tissue			embryonic	Roadmap (Novel)
+BSS00138	brain male embryo (101 day)	brain	Brain		#C5912B	Neural	BRAIN	101	male	tissue			embryonic	Roadmap (Novel)
+BSS00139	brain male embryo (104 days)	brain	Brain		#C5912B	Neural	BRAIN	104	male	tissue			embryonic	Roadmap (Novel)
+BSS00140	brain male embryo (105 days)	brain	Brain		#C5912B	Neural	BRAIN	105	male	tissue			embryonic	ENCODE
+BSS00142	brain male embryo (72 days) and male embryo (76 days)	brain	Brain		#C5912B	Neural	BRAIN	72,76	male	tissue			embryonic	ENCODE
+BSS00174	caudate nucleus male adult (78 years)	caudate nucleus	Brain		#C5912B	Neural	CAUDATE NUCLEUS	78	male	tissue			adult	ENCODE
+BSS00201	cerebellar cortex male adult (78 years) and male adult (84 years)	cerebellar cortex	Brain		#C5912B	Neural	CEREBELLAR CORTEX	84,78	male	tissue			adult	ENCODE
+BSS00206	cerebellum male adult (27 years) and male adult (35 years)	cerebellum	Brain		#C5912B	Neural	CEREBELLUM	35,27	male	tissue			adult	ENCODE
+BSS00207	cerebellum male adult (53 years)	cerebellum	Brain		#C5912B	Neural	CEREBELLUM	53	male	tissue			adult	Roadmap (Novel)
+BSS00369	frontal cortex female adult (67 years) and female adult (80 years)	frontal cortex	Brain		#C5912B	Neural	FRONTAL CORTEX	67,80	female	tissue			adult	ENCODE
+BSS00371	frontal cortex male adult (27 years) and male adult (35 years)	frontal cortex	Brain		#C5912B	Neural	FRONTAL CORTEX	35,27	male	tissue			adult	ENCODE
+BSS00386	globus pallidus male adult (78 years) and male adult (84 years)	globus pallidus	Brain		#C5912B	Neural	GLOBUS PALLIDUS	84,78	male	tissue			adult	ENCODE
+BSS00729	inferior parietal cortex male adult (84 years)	inferior parietal cortex	Brain		#C5912B	Neural	INFERIOR PARIETAL CORTEX	84	male	tissue			adult	ENCODE
+BSS01250	medulla oblongata male adult (78 years) and male adult (84 years)	medulla oblongata	Brain		#C5912B	Neural	MEDULLA OBLONGATA	84,78	male	tissue			adult	ENCODE
+BSS01270	midbrain male adult (78 years) and male adult (84 years)	midbrain	Brain		#C5912B	Neural	MIDBRAIN	78,84	male	tissue			adult	ENCODE
+BSS01273	middle frontal gyrus male adult (78 years)	middle frontal gyrus	Brain		#C5912B	Neural	MIDDLE FRONTAL GYRUS	78	male	tissue			adult	ENCODE
+BSS01388	occipital lobe male adult (84 years)	occipital lobe	Brain		#C5912B	Neural	OCCIPITAL LOBE	84	male	tissue			adult	ENCODE
+BSS01451	pons male adult (78 years)	pons	Brain		#C5912B	Neural	PONS	78	male	tissue			adult	ENCODE
+BSS01469	putamen male adult (78 years)	putamen	Brain		#C5912B	Neural	PUTAMEN	78	male	tissue			adult	ENCODE
+BSS01677	superior temporal gyrus male adult (84 years)	superior temporal gyrus	Brain		#C5912B	Neural	SUPERIOR TEMPORAL GYRUS	84	male	tissue			adult	ENCODE
+BSS00328	eye embryo (56 days) and male embryo (76 days)	eye	Eye		#EAD1DC	Neural	EYE	76,56	unknown/mixed	tissue			embryonic	ENCODE
+BSS00329	eye female embryo (76 days)	eye	Eye		#EAD1DC	Neural	EYE	76	female	tissue			embryonic	ENCODE
+BSS01502	retina embryo (125 days) and male embryo (103 days)	retina	Eye		#EAD1DC	Neural	EYE RETINA	125,103	unknown/mixed	tissue			embryonic	ENCODE
+BSS01503	retina embryo (74 days) and embryo (85 days)	retina	Eye		#EAD1DC	Neural	EYE RETINA	74,85	unknown/mixed	tissue			embryonic	ENCODE
+BSS01504	retina female embryo (89 days)	retina	Eye		#EAD1DC	Neural	EYE RETINA	89	female	tissue			embryonic	ENCODE
+BSS01377	neurosphere embryo (15 weeks) originated from ganglionic eminence	neurosphere	Neurosph		#FFD924	Neural	NEUROSPHERE	15	unknown/mixed	primary cell			embryonic	Roadmap (Novel)
+BSS01378	neurosphere female embryo (17 weeks) originated from cortex	neurosphere	Neurosph		#FFD924	Neural	NEUROSPHERE	17	female	primary cell			embryonic	Roadmap 2015
+BSS01379	neurosphere female embryo (17 weeks) originated from ganglionic eminence	neurosphere	Neurosph		#FFD924	Neural	NEUROSPHERE	17	female	primary cell			embryonic	Roadmap 2015
+BSS01392	olfactory neurosphere cell line	olfactory neurosphere cell line	Neurosph		#FFD924	Neural	OLFACTORY NEUROSPHERE	66	female	in vitro differentiated cells			adult	ENCODE
+BSS01841	tibial nerve female adult (53 years)	tibial nerve	PNS		#DDB796	Neural	TIBIAL NERVE	53	female	tissue			adult	ENCODE
+BSS01613	spinal cord female embryo (108 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	108	female	tissue			embryonic	Roadmap (Novel)
+BSS01614	spinal cord female embryo (113 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	113	female	tissue			embryonic	Roadmap (Novel)
+BSS01840	tibial nerve female adult (51 year)	tibial nerve	PNS		#DDB796	Neural	TIBIAL NERVE	51	female	tissue			adult	ENCODE
+BSS01617	spinal cord female embryo (59 days) and male embryo (72 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	59,72	unknown/mixed	tissue			embryonic	ENCODE
+BSS01618	spinal cord female embryo (87 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	87	female	tissue			embryonic	Roadmap (Novel)
+BSS01619	spinal cord female embryo (89 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	89	female	tissue			embryonic	Roadmap (Novel)
+BSS01620	spinal cord male embryo (105 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	105	male	tissue			embryonic	Roadmap (Novel)
+BSS01621	spinal cord male embryo (96 days)	spinal cord	PNS		#DDB796	Neural	SPINAL CORD	96	male	tissue			embryonic	Roadmap (Novel)
+BSS01842	tibial nerve male adult (37 years)	tibial nerve	PNS		#DDB796	Neural	TIBIAL NERVE	37	male	tissue			adult	ENCODE
+BSS01857	trophoblast cell originated from H1-hESC	trophoblast cell	ES-deriv	Placenta & EEM	#4178AE	Stem-like	TROPHOBLAST DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01261	mesenchymal stem cell originated from H1-hESC	mesenchymal stem cell	ES-deriv	Mesench	#4178AE	Stem-like	MESENCHYMAL STEM DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01371	neural stem progenitor cell originated from H1-hESC	neural stem progenitor cell	ES-deriv	Brain	#4178AE	Stem-like	NEURAL PROGENITOR DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01263	mesendoderm originated from H1-hESC	mesendoderm	ES-deriv		#4178AE	Stem-like	MESENDODERM DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS00112	bipolar neuron originated from GM23338 treated with 0.5 μg/mL doxycycline hyclate for 4 days	bipolar neuron	ES-deriv	Brain	#4178AE	Stem-like	BIPOLAR NEURON DERIV	53	male	in vitro differentiated cells	bipolar_neuron_originated_from_GM23338	0.5_mg_mL_doxycycline_hyclate_for_4_days	adult	ENCODE
+BSS00556	hepatocyte originated from H9	hepatocyte	ES-deriv	Liver	#4178AE	Stem-like	HEPATOCYTE DERIV	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS01370	neural progenitor cell originated from H9	neural progenitor cell	ES-deriv	Brain	#4178AE	Stem-like	NEURAL PROGENITOR DERIV	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS01366	neural cell originated from H1-hESC	neural cell	ES-deriv	Brain	#4178AE	Stem-like	NEURAL DERIV	unknown	male	in vitro differentiated cells			embryonic	ENCODE
+BSS01612	smooth muscle cell originated from H9	smooth muscle cell	ES-deriv	Sm. Muscle	#4178AE	Stem-like	SMOOTH MUSCLE DERIV	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS00171	cardiac muscle cell originated from RUES2	cardiac muscle cell	ES-deriv	Heart	#4178AE	Stem-like	CARDIAC MUSCLE DERIV	unknown	unknown/mixed	in vitro differentiated cells			embryonic	ENCODE
+BSS00287	endodermal cell originated from HUES64	endodermal cell	ES-deriv		#4178AE	Stem-like	ENDODERMAL DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS00273	ectodermal cell originated from HUES64	ectodermal cell	ES-deriv		#4178AE	Stem-like	ECTODERMAL DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01372	neural stem progenitor cell originated from H9	neural stem progenitor cell	ES-deriv	Brain	#4178AE	Stem-like	NEURAL PROGENITOR DERIV	5	female	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01375	neuron originated from H9	neuron	ES-deriv	Brain	#4178AE	Stem-like	NEURON DERIV	5	female	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS01264	mesodermal cell originated from HUES64	mesodermal cell	ES-deriv		#4178AE	Stem-like	MESODERMAL DERIV	unknown	male	in vitro differentiated cells			embryonic	Roadmap 2015
+BSS00169	cardiac mesoderm originated from H7-hESC	cardiac mesoderm	ES-deriv	Heart	#4178AE	Stem-like	CARDIAC MESODERM DERIV	unknown	female	in vitro differentiated cells			embryonic	ENCODE
+BSS00272	ecto neural progenitor cell originated from H9	ecto neural progenitor cell	ES-deriv	Brain	#4178AE	Stem-like	NEURAL PROGENITOR DERIV	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS00285	endodermal cell	endodermal cell	ES-deriv		#4178AE	Stem-like	ENDODERMAL CELL	5	female	in vitro differentiated cells			embryonic	ENCODE
+BSS00484	H9	H9	ESC		#924965	Stem-like	ESC	5	female	cell line			embryonic	Roadmap 2015
+BSS00478	H1-hESC	H1-hESC	ESC		#924965	Stem-like	ESC	unknown	male	cell line			embryonic	Roadmap 2015
+BSS00483	H7-hESC	H7-hESC	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	Roadmap 2015
+BSS00715	HUES48	HUES48	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	Roadmap 2015
+BSS00716	HUES6	HUES6	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	Roadmap 2015
+BSS00717	HUES64	HUES64	ESC		#924965	Stem-like	ESC	unknown	male	cell line			embryonic	Roadmap 2015
+BSS01866	UCSF-4	UCSF-4	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	Roadmap 2015
+BSS00315	ES-I3	ES-I3	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	Roadmap 2015
+BSS00277	ELF-1	ELF-1	ESC		#924965	Stem-like	ESC	unknown	female	cell line			embryonic	ENCODE
+BSS00477	GM23338 originated from GM23248	GM23338	iPSC		#69608A	Stem-like	iPSC	53	male	cell line			adult	ENCODE
+BSS00731	iPS DF 19.11	iPS DF 19.11	iPSC		#69608A	Stem-like	iPSC	unknown	male	cell line			newborn	Roadmap 2015
+BSS00734	iPS DF 6.9	iPS DF 6.9	iPSC		#69608A	Stem-like	iPSC	unknown	male	cell line			newborn	Roadmap 2015
+BSS00737	iPS-18a	iPS-18a	iPSC		#69608A	Stem-like	iPSC	48	female	cell line			adult	Roadmap 2015
+BSS00739	iPS-20b	iPS-20b	iPSC		#69608A	Stem-like	iPSC	55	male	cell line			adult	Roadmap 2015
+BSS00736	iPS-15b	iPS-15b	iPSC		#69608A	Stem-like	iPSC	48	female	cell line			adult	Roadmap 2015
+BSS00738	iPS-18c	iPS-18c	iPSC		#69608A	Stem-like	iPSC	48	female	cell line			adult	Roadmap 2015
+BSS00244	CWRU1	CWRU1	iPSC		#69608A	Stem-like	iPSC	unknown	male	cell line			unknown/mixed	ENCODE
+BSS00732	iPS DF 19.7	iPS DF 19.7	iPSC		#69608A	Stem-like	iPSC	unknown	male	cell line			newborn	Roadmap (Novel)
+BSS00733	iPS DF 4.7	iPS DF 4.7	iPSC		#69608A	Stem-like	iPSC	unknown	male	cell line			newborn	Roadmap (Novel)
+BSS00735	iPS-11a	iPS-11a	iPSC		#69608A	Stem-like	iPSC	36	male	cell line			adult	Roadmap (Novel)
+BSS00741	iPS-NIHi11 originated from AG20443	iPS-NIHi11	iPSC		#69608A	Stem-like	iPSC	71	male	cell line			adult	ENCODE
+BSS00742	iPS-NIHi7 originated from AG08395	iPS-NIHi7	iPSC		#69608A	Stem-like	iPSC	85	female	cell line			adult	ENCODE
+BSS01107	L1-S8	L1-S8	iPSC		#69608A	Stem-like	iPSC	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS01108	L1-S8R	L1-S8R	iPSC		#69608A	Stem-like	iPSC	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS01226	MCF-7	MCF-7	Cancer	Other	#000000	Other	MAMMARY GLAND ADENOCARCINOMA	69	female	cell line			adult	ENCODE
+BSS01274	MM.1S	MM.1S	Cancer	HSC & B-cell	#000000	Other	MYELOMA	42	female	cell line			adult	ENCODE
+BSS01414	PC-3	PC-3	Cancer	Reproductive	#000000	Other	PROSTATE ADENOCARCINOMA	62	male	cell line			adult	ENCODE
+BSS01415	PC-9	PC-9	Cancer	Lung	#000000	Other	LUNG ADENOCARCINOMA	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS01562	SK-N-SH	SK-N-SH	Cancer	Brain	#000000	Other	NEUROBLASTOMA	4	female	cell line			child	ENCODE
+BSS00492	HCT116	HCT116	Cancer	Digestive	#000000	Other	COLORECTAL ADENOCARCINOMA	unknown	male	cell line			adult	ENCODE
+BSS00762	K562	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line			adult	ENCODE 2012
+BSS01065	Karpas-422	Karpas-422	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	72	female	cell line			adult	ENCODE
+BSS01389	OCI-LY1	OCI-LY1	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	44	male	cell line			adult	ENCODE
+BSS00268	DOHH2	DOHH2	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	60	male	cell line			adult	ENCODE
+BSS00529	HeLa-S3	HeLa-S3	Cancer	Reproductive	#000000	Other	CERVIX ADENOCARCINOMA	31	female	cell line			adult	ENCODE 2012
+BSS00558	HepG2	HepG2	Cancer	Liver	#000000	Other	HEPATOCELLULAR CARCINOMA	15	male	cell line			child	ENCODE 2012
+BSS01178	Loucy	Loucy	Cancer	Blood & T-cell	#000000	Other	ACUTE LYMPHOBLASTIC LEUKEMIA	38	female	cell line			adult	ENCODE
+BSS01664	SU-DHL-6	SU-DHL-6	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	43	male	cell line			adult	ENCODE
+BSS00013	A549 treated with 0.02% ethanol for 1 hour	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	0.02pct_ethanol_for_1_hour	adult	ENCODE 2012
+BSS00015	A549 treated with 100 nM dexamethasone for 1 hour	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_1_hour	adult	ENCODE
+BSS00267	DND-41	DND-41	Cancer	Blood & T-cell	#000000	Other	ACUTE LYMPHOBLASTIC LEUKEMIA	13	male	cell line			child	ENCODE 2012
+BSS01390	OCI-LY3	OCI-LY3	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	52	male	cell line			adult	ENCODE
+BSS01391	OCI-LY7	OCI-LY7	Cancer	HSC & B-cell	#000000	Other	B CELL LYMPHOMA	48	male	cell line			adult	ENCODE
+BSS01104	KMS-11	KMS-11	Cancer	HSC & B-cell	#000000	Other	MYELOMA	67	female	cell line			adult	ENCODE
+BSS01411	Parathyroid adenoma male adult (62 years)	Parathyroid adenoma	Cancer	Endocrine	#000000	Other	PARATHYROID ADENOMA	62	male	tissue			adult	ENCODE
+BSS01365	NCI-H929	NCI-H929	Cancer	HSC & B-cell	#000000	Other	MYELOMA	62	female	cell line			adult	ENCODE
+BSS00007	A549	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line			adult	ENCODE 2012
+BSS00018	A549 treated with 100 nM dexamethasone for 12 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_12_hours	adult	GGR
+BSS00025	A549 treated with 100 nM dexamethasone for 4 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_4_hours	adult	GGR
+BSS00030	A549 treated with 100 nM dexamethasone for 8 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_8_hours	adult	GGR
+BSS00035	A673	A673	Cancer	Muscle	#000000	Other	MUSCLE EWING SARCOMA	15	female	cell line			child	ENCODE
+BSS00036	ACC112	ACC112	Cancer	Other	#000000	Other	ADENOID CYSTIC CARCINOMA	70	male	cell line			adult	ENCODE
+BSS01386	NT2/D1	NT2/D1	Cancer	Endocrine	#000000	Other	TESTICULAR EMBRYONAL CARCINOMA	22	male	cell line			unknown/mixed	ENCODE
+BSS01405	Panc1	Panc1	Cancer	Pancreas	#000000	Other	PANCREAS DUCT EPITHELIAL CARCINOMA	56	male	cell line			unknown/mixed	ENCODE
+BSS01559	SK-N-MC	SK-N-MC	Cancer	Brain	#000000	Other	NEUROEPITHELIOMA	14	female	cell line			child	ENCODE
+BSS00016	A549 treated with 100 nM dexamethasone for 10 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_10_hours	adult	GGR
+BSS00020	A549 treated with 100 nM dexamethasone for 2 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_2_hours	adult	GGR
+BSS00023	A549 treated with 100 nM dexamethasone for 3 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_3_hours	adult	GGR
+BSS00024	A549 treated with 100 nM dexamethasone for 30 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_30_minutes	adult	GGR
+BSS00026	A549 treated with 100 nM dexamethasone for 5 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_5_hours	adult	GGR
+BSS00028	A549 treated with 100 nM dexamethasone for 6 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_6_hours	adult	GGR
+BSS00029	A549 treated with 100 nM dexamethasone for 7 hours	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_7_hours	adult	GGR
+BSS01412	Parathyroid adenoma male adult (65 years)	Parathyroid adenoma	Cancer	Endocrine	#000000	Other	PARATHYROID ADENOMA	65	male	tissue			adult	ENCODE
+BSS00159	Caco-2	Caco-2	Cancer	Digestive	#000000	Other	COLORECTAL ADENOCARCINOMA	72	male	cell line			adult	ENCODE
+BSS00531	HeLa-S3 G1b phase	HeLa-S3	Cancer	Reproductive	#000000	Other	CERVIX ADENOCARCINOMA	31	female	cell line	HeLa-S3	G1b_phase	adult	ENCODE 2012
+BSS01105	KOPT-K1	KOPT-K1	Cancer	Blood & T-cell	#000000	Other	ACUTE LYMPHOBLASTIC LEUKEMIA	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS01571	SK-N-SH treated with 6 μM all-trans-retinoic acid for 48 hours	SK-N-SH	Cancer	Brain	#000000	Other	NEUROBLASTOMA	4	female	cell line	SK-N-SH	6_mM_all-trans-retinoic_acid_for_48_hours	child	ENCODE
+BSS00102	BE2C	BE2C	Cancer	Brain	#000000	Other	NEUROBLASTOMA	2	male	cell line			child	ENCODE
+BSS00702	HL-60	HL-60	Cancer	HSC & B-cell	#000000	Other	ACUTE PROMYELOCYTIC LEUKEMIA	36	female	cell line			adult	ENCODE
+BSS01173	LNCaP clone FGC	LNCaP clone FGC	Cancer	Reproductive	#000000	Other	PROSTATE ADENOCARCINOMA	50	male	cell line			adult	ENCODE
+BSS01356	NB4	NB4	Cancer	HSC & B-cell	#000000	Other	ACUTE PROMYELOCYTIC LEUKEMIA	23	female	cell line			adult	ENCODE
+BSS01890	WERI-Rb-1	WERI-Rb-1	Cancer	Eye	#000000	Other	EYE RETINOBLASTOMA	1	female	cell line			child	ENCODE
+BSS00001	22Rv1	22Rv1	Cancer	Reproductive	#000000	Other	PROSTATE EPITHELIAL CARCINOMA	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS00002	22Rv1 treated with 10 nM 17β-hydroxy-5α-androstan-3-one for 4 hours	22Rv1	Cancer	Reproductive	#000000	Other	PROSTATE EPITHELIAL CARCINOMA	unknown	unknown/mixed	cell line	22Rv1	10_nM_17b-hydroxy-5a-androstan-3-one_for_4_hours	unknown/mixed	ENCODE
+BSS00003	8988T	8988T	Cancer	Pancreas	#000000	Other	PANCREAS ADENOCARCINOMA	64	female	cell line			adult	ENCODE
+BSS00004	A172	A172	Cancer	Brain	#000000	Other	GLIOBLASTOMA	53	male	cell line			adult	ENCODE
+BSS00017	A549 treated with 100 nM dexamethasone for 10 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_10_minutes	adult	GGR
+BSS00019	A549 treated with 100 nM dexamethasone for 15 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_15_minutes	adult	GGR
+BSS00021	A549 treated with 100 nM dexamethasone for 20 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_20_minutes	adult	GGR
+BSS00022	A549 treated with 100 nM dexamethasone for 25 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_25_minutes	adult	GGR
+BSS00027	A549 treated with 100 nM dexamethasone for 5 minutes	A549	Cancer	Lung	#000000	Other	LUNG EPITHELIAL CARCINOMA	58	male	cell line	A549	100_nM_dexamethasone_for_5_minutes	adult	GGR
+BSS00037	ACHN	ACHN	Cancer	Kidney	#000000	Other	RENAL CELL ADENOCARCINOMA	22	male	cell line			adult	ENCODE
+BSS00157	C4-2B	C4-2B	Cancer	Reproductive	#000000	Other	PROSTATE CANCER	50	male	cell line			adult	ENCODE
+BSS00160	Caki2	Caki2	Cancer	Kidney	#000000	Other	KIDNEY CLEAR CELL CARCINOMA	69	male	cell line			adult	ENCODE
+BSS00221	CMK	CMK	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	10	male	cell line			child	ENCODE
+BSS00222	COLO829	COLO829	Cancer	Epithelial	#000000	Other	MELANOMA	45	male	cell line			adult	ENCODE
+BSS00246	Daoy	Daoy	Cancer	Brain	#000000	Other	DESMOPLASTIC MEDULLOBLASTOMA	4	male	cell line			child	ENCODE
+BSS00372	G401	G401	Cancer	Kidney	#000000	Other	KIDNEY RHABOID TUMOR	3	male	cell line			child	ENCODE
+BSS00481	H4	H4	Cancer	Brain	#000000	Other	NEUROGLIOMA	37	male	cell line			adult	ENCODE
+BSS00482	H54	H54	Cancer	Brain	#000000	Other	GLIOBLASTOMA	36	female	cell line			adult	ENCODE
+BSS00491	HAP-1	HAP-1	Cancer	HSC & B-cell	#000000	Other	HAPLOID MYELOGENOUS LEUKEMIA	44	male	cell line			adult	ENCODE
+BSS00541	HeLa-S3 treated with interferon alpha for 4 hours	HeLa-S3	Cancer	Reproductive	#000000	Other	CERVIX ADENOCARCINOMA	31	female	cell line	HeLa-S3	interferon_alpha_for_4_hours	adult	ENCODE
+BSS00708	HT-29	HT-29	Cancer	Digestive	#000000	Other	COLORECTAL ADENOCARCINOMA	44	female	cell line			adult	ENCODE
+BSS00709	HT1080	HT1080	Cancer	Stromal	#000000	Other	FIBROSARCOMA	35	male	cell line			adult	ENCODE
+BSS00718	HuH-7	HuH-7	Cancer	Liver	#000000	Other	HEPATOCELLULAR CARCINOMA	57	male	cell line			adult	ENCODE
+BSS00719	HuH-7.5	HuH-7.5	Cancer	Liver	#000000	Other	HEPATOCELLULAR CARCINOMA	57	male	cell line			adult	ENCODE
+BSS00745	Ishikawa treated with 0.02% dimethyl sulfoxide for 1 hour	Ishikawa	Cancer	Reproductive	#000000	Other	ENDOMETRIAL ADENOCARCINOMA	39	female	cell line	Ishikawa	0.02pct_dimethyl_sulfoxide_for_1_hour	adult	ENCODE
+BSS00748	Ishikawa treated with 10 nM 17β-estradiol for 30 minutes	Ishikawa	Cancer	Reproductive	#000000	Other	ENDOMETRIAL ADENOCARCINOMA	39	female	cell line	Ishikawa	10_nM_17b-estradiol_for_30_minutes	adult	ENCODE
+BSS00756	Ishikawa treated with 600 nM afimoxifene for 30 minutes	Ishikawa	Cancer	Reproductive	#000000	Other	ENDOMETRIAL ADENOCARCINOMA	39	female	cell line	Ishikawa	600_nM_afimoxifene_for_30_minutes	adult	ENCODE
+BSS01038	K562 G1 phase	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line	K562	G1_phase	adult	ENCODE
+BSS01039	K562 G2 phase	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line	K562	G2_phase	adult	ENCODE
+BSS01056	K562 treated with 0.05% dimethyl sulfoxide for 72 hours	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line	K562	0.05pct_dimethyl_sulfoxide_for_72_hours	adult	ENCODE
+BSS01057	K562 treated with 1 μM vorinostat for 72 hours	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line	K562	1_mM_vorinostat_for_72_hours	adult	ENCODE
+BSS01059	K562 treated with 500 μM sodium butyrate for 72 hours	K562	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	53	female	cell line	K562	500_mM_sodium_butyrate_for_72_hours	adult	ENCODE
+BSS01066	KBM-7	KBM-7	Cancer	HSC & B-cell	#000000	Other	MYELOGENOUS LEUKEMIA	44	male	cell line			adult	ENCODE
+BSS01174	LNCaP clone FGC treated with 1 nM 17β-hydroxy-17-methylestra-4,9,11-trien-3-one for 12 hours	LNCaP clone FGC	Cancer	Reproductive	#000000	Other	PROSTATE ADENOCARCINOMA	50	male	cell line	LNCaP_clone_FGC	1_nM_17b-hydroxy-17-methylestra-4,9,11-trien-3-one_for_12_hours	adult	ENCODE
+BSS01179	LoVo	LoVo	Cancer	Digestive	#000000	Other	COLORECTAL ADENOCARCINOMA	56	male	cell line			adult	ENCODE
+BSS01208	M059J	M059J	Cancer	Brain	#000000	Other	GLIOBLASTOMA	33	male	cell line			adult	ENCODE
+BSS01235	MCF-7 originated from MCF-7	MCF-7	Cancer	Other	#000000	Other	MAMMARY GLAND ADENOCARCINOMA	69	female	cell line			adult	ENCODE
+BSS01240	MCF-7 treated with 10 mM lactate for 24 hours	MCF-7	Cancer	Other	#000000	Other	MAMMARY GLAND ADENOCARCINOMA	69	female	cell line	MCF-7	10_mM_lactate_for_24_hours	adult	ENCODE
+BSS01243	MCF-7 treated with 100 nM estradiol for 1 hour	MCF-7	Cancer	Other	#000000	Other	MAMMARY GLAND ADENOCARCINOMA	69	female	cell line	MCF-7	100_nM_estradiol_for_1_hour	adult	ENCODE
+BSS01244	MCF-7 genetically modified using RNAi	MCF-7	Cancer	Other	#000000	Other	MAMMARY GLAND ADENOCARCINOMA	69	female	cell line	MCF-7	CTCF_shRNA_knockdown	adult	ENCODE
+BSS01251	D721Med	D721Med	Cancer	Brain	#000000	Other	MEDULLOBLASTOMA	2,3	male	cell line			child	ENCODE
+BSS01267	MG63	MG63	Cancer	Bone	#000000	Other	OSTEOSARCOMA	14	male	cell line			child	ENCODE
+BSS01350	NAMALWA	NAMALWA	Cancer	HSC & B-cell	#000000	Other	BURKITT LYMPHOMA	3	female	cell line			child	ENCODE
+BSS01351	NAMALWA treated with Sendai virus for 2 hours	NAMALWA	Cancer	HSC & B-cell	#000000	Other	BURKITT LYMPHOMA	3	female	cell line	NAMALWA	Sendai_virus_for_2_hours	child	ENCODE
+BSS01359	NCI-H226	NCI-H226	Cancer	Lung	#000000	Other	SQUAMOUS CELL CARCINOMA	unknown	male	cell line			adult	ENCODE
+BSS01360	NCI-H460	NCI-H460	Cancer	Lung	#000000	Other	LARGE CELL LUNG CANCER	unknown	male	cell line			unknown/mixed	ENCODE
+BSS01474	RCC 7860	RCC 7860	Cancer	Kidney	#000000	Other	RENAL CELL ADENOCARCINOMA	58	male	cell line			adult	ENCODE
+BSS01481	renal cell carcinoma	renal cell carcinoma	Cancer	Kidney	#000000	Other	RENAL CELL CARCINOMA	80,62	unknown/mixed	cell line			adult	ENCODE
+BSS01535	RKO	RKO	Cancer	Digestive	#000000	Other	COLON CARCINOMA	unknown	unknown/mixed	cell line			unknown/mixed	ENCODE
+BSS01536	RPMI-7951	RPMI-7951	Cancer	Epithelial	#000000	Other	MELANOMA	18	female	cell line			adult	ENCODE
+BSS01537	RPMI8226	RPMI8226	Cancer	HSC & B-cell	#000000	Other	PLASMA CELL MYELOMA	61	male	cell line			adult	ENCODE
+BSS01549	SJCRH30	SJCRH30	Cancer	Myosat	#000000	Other	RHABDOMYOSARCOMA	17	male	cell line			child	ENCODE
+BSS01550	SJSA1	SJSA1	Cancer	Bone	#000000	Other	OSTEOSARCOMA	19	male	cell line			adult	ENCODE
+BSS01551	SK-MEL-5	SK-MEL-5	Cancer	Epithelial	#000000	Other	MELANOMA	24	female	cell line			adult	ENCODE
+BSS01554	SK-N-DZ	SK-N-DZ	Cancer	Brain	#000000	Other	NEUROBLASTOMA	2	female	cell line			child	ENCODE
+BSS01558	SK-N-DZ treated with dimethyl sulfoxide for 72 hours	SK-N-DZ	Cancer	Brain	#000000	Other	NEUROBLASTOMA	2	female	cell line	SK-N-DZ	dimethyl_sulfoxide_for_72_hours	child	ENCODE
+BSS01682	SW480	SW480	Cancer	Digestive	#000000	Other	COLORECTAL ADENOCARCINOMA	50	male	cell line			adult	ENCODE
+BSS01699	T47D	T47D	Cancer	Other	#000000	Other	MAMMARY GLAND DUCTAL CARCINOMA	54	female	cell line			adult	ENCODE
+BSS01705	T47D treated with 10 nM 17β-estradiol for 30 minutes	T47D	Cancer	Other	#000000	Other	MAMMARY GLAND DUCTAL CARCINOMA	54	female	cell line	T47D	10_nM_17b-estradiol_for_30_minutes	adult	ENCODE
+BSS01888	VCaP	VCaP	Cancer	Reproductive	#000000	Other	PROSTATE EPITHELIAL CARCINOMA	59	male	cell line			adult	ENCODE
+BSS00368	foreskin melanocyte male newborn	foreskin melanocyte	Other		#999999	Other	FORESKIN MELANOCYTE	unknown	male	primary cell			newborn	Roadmap 2015
+BSS00146	breast epithelium female adult (53 years)	breast epithelium	Other		#999999	Other	BREAST EPITHELIUM	53	female	tissue			adult	ENCODE
+BSS00145	breast epithelium female adult (51 year)	breast epithelium	Other		#999999	Other	BREAST EPITHELIUM	51	female	tissue			adult	ENCODE
+BSS00304	epidermal melanocyte	epidermal melanocyte	Other		#999999	Other	EPIDERMAL MELANOCYTE	unknown	unknown/mixed	primary cell			unknown/mixed	ENCODE
+BSS01156	limb embryo (53 days) and embryo (56 days)	limb	Other		#999999	Other	LIMB EMBRYO	53,56	unknown/mixed	tissue			embryonic	ENCODE
+BSS01157	limb embryo (58 days) and embryo (59 days)	limb	Other		#999999	Other	LIMB EMBRYO	58,59	unknown/mixed	tissue			embryonic	ENCODE
+BSS01216	mammary stem cell female adult (33 years)	mammary stem cell	Other		#999999	Other	MAMMARY STEM CELL	33	female	primary cell			adult	Roadmap (Novel)

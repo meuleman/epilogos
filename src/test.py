@@ -42,27 +42,27 @@ def main():
     print("    Time: ", time.time() - tConvert)
 
     # Summing
-    print("\nSumming up array")
+    print("Summing up array")
     tSum = time.time()
     fileArr = fileArr.sum(axis=1)
     print("    Time:", time.time() - tSum)
 
-
     # Create one string of all the scores to write out
+    print("Creating Output String...")
     tCreate = time.time()
-    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}"
+    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}\n"
     scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
-    print("String creation time:", time.time() - tCreate)
+    print("    Time:", time.time() - tCreate)
 
     # Write out the string
+    print("Writing Score...")
     tScore = time.time()
     scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test.txt.gz")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
     scoresTxt.write(scoreStr)
-    print("Score Write Time:", time.time() - tScore)
-    
     scoresTxt.close()
-
+    print("    Time:", time.time() - tScore)
+    
     print("Total Time:", time.time() - tTotal)
 
 if __name__ == "__main__":

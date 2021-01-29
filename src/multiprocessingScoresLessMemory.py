@@ -24,10 +24,10 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
     ##   chrName is hacky, find a better way later
     ##
     ####################################################
-    chrName  = dataFilePath.name.split("_")[1].split(".")[0]
+    chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
 
     # Get the genome file
-    genomeFileList = dataFilePath.parents[0].glob("*.genome")
+    genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))
     if len(genomeFileList) > 1:
         raise IOError("Too many '.genome' files provided")
     elif len(genomeFileList) < 1:

@@ -19,7 +19,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     ##   chrName is hacky, find a better way later
     ##
     ####################################################
-    chrName  = dataFilePath.name.split("_")[1].split(".")[0]
+    chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
 
 
     # If saliency is 1, we don't have to worry about all the multiprocessing stuff
@@ -28,7 +28,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
         return
 
     # Get the genome file
-    genomeFileList = dataFilePath.parents[0].glob("*.genome")
+    genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))
     if len(genomeFileList) > 1:
         raise IOError("Too many '.genome' files provided")
     elif len(genomeFileList) < 1:

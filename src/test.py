@@ -41,11 +41,18 @@ def main():
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
+    print(dataDF.iloc[:10])
+
+    print(fileArr[:10])
+    print(locationArr[:10])
+
     # Summing
-    print("Summing up array")
+    print("Summing up array...")
     tSum = time.time()
     fileArr = fileArr.sum(axis=1)
     print("    Time:", time.time() - tSum)
+
+    print(fileArr[:10])
 
     # Create one string of all the scores to write out
     print("Creating Output String...")
@@ -53,6 +60,8 @@ def main():
     scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}\n"
     scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
     print("    Time:", time.time() - tCreate)
+
+    print(scoreStr[:100])
 
     # Write out the string
     print("Writing Score...")

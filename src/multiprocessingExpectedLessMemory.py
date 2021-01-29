@@ -102,6 +102,7 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
         for i, state in enumerate(uniqueStates):
             expFreqArr[state] += stateCounts[i] / numCols
 
+    return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
 def s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):

@@ -101,6 +101,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         expJobIDArr = []   
         print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
@@ -194,6 +196,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("\nSubmitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "score_calc_{}_{}".format(fileTag, filename)
@@ -251,6 +255,8 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("\nSubmitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 jobName = "writeFaster_{}_{}".format(fileTag, filename)

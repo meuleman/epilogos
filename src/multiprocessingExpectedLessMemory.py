@@ -42,7 +42,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
                 line = gf.readline
             basePairs = int(line.split()[1])
 
-    numRows = int(basePairs / 200)
+    totalRows = int(basePairs / 200)
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
@@ -51,51 +51,66 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     # Split the rows up according to the number of cores we have available
     rowList = []
     for i in range(numProcesses):
-        rowsToCalculate = (i * numRows // numProcesses, (i+1) * numRows // numProcesses)
+        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
         rowList.append(rowsToCalculate)
 
-    # Determine saliency and send to corresponding function
-    if saliency == 2:
-        s2Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+    determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+
+
+def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+    if saliency == 1:
+        s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+    elif saliency == 2:
+        s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
     elif saliency == 3:
-        s3Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+        s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
     else:
         print("Inputed saliency value not supported")
         return
 
 
 # Function that calculates the expected frequencies for the S1 metric
-def s1Exp(dataFilePath, numStates, outputDirPath, fileTag, chrName):
+def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+    print("NUM PROCESSES:", numProcesses)
+    
+    # Start the processes
+    with closing(multiprocessing.Pool(numProcesses)) as pool:
+        results = pool.starmap(s2Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
+    pool.join()
+
+    # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
+    expFreqArr = np.sum(results, axis = 0) / totalRows
+
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
+
+
+# Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
+def s1Calc(dataFilePath, rowsToCalculate, numStates):
     # Reading in the data
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
+    dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
-    # Converting to a np array for faster functions later
+    # Converting to a np array for faster functions
     print("Converting to numpy array...")
     tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
-    numRows, numCols = dataArr.shape
+    multiprocessRows, numCols = dataArr.shape
 
-    # Calculate the expected frequencies of each state
-    # Done column-wise instead of row-wise thus we don't multiprocess as it provides negligible efficiency bonus
-    stateIndices = list(range(1, numStates + 1))
-    expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
-    dfSize = numRows * numCols
-    for i in range(3, numCols + 3):
-        stateCounts = dataDF[i].value_counts()
-        for state, count in stateCounts.items():
-            expFreqSeries.loc[state] += count / dfSize
-    expFreqArr = expFreqSeries.to_numpy(dtype=np.float32)
+    expFreqArr = np.zeros(numStates, dtype=np.float32)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
+    # Simply count each state rowwise, dividing by 
+    for row in range(multiprocessRows):
+        states, counts = np.unique(dataArr[row], return_counts=True)
+        for i, state in enumerate(states):
+            expFreqArr[state - 1] += counts[i] / numCols
 
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
-def s2Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     if (sys.version_info < (3, 8)):
@@ -108,7 +123,7 @@ def s2Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chr
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis = 0) / numRows
+    expFreqArr = np.sum(results, axis = 0) / totalRows
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
@@ -121,13 +136,13 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
-    numRows, numCols = dataDF.shape
-
     # Converting to a np array for faster functions
     print("Converting to numpy array...")
     tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
+
+    multiprocessRows, numCols = dataArr.shape
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
 
@@ -158,7 +173,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s3 metric. Also call function to store expected frequency
-def s3Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     # Start the processes
@@ -170,7 +185,7 @@ def s3Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chr
     numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1]
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
-    expFreqArr = np.sum(results, axis = 0) / (numRows * numCols * (numCols - 1))
+    expFreqArr = np.sum(results, axis = 0) / (totalRows * numCols * (numCols - 1))
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
@@ -182,13 +197,13 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
-    numRows, numCols = dataDF.shape
-
     # Converting to a np array for faster functions
     print("Converting to numpy array...")
     tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
+
+    multiprocessRows, numCols = dataArr.shape
 
     # Gives us everyway to combine the column numbers in numpy indexing form
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
@@ -196,7 +211,7 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
     
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
-    for row in numRows:
+    for row in range(multiprocessRows):
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1], dtype=np.int32)
 
     return expFreqArr

@@ -115,7 +115,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
 
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
-    for row in multiprocessRows:
+    for row in range(multiprocessRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i in range(len(uniqueStates)):
             # Function input is obsFreq and expFreq

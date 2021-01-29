@@ -108,7 +108,7 @@ def s2Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chr
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis = 0) / numRows)
+    expFreqArr = np.sum(results, axis = 0) / numRows
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
@@ -170,7 +170,7 @@ def s3Exp(dataFilePath, rowList, numRows, numStates, outputDirPath, fileTag, chr
     numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1]
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
-    expFreqArr = np.sum(results, axis = 0) / numRows * numCols * (numCols - 1)
+    expFreqArr = np.sum(results, axis = 0) / (numRows * numCols * (numCols - 1))
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 

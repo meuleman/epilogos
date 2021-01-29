@@ -124,9 +124,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                     return
 
-                # computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
-
-                computeExpectedPy = pythonFilesDir / "expectedMultiprocessing.py"
+                computeExpectedPy = pythonFilesDir / "multiprocessingExpectedLessMemory.py"
 
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
@@ -221,9 +219,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                     print("\nERROR: sbatch '.out' or '.err' file already exists\n")
                     return
                 
-                # computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
-
-                computeScorePy = pythonFilesDir / "multiprocessingPlayground.py"
+                computeScorePy = pythonFilesDir / "multiprocessingScoresLessMemory.py"
 
                 pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 

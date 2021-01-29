@@ -69,7 +69,7 @@ def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
-        results = pool.starmap(s2Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
+        results = pool.starmap(s1Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows

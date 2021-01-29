@@ -29,7 +29,7 @@ def main():
     # Taking in the the score array
     filePath = Path("~meuleman/public_html/scores_data_pyData_male_epilogos_matrix_chr1.txt.gz")
     # Read in the data
-    print("\nReading data from file...")
+    print("Reading data from file...")
     tRead = time.time()
     dataDF = pd.read_table(filePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
@@ -41,18 +41,11 @@ def main():
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 
-    print(dataDF.iloc[:10])
-
-    print(fileArr[:10])
-    print(locationArr[:10])
-
     # Summing
     print("Summing up array...")
     tSum = time.time()
     fileArr = fileArr.sum(axis=1)
     print("    Time:", time.time() - tSum)
-
-    print(fileArr[:10])
 
     # Create one string of all the scores to write out
     print("Creating Output String...")
@@ -60,8 +53,6 @@ def main():
     scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}\n"
     scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
     print("    Time:", time.time() - tCreate)
-
-    print(scoreStr[:100])
 
     # Write out the string
     print("Writing Score...")

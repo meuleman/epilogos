@@ -248,7 +248,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
         scoreArr[scoreRow] = rowScoreArr.sum(axis=(0,1,2))
 
 # Helper to store the score arrays combined with the location arrays
-def storeScores(scoreArr, locationArr, outputDirPath, fileTag, filename, chrName):
+def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
     # Create a location array
     numRows = scoreArr.shape[0]
     locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])

@@ -37,7 +37,7 @@ def main():
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    fileArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    fileArr = dataDF.iloc[:,3:].to_numpy(dtype=np.float32)
     locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
     print("    Time: ", time.time() - tConvert)
 

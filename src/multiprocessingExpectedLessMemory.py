@@ -73,7 +73,7 @@ def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis = 0) / totalRows
+    expFreqArr = np.sum(results, axis=0) / totalRows
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
@@ -98,9 +98,9 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
 
     # Simply count each state rowwise, dividing by 
     for row in range(multiprocessRows):
-        states, counts = np.unique(dataArr[row], return_counts=True)
-        for i, state in enumerate(states):
-            expFreqArr[state - 1] += counts[i] / numCols
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        for i, state in enumerate(uniqueStates):
+            expFreqArr[state] += stateCounts[i] / numCols
 
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency

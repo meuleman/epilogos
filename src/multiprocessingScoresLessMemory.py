@@ -117,9 +117,9 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Calculate the observed frequencies and final scores for the designated rows
     for row in range(multiprocessRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i in range(len(uniqueStates)):
+        for i, state in enumerate(uniqueStates):
             # Function input is obsFreq and expFreq
-            scoreArr[row, uniqueStates[i]] = klScore(stateCounts[i] / (numCols), expFreqArr[uniqueStates[i]])
+            scoreArr[row, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores

@@ -31,7 +31,11 @@ def main():
     # Read in the data
     print("Reading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(filePath, header=None, sep="\t")
+    # Challenge 1
+    # dataDF = pd.read_table(filePath, header=None, sep="\t")
+
+    # Challenge 2 500000 to 625,000
+    dataDF = pd.read_table(filePath, skiprows=500000, nrows=625000 , header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later

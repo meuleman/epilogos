@@ -37,24 +37,24 @@ def main():
 
         # Challenge 2 500000 to 625,000
         dataDF = pd.read_table(filePath, skiprows=500000, nrows=625000-500000, header=None, sep="\t")
-        timeArr[0][i] = timeit.default_timer() - tRead
+        timeArr[0, i] = timeit.default_timer() - tRead
 
         # Converting to a np array for faster functions later
         tConvert = timeit.default_timer()
         fileArr = dataDF.iloc[:,3:].to_numpy(dtype=np.float32)
         locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
-        timeArr[1][i] = timeit.default_timer() - tConvert
+        timeArr[1, i] = timeit.default_timer() - tConvert
 
         # Summing
         tSum = timeit.default_timer()
         fileArr = fileArr.sum(axis=1)
-        timeArr[2][i] = timeit.default_timer() - tSum
+        timeArr[2, i] = timeit.default_timer() - tSum
 
         # Create one string of all the scores to write out
         tCreate = timeit.default_timer()
         scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}\n"
         scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
-        timeArr[3][i] = timeit.default_timer() - tCreate
+        timeArr[3, i] = timeit.default_timer() - tCreate
 
         # Write out the string
         tScore = timeit.default_timer()
@@ -66,11 +66,11 @@ def main():
         scoresTxt = gzip.open(scoresTxtPath, "wt")
         scoresTxt.write(scoreStr)
         scoresTxt.close()
-        timeArr[4][i] = timeit.default_timer() - tScore
+        timeArr[4, i] = timeit.default_timer() - tScore
 
-        timeArr[5][i] = timeit.default_timer() - tTotal
+        timeArr[5, i] = timeit.default_timer() - tTotal
 
-        timeArr[6][i] = timeArr[:5][i].sum()
+        timeArr[6, i] = timeArr[:5, i].sum()
 
     print("\t\t" + "\t".join(i for i in range(10)))
 

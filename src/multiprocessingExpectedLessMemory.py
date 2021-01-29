@@ -21,12 +21,6 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     ####################################################
     chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
 
-
-    # If saliency is 1, we don't have to worry about all the multiprocessing stuff
-    if saliency == 1:
-        s1Exp(dataFilePath, numStates, outputDirPath, fileTag, chrName)
-        return
-
     # Get the genome file
     genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))
     if len(genomeFileList) > 1:

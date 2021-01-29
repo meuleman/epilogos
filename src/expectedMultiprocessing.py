@@ -20,6 +20,16 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
+    # For labeling files
+    locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
+
+    numRows, numCols = dataDF.shape
+
+    # Determine saliency and calculate expected frequencies
+    if saliency == 1:
+        s1Exp(dataDF, numRows, numCols, numStates, outputDirPath, fileTag, locationTag)
+        return
+
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
@@ -29,11 +39,6 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
         numProcesses = multiprocessing.cpu_count()
-
-    # For labeling files
-    locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
-
-    numRows, numCols = dataArr.shape
 
     # Split the rows up according to the number of cores we have available
     rowList = []
@@ -46,10 +51,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     for rowsToCalculate in rowList:
         dataArrList.append(dataArr[rowsToCalculate])
 
-    # Determine saliency and calculate expected frequencies
-    if saliency == 1:
-        s1Exp(dataDF, numRows, numCols, numStates, outputDirPath, fileTag, locationTag)
-    elif saliency == 2:
+    if saliency == 2:
         s2Exp(dataArrList, rowList, numRows, numCols, numStates, outputDirPath, fileTag, locationTag, numProcesses)
     elif saliency == 3:
         s3Exp(dataArrList, rowList, numRows, numCols, numStates, outputDirPath, fileTag, locationTag, numProcesses)

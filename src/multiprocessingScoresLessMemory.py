@@ -189,7 +189,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
-    for obsRow, scoreRow in enumerate(range(rowsToCalculate)):
+    for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
         scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
     
@@ -237,7 +237,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
     rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
-    for dataRow, scoreRow in enumerate(range(rowsToCalculate)):
+    for dataRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Reset the array so it doesn't carry over scores from other rows
         rowScoreArr.fill(0)
 

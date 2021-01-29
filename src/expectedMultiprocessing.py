@@ -25,7 +25,10 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     # For labeling files
     locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
 
-    numRows, numCols = dataDF.shape
+    print(locationTag)
+
+    numRows = dataDF.shape[0]
+    numCols = dataDF.shape[1] - 3
 
     print(numRows, numCols)
 

@@ -1,35 +1,69 @@
-import math
+# import math
+# import time
+# import operator as op
+# import numpy as np
+# from functools import reduce
+# import multiprocessing
+# import ctypes as c
+# import itertools
+# import random
+# from pathlib import Path
+# import glob
+# import pandas as pd
+# import os
+# import sys
+# import subprocess
+# from pathlib import PurePath
+# import glob
+# import gzip
+
 import time
-import operator as op
-import numpy as np
-from functools import reduce
-import multiprocessing
-import ctypes as c
-import itertools
-import random
-from pathlib import Path
-import glob
-import pandas as pd
-import os
-import sys
-import subprocess
-from pathlib import PurePath
-import glob
 import gzip
+from pathlib import Path
+import pandas as pd
+import numpy as np
 
 
 def main():
-    tRead = time.time()
+    tTotal = time.time()
     # Taking in the the score array
-    filePath = Path("/home/jquon/chromHMMConversionTest/18state_b'chr3'.npz")
-    npzFile = np.load(filePath)
-    scoreArr = npzFile['scoreArr']
-    locationArr = npzFile['locationArr']
+    filePath = Path("~meuleman/public_html/scores_data_pyData_male_epilogos_matrix_chr1.txt.gz")
+    # Read in the data
+    print("\nReading data from file...")
+    tRead = time.time()
+    dataDF = pd.read_table(filePath, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead)
 
-    print(scoreArr[:10])
-    print(locationArr[:10])
+    # Converting to a np array for faster functions later
+    print("Converting to numpy array...")
+    tConvert = time.time()
+    fileArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
+    print("    Time: ", time.time() - tConvert)
 
-    print("Read Time:", time.time() - tRead)
+    # Summing
+    print("\nSumming up array")
+    tSum = time.time()
+    fileArr = fileArr.sum(axis=1)
+    print("    Time:", time.time() - tSum)
+
+
+    # Create one string of all the scores to write out
+    tCreate = time.time()
+    scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}"
+    scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
+    print("String creation time:", time.time() - tCreate)
+
+    # Write out the string
+    tScore = time.time()
+    scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test.txt.gz")
+    scoresTxt = gzip.open(scoresTxtPath, "wt")
+    scoresTxt.write(scoreStr)
+    print("Score Write Time:", time.time() - tScore)
+    
+    scoresTxt.close()
+
+    print("Total Time:", time.time() - tTotal)
 
 if __name__ == "__main__":
     main()

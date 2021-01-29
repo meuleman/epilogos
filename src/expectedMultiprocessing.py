@@ -20,10 +20,14 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     dataDF = pd.read_table(dataFilePath, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
+    print(dataDF.head())
+
     # For labeling files
     locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
 
     numRows, numCols = dataDF.shape
+
+    print(numRows, numCols)
 
     # Determine saliency and calculate expected frequencies
     if saliency == 1:
@@ -74,6 +78,7 @@ def s1Exp(dataDF, numRows, numCols, numStates, outputDirPath, fileTag, locationT
     # Done column-wise instead of row-wise thus we don't multiprocess as it provides negligible efficiency bonus
     stateIndices = list(range(1, numStates + 1))
     expFreqSeries = pd.Series(np.zeros(numStates), index=stateIndices)
+    print(dataDF.shape)
     dfSize = numRows * numCols
     for i in range(3, numCols + 3):
         stateCounts = dataDF[i].value_counts()

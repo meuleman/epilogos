@@ -72,15 +72,15 @@ def main():
 
         timeArr[6, i] = timeArr[:5, i].sum()
 
-    print("\t\t" + "\t".join(i for i in range(10)))
+    print("\t\t" + "\t".join("{}".format(i) for i in range(10)) + "\tAVG")
 
-    print("Reading Time:\t" + "\t".join(x for x in timeArr[0]))
-    print("Convert Time:\t" + "\t".join(x for x in timeArr[1]))
-    print("Summing Time:\t" + "\t".join(x for x in timeArr[2]))
-    print("Out Str Time:\t" + "\t".join(x for x in timeArr[3]))
-    print("Writing Time:\t" + "\t".join(x for x in timeArr[4]))
-    print("Total   Time:\t" + "\t".join(x for x in timeArr[5]))
-    print("Sum of Times:\t" + "\t".join(x for x in timeArr[6]))
+    print("Reading Time:\t" + "\t".join("{}".format(x) for x in timeArr[0]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Convert Time:\t" + "\t".join("{}".format(x) for x in timeArr[1]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Summing Time:\t" + "\t".join("{}".format(x) for x in timeArr[2]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Out Str Time:\t" + "\t".join("{}".format(x) for x in timeArr[3]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Writing Time:\t" + "\t".join("{}".format(x) for x in timeArr[4]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Total   Time:\t" + "\t".join("{}".format(x) for x in timeArr[5]) + "\t{}".format(np.mean(timeArr[0])))
+    print("Sum of Times:\t" + "\t".join("{}".format(x) for x in timeArr[6]) + "\t{}".format(np.mean(timeArr[0])))
 
 
 if __name__ == "__main__":

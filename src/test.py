@@ -61,7 +61,11 @@ def main():
     # Write out the string
     print("Writing Score...")
     tScore = time.time()
-    scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test.txt.gz")
+    # Challenge 1:
+    # scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test.txt.gz")
+    
+    # Challenge 2:
+    scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test_partial.txt.gz")
     scoresTxt = gzip.open(scoresTxtPath, "wt")
     scoresTxt.write(scoreStr)
     scoresTxt.close()

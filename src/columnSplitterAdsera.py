@@ -25,6 +25,7 @@ def main(filename, randomSampling=False, equalSize=-1, column="Group", type1="",
     else:
         # Getting the column numbers for each of the group types
         typeDictionary = {}
+        idDictionary = {}
         for i in range(len(dataDF[column])):
             if type(dataDF[column][i]) == type("HI"):
                 typeVal = dataDF[column][i].lower()
@@ -34,6 +35,11 @@ def main(filename, randomSampling=False, equalSize=-1, column="Group", type1="",
                 typeDictionary[typeVal] = [i + 4]
             else:
                 typeDictionary[typeVal].append(i + 4)
+
+            if typeVal not in idDictionary:
+                idDictionary[typeVal] = [dataDF.iloc[i, 0]]
+            else:
+                idDictionary[typeVal].append(dataDF.iloc[i, 0])
 
         for k in typeDictionary:
             print("{} (Size={}): \t\t{}".format(k, len(typeDictionary[k]),typeDictionary[k]))
@@ -91,7 +97,13 @@ def main(filename, randomSampling=False, equalSize=-1, column="Group", type1="",
             else:
                 print("{}\t1,2,3,{}".format(type1, str(typeDictionary[type1]).strip('[]').replace(" ", "")))
                 print()
+                print("{}\t{}".format(type1, str(idDictionary[type1]).strip('[]').replace(" ", "")))
+                print()
                 print("{}\t1,2,3,{}".format(type2, str(typeDictionary[type2]).strip('[]').replace(" ", "")))
+                print()
+                print("{}\t{}".format(type2, str(idDictionary[type2]).strip('[]').replace(" ", "")))
+
+
 
 # Helper to convert taken in string into a boolean 
 def strToBool(string):

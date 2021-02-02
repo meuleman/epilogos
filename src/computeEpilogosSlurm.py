@@ -126,12 +126,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-                # computeExpectedPy = pythonFilesDir / "expectedMultiprocessing.py"
-
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --job-name={}.job --output={} --error={} --ntasks=1 --mem-per-cpu=32000 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 2:
                     slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 3:
@@ -177,7 +175,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
 
         if saliency == 1:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
@@ -223,20 +221,18 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
                 
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-                # computeScorePy = pythonFilesDir / "multiprocessingPlayground.py"
-
                 pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
                 if modeOfOperation == "s":
                     if saliency == 1:
-                        slurmCommand = "sbatch --job-name={}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
                         slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:
                         slurmCommand = "sbatch --job-name=S3_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 else:
                     if saliency == 1:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
                         slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:

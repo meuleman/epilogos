@@ -22,9 +22,6 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
-    # For making sure all files are consistently named
-    fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
-
     print()
     print("Input Directory =", dataFilePath)
     print("State Model =", numStates)
@@ -36,11 +33,14 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if expFreqDir == "null":
         expFreqDir = outputDirectory
 
+    # Making paths absolute
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
-
     if not PurePath(dataFilePath).is_absolute():
         dataFilePath = Path.cwd() / dataFilePath
+
+    # For making sure all files are consistently named
+    fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         print("\nERROR: Ensure that saliency metric is either 1, 2, or 3\n")
@@ -66,6 +66,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if numProcesses < 0:
         print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
         return
+    elif numProcesses == 0:
+        numTasks = "--exclusive"
+    else:
+        numTasks = "--ntasks={}".format(numProcesses)
 
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
@@ -93,9 +97,10 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     else:
         print("\nCalculating Per Datafile Background Frequency Arrays...")
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
-                # computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag)
-                expectedMultiprocessing.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses)
+                computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
         print("\nCombining Per Datafile Background Frequency Arrays....")
         computeEpilogosExpectedCombination.main(outputDirPath, fileTag, storedExpPath)
@@ -103,12 +108,15 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
     if modeOfOperation == "s" or modeOfOperation == "both":
         print("\nCalculating Per Datafile Scores...")
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
-                # computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag)
-                multiprocessingPlayground.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+                computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
         print("\nWriting to Score Files....")
         for file in dataFilePath.glob("*"):
+            if file.name.split(".")[1] == "genome":
+                continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
                 computeEpilogosWrite.main(filename, numStates, outputDirPath, fileTag)

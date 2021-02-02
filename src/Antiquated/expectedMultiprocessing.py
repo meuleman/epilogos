@@ -23,7 +23,8 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     print(dataDF.head())
 
     # For labeling files
-    locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
+    # locationTag = "{}_{}_{}".format(dataDF.iloc[0, 0], dataDF.iloc[0,1], dataDF.iloc[0,2])
+    locationTag = "location"
 
     print(locationTag)
 

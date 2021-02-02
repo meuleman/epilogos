@@ -17,7 +17,7 @@ def main(inputDir, outputDir):
     print("Reading file info...")
     for file in inputDirPath.glob("*"):
         # read in the first line of the file to determine genome and chromosome
-        with gzip.open(file, "rb") as f:
+        with gzip.open(file, "rt") as f:
             line = f.readline()
             lineSplit = line.split()
             genome = lineSplit[0]
@@ -55,7 +55,7 @@ def main(inputDir, outputDir):
         # loop over all rows which contain chromosome in question
         for row in directoryDF.loc[directoryDF["Chromosome"] == chromosome].itertuples(index=False, name=None):
             # Use the stored filename to read and store all but first 2 lines
-            with gzip.open(row[0], "rb") as f:
+            with gzip.open(row[0], "rt") as f:
                 stateList.append(f.readlines()[2:])
         
         # Because we appended all the lines from each file at once to the list, we must take the transpose so the array has 200bp bins as rows

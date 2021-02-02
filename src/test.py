@@ -30,7 +30,7 @@ def main():
     # Converting to a np array for faster functions later
     print("Converting to numpy array...")
     tConvert = time.time()
-    dataArr = dataDF.iloc[:,3:100].to_numpy(dtype=int) - 1 
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
     expFreqArr = np.load("/home/jquon/epilogosTesting_01122021/output/minimal/exp_freq_male_saliency3.npy", allow_pickle=False)

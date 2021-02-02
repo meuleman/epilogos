@@ -70,7 +70,7 @@ def main():
         rowScoreArr.fill(0)
 
         # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
-        rowScoreArr[basePermutationArr[0] * rowScoreArr.shape[1] * rowScoreArr.shape[2] * rowScoreArr.shape[3] + basePermutationArr[1] * rowScoreArr.shape[1] * rowScoreArr.shape[2] + dataArr[row, basePermutationArr[1]] * rowScoreArr.shape[1] + dataArr[row, basePermutationArr[0]]] = scoreArrOnes[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]]
+        rowScoreArr.ravel()[basePermutationArr[0] * rowScoreArr.shape[1] * rowScoreArr.shape[2] * rowScoreArr.shape[3] + basePermutationArr[1] * rowScoreArr.shape[1] * rowScoreArr.shape[2] + dataArr[row, basePermutationArr[1]] * rowScoreArr.shape[1] + dataArr[row, basePermutationArr[0]]] = scoreArrOnes.ravel()[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]]
 
         # Flatten the scores and put them into the shared score array
         scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))

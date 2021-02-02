@@ -60,24 +60,60 @@ def main():
         # Flatten the scores and put them into the shared score array
         scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
     print("    Time:", time.time() - tCurrent)
-
-    print("ravel way...")
-    tRavel = time.time()
-    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
-    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
-    for row in range(numRows):
-        # Reset the array so it doesn't carry over scores from other rows
-        rowScoreArr.fill(0)
-
-        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
-        rowScoreArr.ravel()[basePermutationArr[0] * rowScoreArr.shape[1] * rowScoreArr.shape[2] * rowScoreArr.shape[3] + basePermutationArr[1] * rowScoreArr.shape[1] * rowScoreArr.shape[2] + dataArr[row, basePermutationArr[1]] * rowScoreArr.shape[1] + dataArr[row, basePermutationArr[0]]] = scoreArrOnes.ravel()[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]]
-
-        # Flatten the scores and put them into the shared score array
-        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
-    print("    Time:", time.time() - tRavel)
+    print(scoreArr[:10])
 
 
-    print("Less indexing way way...")
+    # print("ravel way...")
+    # tRavel = time.time()
+    # scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    # rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
+    # for row in range(numRows):
+    #     # Reset the array so it doesn't carry over scores from other rows
+    #     rowScoreArr.fill(0)
+
+    #     # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+    #     rowScoreArr.ravel()[basePermutationArr[0] * rowScoreArr.shape[1] * rowScoreArr.shape[2] * rowScoreArr.shape[3] + basePermutationArr[1] * rowScoreArr.shape[1] * rowScoreArr.shape[2] + dataArr[row, basePermutationArr[1]] * rowScoreArr.shape[1] + dataArr[row, basePermutationArr[0]]] = scoreArrOnes.ravel()[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]]
+
+    #     # Flatten the scores and put them into the shared score array
+    #     scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
+    # print("    Time:", time.time() - tRavel)
+
+
+    # print("Less indexing way way...")
+    # tCurrent = time.time()
+    # scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    # rowScoreArr = np.zeros(numStates, dtype=np.float32)
+    # for row in range(numRows):
+    #     # Reset the array so it doesn't carry over scores from other rows
+    #     rowScoreArr.fill(0)
+
+    #     # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+    #     np.add.at(rowScoreArr, dataArr[row, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])
+
+    #     # Flatten the scores and put them into the shared score array
+    #     scoreArr[row] = rowScoreArr
+    # print("    Time:", time.time() - tCurrent)
+
+    # print("Changed Axes way...")
+    # scoreArrOnes = scoreArrOnes.reshape((numStates, numStates, numCols, numCols))
+    # tAxes = time.time()
+    # scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    # rowScoreArr = np.zeros((numStates, numStates, numCols, numCols), dtype=np.float32)
+    # print(scoreArrOnes.shape)
+    # print(rowScoreArr.shape)
+    # for row in range(numRows):
+    #     # Reset the array so it doesn't carry over scores from other rows
+    #     rowScoreArr.fill(0)
+
+    #     # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+    #     rowScoreArr[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]] = scoreArrOnes[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]]
+
+    #     # Flatten the scores and put them into the shared score array
+    #     scoreArr[row] = rowScoreArr.sum(axis=(1,2,3))
+    # print("    Time:", time.time() - tAxes)
+
+
+    print("Less indexing way...")
     tCurrent = time.time()
     scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
     rowScoreArr = np.zeros(numStates, dtype=np.float32)
@@ -91,24 +127,58 @@ def main():
         # Flatten the scores and put them into the shared score array
         scoreArr[row] = rowScoreArr
     print("    Time:", time.time() - tCurrent)
+    print(scoreArr[:10])
 
-    print("Changed Axes way...")
-    scoreArrOnes = scoreArrOnes.reshape((numStates, numStates, numCols, numCols))
-    tAxes = time.time()
+    print("Less indexing ravel...")
+    tRavel = time.time()
     scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
-    rowScoreArr = np.zeros((numStates, numStates, numCols, numCols), dtype=np.float32)
-    print(scoreArrOnes.shape)
-    print(rowScoreArr.shape)
+    rowScoreArr = np.zeros(numStates, dtype=np.float32)
     for row in range(numRows):
         # Reset the array so it doesn't carry over scores from other rows
         rowScoreArr.fill(0)
 
         # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
-        rowScoreArr[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]] = scoreArrOnes[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]]
+        np.add.at(rowScoreArr, dataArr[row, basePermutationArr[1]], scoreArrOnes.ravel()[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]])
 
         # Flatten the scores and put them into the shared score array
-        scoreArr[row] = rowScoreArr.sum(axis=(1,2,3))
+        scoreArr[row] = rowScoreArr
+    print("    Time:", time.time() - tRavel)
+    print(scoreArr[:10])
+
+
+    print("Less indexing flipped axes...")
+    scoreArrOnes = scoreArrOnes.reshape((numStates, numStates, numCols, numCols))
+    tAxes = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros(numStates, dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
+
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        np.add.at(rowScoreArr, dataArr[row, basePermutationArr[1]], scoreArrOnes[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]])
+
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr
     print("    Time:", time.time() - tAxes)
+    print(scoreArr[:10])
+
+
+    print("Less indexing ravel + flipped axes...")
+    tCurrent = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros(numStates, dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
+
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        np.add.at(rowScoreArr, dataArr[row, basePermutationArr[1]], scoreArrOnes.ravel()[dataArr[row, basePermutationArr[0]] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + basePermutationArr[0] * scoreArrOnes.shape[1] + basePermutationArr[1]])
+
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr
+    print("    Time:", time.time() - tCurrent)
+    print(scoreArr[:10])
 
 
 # Helper to calculate KL-score for Nd arrays (cleans up the code)

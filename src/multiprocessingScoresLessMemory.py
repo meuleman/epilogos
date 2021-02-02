@@ -115,11 +115,11 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
 
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
-    for row in range(multiprocessRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+    for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
         for i, state in enumerate(uniqueStates):
             # Function input is obsFreq and expFreq
-            scoreArr[row, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+            scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
@@ -267,7 +267,7 @@ def klScore(obs, exp):
     else:
         return obs * math.log2(obs / exp)
 
-# Helper to calculate KL-score for 2d arrays (cleans up the code)
+# Helper to calculate KL-score for Nd arrays (cleans up the code)
 def klScoreND(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 

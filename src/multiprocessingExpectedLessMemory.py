@@ -97,10 +97,9 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
     expFreqArr = np.zeros(numStates, dtype=np.float32)
 
     # Simply count each state rowwise, dividing by 
-    for row in range(multiprocessRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i, state in enumerate(uniqueStates):
-            expFreqArr[state] += stateCounts[i] / numCols
+    uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
+    for i, state in enumerate(uniqueStates):
+        expFreqArr[state] += stateCounts[i] / numCols
 
     return expFreqArr
 
@@ -207,7 +206,7 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in range(multiprocessRows):
-        expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += np.ones(basePermutationArr.shape[1], dtype=np.int32)
+        expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
 
     return expFreqArr
 

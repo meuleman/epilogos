@@ -145,7 +145,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
     if (sys.version_info < (3, 8)):
         combinations = ncr(numCols, 2)
-        for row in range(len(rowsToCalculate)):
+        for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):
@@ -155,7 +155,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
                         expFreqArr[uniqueStates[i], uniqueStates[j]] += ncr(stateCounts[i], 2) / combinations
     else:
         combinations = math.comb(numCols, 2)
-        for row in  range(len(rowsToCalculate)):
+        for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
             for i in range(len(uniqueStates)):
                 for j in range(len(uniqueStates)):

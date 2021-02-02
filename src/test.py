@@ -1,87 +1,118 @@
-# import math
-# import time
-# import operator as op
-# import numpy as np
-# from functools import reduce
-# import multiprocessing
-# import ctypes as c
-# import itertools
-# import random
-# from pathlib import Path
-# import glob
-# import pandas as pd
-# import os
-# import sys
-# import subprocess
-# from pathlib import PurePath
-# import glob
-# import gzip
-
-import timeit
-import gzip
-from pathlib import Path
-import pandas as pd
+import math
+import time
+import operator as op
 import numpy as np
+from functools import reduce
+import multiprocessing
+import ctypes as c
+import itertools
+import random
+from pathlib import Path
+import glob
+import pandas as pd
+import os
+import sys
+import subprocess
+from pathlib import PurePath
+import glob
+import gzip
+import numpy.ma as ma
+
 
 
 def main():
-    timeArr = np.zeros((7, 10))
-    for i in range(10):
-        tTotal = timeit.default_timer()
-        # Taking in the the score array
-        filePath = Path("~meuleman/public_html/scores_data_pyData_male_epilogos_matrix_chr1.txt.gz")
-        # Read in the data
-        tRead = timeit.default_timer()
-        # Challenge 1
-        # dataDF = pd.read_table(filePath, header=None, sep="\t")
+    dataFilePath = Path("/home/jquon/epilogos/data/pyData/male/epilogos_matrix_chr1.txt.gz")
+    print("\nReading data from file...")
+    tRead = time.time()
+    dataDF = pd.read_table(dataFilePath, nrows=10000, header=None, sep="\t")
+    print("    Time: ", time.time() - tRead)
 
-        # Challenge 2 500000 to 625,000
-        dataDF = pd.read_table(filePath, skiprows=500000, nrows=625000-500000, header=None, sep="\t")
-        timeArr[0, i] = timeit.default_timer() - tRead
+    # Converting to a np array for faster functions later
+    print("Converting to numpy array...")
+    tConvert = time.time()
+    dataArr = dataDF.iloc[:,3:100].to_numpy(dtype=int) - 1 
+    print("    Time: ", time.time() - tConvert)
 
-        # Converting to a np array for faster functions later
-        tConvert = timeit.default_timer()
-        fileArr = dataDF.iloc[:,3:].to_numpy(dtype=np.float32)
-        locationArr = dataDF.iloc[:,0:3].to_numpy(dtype=str)
-        timeArr[1, i] = timeit.default_timer() - tConvert
+    expFreqArr = np.load("/home/jquon/epilogosTesting_01122021/output/minimal/exp_freq_male_saliency3.npy", allow_pickle=False)
 
-        # Summing
-        tSum = timeit.default_timer()
-        fileArr = fileArr.sum(axis=1)
-        timeArr[2, i] = timeit.default_timer() - tSum
+    numRows, numCols = dataArr.shape
+    numStates = 18
 
-        # Create one string of all the scores to write out
-        tCreate = timeit.default_timer()
-        scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1:.5f}\n"
-        scoreStr = "".join(scoresTemplate.format(locationArr[i], fileArr[i]) for i in range(fileArr.shape[0]))
-        timeArr[3, i] = timeit.default_timer() - tCreate
+    # Gives us everyway to combine the column numbers in numpy indexing form
+    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2)), dtype=np.int16).T
 
-        # Write out the string
-        tScore = timeit.default_timer()
-        # Challenge 1:
-        # scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test.txt.gz")
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
+    # This saves a lot of time in the loop as we are just looking up references and not calculating
+    scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)), expFreqArr)
 
-        # Challenge 2:
-        scoresTxtPath = Path("/home/jquon/fortnightFridayContest/scores_test_partial.txt.gz")
-        scoresTxt = gzip.open(scoresTxtPath, "wt")
-        scoresTxt.write(scoreStr)
-        scoresTxt.close()
-        timeArr[4, i] = timeit.default_timer() - tScore
 
-        timeArr[5, i] = timeit.default_timer() - tTotal
+    print("Current way...")
+    tCurrent = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
 
-        timeArr[6, i] = timeArr[:5, i].sum()
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]
 
-    print("\t\t" + "\t".join("{}".format(i) for i in range(1, 11)) + "\tAVG")
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
+    print("    Time:", time.time() - tCurrent)
 
-    print("Reading Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[0]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Convert Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[1]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Summing Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[2]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Out Str Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[3]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Writing Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[4]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Total   Time:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[5]) + "\t{:.4f}".format(np.mean(timeArr[0])))
-    print("Sum of Times:\t" + "\t".join("{:.4f}".format(x) for x in timeArr[6]) + "\t{:.4f}".format(np.mean(timeArr[0])))
 
+    print("Changed Axes way...")
+    scoreArrOnes.reshape((numStates, numStates, numCols, numCols))
+    tAxes = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros((numStates, numStates, numCols, numCols), dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
+
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        rowScoreArr[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]] = scoreArrOnes[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], basePermutationArr[0], basePermutationArr[1]]
+
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr.sum(axis=(1,2,3))
+    print("    Time:", time.time() - tAxes)
+
+    print("ravel way...")
+    tRavel = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
+
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        rowScoreArr[basePermutationArr[0] * rowScoreArr.shape[1] * rowScoreArr.shape[2] * rowScoreArr.shape[3] + basePermutationArr[1] * rowScoreArr.shape[1] * rowScoreArr.shape[2] + dataArr[row, basePermutationArr[1]] * rowScoreArr.shape[1] + dataArr[row, basePermutationArr[0]]] = scoreArrOnes[basePermutationArr[0] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] * scoreArrOnes.shape[3] + basePermutationArr[1] * scoreArrOnes.shape[1] * scoreArrOnes.shape[2] + dataArr[row, basePermutationArr[1]] * scoreArrOnes.shape[1] + dataArr[row, basePermutationArr[0]]]
+
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr.sum(axis=(0,1,2))
+    print("    Time:", time.time() - tRavel)
+
+
+    print("Less indexing way way...")
+    tCurrent = time.time()
+    scoreArr = np.zeros((numRows, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros(numStates, dtype=np.float32)
+    for row in range(numRows):
+        # Reset the array so it doesn't carry over scores from other rows
+        rowScoreArr.fill(0)
+
+        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
+        np.add.at(rowScoreArr, dataArr[row, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]])
+
+        # Flatten the scores and put them into the shared score array
+        scoreArr[row] = rowScoreArr
+    print("    Time:", time.time() - tCurrent)
+
+
+# Helper to calculate KL-score for Nd arrays (cleans up the code)
+def klScoreND(obs, exp):
+    return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 
 if __name__ == "__main__":
     main()

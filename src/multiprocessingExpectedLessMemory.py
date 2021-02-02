@@ -147,22 +147,22 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
         combinations = ncr(numCols, 2)
         for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        expFreqArr[uniqueStates[i], uniqueStates[j]] += stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        expFreqArr[uniqueStates[i], uniqueStates[j]] += ncr(stateCounts[i], 2) / combinations
+            for i, state1 in enumerate(uniqueStates):
+                for j, state2 in enumerate(uniqueStates):
+                    if state1 == state2:
+                        expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
+                    else: # state1 > state2 or state1 < state2
+                        expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
     else:
         combinations = math.comb(numCols, 2)
         for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        expFreqArr[uniqueStates[i], uniqueStates[j]] += stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        expFreqArr[uniqueStates[i], uniqueStates[j]] += math.comb(stateCounts[i], 2) / combinations
+            for i, state1 in enumerate(uniqueStates):
+                for j, state2 in enumerate(uniqueStates):
+                    if state1 == state2:
+                        expFreqArr[state1, state2] += math.comb(stateCounts[i], 2) / combinations
+                    else: # state1 > state2 or state1 < state2
+                        expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
 
     return expFreqArr
 

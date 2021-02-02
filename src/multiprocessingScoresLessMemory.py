@@ -170,22 +170,22 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
         combinations = ncr(numCols, 2)
         for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = ncr(stateCounts[i], 2) / combinations
+            for i, state1 in enumerate(uniqueStates):
+                for j, state2 in enumerate(uniqueStates):
+                    if state1 == state2:
+                        obsFreqArr[row, state1, state2]  = ncr(stateCounts[i], 2) / combinations
+                    else: # state1 > state2 or state1 < state2
+                        obsFreqArr[row, state1, state2]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
     else:
         combinations = math.comb(numCols, 2)
         for row in range(multiprocessRows):
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i in range(len(uniqueStates)):
-                for j in range(len(uniqueStates)):
-                    if uniqueStates[i] > uniqueStates[j] or uniqueStates[i] < uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-                    elif uniqueStates[i] == uniqueStates[j]:
-                        obsFreqArr[row, uniqueStates[i], uniqueStates[j]]  = math.comb(stateCounts[i], 2) / combinations
+            for i, state1 in enumerate(uniqueStates):
+                for j, state2 in enumerate(uniqueStates):
+                    if state1 == state2:
+                        obsFreqArr[row, state1, state2]  = math.comb(stateCounts[i], 2) / combinations
+                    else: # state1 > state2 or state1 < state2
+                        obsFreqArr[row, state1, state2]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
@@ -236,16 +236,16 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
-    rowScoreArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.float32)
+    rowScoreArr = np.zeros(numStates, dtype=np.float32)
     for dataRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Reset the array so it doesn't carry over scores from other rows
         rowScoreArr.fill(0)
 
-        # Pull the scores from the precalculated score array and put them into the correct positions for the state combinations that we observe
-        rowScoreArr[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]] = scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]]
+        # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
+        np.add.at(rowScoreArr, dataArr[dataRow, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]])
 
-        # Flatten the scores and put them into the shared score array
-        scoreArr[scoreRow] = rowScoreArr.sum(axis=(0,1,2))
+        # Store the scores in the shared score array
+        scoreArr[scoreRow] = rowScoreArr
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):

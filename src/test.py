@@ -24,7 +24,7 @@ def main():
     dataFilePath = Path("/home/jquon/epilogos/data/pyData/male/epilogos_matrix_chr1.txt.gz")
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, nrows=10000, header=None, sep="\t")
+    dataDF = pd.read_table(dataFilePath, nrows=500, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later

@@ -24,7 +24,7 @@ def main():
     dataFilePath = Path("/home/jquon/AdseraStateByGroup/male/split/epilogos_matrix_chr22.txt.gz")
     print("\nReading data from file...")
     tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, nrows=500000, header=None, sep="\t")
+    dataDF = pd.read_table(dataFilePath, skiprows=100000, nrows=500000, header=None, sep="\t")
     print("    Time: ", time.time() - tRead)
 
     print(dataDF.shape)

@@ -3,6 +3,8 @@
 1. [About](#about)
 2. [Prerequisites](#prerequisites)
 3. [Running Epilogos](#running-epilogos)
+4. [Minimal Example](#minimal-example)
+5. [Command Line Options](#command-line-options)
     * [Input Directory (-f, --file-directory)](#input-directory)
     * [Output Directory (-o, --output-directory)](#output-directory)
     * [State Model (-s, --state-model)](#state-model)
@@ -11,7 +13,6 @@
     * [Background Directory (-b, --background-directory)](#background-directory)
     * [Number of Cores (-c, --num-cores)](#number-of-cores)
     * [Exit When Complete (-x, --exit-when-complete)](#exit-when-complete)
-4. [Minimal example](#minimal-example)
 
 ## About
 
@@ -25,12 +26,30 @@ To compute epilogos, you will need to have the following python libraries: [clic
 ```bash
 $ pip install click, numpy, pandas
 ```
+Additionally, it is recommended that python is updated to version 3.8 or later. Epilogos will still run in other versions, however the saliency 2 metric is faster in Python 3.8 and above (makes use of the new math.comb() function).
 
-## Running Epilogos:
+## Running Epilogos
 
-A single python script, `src/computeEpilogosSlurm.py`, controls all of the processing. To be presented with minimal documentation of arguments needed to run epilogos, simply run python `src/computeEpilogosSlurm.py --help` (More in-depth explanation is given [below](#input-directory))
+A single python script, `src/computeEpilogosSlurm.py`, controls all of the processing. To be presented with minimal documentation of arguments needed to run epilogos, simply run python `src/computeEpilogosSlurm.py --help` (More in-depth explanation is given [below](#command-line-options))
 
 The script, `src/computeEpilogosSlurm.py`, requires access to a computational cluster managed by [SLURM](https://slurm.schedmd.com/). A minimal version of epilogos, `src/minimalEpilogos.py`, has been created for those without access to a SLURM cluster. It functions identically to `src/computeEpilogosSlurm.py` but runs everything within one terminal command.
+
+## Minimal Example
+
+Sample data has been provided under `~/epilogos/data/pyData/male/`. The file, `epilogos_matrix_chr1.txt.gz`, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the [BOIX dataset](https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486) and contains only those epigenomes which are tagged `Male` under the `Sex` column
+
+To compute epilogos (using the S1 saliency metric) for this sample data run one of the following commands (depending on if you want to use SLURM or not) within the `~/epilogos/` directory (replacing `OUTPUTDIR` with the output directory of your choice).
+```bash
+$ python ./src/computeEpilogosSlurm.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
+```
+```bash
+$ python ./src/minimalEpilogos.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
+```
+Upon completion of the run, you should see the files `exp_freq_male.npy` and `scores_male_epilogos_matrix_chr1.txt.gz` in `OUTPUTDIR`
+
+To customize your run of epilogos see the [Command Line Options](#command-line-options) of the `README`
+
+## Command Line Options
 
 <a name="input-directory"></a>
 
@@ -96,18 +115,3 @@ The argument to this flag is an integer number of cores you would like to utiliz
 #### Exit When Complete (-x, --exit-when-complete)
 
 By default `src/computeEpilogosSlurm.py` exits after it has submitted all slurm jobs. This allows the user to continue use of their terminal while the jobs are running. If you would like the program to instead exit when all jobs are done, enable this flag.
-
-## Minimal Example
-
-Sample data has been provided under `~/epilogos/data/pyData/male/`. The file, `epilogos_matrix_chr1.txt.gz`, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the [BOIX dataset](https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486) and contains only those epigenomes which are tagged `Male` under the `Sex` column
-
-To compute epilogos (using the S1 saliency metric) for this sample data run one of the following commands (depending on if you want to use SLURM or not) within the `~/epilogos/` directory (replacing `OUTPUTDIR` with the output directory of your choice).
-```bash
-$ python ./src/computeEpilogosSlurm.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
-```
-```bash
-$ python ./src/minimalEpilogos.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
-```
-Upon completion of the run, you should see the files `exp_freq_male.npy` and `scores_male_epilogos_matrix_chr1.txt.gz` in `OUTPUTDIR`
-
-To customize your run of epilogos see the [Running Epilogos](#running-epilogos) of the `README`

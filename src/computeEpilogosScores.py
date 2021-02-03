@@ -41,7 +41,7 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
                 line = gf.readline
             basePairs = int(line.split()[1])
 
-    totalRows = int(basePairs / 200)
+    totalRows = math.ceil(basePairs / 200)
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:

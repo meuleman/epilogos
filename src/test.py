@@ -31,11 +31,8 @@ def main():
                 line1Split = lines1[i].split()
                 line2Split = lines2[i].split()
 
-                if line1Split[0] != line2Split[0] or line1Split[1] != line2Split[1]:
-                    print(i)
-
-            print("newBed", len(lines2))
-            print("oldBed", len(lines1))
+                if line1Split[-2] != line2Split[-2]:
+                    print(i, line1Split[-2], line2Split[-2])
 
 if __name__ == "__main__":
     main()

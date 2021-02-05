@@ -9,18 +9,46 @@ import subprocess
 from pathlib import PurePath
 
 @click.command()
-@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, help="Output Directory (CANNOT be the same as input directory)\n")
-@click.option("-s", "--state-model", "numStates", type=int, required=True, help="Number of states in chromatin state model")
-@click.option("-l", "--saliency-level", "saliency", type=int, default=1, show_default=True, help="Desired saliency level (1, 2, or 3)")
-@click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default="both", show_default=True, help="bg for background, s for scores, both for both")
-@click.option("-b", "--background-directory", "expFreqDir", type=str, default="null", help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
-@click.option("-c", "--num-cores", "numProcesses", type=int, default=0, help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
-def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, expFreqDir, numProcesses, exitBool):
+@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
+@click.option("-s", "--state-model", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
+@click.option("-l", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1, 2, or 3)")
+@click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default=["both"], show_default=True, multiple=True, help="bg for background, s for scores, both for both")
+@click.option("-b", "--background-directory", "expFreqDir", type=str, default=["null"], multiple=True, help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
+@click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
+@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
+def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool):
     """
     This script computes scores for chromatin states across the genome.
     """
+
+    # Handling case if user inputs flag multiples times
+    if len(fileDirectory) > 1:
+        raise ValueError("Too many [-f, --file-directory] arguments provided")
+    elif len(outputDirectory) > 1:
+        raise ValueError("Too many [-o, --output-directory] arguments provided")
+    elif len(numStates) > 1:
+        raise ValueError("Too many [-s, --state-model] arguments provided")
+    elif len(saliency) > 1:
+        raise ValueError("Too many [-l, --saliency-level] arguments provided")
+    elif len(modeOfOperation) > 1:
+        raise ValueError("Too many [-m, --mode-of-operation] arguments provided")
+    elif len(expFreqDir) > 1:
+        raise ValueError("Too many [-b, --background-directory] arguments provided")
+    elif len(numProcesses) > 1:
+        raise ValueError("Too many [-c, --num-cores] arguments provided")
+    elif len(exitBool) > 1:
+        raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
+    fileDirectory = fileDirectory[0]
+    outputDirectory = outputDirectory[0]
+    numStates = numStates[0]
+    saliency = saliency[0]
+    modeOfOperation = modeOfOperation[0]
+    expFreqDir = expFreqDir[0]
+    numProcesses = numProcesses[0]
+    exitBool = exitBool[0]
+
+
     dataFilePath = Path(fileDirectory)
     outputDirPath = Path(outputDirectory)
 
@@ -80,8 +108,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
-    expFreqFilename = "exp_freq_{}.npy".format(fileTag)
-    storedExpPath = Path(expFreqDir) / expFreqFilename
+    storedExpPath = Path(expFreqDir) / "exp_freq_{}.npy".format(fileTag)
     print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
@@ -101,6 +128,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         expJobIDArr = []   
         print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
+            # Skip over ".genome" files
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
@@ -172,7 +200,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
-        pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, fileTag, storedExpPath)
+        pythonCommand = "python {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath)
 
         if saliency == 1:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
@@ -196,6 +224,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("\nSubmitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
+            # Skip over ".genome" files
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
@@ -255,6 +284,7 @@ def main(fileDirectory, numStates, saliency, outputDirectory, modeOfOperation, e
         print("\nSubmitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []
         for file in dataFilePath.glob("*"):
+            # Skip over ".genome" files
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():

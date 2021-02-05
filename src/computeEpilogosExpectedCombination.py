@@ -2,9 +2,11 @@ import sys
 import numpy as np
 import os
 from pathlib import Path
+import time
 
+def main(outputDirectory, storedExpInput):
+    tTotal = time.time()
 
-def main(outputDirectory, fileTag, storedExpInput):
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
 
@@ -28,6 +30,8 @@ def main(outputDirectory, fileTag, storedExpInput):
     # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
+    print("Total Time:", time.time() - tTotal)
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[3])
 

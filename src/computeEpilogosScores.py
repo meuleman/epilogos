@@ -16,8 +16,6 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
     tTotal = time.time()
     dataFilePath = Path(file)
     outputDirPath = Path(outputDirPath)
-    filename = dataFilePath.name.split(".")[0]
-    print("FILE:", filename)
 
     ###################################################
     ##
@@ -53,18 +51,18 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
         rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
         rowList.append(rowsToCalculate)
 
-    determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses)
+    determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses)
 
     print("Total Time:", time.time() - tTotal)
 
 
-def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses):
+def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
     if saliency == 1:
-        s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses)
+        s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses)
     elif saliency == 2:
-        s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses)
+        s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses)
     elif saliency == 3:
-        s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses)
+        s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses)
     else:
         print("Inputed saliency value not supported")
         return
@@ -74,15 +72,13 @@ def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, out
 def sharedToNumpy(sharedArr, numRows, numStates):
     return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
 
-sharedArr=None
-
 # initiliazer for multiprocessing
 def _init(sharedArr_):
     global sharedArr
     sharedArr = sharedArr_
 
 # Function that deploys the processes used to calculate the scores for the s1 metric. Also call function to store scores
-def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses):
+def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
@@ -92,7 +88,7 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath)))
     pool.join()
 
-    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
+    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, chrName)
 
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
@@ -111,7 +107,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
-    multiprocessRows, numCols = dataArr.shape
+    numCols = dataArr.shape[1]
 
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
@@ -123,7 +119,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
-def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses):
+def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
@@ -137,7 +133,7 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         pool.starmap(s2Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath)))
     pool.join()
 
-    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
+    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, chrName)
 
 
 # Calculates the scores for the s2 metric over a given range of rows
@@ -195,7 +191,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
-def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, chrName, numProcesses):
+def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
@@ -205,7 +201,7 @@ def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         pool.starmap(s3Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath)))
     pool.join()
 
-    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
+    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, chrName)
 
 # Helper for the multiprocessing implemented in s3
 def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
@@ -248,13 +244,13 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
         scoreArr[scoreRow] = rowScoreArr
 
 # Helper to store the score arrays combined with the location arrays
-def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
+def storeScores(scoreArr, outputDirPath, fileTag, chrName):
     # Create a location array
     numRows = scoreArr.shape[0]
     locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
     # Creating a file path
-    scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
+    scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, chrName)
     scoreFilePath = outputDirPath / scoreFilename
 
     # Savez saves space allowing location to be stored as string and scoreArr as float

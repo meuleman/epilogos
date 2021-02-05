@@ -11,6 +11,8 @@ import itertools
 from contextlib import closing
 
 def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
+    tTotal = time.time()
+
     dataFilePath = Path(filename)
     outputDirPath = Path(outputDirPath)
 
@@ -49,6 +51,8 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
         rowList.append(rowsToCalculate)
 
     determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+
+    print("Total Time:", time.time() - tTotal)
 
 
 def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
@@ -92,11 +96,11 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
-    multiprocessRows, numCols = dataArr.shape
+    numCols = dataArr.shape[1]
 
     expFreqArr = np.zeros(numStates, dtype=np.float32)
 
-    # Simply count each state rowwise, dividing by 
+    # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
     for i, state in enumerate(uniqueStates):
         expFreqArr[state] += stateCounts[i] / numCols

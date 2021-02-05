@@ -50,11 +50,9 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
 
     # Split the rows up according to the number of cores we have available
     rowList = []
-    # for i in range(numProcesses):
-    #     rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
-    #     rowList.append(rowsToCalculate)
-    rowsToCalculate = (0, totalRows // numProcesses)
-    rowList.append(rowsToCalculate)
+    for i in range(2):
+        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+        rowList.append(rowsToCalculate)
 
     print("Calculating Scores...")
     tScore = time.time()

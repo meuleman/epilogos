@@ -107,7 +107,7 @@ def readInData(outputDirPath, numProcesses):
     
     # Multiprocess the reading
     with closing(multiprocessing.Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("nullDistances_*.txt.gz"), itertools.repeat(realNames), itertools.repeat(nullNames))))
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("nullDistances_*.txt.gz"), itertools.repeat(realNames), itertools.repeat(nullNames)))
     pool.join()
 
     # Concatenating all chunks to the DataFrames

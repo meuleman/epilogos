@@ -10,8 +10,11 @@ import statsmodels as sm
 import warnings
 import time
 import gzip
+import multiprocessing
+from contextlib import closing
+import itertools
 
-def main(group1Name, group2Name, numStates, outputDir):
+def main(group1Name, group2Name, numStates, outputDir, numProcesses):
     tTotal = time.time()
 
     outputDirPath = Path(outputDir)
@@ -26,31 +29,17 @@ def main(group1Name, group2Name, numStates, outputDir):
         stateColorList = np.array([(1.0, 0.0, 0.0), (1.0, 0.27059, 0.0), (0.19608, 0.80392, 0.19608), (0.0, 0.50196, 0.0), (0.0, 0.39216, 0.0), (0.76078, 0.88235, 0.01961), (1.0, 1.0, 0.0), (0.4, 0.80392, 0.66667), (0.54118, 0.56863, 0.81569), (0.80392, 0.36078, 0.36078), (0.91373, 0.58824, 0.47843), (0.74118, 0.71765, 0.41961), (0.50196, 0.50196, 0.50196), (0.75294, 0.75294, 0.75294), (1.0, 1.0, 1.0)])
         stateNameList = np.array(["TssA", "TssAFlnk", "TxFlnk", "Tx", "TxWk", "EnhG", "Enh", "ZNF/Rpts", "Het", "TssBiv", "BivFlnk", "EnhBiv", "ReprPC", "ReprPCWk", "Quies"])
     else:
-        print("State model not supported for plotting")
-        return
+        raise ValueError("State model not supported for plotting")
+
+    # If user doesn't want to choose number of cores use as many as available
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
 
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time.time()
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numStates)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses)
     print("    Time:", time.time() - tRead)
-
-    print("                        Distances\tRand Distances")
-    print("Minimum:\t\t{}\t{}".format(np.round(np.amin(distanceArrReal), 5), np.round(np.amin(distanceArrNull), 5)))
-    print("0.0001 Quantile:\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.0001), 5), np.round(np.quantile(distanceArrNull, 0.0001), 5)))
-    print("0.001 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.001), 5), np.round(np.quantile(distanceArrNull, 0.001), 5)))
-    print("0.01 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.01), 5), np.round(np.quantile(distanceArrNull, 0.01), 5)))
-    print("0.05 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.05), 5), np.round(np.quantile(distanceArrNull, 0.05), 5)))
-    print("0.1 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.1), 5), np.round(np.quantile(distanceArrNull, 0.1), 5)))
-    print("0.25 Quantile:\t\t{}\t{}".format(np.round(np.quantile(distanceArrReal, 0.25), 5), np.round(np.quantile(distanceArrNull, 0.25), 5)))
-    print("0.5 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.5), 5), np.round(np.quantile(distanceArrNull, 0.5), 5)))
-    print("0.75 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.75), 5), np.round(np.quantile(distanceArrNull, 0.75), 5)))
-    print("0.9 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.9), 5), np.round(np.quantile(distanceArrNull, 0.9), 5)))
-    print("0.95 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.95), 5), np.round(np.quantile(distanceArrNull, 0.95), 5)))
-    print("0.99 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.99), 5), np.round(np.quantile(distanceArrNull, 0.99), 5)))
-    print("0.999 Quantile:\t\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.999), 5), np.round(np.quantile(distanceArrNull, 0.999), 5)))
-    print("0.9999 Quantile:\t {}\t {}".format(np.round(np.quantile(distanceArrReal, 0.9999), 5), np.round(np.quantile(distanceArrNull, 0.9999), 5)))
-    print("Maximum:\t\t {}\t {}".format(np.round(np.amax(distanceArrReal), 5), np.round(np.amax(distanceArrNull), 5)))
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
@@ -103,7 +92,7 @@ def main(group1Name, group2Name, numStates, outputDir):
     print("Total Time:", time.time() - tTotal)
 
 # Helper to read in the necessary data to fit and visualize pairwise results
-def readInData(outputDirPath, numStates):
+def readInData(outputDirPath, numProcesses):
     # For keeping the data arrays organized correctly
     realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, 19)]
     nullNames = ["chr", "binStart", "binEnd", "distance"]
@@ -116,14 +105,14 @@ def readInData(outputDirPath, numStates):
     diffDF = pd.DataFrame(columns=realNames)
     nullDistanceDF = pd.DataFrame(columns=nullNames)
     
-    # Take in all the real distances
-    for file in outputDirPath.glob("pairwiseDelta_*.txt.gz"):
-        diffDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=realNames)
-        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
+    # Multiprocess the reading
+    with closing(multiprocessing.Pool(numProcesses)) as pool:
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("nullDistances_*.txt.gz"), itertools.repeat(realNames), itertools.repeat(nullNames))))
+    pool.join()
 
-    # Take in all the null distances
-    for file in outputDirPath.glob("nullDistances_*.txt.gz"):
-        nullDistanceDFChunk = pd.read_table(Path(file), header=None, sep="\s+", names=nullNames)
+    # Concatenating all chunks to the DataFrames
+    for diffDFChunk, nullDistanceDFChunk in results:
+        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
         nullDistanceDF = pd.concat((nullDistanceDF, nullDistanceDFChunk), axis=0, ignore_index=True)
 
     # Sorting the dataframes by chromosomal location
@@ -147,6 +136,12 @@ def readInData(outputDirPath, numStates):
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr
 
+def readTableMulti(realFile, nullFile, realNames, nullNames):
+    diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
+    nullDistanceDFChunk = pd.read_table(Path(nullFile), header=None, sep="\t", names=nullNames)
+
+    return diffDFChunk, nullDistanceDFChunk
+
 # Helper to fit the distances
 def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
@@ -154,27 +149,12 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
-    print("Length Data Real:", len(dataReal))
-    print("Length Data Null:", len(dataNull))
-
-    # y, x = np.histogram(data.values, bins=100, range=(np.amin(data), np.amax(data)), density=True)
-    # x = (x + np.roll(x, -1))[:-1] / 2.0
-
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         # Fit the data
         params = st.gennorm.fit(dataNull)
-
-        # # Separate parts of parameters
-        # distArgs = params[:-2]
-        # loc = params[-2]
-        # scale = params[-1]
-        # # Calculate SSE and MLE
-        # pdf = st.gennorm.pdf(x, loc=loc, scale=scale, *distArgs)
-        # sse = np.sum(np.power(y - pdf, 2.0))
-        # mle = st.gennorm.nnlf(params, data)
 
     return params, dataReal, dataNull
 
@@ -208,8 +188,6 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
 
     # Real vs Null distance scatter plot
     fig = plt.figure(figsize=(12,12))
-    print("distanceArrReal Length:", distanceArrReal.shape)
-    print("distanceArrNull Length:", distanceArrNull.shape)
     plt.scatter(distanceArrReal, distanceArrNull, color='r')
     plt.xlim(-rangeLim, rangeLim)
     plt.ylim(-rangeLim, rangeLim)
@@ -539,7 +517,6 @@ def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr):
         while(hasAdjacent(locations)):
             locations = mergeAdjacent(locations)
             
-        print(len(locations))
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\n"
         outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
@@ -586,4 +563,4 @@ def findSign(x):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4])
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], int(sys.argv[5]))

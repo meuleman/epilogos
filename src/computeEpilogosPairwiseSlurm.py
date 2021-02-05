@@ -342,6 +342,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
             time.sleep(10)
             sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             if not (sp.stdout.strip().endswith("RUNNING") or sp.stdout.strip().endswith("PENDING")):
+                break
 
 if __name__ == "__main__":
     main()

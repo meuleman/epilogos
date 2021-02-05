@@ -196,7 +196,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the python commmand
     computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
-    pythonCommand = "python {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath)
+    pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag)
 
     # Create a string for the slurm command
     if saliency == 1:

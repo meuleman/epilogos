@@ -155,9 +155,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
             # Create a string for the slurm command
             if saliency == 1:
-                slurmCommand = "sbatch --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
             elif saliency == 2:
-                slurmCommand = "sbatch --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -200,9 +200,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} --nodes=1 --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -269,11 +269,11 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
             # Create a string for the slurm commands
             if saliency == 1:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
+                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
+                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
             elif saliency == 2:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
+                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
+                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
 
             spReal = subprocess.run(slurmCommandReal, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
@@ -320,9 +320,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

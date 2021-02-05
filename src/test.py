@@ -17,17 +17,25 @@ from pathlib import PurePath
 import glob
 import gzip
 import numpy.ma as ma
-
-
+import click
 
 def main():
-    dataFilePath = Path("/home/jquon/AdseraStateByGroup/male/split/epilogos_matrix_chr22.txt.gz")
-    print("\nReading data from file...")
-    tRead = time.time()
-    dataDF = pd.read_table(dataFilePath, skiprows=100000, nrows=500000, header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    bedOne = Path("/home/jquon/epilogosTesting_01122021/output/pairwiseMF/largestDistanceLoci_split_split.bed")
+    bedTwo = Path("/home/jquon/newPairwiseTest/maleFemale/largestDistanceLoci_split_split.bed")
 
-    print(dataDF.shape)
+    with open(bedOne, "r") as f1:
+        with open(bedTwo, "r") as f2:
+            lines1 = f1.readlines()
+            lines2 = f2.readlines()
+            for i in range(len(lines1)):
+                line1Split = lines1[i].split()
+                line2Split = lines2[i].split()
+
+                if line1Split[0] != line2Split[0] or line1Split[1] != line2Split[1]:
+                    print(i)
+
+            print("newBed", len(lines2))
+            print("oldBed", len(lines1))
 
 if __name__ == "__main__":
     main()

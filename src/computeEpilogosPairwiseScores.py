@@ -39,7 +39,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
         with open(genomeFile, "r") as gf:
             line = gf.readline()
             while chrName not in line:
-                line = gf.readline
+                line = gf.readline()
             basePairs = int(line.split()[1])
 
     totalRows = math.ceil(basePairs / 200)
@@ -227,16 +227,6 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     # Calculte the scores and store them in the shared array
     scoreArr1 = sharedToNumpy(*sharedArr1)
     scoreArr2 = sharedToNumpy(*sharedArr2)
-
-    print(rowsToCalculate)
-    print(file1Arr.shape)
-    print(file2Arr.shape)
-    print(expFreqArr.shape)
-    print(obsFreqArr1.shape)
-    print(obsFreqArr2.shape)
-    print(scoreArr1.shape)
-    print(scoreArr2.shape)
-    print(rowsToCalculate[0], rowsToCalculate[1])
 
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively

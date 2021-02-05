@@ -35,7 +35,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
         with open(genomeFile, "r") as gf:
             line = gf.readline()
             while chrName not in line:
-                line = gf.readline
+                line = gf.readline()
             basePairs = int(line.split()[1])
 
     totalRows = math.ceil(basePairs / 200)

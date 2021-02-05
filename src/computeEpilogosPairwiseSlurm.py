@@ -320,9 +320,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

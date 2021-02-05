@@ -168,9 +168,14 @@ def s1Multi(file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, nu
 
 def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     file1Arr, file2Arr = readInData(file1Path, file2Path, rowsToCalculate, realOrNull)
+    print(rowsToCalculate)
+    print(file1Arr.shape)
+    print(file2Arr.shape)
+
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    print(expFreqArr.shape)
 
     numCols1 = file1Arr.shape[1]
     numCols2 = file2Arr.shape[1]
@@ -178,6 +183,9 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     scoreArr1 = sharedToNumpy(*sharedArr1)
     scoreArr2 = sharedToNumpy(*sharedArr2)
 
+    print(scoreArr1.shape)
+    print(scoreArr2.shape)
+    
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
@@ -221,6 +229,17 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     # Calculte the scores and store them in the shared array
     scoreArr1 = sharedToNumpy(*sharedArr1)
     scoreArr2 = sharedToNumpy(*sharedArr2)
+
+    if rowsToCalculate[0] == 0:
+        print(rowsToCalculate)
+        print(file1Arr.shape)
+        print(file2Arr.shape)
+        print(expFreqArr.shape)
+        print(obsFreqArr1.shape)
+        print(obsFreqArr2.shape)
+        print(scoreArr1.shape)
+        print(scoreArr2.shape)
+
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
         scoreArr1[scoreRow] = klScoreND(obsFreqArr1[obsRow], expFreqArr).sum(axis=0)

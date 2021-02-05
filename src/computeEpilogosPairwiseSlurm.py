@@ -130,7 +130,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
         if not file1.is_dir() and not file2.is_dir():
             filename = file1.name.split(".")[0]
-            jobName = "exp_calc_{}_{}_{}".format(file1Path.name, file2Path.name, filename)
+            jobName = "exp_calc_{}_{}".format(fileTag, filename)
             jobOutPath = outputDirPath / (".out/" + jobName + ".out")
             jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -175,7 +175,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
 
-    jobName = "exp_comb_{}_{}".format(file1Path.name, file2Path.name)
+    jobName = "exp_comb_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -232,8 +232,8 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
         if not file1.is_dir() and not file2.is_dir():
             filename = file1.name.split(".")[0]
-            jobNameReal = "score_real_{}_{}_{}".format(file1Path.name, file2Path.name, filename)
-            jobNameNull = "score_null_{}_{}_{}".format(file1Path.name, file2Path.name, filename)
+            jobNameReal = "score_real_{}_{}".format(fileTag, filename)
+            jobNameNull = "score_null_{}_{}".format(fileTag, filename)
             jobOutPathReal = outputDirPath / (".out/" + jobNameReal + ".out")
             jobErrPathReal = outputDirPath / (".err/" + jobNameReal + ".err")
             jobOutPathNull = outputDirPath / (".out/" + jobNameNull + ".out")
@@ -295,7 +295,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     # Fitting, calculating p-values, and visualizing pairiwse differences
     print("\nSubmitting Slurm Jobs for data visualization....")
 
-    jobName = "visual_{}_{}".format(file1Path.name, file2Path.name)
+    jobName = "visual_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 

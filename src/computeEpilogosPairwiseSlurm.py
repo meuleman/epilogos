@@ -41,7 +41,8 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     numStates = numStates[0]
     saliency = saliency[0]
     numProcesses = numProcesses[0]
-    exitBool = exitBool[0]
+    if exitBool:
+        exitBool = exitBool[0]
 
     file1Path = Path(fileDirectory1)
     file2Path = Path(fileDirectory2)

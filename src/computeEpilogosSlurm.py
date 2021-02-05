@@ -46,7 +46,8 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     modeOfOperation = modeOfOperation[0]
     expFreqDir = expFreqDir[0]
     numProcesses = numProcesses[0]
-    exitBool = exitBool[0]
+    if exitBool:
+        exitBool = exitBool[0]
 
 
     dataFilePath = Path(fileDirectory)

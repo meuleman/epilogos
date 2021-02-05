@@ -32,7 +32,7 @@ def main():
                 line2Split = lines2[i].split()
 
                 if line1Split[-2] != line2Split[-2]:
-                    print("{}\t\t{}\t\t{}\t\t{}".format(i, line1Split[-2], line2Split[-2], line1Split[-2] - line2Split[-2]))
+                    print("{}\t\t{}\t\t{}\t\t{:e.9}".format(i, line1Split[-2], line2Split[-2], float(line1Split[-2]) - float(line2Split[-2])))
 
 if __name__ == "__main__":
     main()

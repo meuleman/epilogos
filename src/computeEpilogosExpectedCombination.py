@@ -33,5 +33,5 @@ def main(outputDirectory, storedExpInput):
     print("Total Time:", time.time() - tTotal)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[3])
+    main(sys.argv[1], sys.argv[2])
 

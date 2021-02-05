@@ -130,7 +130,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
         if not file1.is_dir() and not file2.is_dir():
             filename = file1.name.split(".")[0]
-            jobName = "exp_freq_calc_{}_{}_{}".format(file1Path.name, file2Path.name, filename)
+            jobName = "exp_calc_{}_{}_{}".format(file1Path.name, file2Path.name, filename)
             jobOutPath = outputDirPath / (".out/" + jobName + ".out")
             jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -175,7 +175,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
 
-    jobName = "exp_freq_comb_{}_{}".format(file1Path.name, file2Path.name)
+    jobName = "exp_comb_{}_{}".format(file1Path.name, file2Path.name)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -320,9 +320,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S1_{}.job --output={} --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --error={} --nodes=1 --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name=S2_{}.job --output={} --error={} {} --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

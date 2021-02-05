@@ -50,18 +50,23 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
 
     # Split the rows up according to the number of cores we have available
     rowList = []
-    for i in range(2):
+    for i in range(numProcesses):
         rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
         rowList.append(rowsToCalculate)
 
     print("Calculating Scores...")
     tScore = time.time()
-    score1Arr, score2Arr = determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull)
+    scoreArr1, scoreArr2 = determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull)
     print("    Time: ", time.time() - tScore)
+
+    # Getting rid of potential empty row at end
+    if np.all(scoreArr1[-1] == 0):
+        scoreArr1 = scoreArr1[:-1]
+        scoreArr2 = scoreArr2[:-1]
 
     print("Calculating Raw Differences...")
     tDiff = time.time()
-    diffArr = score1Arr - score2Arr
+    diffArr = scoreArr1 - scoreArr2
     print("    Time:", time.time() - tDiff)
 
     # Only calculate the distances for the null data in this step
@@ -177,25 +182,18 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
     scoreArr1 = sharedToNumpy(*sharedArr1)
     scoreArr2 = sharedToNumpy(*sharedArr2)
-
-    print(rowsToCalculate)
-    print(file1Arr.shape)
-    print(file2Arr.shape)
-    print(expFreqArr.shape)
-    print(scoreArr1.shape)
-    print(scoreArr2.shape)
-    print(rowsToCalculate[0], rowsToCalculate[1])
     
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
-        uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
-        for i, state in enumerate(uniqueStates):
-            # Function input is obsFreq and expFreq
-            scoreArr1[scoreRow, state] = klScore(stateCounts[i] / numCols1, expFreqArr[state])
-        uniqueStates, stateCounts = np.unique(file2Arr[obsRow], return_counts=True)
-        for i, state in enumerate(uniqueStates):
-            # Function input is obsFreq and expFreq
-            scoreArr2[scoreRow, state] = klScore(stateCounts[i] / numCols2, expFreqArr[state])
+        if obsRow < file1Arr.shape[0]:
+            uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
+            for i, state in enumerate(uniqueStates):
+                # Function input is obsFreq and expFreq
+                scoreArr1[scoreRow, state] = klScore(stateCounts[i] / numCols1, expFreqArr[state])
+            uniqueStates, stateCounts = np.unique(file2Arr[obsRow], return_counts=True)
+            for i, state in enumerate(uniqueStates):
+                # Function input is obsFreq and expFreq
+                scoreArr2[scoreRow, state] = klScore(stateCounts[i] / numCols2, expFreqArr[state])
         
 
 # Function that calculates the scores for the S2 metric
@@ -242,8 +240,9 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
-        scoreArr1[scoreRow] = klScoreND(obsFreqArr1[obsRow], expFreqArr).sum(axis=0)
-        scoreArr2[scoreRow] = klScoreND(obsFreqArr2[obsRow], expFreqArr).sum(axis=0)
+        if obsRow < obsFreqArr1.shape[0]:
+            scoreArr1[scoreRow] = klScoreND(obsFreqArr1[obsRow], expFreqArr).sum(axis=0)
+            scoreArr2[scoreRow] = klScoreND(obsFreqArr2[obsRow], expFreqArr).sum(axis=0)
 
 # Helper for calculating the observed frequencies in the s2 metric
 def s2Obs(dataArr, numStates):

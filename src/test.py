@@ -32,7 +32,7 @@ def main():
                 line2Split = lines2[i].split()
 
                 if line1Split[-2] != line2Split[-2]:
-                    print(i, line1Split[-2], line2Split[-2])
+                    print(i, line1Split[-2], line2Split[-2], line1Split - line2Split)
 
 if __name__ == "__main__":
     main()

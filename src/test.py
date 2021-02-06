@@ -20,19 +20,13 @@ import numpy.ma as ma
 import click
 
 def main():
-    bedOne = Path("/home/jquon/epilogosTesting_01122021/output/pairwiseMF/largestDistanceLoci_split_split.bed")
-    bedTwo = Path("/home/jquon/newPairwiseTest/maleFemale/largestDistanceLoci_split_split.bed")
-
-    with open(bedOne, "r") as f1:
-        with open(bedTwo, "r") as f2:
-            lines1 = f1.readlines()
-            lines2 = f2.readlines()
-            for i in range(len(lines1)):
-                line1Split = lines1[i].split()
-                line2Split = lines2[i].split()
-
-                if line1Split[-2] != line2Split[-2]:
-                    print("{}\t\t{}\t\t{}\t\t{:.9e}".format(i, line1Split[-2], line2Split[-2], float(line1Split[-2]) - float(line2Split[-2])))
+    dataFilePath = Path("/home/jquon/RoadmapStateByGroup/male/split/")
+    
+    for file in dataFilePath.glob("*"):
+        print(file)
+        # Skip over ".genome" files
+        if file.name.split(".")[1] == "genome":
+            print("GENOME")
 
 if __name__ == "__main__":
     main()

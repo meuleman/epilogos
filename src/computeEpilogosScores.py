@@ -93,29 +93,51 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("\nReading data from file...")
+        tRead = time.time()
+
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
-    print("Converting to numpy array...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Converting to numpy array...")
+        tConvert = time.time()
+
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     numCols = dataArr.shape[1]
 
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Scores...")
+        tScore = time.time()
+        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+    
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+        
+        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
+                print("{}% Completed".format(percentDone))
+                percentDone += 10
+
         uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
         for i, state in enumerate(uniqueStates):
             # Function input is obsFreq and expFreq
             scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tScore)
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
@@ -139,16 +161,24 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s2 metric over a given range of rows
 def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("\nReading data from file...")
+        tRead = time.time()
+
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
-    print("Converting to numpy array...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Converting to numpy array...")
+        tConvert = time.time()
+
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -159,12 +189,23 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Calculate the observed frequencies
     obsFreqArr = np.zeros((multiprocessRows, numStates, numStates))
 
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Observed Frequencies...")
+        tObs = time.time()
+        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+
     # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
     if (sys.version_info < (3, 8)):
         combinations = ncr(numCols, 2)
         for row in range(multiprocessRows):
+
+            if rowsToCalculate[0] == 0 and row in printCheckmarks:
+                print("{}% Completed".format(percentDone))
+                percentDone += 10
+
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i, state1 in enumerate(uniqueStates):
                 for j, state2 in enumerate(uniqueStates):
@@ -175,6 +216,11 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     else:
         combinations = math.comb(numCols, 2)
         for row in range(multiprocessRows):
+
+            if rowsToCalculate[0] == 0 and row in printCheckmarks:
+                print("{}% Completed".format(percentDone))
+                percentDone += 10
+
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i, state1 in enumerate(uniqueStates):
                 for j, state2 in enumerate(uniqueStates):
@@ -182,12 +228,29 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
                         obsFreqArr[row, state1, state2]  = math.comb(stateCounts[i], 2) / combinations
                     else: # state1 > state2 or state1 < state2
                         obsFreqArr[row, state1, state2]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tObs)
+
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Scores...")
+        tScore = time.time()
+        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+
+        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
+                print("{}% Completed".format(percentDone))
+                percentDone += 10
+
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
         scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
+
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tScore)
     
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
@@ -206,16 +269,24 @@ def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Helper for the multiprocessing implemented in s3
 def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("\nReading data from file...")
+        tRead = time.time()
+
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions later
-    print("Converting to numpy array...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Converting to numpy array...")
+        tConvert = time.time()
+
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -230,10 +301,21 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     # This saves a lot of time in the loop as we are just looking up references and not calculating
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)), expFreqArr)
 
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Scores...")
+        tScore = time.time()
+        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
     rowScoreArr = np.zeros(numStates, dtype=np.float32)
     for dataRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+
+        if rowsToCalculate[0] == 0 and dataRow in printCheckmarks:
+                print("{}% Completed".format(percentDone))
+                percentDone += 10
+
         # Reset the array so it doesn't carry over scores from other rows
         rowScoreArr.fill(0)
 
@@ -242,6 +324,9 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
 
         # Store the scores in the shared score array
         scoreArr[scoreRow] = rowScoreArr
+
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tScore)
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, chrName):

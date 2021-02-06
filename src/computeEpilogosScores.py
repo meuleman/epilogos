@@ -128,8 +128,8 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
-                print("{}% Completed".format(percentDone))
-                percentDone += 10
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
 
         if obsRow < dataArr.shape[0]:
             uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
@@ -204,8 +204,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
         for row in range(multiprocessRows):
 
             if rowsToCalculate[0] == 0 and row in printCheckmarks:
-                print("{}% Completed".format(percentDone))
                 percentDone += 10
+                print("{}% Completed".format(percentDone))
 
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i, state1 in enumerate(uniqueStates):
@@ -219,8 +219,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
         for row in range(multiprocessRows):
 
             if rowsToCalculate[0] == 0 and row in printCheckmarks:
-                print("{}% Completed".format(percentDone))
                 percentDone += 10
+                print("{}% Completed".format(percentDone))
 
             uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
             for i, state1 in enumerate(uniqueStates):
@@ -244,8 +244,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
-                print("{}% Completed".format(percentDone))
-                percentDone += 10
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
 
         if obsRow < obsFreqArr.shape[0]:
             # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
@@ -315,8 +315,8 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     for dataRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
         if rowsToCalculate[0] == 0 and dataRow in printCheckmarks:
-                print("{}% Completed".format(percentDone))
-                percentDone += 10
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
 
         if dataRow < dataArr.shape[0]:
 

@@ -21,7 +21,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
     ##   chrName is hacky, find a better way later
     ##
     ####################################################
-    chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
+    chrName = dataFilePath.name.split("_")[-1].split(".")[0]
 
     # Get the genome file
     genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))

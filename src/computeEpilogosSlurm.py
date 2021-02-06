@@ -130,7 +130,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
         for file in dataFilePath.glob("*"):
             # Skip over ".genome" files
-            if file.name.split(".")[1] == "genome":
+            if file.name.split(".")[-1] == "genome":
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -226,7 +226,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         scoreJobIDArr = []
         for file in dataFilePath.glob("*"):
             # Skip over ".genome" files
-            if file.name.split(".")[1] == "genome":
+            if file.name.split(".")[-1] == "genome":
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
@@ -286,7 +286,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         writeJobIDArr = []
         for file in dataFilePath.glob("*"):
             # Skip over ".genome" files
-            if file.name.split(".")[1] == "genome":
+            if file.name.split(".")[-1] == "genome":
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]

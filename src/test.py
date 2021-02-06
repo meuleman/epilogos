@@ -34,12 +34,12 @@ def main(file1, file2):
 
     print("\nReading data from file 1...")
     tRead1 = time.time()
-    file1DF = pd.read_table(file1Path, header=None, sep="\t")
+    file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
     print("    Time: ", time.time() - tRead1)
 
     print("Reading data from file 2...")
     tRead2 = time.time()
-    file2DF = pd.read_table(file2Path, header=None, sep="\t")
+    file2DF = pd.read_table(file2Path, header=None, sep="\t", names=colNames)
     print("    Time: ", time.time() - tRead2)
 
     # Sorting the dataframes by chromosomal location

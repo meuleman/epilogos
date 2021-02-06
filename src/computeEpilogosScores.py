@@ -131,10 +131,11 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
                 print("{}% Completed".format(percentDone))
                 percentDone += 10
 
-        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
-        for i, state in enumerate(uniqueStates):
-            # Function input is obsFreq and expFreq
-            scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+        if obsRow < dataArr.shape[0]:
+            uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+            for i, state in enumerate(uniqueStates):
+                # Function input is obsFreq and expFreq
+                scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
     
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
@@ -246,8 +247,9 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
                 print("{}% Completed".format(percentDone))
                 percentDone += 10
 
-        # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
-        scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
+        if obsRow < obsFreqArr.shape[0]:
+            # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
+            scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
@@ -316,14 +318,16 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
                 print("{}% Completed".format(percentDone))
                 percentDone += 10
 
-        # Reset the array so it doesn't carry over scores from other rows
-        rowScoreArr.fill(0)
+        if dataRow < dataArr.shape[0]:
 
-        # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
-        np.add.at(rowScoreArr, dataArr[dataRow, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]])
+            # Reset the array so it doesn't carry over scores from other rows
+            rowScoreArr.fill(0)
 
-        # Store the scores in the shared score array
-        scoreArr[scoreRow] = rowScoreArr
+            # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
+            np.add.at(rowScoreArr, dataArr[dataRow, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]])
+
+            # Store the scores in the shared score array
+            scoreArr[scoreRow] = rowScoreArr
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)

@@ -8,20 +8,24 @@ import time
 def main(filename, numStates, outputDirectory, fileTag):
     tTotal = time.time()
     outputDirPath = Path(outputDirectory)
+    filePath = Path(filename)
 
-    writeScores(filename, numStates, outputDirPath, fileTag)
+    chrName = filePath.name.split("_")[-1].split(".")[0]
+
+
+    writeScores(chrName, numStates, outputDirPath, fileTag)
 
     print("Total Time:", time.time() - tTotal)
 
 # Helper to write the final scores to files
-def writeScores(filename, numStates, outputDirPath, fileTag):
+def writeScores(chrName, numStates, outputDirPath, fileTag):
     # Initializing writing process
-    scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
+    scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, chrName)
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
     tRead = time.time()
     # Taking in the the score array
-    filePath = outputDirPath / Path("temp_scores_{}_{}.npz".format(fileTag, filename))
+    filePath = outputDirPath / Path("temp_scores_{}_{}.npz".format(fileTag, chrName))
     npzFile = np.load(filePath)
     scoreArr = npzFile['scoreArr']
     locationArr = npzFile['locationArr']

@@ -311,7 +311,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
                 computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, filename, numStates, outputDirPath, fileTag)
+                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag)
 
                 slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 

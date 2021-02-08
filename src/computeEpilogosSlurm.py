@@ -134,7 +134,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
-                jobName = "exp_freq_calc_{}_{}".format(fileTag, filename)
+                jobName = "exp_calc_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -158,11 +158,11 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -180,7 +180,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
         print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
 
-        jobName = "exp_freq_comb_{}".format(fileTag)
+        jobName = "exp_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -204,11 +204,11 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag)
 
         if saliency == 1:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue0 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue0 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue0 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -230,7 +230,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
-                jobName = "score_calc_{}_{}".format(fileTag, filename)
+                jobName = "score_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -255,18 +255,18 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
                 if modeOfOperation == "s":
                     if saliency == 1:
-                        slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 else:
                     if saliency == 1:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue0 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -290,7 +290,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 continue
             if not file.is_dir():
                 filename = file.name.split(".")[0]
-                jobName = "writeFaster_{}_{}".format(fileTag, filename)
+                jobName = "write_{}_{}".format(fileTag, filename)
                 jobOutPath = outputDirPath / (".out/" + jobName + ".out")
                 jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
@@ -313,7 +313,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
                 pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag)
 
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name=S{}_{}.job --output={} --partition=queue0 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, saliency, jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

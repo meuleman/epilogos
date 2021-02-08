@@ -220,6 +220,8 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows):
     expFreqFilename = "temp_exp_freq_{}_{}.npz".format(fileTag, chrName)
     expFreqPath = outputDirPath / expFreqFilename
 
+    print("ExpFreq Dtype:",expFreqArr.dtype)
+
     np.savez_compressed(expFreqPath, expFreqArr=expFreqArr, totalRows=np.array([totalRows]))
 
 # Helper to calculate combinations

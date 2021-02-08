@@ -14,15 +14,20 @@ def main(outputDirectory, storedExpInput, fileTag):
     expFreqFileCount = 0
     totalRows = 0
     expFreqArr = np.zeros((1,1))
+    sums = []
     for file in outputDirPath.glob("temp_exp_freq_{}_*.npz".format(fileTag)):
         if expFreqFileCount == 0:
             npzFile = np.load(file)
             expFreqArr = npzFile["expFreqArr"]
             totalRows = npzFile["totalRows"][0]
+            print("File: {}\t\tSum: {}\t\tRows:{}".format(file.name, np.sum(npzFile["expFreqArr"]) / npzFile["totalRows"][0], npzFile["totalRows"][0]))
+            sums.append(np.sum(npzFile["expFreqArr"]) / npzFile["totalRows"][0])
         else:
             npzFile = np.load(file)
             expFreqArr += npzFile["expFreqArr"]
             totalRows += npzFile["totalRows"][0]
+            print("File: {}\t\tSum: {}\t\tRows:{}".format(file.name, np.sum(npzFile["expFreqArr"]) / npzFile["totalRows"][0], npzFile["totalRows"][0]))
+            sums.append(np.sum(npzFile["expFreqArr"]) / npzFile["totalRows"][0])
         expFreqFileCount += 1
     
     # Clean up temp files
@@ -31,6 +36,9 @@ def main(outputDirectory, storedExpInput, fileTag):
 
     # normalize for number of temp expected frequencies calculated
     expFreqArr /= totalRows
+
+    print("Total Sum:", np.sum(expFreqArr))
+    print("Sum of Sums:", sum(sums))
 
     # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)

@@ -115,6 +115,9 @@ def main(file1, file2, numStates):
         print("{}. Python: {}\t\tC: {}\t\tDiff: {}\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]], fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
 
 
+    print(np.sum(pythonArr))
+    print(np.sum(cArr))
+
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

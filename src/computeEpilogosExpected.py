@@ -180,7 +180,7 @@ def s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     pool.join()
 
     # Read one line to determine numCols
-    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1]
+    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
     expFreqArr = np.sum(results, axis = 0) / (numCols * (numCols - 1))

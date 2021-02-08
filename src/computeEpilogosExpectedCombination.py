@@ -12,20 +12,25 @@ def main(outputDirectory, storedExpInput, fileTag):
 
     # Loop over all the expected value arrays and add them up
     expFreqFileCount = 0
+    totalRows = 0
     expFreqArr = np.zeros((1,1))
-    for file in outputDirPath.glob("temp_exp_freq_{}_*.npy".format(fileTag)):
+    for file in outputDirPath.glob("temp_exp_freq_{}_*.npz".format(fileTag)):
         if expFreqFileCount == 0:
-            expFreqArr = np.load(file, allow_pickle=False)
+            npzFile = np.load(file)
+            expFreqArr = npzFile["expFreqArr"]
+            totalRows = npzFile["totalRows"][0]
         else:
-            expFreqArr += np.load(file, allow_pickle=False)
+            npzFile = np.load(file)
+            expFreqArr += npzFile["expFreqArr"]
+            totalRows += npzFile["totalRows"][0]
         expFreqFileCount += 1
     
     # Clean up temp files
-    for file in outputDirPath.glob("temp_exp_freq_*.npy"):
+    for file in outputDirPath.glob("temp_exp_freq_*.npz"):
         os.remove(file)
 
     # normalize for number of temp expected frequencies calculated
-    expFreqArr /= expFreqFileCount
+    expFreqArr /= totalRows
 
     # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)

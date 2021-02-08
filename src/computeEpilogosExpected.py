@@ -77,9 +77,9 @@ def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis=0) / totalRows
+    expFreqArr = np.sum(results, axis=0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
@@ -121,9 +121,9 @@ def s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     pool.join()
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis = 0) / totalRows
+    expFreqArr = np.sum(results, axis = 0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
@@ -183,9 +183,9 @@ def s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1]
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
-    expFreqArr = np.sum(results, axis = 0) / (totalRows * numCols * (numCols - 1))
+    expFreqArr = np.sum(results, axis = 0) / (numCols * (numCols - 1))
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
 
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
 def s3Calc(dataFilePath, rowsToCalculate, numStates):
@@ -215,12 +215,12 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     return expFreqArr
 
 # Helper to store the expected frequency arrays
-def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName):
+def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows):
     # Creating a file path
-    expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, chrName)
+    expFreqFilename = "temp_exp_freq_{}_{}.npz".format(fileTag, chrName)
     expFreqPath = outputDirPath / expFreqFilename
 
-    np.save(expFreqPath, expFreqArr, allow_pickle=False)
+    np.savez_compressed(expFreqPath, expFreqArr=expFreqArr, totalRows=np.array([totalRows]))
 
 # Helper to calculate combinations
 def ncr(n, r):

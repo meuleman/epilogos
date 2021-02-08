@@ -54,13 +54,10 @@ def main(file1, file2):
     print(file1DF.shape)
     print(file2DF.shape)
 
-    print(file1DF.chr.unique())
-    print(file2DF.chr.unique())
-
     print("Converting to numpy arrays...")
     tConvert = time.time()
-    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
-    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
+    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
+    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
     print("    Time: ", time.time() - tConvert)
 
     print("Calculating percent difference...")

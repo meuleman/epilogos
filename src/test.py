@@ -54,6 +54,8 @@ def main(file1, file2):
     print(file1DF.shape)
     print(file2DF.shape)
 
+    print(file1DF.chr.unique())
+    print(file2DF.chr.unique())
 
     print("Converting to numpy arrays...")
     tConvert = time.time()

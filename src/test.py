@@ -95,8 +95,8 @@ def main(file1, file2, numStates):
     print("putting txt into numpy array...")
     for i in range(file2Arr.shape[0]):
         for j in range(file2Arr.shape[1]):
-            cArr[epigenomeCombinations[0, i], epigenomeCombinations[1, i], stateCombinations[0, i], stateCombinations[1, i]] = file2Arr[i, j]
-            cArr[epigenomeCombinations[1, i], epigenomeCombinations[0, i], stateCombinations[0, i], stateCombinations[1, i]] = file2Arr[i, j]
+            cArr[epigenomeCombinations[0, i], epigenomeCombinations[1, i], stateCombinations[0, j], stateCombinations[1, j]] = file2Arr[i, j]
+            cArr[epigenomeCombinations[1, i], epigenomeCombinations[0, i], stateCombinations[0, j], stateCombinations[1, j]] = file2Arr[i, j]
     
     cArr /= (15181508 * numCols * (numCols - 1))
 

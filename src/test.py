@@ -70,4 +70,4 @@ def main(file1, file2, numStates):
     print("Percent Difference is:", error)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

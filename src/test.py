@@ -19,12 +19,12 @@ import gzip
 import numpy.ma as ma
 import click
 
-def main(file1, file2):
+def main(file1, file2, numStates):
     
     file1Path = Path(file1)
     file2Path = Path(file2)
     
-    colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, 16)]
+    colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates+1)]
     chrOrder = []
     for i in range(1, 23):
         chrOrder.append("chr{}".format(i))

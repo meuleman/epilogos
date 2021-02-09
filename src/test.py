@@ -19,8 +19,7 @@ import gzip
 import numpy.ma as ma
 import click
 
-# def main(file1, file2, numStates):
-def main():
+def main(file1, file2, numStates):
     
     # file1Path = Path(file1)
     # file2Path = Path(file2)
@@ -168,5 +167,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    # main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

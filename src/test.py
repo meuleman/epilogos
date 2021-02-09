@@ -179,9 +179,9 @@ def main():
     # print("8.", np.where((genomeArr[:, 69] == 5) & (genomeArr[:, 27] == 9))[0])
 
     
-    # inputPath = Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")
+    inputPath = Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")
 
-    inputPath = Path("C:/Users/User/Desktop/epilogos/matrix.txt.gz")
+    # inputPath = Path("C:/Users/User/Desktop/epilogos/matrix.txt.gz")
 
     dataDF = pd.read_table(inputPath, nrows=10000, header=None, sep="\t")
 

@@ -76,8 +76,8 @@ def main(file1, file2, numStates):
 
 
 
-    # print("\nReading python expFreqARr")
-    # pythonArr = np.load(Path(file1), allow_pickle=False)
+    print("\nReading python expFreqARr")
+    pythonArr = np.load(Path(file1), allow_pickle=False)
 
     print("\nReading c expFreqARr")
     tRead1 = time.time()
@@ -107,7 +107,13 @@ def main(file1, file2, numStates):
     
     cArr /= (15181508 * numCols * (numCols - 1))
 
-    print("C Arr contains zeros?", np.isin(np.array([0]), cArr))
+
+    print(pythonArr[0,1])
+    print(cArr[0, 1])
+
+
+
+
 
     # print("Calculating top 100...")
     # diffArr = np.abs(pythonArr - cArr)
@@ -116,9 +122,17 @@ def main(file1, file2, numStates):
 
     # fourDIndices = np.unravel_index(sortedIndices, (numCols, numCols, numStates, numStates))
 
-    # flatPython = pythonArr.flatten()
-    # flatC = cArr.flatten()
+    flatPython = pythonArr.flatten()
+    flatC = cArr.flatten()
     # flatDiff = diffArr.flatten()
+
+
+    sortFlatPython = np.sort(flatPython)
+    sortFlatC = np.sort(flatC)
+
+    print(sortFlatPython[:50])
+    print(sortFlatC[:50])
+
 
     # for i in range(100):
     #     print("{}. Python: {}\t\tC: {}\t\tDiff: {}\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]], fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
@@ -128,41 +142,41 @@ def main(file1, file2, numStates):
     # print(np.sum(cArr))
 
 
-    print("\nReading c expFreqARr")
-    tRead1 = time.time()
-    wholeGenomeDF = pd.read_table(Path("/home/jquon/RoadmapStateByGroup/all127/matrix.txt.gz"), header=None, sep="\t")
-    print("    Time: ", time.time() - tRead1)
+    # print("\nReading c expFreqARr")
+    # tRead1 = time.time()
+    # wholeGenomeDF = pd.read_table(Path("/home/jquon/RoadmapStateByGroup/all127/matrix.txt.gz"), header=None, sep="\t")
+    # print("    Time: ", time.time() - tRead1)
 
-    print("Converting to numpy arrays...")
-    tConvert = time.time()
-    genomeArr = wholeGenomeDF.iloc[:,3:].to_numpy(dtype=int) - 1
-    print("    Time: ", time.time() - tConvert)
+    # print("Converting to numpy arrays...")
+    # tConvert = time.time()
+    # genomeArr = wholeGenomeDF.iloc[:,3:].to_numpy(dtype=int) - 1
+    # print("    Time: ", time.time() - tConvert)
 
-    print("Eric", np.where((genomeArr[:, 0] == 0) & (genomeArr[:, 1] == 2))[0])
+    # print("Eric", np.where((genomeArr[:, 0] == 0) & (genomeArr[:, 1] == 2))[0])
 
-    # where column 107 == 2 and column 72 == 10
-    print("1.", np.where((genomeArr[:, 107] == 2) & (genomeArr[:, 72] == 10))[0])
+    # # where column 107 == 2 and column 72 == 10
+    # print("1.", np.where((genomeArr[:, 107] == 2) & (genomeArr[:, 72] == 10))[0])
 
-    # where column 114 == 2 and column 75 == 10
-    print("2.", np.where((genomeArr[:, 114] == 9) & (genomeArr[:, 75] == 5))[0])
+    # # where column 114 == 2 and column 75 == 10
+    # print("2.", np.where((genomeArr[:, 114] == 9) & (genomeArr[:, 75] == 5))[0])
     
-    # where column 107 == 3 and column 98 == 1
-    print("3.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 1))[0])
+    # # where column 107 == 3 and column 98 == 1
+    # print("3.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 1))[0])
 
-    # where column 107 == 3 and column 98 == 0
-    print("4.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 0))[0])
+    # # where column 107 == 3 and column 98 == 0
+    # print("4.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 0))[0])
 
-    # where column 69 == 3 and column 27 == 9
-    print("5.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 9))[0])
+    # # where column 69 == 3 and column 27 == 9
+    # print("5.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 9))[0])
 
-    # where column 69 == 3 and column 27 == 10
-    print("6.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 10))[0])
+    # # where column 69 == 3 and column 27 == 10
+    # print("6.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 10))[0])
 
-    # where column 114 == 10 and column 75 == 2
-    print("7.", np.where((genomeArr[:, 114] == 10) & (genomeArr[:, 75] == 2))[0])
+    # # where column 114 == 10 and column 75 == 2
+    # print("7.", np.where((genomeArr[:, 114] == 10) & (genomeArr[:, 75] == 2))[0])
 
-    # where column 69 == 3 and column 27 == 10
-    print("8.", np.where((genomeArr[:, 69] == 5) & (genomeArr[:, 27] == 9))[0])
+    # # where column 69 == 3 and column 27 == 10
+    # print("8.", np.where((genomeArr[:, 69] == 5) & (genomeArr[:, 27] == 9))[0])
 
     
 

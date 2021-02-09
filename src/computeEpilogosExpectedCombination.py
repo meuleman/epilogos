@@ -38,9 +38,11 @@ def main(outputDirectory, storedExpInput, saliency, fileTag):
         expFreqArr = expFreqArr.astype(np.float32) / (totalRows * numCols)
     elif saliency == 2:
         combinations = ncr(numCols, 2) if sys.version_info < (3, 8) else math.comb(numCols, 2)
-        totalRows = np.sum(expFreqArr) / combinations
+        totalRows = np.sum(expFreqArr) / combinations / 2
+        print("Sum", np.sum(expFreqArr))
+        print("combinations", combinations)
         print("TotalRows = ", totalRows)
-        expFreqArr = expFreqArr.astype(np.float32) / (totalRows * combinations)
+        expFreqArr = expFreqArr.astype(np.float32) / (totalRows * combinations * 2)
     elif saliency == 3:
         totalRows = np.sum(expFreqArr[0, 1])
         print("TotalRows = ", totalRows)

@@ -258,9 +258,9 @@ def main():
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
+                    expFreqArr[state1, state2] += ncr(stateCounts[i], 2)
                 else: # state1 > state2 or state1 < state2
-                    expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]/ combinations / 2
+                    expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j] / 2
     print(time.time() - t1)
 
     expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)

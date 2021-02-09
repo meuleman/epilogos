@@ -112,10 +112,6 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
 def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
-    if (sys.version_info < (3, 8)):
-        print("\nFor maximum efficiency please update python to version 3.8 or later")
-        print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
-
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
         results = pool.starmap(s2Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
@@ -148,27 +144,16 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
-    # SumOverRows: (Prob of choosing x and y)
-    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    if (sys.version_info < (3, 8)):
-        for row in range(multiprocessRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i, state1 in enumerate(uniqueStates):
-                for j, state2 in enumerate(uniqueStates):
-                    if state1 == state2:
-                        expFreqArr[state1, state2] += ncr(stateCounts[i], 2) * 2 # Extra 2 is to account for the symmetric matrix
-                    else: # state1 > state2 or state1 < state2
-                        expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
-    else:
-        for row in range(multiprocessRows):
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
-            for i, state1 in enumerate(uniqueStates):
-                for j, state2 in enumerate(uniqueStates):
-                    if state1 == state2:
-                        expFreqArr[state1, state2] += math.comb(stateCounts[i], 2) * 2 # Extra 2 is to account for the symmetric matrix
-                    else: # state1 > state2 or state1 < state2
-                        expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
+    # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
+    # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
+    for row in range(multiprocessRows):
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) # this equals statecounts permute 2
+                else: # state1 > state2 or state1 < state2
+                    expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 
     return expFreqArr
 

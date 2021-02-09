@@ -249,29 +249,30 @@ def main():
     # print("    Mean:", sum(newTimes) / len(newTimes))
 
 
-    # expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
+    expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
 
-    # t1 = time.time()
-    # for row in range(numRows):
-    #     uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-    #     combinations = ncr(numCols, 2)
-    #     for i, state1 in enumerate(uniqueStates):
-    #         for j, state2 in enumerate(uniqueStates):
-    #             if state1 == state2:
-    #                 expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
-    #             else: # state1 > state2 or state1 < state2
-    #                 expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]/ combinations / 2
-    # print(time.time() - t1)
+    t1 = time.time()
+    combinations = ncr(numCols, 2)
+    for row in range(numRows):
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
+                else: # state1 > state2 or state1 < state2
+                    expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]/ combinations / 2
+    print(time.time() - t1)
 
     expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)
 
     t2 = time.time()
-    basePermutationArr = np.array(list(itertools.combinations(range(numCols), 2))).T
+    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
     for row in range(numRows):
-        expFreqArr2[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
+        np.add.at(expFreqArr2, dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], 1)
     print(time.time() - t2)
 
-    # print(expFreqArr)
+    print(expFreqArr)
+    print(expFreqArr * 2 * combinations)
     print()
     print()
     print()
@@ -283,7 +284,7 @@ def main():
     print()
     print()
     print()
-    # print(np.all(expFreqArr == expFreqArr2))
+    print(np.all(expFreqArr * 2 * combinations == expFreqArr2))
 
 # Helper to calculate combinations
 def ncr(n, r):

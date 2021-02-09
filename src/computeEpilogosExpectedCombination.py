@@ -30,6 +30,13 @@ def main(outputDirectory, storedExpInput, saliency, fileTag):
 
     # normalize expected frequency array
 
+    print("sum", np.sum(expFreqArr))
+    print("total rows", np.sum(expFreqArr) / numCols)
+    print("numCols", numCols)
+    totalRows = np.sum(expFreqArr) / numCols
+    print("division thing", np.sum(expFreqArr) / (totalRows*numCols))
+
+
     expFreqArr = expFreqArr.astype(np.float32) / np.sum(expFreqArr)
 
     # if saliency == 1:

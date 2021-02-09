@@ -251,7 +251,7 @@ def main():
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
-    combinations = ncr(numCols, 2)
+    t1 = time.time()
     for row in range(numRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i, state1 in enumerate(uniqueStates):
@@ -260,14 +260,15 @@ def main():
                     expFreqArr[state1, state2] += ncr(stateCounts[i], 2)
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
-
+    print(time.time() - t1)
 
     expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)
 
+    t2 = time.time()
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
     for row in range(numRows):
         expFreqArr2[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
-
+    print(time.time() - t2)
 
     print(expFreqArr)
     print()

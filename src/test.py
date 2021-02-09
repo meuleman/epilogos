@@ -112,7 +112,7 @@ def main(file1, file2, numStates):
     flatDiff = diffArr.flatten()
 
     for i in range(100):
-        print("{}. Python: {}\t\tC: {}\t\tDiff: {}\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]], fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
+        print("{}. Python: {}\t\tC: {}\t\tPercent Diff: {} %\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]] / flatPython[sortedIndices[i]] * 100, fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
 
 
     print(np.sum(pythonArr))

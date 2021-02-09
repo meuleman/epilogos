@@ -50,25 +50,25 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses):
         rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
         rowList.append(rowsToCalculate)
 
-    determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+    determineSaliency(saliency, dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses)
 
     print("Total Time:", time.time() - tTotal)
 
 
-def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def determineSaliency(saliency, dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
     if saliency == 1:
-        s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+        s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses)
     elif saliency == 2:
-        s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+        s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses)
     elif saliency == 3:
-        s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses)
+        s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses)
     else:
         print("Inputed saliency value not supported")
         return
 
 
 # Function that calculates the expected frequencies for the S1 metric
-def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
     
     # Start the processes
@@ -76,10 +76,13 @@ def s1Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
         results = pool.starmap(s1Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
+    # Read one line to determine numCols
+    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
+
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
     expFreqArr = np.sum(results, axis=0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
@@ -96,19 +99,17 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
-    numCols = dataArr.shape[1]
-
-    expFreqArr = np.zeros(numStates, dtype=np.float32)
+    expFreqArr = np.zeros(numStates, dtype=np.int32)
 
     # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
     for i, state in enumerate(uniqueStates):
-        expFreqArr[state] += stateCounts[i] / numCols
+        expFreqArr[state] += stateCounts[i]
 
     return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
-def s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     if (sys.version_info < (3, 8)):
@@ -120,10 +121,13 @@ def s2Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
         results = pool.starmap(s2Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
+    # Read one line to determine numCols
+    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
+
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
     expFreqArr = np.sum(results, axis = 0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
@@ -171,7 +175,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s3 metric. Also call function to store expected frequency
-def s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
+def s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
     print("NUM PROCESSES:", numProcesses)
 
     # Start the processes
@@ -183,9 +187,9 @@ def s3Exp(dataFilePath, rowList, totalRows, numStates, outputDirPath, fileTag, c
     numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
 
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
-    expFreqArr = np.sum(results, axis = 0) / (numCols * (numCols - 1))
+    expFreqArr = np.sum(results, axis = 0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
 
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
 def s3Calc(dataFilePath, rowsToCalculate, numStates):
@@ -215,14 +219,12 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     return expFreqArr
 
 # Helper to store the expected frequency arrays
-def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, totalRows):
+def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols):
     # Creating a file path
     expFreqFilename = "temp_exp_freq_{}_{}.npz".format(fileTag, chrName)
     expFreqPath = outputDirPath / expFreqFilename
 
-    print("ExpFreq Dtype:",expFreqArr.dtype)
-
-    np.savez_compressed(expFreqPath, expFreqArr=expFreqArr, totalRows=np.array([totalRows]))
+    np.savez_compressed(expFreqPath, expFreqArr=expFreqArr, numCols=np.array([numCols]))
 
 # Helper to calculate combinations
 def ncr(n, r):

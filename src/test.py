@@ -268,7 +268,7 @@ def main():
     t2 = time.time()
     basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
     for row in range(numRows):
-        np.add.at(expFreqArr2, dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]], 1)
+        np.add.at(expFreqArr2, np.array([dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]), 1)
     print(time.time() - t2)
 
     print(expFreqArr)

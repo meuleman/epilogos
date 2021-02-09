@@ -107,7 +107,7 @@ def main(file1, file2, numStates):
     
     cArr /= (15181508 * numCols * (numCols - 1))
 
-    print("C Arr contains zeros?", np.isin(cArr, np.array([0])))
+    print("C Arr contains zeros?", np.isin(np.array([0]), cArr))
 
     # print("Calculating top 100...")
     # diffArr = np.abs(pythonArr - cArr)
@@ -135,7 +135,7 @@ def main(file1, file2, numStates):
 
     print("Converting to numpy arrays...")
     tConvert = time.time()
-    genomeArr = wholeGenomeDF[:, 3:].to_numpy(dtype=int)
+    genomeArr = wholeGenomeDF.iloc[:,3:].to_numpy(dtype=int) - 1
     print("    Time: ", time.time() - tConvert)
 
 

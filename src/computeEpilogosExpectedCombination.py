@@ -28,8 +28,10 @@ def main(outputDirectory, storedExpInput, saliency, fileTag):
     for file in outputDirPath.glob("temp_exp_freq_*.npz"):
         os.remove(file)
 
-    # normalize expected frequency array
+    np.save(Path("/home/jquon/expTest/rawArrays/{}.npz".format(fileTag)), expFreqArr, allow_pickle=False)
 
+
+    # normalize expected frequency array
     expFreqArr = (expFreqArr / np.sum(expFreqArr)).astype(np.float32)
 
     # if saliency == 1:

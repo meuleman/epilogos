@@ -138,6 +138,7 @@ def main(file1, file2, numStates):
     genomeArr = wholeGenomeDF.iloc[:,3:].to_numpy(dtype=int) - 1
     print("    Time: ", time.time() - tConvert)
 
+    print("Eric", np.where((genomeArr[:, 0] == 0) & (genomeArr[:, 1] == 2))[0])
 
     # where column 107 == 2 and column 72 == 10
     print("1.", np.where((genomeArr[:, 107] == 2) & (genomeArr[:, 72] == 10))[0])

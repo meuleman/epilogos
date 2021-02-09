@@ -266,7 +266,7 @@ def main():
     expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)
 
     t2 = time.time()
-    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
+    basePermutationArr = np.array(list(itertools.combinations(range(numCols), 2))).T
     for row in range(numRows):
         expFreqArr2[dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
     print(time.time() - t2)

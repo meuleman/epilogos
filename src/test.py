@@ -19,7 +19,8 @@ import gzip
 import numpy.ma as ma
 import click
 
-def main(file1, file2, numStates):
+# def main(file1, file2, numStates):
+def main():
     
     # file1Path = Path(file1)
     # file2Path = Path(file2)
@@ -69,8 +70,15 @@ def main(file1, file2, numStates):
     
     # print("Percent Difference is:", error)
 
-    print("\nReading python expFreqARr")
-    pythonArr = np.load(Path(file1), allow_pickle=False)
+
+
+
+
+
+
+
+    # print("\nReading python expFreqARr")
+    # pythonArr = np.load(Path(file1), allow_pickle=False)
 
     print("\nReading c expFreqARr")
     tRead1 = time.time()
@@ -100,24 +108,65 @@ def main(file1, file2, numStates):
     
     cArr /= (15181508 * numCols * (numCols - 1))
 
-    print("Calculating top 100...")
-    diffArr = np.abs(pythonArr - cArr)
+    print("C Arr contains zeros?", np.isin(cArr, np.array([0])))
 
-    sortedIndices = np.argsort(-diffArr, axis=None)[:100]
+    # print("Calculating top 100...")
+    # diffArr = np.abs(pythonArr - cArr)
 
-    fourDIndices = np.unravel_index(sortedIndices, (numCols, numCols, numStates, numStates))
+    # sortedIndices = np.argsort(-diffArr, axis=None)[:100]
 
-    flatPython = pythonArr.flatten()
-    flatC = cArr.flatten()
-    flatDiff = diffArr.flatten()
+    # fourDIndices = np.unravel_index(sortedIndices, (numCols, numCols, numStates, numStates))
 
-    for i in range(100):
-        print("{}. Python: {}\t\tC: {}\t\tDiff: {}\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]], fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
+    # flatPython = pythonArr.flatten()
+    # flatC = cArr.flatten()
+    # flatDiff = diffArr.flatten()
+
+    # for i in range(100):
+    #     print("{}. Python: {}\t\tC: {}\t\tDiff: {}\t\tIndices:({},{},{},{})".format(i, flatPython[sortedIndices[i]], flatC[sortedIndices[i]], flatDiff[sortedIndices[i]], fourDIndices[0][i], fourDIndices[1][i], fourDIndices[2][i], fourDIndices[3][i]))
 
 
-    print(np.sum(pythonArr))
-    print(np.sum(cArr))
+    # print(np.sum(pythonArr))
+    # print(np.sum(cArr))
+
+
+    print("\nReading c expFreqARr")
+    tRead1 = time.time()
+    wholeGenomeDF = pd.read_table(Path("/home/jquon/RoadmapStateByGroup/all127/matrix.txt.gz"), header=None, sep="\t")
+    print("    Time: ", time.time() - tRead1)
+
+    print("Converting to numpy arrays...")
+    tConvert = time.time()
+    genomeArr = wholeGenomeDF[:, 3:].to_numpy(dtype=int)
+    print("    Time: ", time.time() - tConvert)
+
+
+    # where column 107 == 2 and column 72 == 10
+    print("1.", np.where((genomeArr[:, 107] == 2) & (genomeArr[:, 72] == 10))[0])
+
+    # where column 114 == 2 and column 75 == 10
+    print("2.", np.where((genomeArr[:, 114] == 9) & (genomeArr[:, 75] == 5))[0])
+    
+    # where column 107 == 3 and column 98 == 1
+    print("3.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 1))[0])
+
+    # where column 107 == 3 and column 98 == 0
+    print("4.", np.where((genomeArr[:, 107] == 3) & (genomeArr[:, 98] == 0))[0])
+
+    # where column 69 == 3 and column 27 == 9
+    print("5.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 9))[0])
+
+    # where column 69 == 3 and column 27 == 10
+    print("6.", np.where((genomeArr[:, 69] == 3) & (genomeArr[:, 27] == 10))[0])
+
+    # where column 114 == 10 and column 75 == 2
+    print("7.", np.where((genomeArr[:, 114] == 10) & (genomeArr[:, 75] == 2))[0])
+
+    # where column 69 == 3 and column 27 == 10
+    print("8.", np.where((genomeArr[:, 69] == 5) & (genomeArr[:, 27] == 9))[0])
+
+    
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    main()
+    # main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

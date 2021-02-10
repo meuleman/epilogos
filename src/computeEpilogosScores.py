@@ -147,10 +147,6 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
-    if (sys.version_info < (3, 8)):
-        print("\nFor maximum efficiency please update python to version 3.8 or later")
-        print("NOTE: The code will still run in a lower version, but will be slightly slower\n")
-
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
         pool.starmap(s2Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath)))
@@ -199,36 +195,20 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
     # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    if (sys.version_info < (3, 8)):
-        combinations = ncr(numCols, 2)
-        for row in range(multiprocessRows):
+    combinations = numCols * (numCols - 1) / 2
+    for row in range(multiprocessRows):
 
-            if rowsToCalculate[0] == 0 and row in printCheckmarks:
-                percentDone += 10
-                print("{}% Completed".format(percentDone))
+        if rowsToCalculate[0] == 0 and row in printCheckmarks:
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
 
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i, state1 in enumerate(uniqueStates):
-                for j, state2 in enumerate(uniqueStates):
-                    if state1 == state2:
-                        obsFreqArr[row, state1, state2]  = ncr(stateCounts[i], 2) / combinations
-                    else: # state1 > state2 or state1 < state2
-                        obsFreqArr[row, state1, state2]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
-    else:
-        combinations = math.comb(numCols, 2)
-        for row in range(multiprocessRows):
-
-            if rowsToCalculate[0] == 0 and row in printCheckmarks:
-                percentDone += 10
-                print("{}% Completed".format(percentDone))
-
-            uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-            for i, state1 in enumerate(uniqueStates):
-                for j, state2 in enumerate(uniqueStates):
-                    if state1 == state2:
-                        obsFreqArr[row, state1, state2]  = math.comb(stateCounts[i], 2) / combinations
-                    else: # state1 > state2 or state1 < state2
-                        obsFreqArr[row, state1, state2]  = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    obsFreqArr[row, state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / 2 / combinations # Equates to statecounts[i] choose 2 / combinations
+                else: # state1 > state2 or state1 < state2
+                    obsFreqArr[row, state1, state2] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
     
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tObs)

@@ -146,7 +146,8 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
 
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
     # Can choose x and y to be together n*m ways if n != m and n(n-1)/2 ways if n == m (where n and m are the number of times that x and y show up respectively)
-    # Note that normally, we would have to divied the x*y value by 2 to account for the symmetric matrix. However, we instead we multiply the state1 == state2 by 2 in order to use integer arrays
+    # Note that normally, we would have to divied the x*y value by 2 to account for the symmetric matrix. 
+    # However, we instead we multiply the state1 == state2 by 2 in order to use integer arrays. This maintains the correct ratios and thus does not change the later calculated expected frequencies
     for row in range(multiprocessRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
@@ -205,10 +206,10 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
 # Helper to store the expected frequency arrays
 def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols):
     # Creating a file path
-    expFreqFilename = "temp_exp_freq_{}_{}.npz".format(fileTag, chrName)
+    expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, chrName)
     expFreqPath = outputDirPath / expFreqFilename
 
-    np.savez_compressed(expFreqPath, expFreqArr=expFreqArr, numCols=np.array([numCols]))
+    np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 # Helper to calculate combinations
 def ncr(n, r):

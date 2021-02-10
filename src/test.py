@@ -19,55 +19,55 @@ import gzip
 import numpy.ma as ma
 import click
 
-def main():
+def main(file1, file2, numStates):
     
-    # file1Path = Path(file1)
-    # file2Path = Path(file2)
+    file1Path = Path(file1)
+    file2Path = Path(file2)
     
-    # colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates+1)]
-    # chrOrder = []
-    # for i in range(1, 23):
-    #     chrOrder.append("chr{}".format(i))
-    # chrOrder.append("chrX")
+    colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates+1)]
+    chrOrder = []
+    for i in range(1, 23):
+        chrOrder.append("chr{}".format(i))
+    chrOrder.append("chrX")
 
-    # print("\nReading data from file 1...")
-    # tRead1 = time.time()
-    # file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
-    # print("    Time: ", time.time() - tRead1)
+    print("\nReading data from file 1...")
+    tRead1 = time.time()
+    file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
+    print("    Time: ", time.time() - tRead1)
 
-    # if "all127" in file1.split("/"):
-    #     for chr in chrOrder:
-    #         index = file1DF["chr"].where(file1DF["chr"] == chr).last_valid_index()
-    #         file1DF.drop(index, inplace=True)
+    if "all127" in file1.split("/"):
+        for chr in chrOrder:
+            index = file1DF["chr"].where(file1DF["chr"] == chr).last_valid_index()
+            file1DF.drop(index, inplace=True)
 
-    # print("Reading data from file 2...")
-    # tRead2 = time.time()
-    # file2DF = pd.read_table(file2Path, header=None, sep="\t", names=colNames)
-    # print("    Time: ", time.time() - tRead2)
+    print("Reading data from file 2...")
+    tRead2 = time.time()
+    file2DF = pd.read_table(file2Path, header=None, sep="\t", names=colNames)
+    print("    Time: ", time.time() - tRead2)
 
-    # # Sorting the dataframes by chromosomal location
-    # file1DF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
-    # file2DF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
-    # file1DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-    # file2DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    # Sorting the dataframes by chromosomal location
+    file1DF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
+    file2DF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
+    file1DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    file2DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
-    # print(file1DF.shape)
-    # print(file2DF.shape)
+    print(file1DF.shape)
+    print(file2DF.shape)
 
-    # print("Converting to numpy arrays...")
-    # tConvert = time.time()
-    # file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
-    # file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
-    # print("    Time: ", time.time() - tConvert)
+    print("Converting to numpy arrays...")
+    tConvert = time.time()
+    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
+    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+    print("    Time: ", time.time() - tConvert)
 
-    # print("Calculating percent difference...")
-    # tDiff = time.time()
-    # maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
-    # maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
-    # error = np.mean(maxStateArr1 != maxStateArr2)
-    # print("    Time: ", time.time() - tDiff)
+    print("Calculating percent difference...")
+    tDiff = time.time()
+    maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
+    maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
+    error = np.mean(maxStateArr1 != maxStateArr2)
+    print("    Time: ", time.time() - tDiff)
     
-    # print("Percent Difference is:", error)
+    print("Percent Difference is:", error)
 
 
 
@@ -179,19 +179,19 @@ def main():
     # print("8.", np.where((genomeArr[:, 69] == 5) & (genomeArr[:, 27] == 9))[0])
 
     
-    inputPath = Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")
+    # inputPath = Path("/home/jquon/AdseraStateByGroup/male/matrix.txt.gz")
 
-    # inputPath = Path("C:/Users/User/Desktop/epilogos/matrix.txt.gz")
+    # # inputPath = Path("C:/Users/User/Desktop/epilogos/matrix.txt.gz")
 
-    dataDF = pd.read_table(inputPath, nrows=10000, header=None, sep="\t")
+    # dataDF = pd.read_table(inputPath, nrows=10000, header=None, sep="\t")
 
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
+    # dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
 
-    numStates = 18
+    # numStates = 18
 
-    ncrTimes = []
+    # ncrTimes = []
 
-    numRows, numCols = dataArr.shape
+    # numRows, numCols = dataArr.shape
 
     # for i in range(10):
     #     expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
@@ -249,42 +249,42 @@ def main():
     # print("    Mean:", sum(newTimes) / len(newTimes))
 
 
-    expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
+    # expFreqArr = np.zeros((numStates, numStates), dtype=np.float32)
 
-    t1 = time.time()
-    combinations = ncr(numCols, 2)
-    for row in range(numRows):
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i, state1 in enumerate(uniqueStates):
-            for j, state2 in enumerate(uniqueStates):
-                if state1 == state2:
-                    expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
-                else: # state1 > state2 or state1 < state2
-                    expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]/ combinations / 2
-    print(time.time() - t1)
+    # t1 = time.time()
+    # combinations = ncr(numCols, 2)
+    # for row in range(numRows):
+    #     uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
+    #     for i, state1 in enumerate(uniqueStates):
+    #         for j, state2 in enumerate(uniqueStates):
+    #             if state1 == state2:
+    #                 expFreqArr[state1, state2] += ncr(stateCounts[i], 2) / combinations
+    #             else: # state1 > state2 or state1 < state2
+    #                 expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]/ combinations / 2
+    # print(time.time() - t1)
 
-    expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)
+    # expFreqArr2 = np.zeros((numStates, numStates), dtype=np.int32)
 
-    t2 = time.time()
-    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
-    for row in range(numRows):
-        np.add.at(expFreqArr2, np.array([dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]), 1)
-    print(time.time() - t2)
+    # t2 = time.time()
+    # basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2))).T
+    # for row in range(numRows):
+    #     np.add.at(expFreqArr2, np.array([dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]]), 1)
+    # print(time.time() - t2)
 
-    print(expFreqArr)
-    print(expFreqArr * 2 * combinations)
-    print()
-    print()
-    print()
-    print(expFreqArr2)
+    # print(expFreqArr)
+    # print(expFreqArr * 2 * combinations)
+    # print()
+    # print()
+    # print()
+    # print(expFreqArr2)
 
-    print(np.sum(expFreqArr2))
-    print(np.sum(expFreqArr2, axis=1))
+    # print(np.sum(expFreqArr2))
+    # print(np.sum(expFreqArr2, axis=1))
 
-    print()
-    print()
-    print()
-    print(np.all(expFreqArr * 2 * combinations == expFreqArr2))
+    # print()
+    # print()
+    # print()
+    # print(np.all(expFreqArr * 2 * combinations == expFreqArr2))
 
 # Helper to calculate combinations
 def ncr(n, r):
@@ -295,4 +295,4 @@ def ncr(n, r):
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))

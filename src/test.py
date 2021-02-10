@@ -35,7 +35,7 @@ def main(file1, file2, numStates):
     file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
     print("    Time: ", time.time() - tRead1)
 
-    if "all127" in file1.split("/"):
+    if "expTest" in file1.split("/"):
         for chr in chrOrder:
             index = file1DF["chr"].where(file1DF["chr"] == chr).last_valid_index()
             file1DF.drop(index, inplace=True)

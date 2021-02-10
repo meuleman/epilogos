@@ -64,6 +64,7 @@ def main(file1, file2, numStates):
     tDiff = time.time()
     maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
     maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
+    print(np.where(maxStateArr1 != maxStateArr2))
     error = np.mean(maxStateArr1 != maxStateArr2)
     print("    Time: ", time.time() - tDiff)
     

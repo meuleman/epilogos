@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import time
 
-def main(outputDirectory, storedExpInput, saliency, fileTag):
+def main(outputDirectory, storedExpInput, fileTag):
     tTotal = time.time()
 
     outputDirPath = Path(outputDirectory)
@@ -35,5 +35,5 @@ def main(outputDirectory, storedExpInput, saliency, fileTag):
     print("Total Time:", time.time() - tTotal)
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
 

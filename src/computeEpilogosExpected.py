@@ -146,12 +146,13 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
 
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
     # Can choose x and y to be together n*m ways if n != m and n(n-1)/2 ways if n == m (where n and m are the number of times that x and y show up respectively)
+    # Note that normally, we would have to divied the x*y value by 2 to account for the symmetric matrix. However, we instead we multiply the state1 == state2 by 2 in order to use integer arrays
     for row in range(multiprocessRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) / 2 # this equals statecounts[i] choose 2
+                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) # Equates to statecounts[i] choose 2 * 2
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 

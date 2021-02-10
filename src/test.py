@@ -64,8 +64,14 @@ def main(file1, file2, numStates):
     tDiff = time.time()
     maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
     maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
-    print(np.where(maxStateArr1 != maxStateArr2))
-    error = np.mean(maxStateArr1 != maxStateArr2)
+    print(len(np.where(maxStateArr1 != maxStateArr2)[0]))
+
+    for n, i in enumerate(np.where(maxStateArr1 != maxStateArr2)[0][:5]):
+        print("{}.\tPython:{}, C:{}".format(n, maxStateArr1[i], maxStateArr2[i]))
+        print("Python:", file1Arr[i])
+        print("C:", file2Arr[i])
+
+    # error = np.mean(maxStateArr1 != maxStateArr2)
     print("    Time: ", time.time() - tDiff)
     
     print("Percent Difference is:", error)

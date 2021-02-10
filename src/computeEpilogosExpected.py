@@ -145,13 +145,13 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
-    # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
+    # Can choose x and y to be together n*m ways if n != m and n(n-1)/2 ways if n == m (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) # this equals statecounts permute 2
+                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) / 2 # this equals statecounts[i] choose 2
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 

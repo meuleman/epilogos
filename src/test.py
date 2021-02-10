@@ -74,7 +74,7 @@ def main(file1, file2, numStates):
     # error = np.mean(maxStateArr1 != maxStateArr2)
     print("    Time: ", time.time() - tDiff)
     
-    print("Percent Difference is:", error)
+    # print("Percent Difference is:", error)
 
 
 

@@ -26,7 +26,7 @@ def main(file1):
     file1Path = Path(file1)
     
     tOverflow = time.time()
-    with open(file1Path, "r") as f:
+    with open(file1Path, "r", encoding="utf-8",errors='ignore') as f:
         print("overflow count:", sum(bl.count("\n") for bl in blocks(f)))
     print("Overflow time:", time.time() - tOverflow)
 

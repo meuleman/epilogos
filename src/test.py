@@ -18,63 +18,100 @@ import glob
 import gzip
 import numpy.ma as ma
 import click
+import functools
 
-def main(file1, file2, numStates):
+
+def main(file1):
     
     file1Path = Path(file1)
-    file2Path = Path(file2)
     
-    colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates+1)]
-    chrOrder = []
-    for i in range(1, 23):
-        chrOrder.append("chr{}".format(i))
-    chrOrder.append("chrX")
+    tOverflow = time.time()
+    with open(file1Path, "r") as f:
+        print("overflow count:", sum(bl.count("\n") for bl in blocks(f)))
+    print("Overflow time:", time.time() - tOverflow)
 
-    print("\nReading data from file 1...")
-    tRead1 = time.time()
-    file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
-    print("    Time: ", time.time() - tRead1)
+    tFor = time.time()
+    with gzip.open(file1Path, "rb") as ifh:
+        count = 0
+        for line in ifh:
+            count += 1
+    print("for count:", count)
+    print("For Time:", time.time() - tFor)
 
-    if "expTest" in file1.split("/"):
-        for chr in chrOrder:
-            index = file1DF["chr"].where(file1DF["chr"] == chr).last_valid_index()
-            file1DF.drop(index, inplace=True)
+    tReadLines = time.time()
+    with gzip.open(file1Path, "rb") as ifh:
+        lines = ifh.readlines()
+        print("readlines count:", len(lines))
 
-    print("Reading data from file 2...")
-    tRead2 = time.time()
-    file2DF = pd.read_table(file2Path, header=None, sep="\t", names=colNames)
-    print("    Time: ", time.time() - tRead2)
+    print("readLines time:", time.time() - tReadLines)
 
-    # Sorting the dataframes by chromosomal location
-    file1DF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
-    file2DF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
-    file1DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-    file2DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+        
+    tAlex = time.time()
+    chunk_size = 65536
+    zcat = subprocess.Popen(['zcat', file1Path], stdout=subprocess.PIPE)
+    count = 0
+    for chunk in iter(functools.partial(zcat.stdout.read, chunk_size), b''):
+        lines = chunk.splitlines(True)
+        count += len(lines)
+        if not lines[-1].endswith(b'\n'):
+            count -= 1
+    print("alex count:", count)
+    print("Alex Time:", time.time() - tAlex)
 
-    print(file1DF.shape)
-    print(file2DF.shape)
 
-    print("Converting to numpy arrays...")
-    tConvert = time.time()
-    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=np.float32)
-    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=np.float32)
-    print("    Time: ", time.time() - tConvert)
-
-    print("Calculating percent difference...")
-    tDiff = time.time()
-    maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
-    maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
-    print(len(np.where(maxStateArr1 != maxStateArr2)[0]))
-
-    for n, i in enumerate(np.where(maxStateArr1 != maxStateArr2)[0][:5]):
-        print("{}.\tPython:{}, C:{}".format(n, maxStateArr1[i], maxStateArr2[i]))
-        print("Python:", file1Arr[i])
-        print("C:", file2Arr[i])
-
-    error = np.mean(maxStateArr1 != maxStateArr2)
-    print("    Time: ", time.time() - tDiff)
+    # file2Path = Path(file2)
     
-    print("Percent Difference is:", error)
+    # colNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates+1)]
+    # chrOrder = []
+    # for i in range(1, 23):
+    #     chrOrder.append("chr{}".format(i))
+    # chrOrder.append("chrX")
+
+    # print("\nReading data from file 1...")
+    # tRead1 = time.time()
+    # file1DF = pd.read_table(file1Path, header=None, sep="\t", names=colNames)
+    # print("    Time: ", time.time() - tRead1)
+
+    # if "expTest" in file1.split("/"):
+    #     for chr in chrOrder:
+    #         index = file1DF["chr"].where(file1DF["chr"] == chr).last_valid_index()
+    #         file1DF.drop(index, inplace=True)
+
+    # print("Reading data from file 2...")
+    # tRead2 = time.time()
+    # file2DF = pd.read_table(file2Path, header=None, sep="\t", names=colNames)
+    # print("    Time: ", time.time() - tRead2)
+
+    # # Sorting the dataframes by chromosomal location
+    # file1DF["chr"] = pd.Categorical(file1DF["chr"], categories=chrOrder, ordered=True)
+    # file2DF["chr"] = pd.Categorical(file2DF["chr"], categories=chrOrder, ordered=True)
+    # file1DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    # file2DF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+
+    # print(file1DF.shape)
+    # print(file2DF.shape)
+
+    # print("Converting to numpy arrays...")
+    # tConvert = time.time()
+    # file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=np.float32)
+    # file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=np.float32)
+    # print("    Time: ", time.time() - tConvert)
+
+    # print("Calculating percent difference...")
+    # tDiff = time.time()
+    # maxStateArr1 = np.argmax(file1Arr, axis=1) + 1
+    # maxStateArr2 = np.argmax(file2Arr, axis=1) + 1
+    # print(len(np.where(maxStateArr1 != maxStateArr2)[0]))
+
+    # for n, i in enumerate(np.where(maxStateArr1 != maxStateArr2)[0][:5]):
+    #     print("{}.\tPython:{}, C:{}".format(n, maxStateArr1[i], maxStateArr2[i]))
+    #     print("Python:", file1Arr[i])
+    #     print("C:", file2Arr[i])
+
+    # error = np.mean(maxStateArr1 != maxStateArr2)
+    # print("    Time: ", time.time() - tDiff)
+    
+    # print("Percent Difference is:", error)
 
 
 
@@ -301,5 +338,11 @@ def ncr(n, r):
     return numer // denom
 
 
+def blocks(files, size=65536):
+    while True:
+        b = files.read(size)
+        if not b: break
+        yield b
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    main(sys.argv[1])

@@ -326,27 +326,29 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
         print("    JobIDs:", writeJobIDStr)
         if modeOfOperation == "both":
-            print("\nAll JobIDs: {},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr))
+            allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr)
+            print("\nAll JobIDs:", allJobIDs)
         elif modeOfOperation == "s":
-            print("\nAll JobIDs: {},{}".format(scoreJobIDStr, writeJobIDStr))
+            allJobIDs = "{},{}".format(scoreJobIDStr, writeJobIDStr)
+            print("\nAll JobIDs:", allJobIDs)
         elif modeOfOperation == "bg":
-            print("\nAll JobIDs: {},{}".format(expJobIDStr, combinationJobID))
+            allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
+            print("\nAll JobIDs:", allJobIDs)
 
     # If the user wants to exit upon job completion rather than submission
+    # If a job fails, it cancels all other jobs
     if exitBool:
-        # The last job is different depending on mode of operation
-        if modeOfOperation == "s" or modeOfOperation == "both":
-            lastJob = writeJobIDStr
-        else:
-            lastJob = combinationJobID
-
-        lastJobCheckStr = "sacct --format=State --jobs {}".format(lastJob)
+        lastJobCheckStr = "sacct --format=State --jobs {}".format(allJobIDs)
 
         # Every ten seconds check if the final job is done, if it is exit the program
         while True:
             time.sleep(10)
             sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+                break
+            if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
+                print("\nERROR RUNNING JOBS: CANCELLING ALL REMAING JOBS\n")
+                subprocess.run("scancel", allJobIDs)
                 break
                 
 if __name__ == "__main__":

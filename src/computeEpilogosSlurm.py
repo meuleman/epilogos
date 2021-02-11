@@ -336,7 +336,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     if exitBool:
         # The last job is different depending on mode of operation
         if modeOfOperation == "s" or modeOfOperation == "both":
-            lastJob = writeJobIDArr[-1]
+            lastJob = writeJobIDArr
         else:
             lastJob = combinationJobID
 
@@ -346,7 +346,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         while True:
             time.sleep(10)
             sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            if not (sp.stdout.strip().endswith("RUNNING") or sp.stdout.strip().endswith("PENDING")):
+            if not (sp.stdout.strip().contains("RUNNING") or sp.stdout.strip().contains("PENDING")):
                 break
                 
 if __name__ == "__main__":

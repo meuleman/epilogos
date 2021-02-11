@@ -56,8 +56,8 @@ def main(file1, file2, numStates):
 
     print("Converting to numpy arrays...")
     tConvert = time.time()
-    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int)
-    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int)
+    file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=np.float32)
+    file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=np.float32)
     print("    Time: ", time.time() - tConvert)
 
     print("Calculating percent difference...")
@@ -71,10 +71,10 @@ def main(file1, file2, numStates):
         print("Python:", file1Arr[i])
         print("C:", file2Arr[i])
 
-    # error = np.mean(maxStateArr1 != maxStateArr2)
+    error = np.mean(maxStateArr1 != maxStateArr2)
     print("    Time: ", time.time() - tDiff)
     
-    # print("Percent Difference is:", error)
+    print("Percent Difference is:", error)
 
 
 

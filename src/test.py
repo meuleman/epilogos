@@ -26,26 +26,11 @@ def main(file1):
     file1Path = Path(file1)
     
     tOverflow = time.time()
-    with gzip.open(file1Path, "r", encoding="utf-8",errors='ignore') as f:
+    with gzip.open(file1Path, "r") as f:
         print("overflow count:", sum(bl.count("\n") for bl in blocks(f)))
     print("Overflow time:", time.time() - tOverflow)
 
-    tFor = time.time()
-    with gzip.open(file1Path, "rb") as ifh:
-        count = 0
-        for line in ifh:
-            count += 1
-    print("for count:", count)
-    print("For Time:", time.time() - tFor)
-
-    tReadLines = time.time()
-    with gzip.open(file1Path, "rb") as ifh:
-        lines = ifh.readlines()
-        print("readlines count:", len(lines))
-
-    print("readLines time:", time.time() - tReadLines)
-
-        
+   
     tAlex = time.time()
     chunk_size = 65536
     zcat = subprocess.Popen(['zcat', file1Path], stdout=subprocess.PIPE)

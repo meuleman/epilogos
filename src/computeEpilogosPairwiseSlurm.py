@@ -105,7 +105,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
 
     # Path for storing/retrieving the expected frequency array
-    storedExpPath = outputDirPath / "exp_freq_{}_{}.npy".format(file1Path.name, file2Path.name)
+    storedExpPath = outputDirPath / "exp_freq_{}.npy".format(fileTag)
     print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
@@ -118,7 +118,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
     for file1 in file1Path.glob("*"):
         # Skip over ".genome" files
-        if file1.name.split(".")[1] == "genome":
+        if file1.name.split(".")[-1] == "genome":
                 continue
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
@@ -220,7 +220,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     scoreNullJobIDArr = []
     for file1 in file1Path.glob("*"):
         # Skip over ".genome" files
-        if file1.name.split(".")[1] == "genome":
+        if file1.name.split(".")[-1] == "genome":
                 continue
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
@@ -316,7 +316,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
 
     # Create a string for the python commmand
     computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-    pythonCommand = "python {} {} {} {} {} {}".format(computeVisualPy, file1Path.name, file2Path.name, numStates, outputDirPath, numProcesses)
+    pythonCommand = "python {} {} {} {} {} {} {}".format(computeVisualPy, file1Path.name, file2Path.name, numStates, outputDirPath, fileTag, numProcesses)
 
     # Create a string for the slurm command
     if saliency == 1:

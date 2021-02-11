@@ -14,7 +14,7 @@ import multiprocessing
 from contextlib import closing
 import itertools
 
-def main(group1Name, group2Name, numStates, outputDir, numProcesses):
+def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     tTotal = time.time()
 
     outputDirPath = Path(outputDir)
@@ -53,7 +53,7 @@ def main(group1Name, group2Name, numStates, outputDir, numProcesses):
     # Creating Diagnostic Figures
     print("Creating diagnostic figures...")
     tDiagnostic = time.time()
-    createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath)
+    createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
     print("    Time:", time.time() - tDiagnostic)
 
     # Calculating PValues
@@ -70,23 +70,23 @@ def main(group1Name, group2Name, numStates, outputDir, numProcesses):
     # Create Genome Manhattan Plot
     print("Creating Genome-Wide Manhattan Plot")
     tGManhattan = time.time()
-    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
+    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
     print("    Time:", time.time() - tGManhattan)
     
     # Create Chromosome Manhattan Plot
     print("Creating Individual Chromosome Manhattan Plots")
     tCManhattan = time.time()
-    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath)
+    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
     print("    Time:", time.time() - tCManhattan)
 
     # Create an output file which summarizes the results
     print("Writing metrics file...")
     tMetrics = time.time()
-    writeMetrics(group1Name, group2Name, locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath)
+    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
     print("    Time:", time.time() - tMetrics)
 
     # Create Bed file of top 1000 loci with adjacent merged
-    roiPath = outputDirPath / "largestDistanceLoci_{}_{}.bed".format(group1Name, group2Name)
+    roiPath = outputDirPath / "largestDistanceLoci_{}.bed".format(fileTag)
     sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
 
     print("Total Time:", time.time() - tTotal)
@@ -160,8 +160,8 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
 
 
 # Helper for creating and saving diagnostic figures
-def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath):
-    diagnosticDirPath = outputDirPath / "diagnosticFigures"
+def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag):
+    diagnosticDirPath = outputDirPath / "diagnosticFigures_{}".format(fileTag)
     if not diagnosticDirPath.exists():
         diagnosticDirPath.mkdir(parents=True)
     
@@ -252,8 +252,8 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
 
 # Helper to create a genome-wide manhattan plot
-def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
-    manhattanDirPath = outputDirPath / "manhattanPlots"
+def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
+    manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
@@ -323,8 +323,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     plt.close(fig)
 
 # Helper for generating individual chromosome manhattan plots
-def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath):
-    manhattanDirPath = outputDirPath / "manhattanPlots"
+def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
+    manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
@@ -491,11 +491,11 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     
 
 # Helper to write the metrics file to disk
-def writeMetrics(group1Name, group2Name, locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath):
+def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    metricsTxtPath = outputDirPath / "pairwiseMetrics_{}_{}.txt.gz".format(group1Name, group2Name)
+    metricsTxtPath = outputDirPath / "pairwiseMetrics_{}.txt.gz".format(fileTag)
     metricsTxt = gzip.open(metricsTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
@@ -563,4 +563,4 @@ def findSign(x):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], int(sys.argv[5]))
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], int(sys.argv[6]))

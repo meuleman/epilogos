@@ -348,7 +348,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 break
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
                 print("\nERROR RUNNING JOBS: CANCELLING ALL REMAING JOBS\n")
-                subprocess.run("scancel {}".format(allJobIDs))
+                subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
                 
 if __name__ == "__main__":

@@ -336,7 +336,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     if exitBool:
         # The last job is different depending on mode of operation
         if modeOfOperation == "s" or modeOfOperation == "both":
-            lastJob = writeJobIDArr
+            lastJob = writeJobIDStr
         else:
             lastJob = combinationJobID
 

@@ -5,13 +5,13 @@ import gzip
 import sys
 import time
 
-def main(filename, numStates, outputDirectory, fileTag):
+def main(file, numStates, outputDirectory, fileTag):
     tTotal = time.time()
     outputDirPath = Path(outputDirectory)
-    filePath = Path(filename)
+    filePath = Path(file)
 
-    chrName = filePath.name.split("_")[-1].split(".")[0]
-
+    # chrName = filePath.name.split("_")[-1].split(".")[0]
+    chrName = filePath.name.split(".")[0]
 
     writeScores(chrName, numStates, outputDirPath, fileTag)
 

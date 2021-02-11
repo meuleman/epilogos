@@ -11,6 +11,7 @@ import multiprocessing
 import itertools
 import ctypes as c
 from contextlib import closing
+import gzip
 
 def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses):
     tTotal = time.time()
@@ -22,24 +23,34 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
     ##   chrName is hacky, find a better way later
     ##
     ####################################################
-    chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
+    # chrName  = dataFilePath.name.split("_")[-1].split(".")[0]
 
-    # Get the genome file
-    genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))
-    if len(genomeFileList) > 1:
-        raise IOError("Too many '.genome' files provided")
-    elif len(genomeFileList) < 1:
-        raise IOError("No '.genome' file provided")
+    # # Get the genome file
+    # genomeFileList = list(dataFilePath.parents[0].glob("*.genome"))
+    # if len(genomeFileList) > 1:
+    #     raise IOError("Too many '.genome' files provided")
+    # elif len(genomeFileList) < 1:
+    #     raise IOError("No '.genome' file provided")
 
-    # Read line by line until we are on correct chromosome, then read out number of bp
-    for genomeFile in genomeFileList:
-        with open(genomeFile, "r") as gf:
-            line = gf.readline()
-            while chrName not in line:
-                line = gf.readline()
-            basePairs = int(line.split()[1])
+    # # Read line by line until we are on correct chromosome, then read out number of bp
+    # for genomeFile in genomeFileList:
+    #     with open(genomeFile, "r") as gf:
+    #         line = gf.readline()
+    #         while chrName not in line:
+    #             line = gf.readline()
+    #         basePairs = int(line.split()[1])
 
-    totalRows = math.ceil(basePairs / 200)
+    # totalRows = math.ceil(basePairs / 200)
+
+    # Chrname is actually filename
+    chrName = dataFilePath.name.split(".")[0]
+
+    if dataFilePath.name.endswith("gz"):
+        with gzip.open(dataFilePath, "rb") as f:
+            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
+    else:
+        with open(dataFilePath, "rb") as f:
+            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
@@ -318,9 +329,9 @@ def storeScores(scoreArr, outputDirPath, fileTag, chrName):
     numRows = scoreArr.shape[0]
     locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
-    # Getting rid of potential empty row at end
-    if np.all(scoreArr[-1] == 0):
-        scoreArr = scoreArr[:-1]
+    # # Getting rid of potential empty row at end
+    # if np.all(scoreArr[-1] == 0):
+    #     scoreArr = scoreArr[:-1]
 
     # Creating a file path
     scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, chrName)
@@ -346,6 +357,14 @@ def ncr(n, r):
     numer = reduce(op.mul, range(n, n - r, -1), 1)
     denom = reduce(op.mul, range(1, r + 1), 1)
     return numer // denom
+
+
+# Helper for reading number of lines in input file
+def blocks(files, size=65536):
+    while True:
+        b = files.read(size)
+        if not b: break
+        yield b
 
 if __name__ == "__main__":
     main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], int(sys.argv[7]))

@@ -88,35 +88,51 @@ def s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
         results = pool.starmap(s1Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
-    # Read one line to determine numCols
-    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
-
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
     expFreqArr = np.sum(results, axis=0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s1Calc(dataFilePath, rowsToCalculate, numStates):
     # Reading in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("\nReading data from file...")
+        tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     # Converting to a np array for faster functions
-    print("Converting to numpy array...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Converting to numpy array...")
+        tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
     # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
+    
+    if rowsToCalculate[0] == 0:
+        print("Calculating expected frequency...")
+        tExp = time.time()
+        printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+
     for i, state in enumerate(uniqueStates):
+
+        if rowsToCalculate[0] == 0 and i in printCheckmarks:
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
+
         expFreqArr[state] += stateCounts[i]
+
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tExp)
 
     return expFreqArr
 
@@ -129,13 +145,10 @@ def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
         results = pool.starmap(s2Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
-    # Read one line to determine numCols
-    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
-
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
     expFreqArr = np.sum(results, axis = 0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
 
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
@@ -152,22 +165,34 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     print("    Time: ", time.time() - tConvert)
 
-    multiprocessRows, numCols = dataArr.shape
+    multiprocessRows = dataArr.shape[0]
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Scores...")
+        tExp = time.time()
+        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+    
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
-    # Can choose x and y to be together n*m ways if n != m and n(n-1)/2 ways if n == m (where n and m are the number of times that x and y show up respectively)
-    # Note that normally, we would have to divied the x*y value by 2 to account for the symmetric matrix. 
-    # However, we instead we multiply the state1 == state2 by 2 in order to use integer arrays. This maintains the correct ratios and thus does not change the later calculated expected frequencies
+    # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
+
+        if rowsToCalculate[0] == 0 and row in printCheckmarks:
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
+
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1) # Equates to statecounts[i] choose 2 * 2
+                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1)
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
+
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tExp)
 
     return expFreqArr
 
@@ -180,13 +205,10 @@ def s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
         results = pool.starmap(s3Calc, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(numStates)))
     pool.join()
 
-    # Read one line to determine numCols
-    numCols = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1] - 3
-
     # Sum all the expected frequency arrays from the seperate processes and normalize by dividing
     expFreqArr = np.sum(results, axis = 0)
 
-    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols)
+    storeExpArray(expFreqArr, outputDirPath, fileTag, chrName)
 
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
 def s3Calc(dataFilePath, rowsToCalculate, numStates):
@@ -209,26 +231,34 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
 
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
     
+    if rowsToCalculate[0] == 0:
+        print("\nCalculating Scores...")
+        tExp = time.time()
+        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
+        percentDone = 0
+
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in range(multiprocessRows):
+
+        if rowsToCalculate[0] == 0 and row in printCheckmarks:
+            percentDone += 10
+            print("{}% Completed".format(percentDone))
+
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
+
+    if rowsToCalculate[0] == 0:
+        print("    Time:", time.time() - tExp)
 
     return expFreqArr
 
 # Helper to store the expected frequency arrays
-def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName, numCols):
+def storeExpArray(expFreqArr, outputDirPath, fileTag, chrName):
     # Creating a file path
     expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, chrName)
     expFreqPath = outputDirPath / expFreqFilename
 
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
-# Helper to calculate combinations
-def ncr(n, r):
-    r = min(r, n-r)
-    numer = reduce(op.mul, range(n, n - r, -1), 1)
-    denom = reduce(op.mul, range(1, r + 1), 1)
-    return numer // denom
 
 # Helper for reading number of lines in input file
 def blocks(files, size=65536):

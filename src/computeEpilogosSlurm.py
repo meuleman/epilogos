@@ -74,8 +74,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print("\nERROR: Ensure that saliency metric is either 1, 2, or 3\n")
-        return
+        raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
 
     # Check that paths are valid before doing anything
     if not dataFilePath.exists() or not dataFilePath.is_dir():

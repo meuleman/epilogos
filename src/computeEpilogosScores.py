@@ -15,6 +15,7 @@ import gzip
 
 def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses):
     tTotal = time.time()
+    
     dataFilePath = Path(file)
     outputDirPath = Path(outputDirPath)
 
@@ -107,9 +108,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     if rowsToCalculate[0] == 0:
         print("\nReading data from file...")
         tRead = time.time()
-
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tRead)
 
@@ -117,9 +116,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     if rowsToCalculate[0] == 0:
         print("Converting to numpy array...")
         tConvert = time.time()
-
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tConvert)
 
@@ -142,11 +139,11 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
             percentDone += 10
             print("{}% Completed".format(percentDone))
 
-        if obsRow < dataArr.shape[0]:
-            uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
-            for i, state in enumerate(uniqueStates):
-                # Function input is obsFreq and expFreq
-                scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+        # if obsRow < dataArr.shape[0]:
+        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+        for i, state in enumerate(uniqueStates):
+            # Function input is obsFreq and expFreq
+            scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
     
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
@@ -172,9 +169,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     if rowsToCalculate[0] == 0:
         print("\nReading data from file...")
         tRead = time.time()
-
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tRead)
 
@@ -182,9 +177,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     if rowsToCalculate[0] == 0:
         print("Converting to numpy array...")
         tConvert = time.time()
-
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tConvert)
 
@@ -203,10 +196,10 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
 
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
+    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ordered ways can you choose 2 states)
     # SumOverRows: (Prob of choosing x and y)
-    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    combinations = numCols * (numCols - 1) / 2
+    # Can choose x and y to be together x*y ways if different and n(n-1) ways if same (where n is the number of times that x/y shows up)
+    permutations = numCols * (numCols - 1)
     for row in range(multiprocessRows):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
@@ -217,12 +210,13 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    obsFreqArr[row, state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / 2 / combinations # Equates to statecounts[i] choose 2 / combinations
+                    obsFreqArr[row, state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations # Equates to statecounts[i] permute 2 / combinations
                 else: # state1 > state2 or state1 < state2
-                    obsFreqArr[row, state1, state2] = stateCounts[i] * stateCounts[j] / combinations / 2 # Extra 2 is to account for the symmetric matrix
+                    obsFreqArr[row, state1, state2] = stateCounts[i] * stateCounts[j] / permutations
     
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tObs)
+
 
     if rowsToCalculate[0] == 0:
         print("\nCalculating Scores...")
@@ -238,9 +232,9 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
             percentDone += 10
             print("{}% Completed".format(percentDone))
 
-        if obsRow < obsFreqArr.shape[0]:
-            # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
-            scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
+        # if obsRow < obsFreqArr.shape[0]:
+        # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
+        scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
@@ -350,13 +344,6 @@ def klScore(obs, exp):
 # Helper to calculate KL-score for Nd arrays (cleans up the code)
 def klScoreND(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
-
-# Helper to calculate combinations
-def ncr(n, r):
-    r = min(r, n-r)
-    numer = reduce(op.mul, range(n, n - r, -1), 1)
-    denom = reduce(op.mul, range(1, r + 1), 1)
-    return numer // denom
 
 
 # Helper for reading number of lines in input file

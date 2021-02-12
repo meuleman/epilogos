@@ -240,46 +240,8 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
-    multiprocessRows, numCols = file1Arr.shape
+    numCols = file1Arr.shape[1]
     numStates = sharedArr1[2]
-
-    obsFreqArr1 = np.zeros((multiprocessRows, numStates, numStates))
-    obsFreqArr2 = np.zeros((multiprocessRows, numStates, numStates))
-
-    if rowsToCalculate[0] == 0:
-        print("Calculating Observed Frequencies...")
-        tObs = time.time()
-        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
-        percentDone = 0
-
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
-    # SumOverRows: (Prob of choosing x and y)
-    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
-    permutations = numCols * (numCols - 1)
-    for row in range(multiprocessRows):
-
-        if rowsToCalculate[0] == 0 and row in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
-
-        uniqueStates, stateCounts = np.unique(file1Arr[row], return_counts=True)
-        for i, state1 in enumerate(uniqueStates):
-            for j, state2 in enumerate(uniqueStates):
-                if state1 == state2:
-                    obsFreqArr1[row, state1, state2]  = stateCounts[i] * (stateCounts[i] - 1) / permutations
-                else: # state1 > state2 or state1 < state2
-                    obsFreqArr1[row, state1, state2]  = stateCounts[i] * stateCounts[j] / permutations
-        uniqueStates, stateCounts = np.unique(file2Arr[row], return_counts=True)
-        for i, state1 in enumerate(uniqueStates):
-            for j, state2 in enumerate(uniqueStates):
-                if state1 == state2:
-                    obsFreqArr2[row, state1, state2]  = stateCounts[i] * (stateCounts[i] - 1) / permutations
-                else: # state1 > state2 or state1 < state2
-                    obsFreqArr2[row, state1, state2]  = stateCounts[i] * stateCounts[j] / permutations
-
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tObs)
-
 
     if rowsToCalculate[0] == 0:
         print("Calculating Scores...")
@@ -290,16 +252,40 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     # Calculte the scores and store them in the shared array
     scoreArr1 = sharedToNumpy(*sharedArr1)
     scoreArr2 = sharedToNumpy(*sharedArr2)
+    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ways can you choose 2 states)
+    # SumOverRows: (Prob of choosing x and y)
+    # Can choose x and y to be together x*y ways if different and n(n-1)/2 ways if same (where n is the number of times that x/y shows up)
+    rowObsArr = np.zeros((numStates, numStates))
+    permutations = numCols * (numCols - 1)
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
             print("    {}% Completed".format(percentDone))
 
+        uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations
+                else: # state1 > state2 or state1 < state2
+                    rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
-        # if obsRow < obsFreqArr1.shape[0]:
-        scoreArr1[scoreRow] = klScoreND(obsFreqArr1[obsRow], expFreqArr).sum(axis=0)
-        scoreArr2[scoreRow] = klScoreND(obsFreqArr2[obsRow], expFreqArr).sum(axis=0)
+        scoreArr1[scoreRow] = klScoreND(rowObsArr, expFreqArr).sum(axis=0)
+        # Reset the array so it doesn't carry over values
+        rowObsArr.fill(0)
+        
+        uniqueStates, stateCounts = np.unique(file2Arr[obsRow], return_counts=True)
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations
+                else: # state1 > state2 or state1 < state2
+                    rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
+        # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
+        scoreArr2[scoreRow] = klScoreND(rowObsArr[obsRow], expFreqArr).sum(axis=0)
+        # Reset the array so it doesn't carry over values
+        rowObsArr.fill(0)
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)

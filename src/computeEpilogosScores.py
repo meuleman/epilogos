@@ -172,39 +172,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
-    multiprocessRows, numCols = dataArr.shape
+    numCols = dataArr.shape[1]
     numStates = sharedArr[2]
-
-    # Calculate the observed frequencies
-    obsFreqArr = np.zeros((multiprocessRows, numStates, numStates))
-
-    if rowsToCalculate[0] == 0:
-        print("Calculating Observed Frequencies...")
-        tObs = time.time()
-        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
-        percentDone = 0
-
-    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ordered ways can you choose 2 states)
-    # SumOverRows: (Prob of choosing x and y)
-    # Can choose x and y to be together x*y ways if different and n(n-1) ways if same (where n is the number of times that x/y shows up)
-    permutations = numCols * (numCols - 1)
-    for row in range(multiprocessRows):
-
-        if rowsToCalculate[0] == 0 and row in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
-
-        uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
-        for i, state1 in enumerate(uniqueStates):
-            for j, state2 in enumerate(uniqueStates):
-                if state1 == state2:
-                    obsFreqArr[row, state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations # Equates to statecounts[i] permute 2 / combinations
-                else: # state1 > state2 or state1 < state2
-                    obsFreqArr[row, state1, state2] = stateCounts[i] * stateCounts[j] / permutations
-    
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tObs)
-
 
     if rowsToCalculate[0] == 0:
         print("Calculating Scores...")
@@ -214,16 +183,31 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
+    # SumOverRows: (Within a row, how many ways can you choose x and y to be together) / (how many ordered ways can you choose 2 states)
+    # SumOverRows: (Prob of choosing x and y)
+    # Can choose x and y to be together x*y ways if different and n(n-1) ways if same (where n is the number of times that x/y shows up)
+    rowObsArr = np.zeros((numStates, numStates))
+    permutations = numCols * (numCols - 1)
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
             print("    {}% Completed".format(percentDone))
 
-        # if obsRow < obsFreqArr.shape[0]:
+        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+        for i, state1 in enumerate(uniqueStates):
+            for j, state2 in enumerate(uniqueStates):
+                if state1 == state2:
+                    rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations # Equates to statecounts[i] permute 2 / permutations
+                else: # state1 > state2 or state1 < state2
+                    rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
+        
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
-        scoreArr[scoreRow] = klScoreND(obsFreqArr[obsRow], expFreqArr).sum(axis=0)
+        scoreArr[scoreRow] = klScoreND(rowObsArr, expFreqArr).sum(axis=0)
 
+        # Reset the array so it doesn't carry over values
+        rowObsArr.fill(0)
+    
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
     
@@ -282,15 +266,14 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
             print("    {}% Completed".format(percentDone))
 
         if dataRow < dataArr.shape[0]:
-
-            # Reset the array so it doesn't carry over scores from other rows
-            rowScoreArr.fill(0)
-
             # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
             np.add.at(rowScoreArr, dataArr[dataRow, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0], basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]])
 
             # Store the scores in the shared score array
             scoreArr[scoreRow] = rowScoreArr
+
+            # Reset the array so it doesn't carry over scores from other rows
+            rowScoreArr.fill(0)
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)

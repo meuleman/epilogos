@@ -1,4 +1,5 @@
 import gzip
+from multiprocessing import Value
 import numpy as np
 from pathlib import Path
 import pandas as pd
@@ -7,6 +8,7 @@ import click
 import os
 import subprocess
 from pathlib import PurePath
+import errno
 
 @click.command()
 @click.option("-i", "--directory-one", "fileDirectory1", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
@@ -56,8 +58,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     print("Output Directory =", outputDirPath)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print("\nERROR: Ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison\n")
-        return
+        raise ValueError("Saliency Metric Invalid: {} Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison".format(saliency))
 
     # Making paths absolute
     if not PurePath(outputDirPath).is_absolute():
@@ -71,30 +72,28 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     fileTag = "{}_{}_saliency{}".format(file1Path.name, file2Path.name, saliency)
 
     # Check that paths are valid before doing anything
-    if not file1Path.exists() or not file1Path.is_dir():
-        print("\nERROR: Given file path does not exist or is not a directory\n")
-        return
+    if not file1Path.exists():
+        raise FileNotFoundError("Given path does not exist: {}".format(str(file1Path)))
+    if not file1Path.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(file1Path)))
     if not list(file1Path.glob("*")):
-        print("\nERROR: Ensure that file directory 1 is not empty\n")
-        return
-    if not file2Path.exists() or not file2Path.is_dir():
-        print("\nERROR: Given file path does not exist or is not a directory\n")
-        return
+        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(file1Path))
+    if not file2Path.exists():
+        raise FileNotFoundError("Given path does not exist: {}".format(str(file2Path)))
+    if not file2Path.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(file2Path)))
     if not list(file2Path.glob("*")):
-        print("\nERROR: Ensure that file directory 2 is not empty\n")
-        return
+        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(file2Path))
 
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
     if not outputDirPath.is_dir():
-        print("\nERROR: Output directory is not a directory\n")
-        return
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDirPath)))
 
     if numProcesses < 0:
-        print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
-        return
+        raise ValueError("Number of cores must be positive or zero (0 means use all cores)")
     elif numProcesses == 0:
         numTasks = "--exclusive"
     else:
@@ -122,9 +121,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
                 continue
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
-            print("\nERROR: File names do not match in input directory and pairwise directory")
-            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name\n".format(file1.name))
-            return
+            raise FileNotFoundError("File not found: {} Please ensure corresponding files within input directories directories 1 and 2 have the same name".format(str(file2Path / file1.name)))
         else:
             file2 = next(file2Path.glob(file1.name))
 
@@ -144,9 +141,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
                 jout.close()
                 jerr = open(jobErrPath, 'x')
                 jerr.close()
-            except FileExistsError:
+            except FileExistsError as err:
                 # This error should never occur because we are deleting the files first
-                print("\nERROR: sbatch '.out' or '.err' file already exists\n")
+                print(err)
                 return
 
             # Create a string for the python command
@@ -162,8 +159,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             if not sp.stdout.startswith("Submitted batch"):
-                print("\nERROR: sbatch not submitted correctly\n")
-                return
+                raise ChildProcessError("SlurmError: sbatch not submitted correctly")
             
             expJobIDArr.append(int(sp.stdout.split()[-1]))
 
@@ -189,9 +185,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
         jout.close()
         jerr = open(jobErrPath, 'x')
         jerr.close()
-    except FileExistsError:
+    except FileExistsError as err:
         # This error should never occur because we are deleting the files first
-        print("\nERROR: sbatch '.out' or '.err' file already exists\n")
+        print(err)
         return
 
     # Create a string for the python commmand
@@ -207,8 +203,8 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):
-        print("\nERROR: sbatch not submitted correctly\n")
-        return
+        raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+
     
     combinationJobID = int(sp.stdout.split()[-1])
     print("    JobID:", combinationJobID)
@@ -224,9 +220,7 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
                 continue
         # Find matching file in other directory
         if not list(file2Path.glob(file1.name)):
-            print("\nERROR: File names do not match in input directory and pairwise directory")
-            print("\tNo match for {} in pairwise directory. Ensure corresponding files within directories 1 and 2 have the same name\n".format(file1.name))
-            return
+            raise FileNotFoundError("File not found: {} Please ensure corresponding files within input directories directories 1 and 2 have the same name".format(str(file2Path / file1.name)))
         else:
             file2 = next(file2Path.glob(file1.name))
 
@@ -257,9 +251,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
                 jout.close()
                 jerr = open(jobErrPathNull, 'x')
                 jerr.close()
-            except FileExistsError:
+            except FileExistsError as err:
                 # This error should never occur because we are deleting the files first
-                print("\nERROR: sbatch '.out' or '.err' file already exists\n")
+                print(err)
                 return
             
             # Create a string for the python commands
@@ -279,8 +273,8 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
             spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
             if not spReal.stdout.startswith("Submitted batch") or not spNull.stdout.startswith("Submitted batch"):
-                print("\nERROR: sbatch not submitted correctly\n")
-                return
+                raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+
 
             scoreRealJobIDArr.append(int(spReal.stdout.split()[-1]))
             scoreNullJobIDArr.append(int(spNull.stdout.split()[-1]))
@@ -309,9 +303,9 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
         jout.close()
         jerr = open(jobErrPath, 'x')
         jerr.close()
-    except FileExistsError:
+    except FileExistsError as err:
         # This error should never occur because we are deleting the files first
-        print("\nERROR: sbatch '.out' or '.err' file already exists\n")
+        print(err)
         return
 
     # Create a string for the python commmand
@@ -327,8 +321,8 @@ def main(fileDirectory1, fileDirectory2, outputDirectory, numStates, saliency, n
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):
-        print("\nERROR: sbatch not submitted correctly\n")
-        return
+        raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+
     
     visualJobID = int(sp.stdout.split()[-1])
     print("    JobID:", visualJobID)

@@ -81,7 +81,7 @@ def determineSaliency(saliency, dataFilePath, rowList, numStates, outputDirPath,
 
 # Function that calculates the expected frequencies for the S1 metric
 def s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
     
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
@@ -98,19 +98,13 @@ def s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
 def s1Calc(dataFilePath, rowsToCalculate, numStates):
     # Reading in the data
     if rowsToCalculate[0] == 0:
-        print("\nReading data from file...")
+        print("Reading data from file...")
         tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions
-    if rowsToCalculate[0] == 0:
-        print("Converting to numpy array...")
-        tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)
+        print("    Time: ", time.time() - tRead)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
@@ -127,7 +121,7 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
 
         if rowsToCalculate[0] == 0 and i in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         expFreqArr[state] += stateCounts[i]
 
@@ -138,7 +132,7 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates):
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
 def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
@@ -154,23 +148,21 @@ def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s2Calc(dataFilePath, rowsToCalculate, numStates):
     # Reading in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file...")
+        tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions
-    print("Converting to numpy array...")
-    tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     multiprocessRows = dataArr.shape[0]
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tExp = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -181,7 +173,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
@@ -198,7 +190,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates):
 
 # Function that deploys the processes used to calculate the expected frequencies for the s3 metric. Also call function to store expected frequency
 def s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
@@ -213,16 +205,14 @@ def s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, chrName, num
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
 def s3Calc(dataFilePath, rowsToCalculate, numStates):
     # Reading in the data
-    print("\nReading data from file...")
-    tRead = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file...")
+        tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions
-    print("Converting to numpy array...")
-    tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    print("    Time: ", time.time() - tConvert)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead)
 
     multiprocessRows, numCols = dataArr.shape
 
@@ -232,7 +222,7 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
     
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tExp = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -242,7 +232,7 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
 

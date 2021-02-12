@@ -23,25 +23,27 @@ def writeScores(chrName, numStates, outputDirPath, fileTag):
     scoresTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, chrName)
     scoresTxt = gzip.open(scoresTxtPath, "wt")
 
+    print("Reading in scores...")
     tRead = time.time()
     # Taking in the the score array
     filePath = outputDirPath / Path("temp_scores_{}_{}.npz".format(fileTag, chrName))
     npzFile = np.load(filePath)
     scoreArr = npzFile['scoreArr']
     locationArr = npzFile['locationArr']
-
-    print("Read Time:", time.time() - tRead)
+    print("    Time:", time.time() - tRead)
 
     # Create one string of all the scores to write out
+    print("Creating output string...")
     tCreate = time.time()
     scoresTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates-1)) + "{1[%d]:.5f}\n" % (numStates - 1)
     scoreStr = "".join(scoresTemplate.format(locationArr[i], scoreArr[i]) for i in range(scoreArr.shape[0]))
-    print("String creation time:", time.time() - tCreate)
+    print("    Time:", time.time() - tCreate)
 
     # Write out the string
+    print("Writing scores...")
     tScore = time.time()
     scoresTxt.write(scoreStr)
-    print("Score Write Time:", time.time() - tScore)
+    print("    Time:", time.time() - tScore)
     
     scoresTxt.close()
 

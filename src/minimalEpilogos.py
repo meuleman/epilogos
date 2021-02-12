@@ -6,6 +6,7 @@ import computeEpilogosExpected
 import computeEpilogosExpectedCombination
 import computeEpilogosScores
 import computeEpilogosWrite
+import errno
 
 @click.command()
 @click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
@@ -68,29 +69,25 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
-        print("\nERROR: Ensure that saliency metric is either 1, 2, or 3\n")
-        return
+        raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
 
     # Check that paths are valid before doing anything
-    if not dataFilePath.exists() or not dataFilePath.is_dir():
-        print("\nERROR: Given file path does not exist or is not a directory\n")
-        return
-
+    if not dataFilePath.exists():
+        raise FileNotFoundError("Given path does not exist: {}".format(str(dataFilePath)))
+    if not dataFilePath.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(dataFilePath)))
     if not list(dataFilePath.glob("*")):
-        print("\nERROR: Ensure that file directory is not empty\n")
-        return
+        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(dataFilePath))
 
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
     
     if not outputDirPath.is_dir():
-        print("\nERROR: Output directory is not a directory\n")
-        return
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDirPath)))
 
     if numProcesses < 0:
-        print("\nERROR: Number of cores must be positive or zero (0 means use all cores)\n")
-        return
+        raise ValueError("Number of cores must be positive or zero (0 means use all cores)")
     elif numProcesses == 0:
         numTasks = "--exclusive"
     else:
@@ -109,8 +106,8 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     if modeOfOperation == "s":
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
-        except IOError:
-            print("\nERROR: Could not load stored expected value array.\n\tPlease check that the directory is correct or that the file exists\n")
+        except IOError as err:
+            print(err)
             return
     else:
         print("\nCalculating Per Datafile Background Frequency Arrays...")

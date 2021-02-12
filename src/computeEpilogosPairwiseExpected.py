@@ -9,6 +9,7 @@ from functools import reduce
 import multiprocessing
 import itertools
 from contextlib import closing
+import gzip
 
 def main(filename1, filename2, numStates, saliency, outputDirPath, fileTag, numProcesses):
     tTotal = time.time()
@@ -75,7 +76,7 @@ def main(filename1, filename2, numStates, saliency, outputDirPath, fileTag, numP
 
 # Function that deploys the processes used to calculate the expected frequencies for the s1 metric. Also calls function to store expected frequency
 def s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
     
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
@@ -90,22 +91,28 @@ def s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
 # Function that reads in data and calculates the expected frequencies for the S1 metric over a chunk of the data
 def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
     # Read in the data
-    print("\nReading data from file 1...")
-    tRead1 = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file 1...")
+        tRead1 = time.time()
     file1DF = pd.read_table(file1Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead1)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead1)
 
-    print("Reading data from file 2...")
-    tRead2 = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file 2...")
+        tRead2 = time.time()
     file2DF = pd.read_table(file2Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead2)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead2)
 
     # Converting to a np array for faster functions
     # Also combine the arrays to calculate a combined background
-    print("Converting to numpy arrays and combining...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Combining input matrices...")
+        tConvert = time.time()
     dataArr = np.concatenate((file1DF.iloc[:,3:].to_numpy(dtype=int) - 1, file2DF.iloc[:,3:].to_numpy(dtype=int) - 1), axis=1)
-    print("    Time: ", time.time() - tConvert)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
@@ -122,7 +129,7 @@ def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
 
         if rowsToCalculate[0] == 0 and i in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         expFreqArr[state] += stateCounts[i]
 
@@ -133,7 +140,7 @@ def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
 def s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses)) as pool:
@@ -149,29 +156,35 @@ def s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s2Calc(file1Path, file2Path, rowsToCalculate, numStates):
     # Read in the data
-    print("\nReading data from file 1...")
-    tRead1 = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file 1...")
+        tRead1 = time.time()
     file1DF = pd.read_table(file1Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead1)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead1)
 
-    print("Reading data from file 2...")
-    tRead2 = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Reading data from file 2...")
+        tRead2 = time.time()
     file2DF = pd.read_table(file2Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    print("    Time: ", time.time() - tRead2)
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tRead2)
 
     # Converting to a np array for faster functions
     # Also combine the arrays to calculate a combined background
-    print("Converting to numpy arrays and combining...")
-    tConvert = time.time()
+    if rowsToCalculate[0] == 0:
+        print("Combining input matrices...")
+        tConvert = time.time()
     dataArr = np.concatenate((file1DF.iloc[:,3:].to_numpy(dtype=int) - 1, file2DF.iloc[:,3:].to_numpy(dtype=int) - 1), axis=1)
-    print("    Time: ", time.time() - tConvert)    
+    if rowsToCalculate[0] == 0:
+        print("    Time: ", time.time() - tConvert)    
 
     multiprocessRows = dataArr.shape[0]
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tExp = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -182,7 +195,7 @@ def s2Calc(file1Path, file2Path, rowsToCalculate, numStates):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):

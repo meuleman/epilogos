@@ -91,7 +91,7 @@ def _init(sharedArr_):
 
 # Function that deploys the processes used to calculate the scores for the s1 metric. Also call function to store scores
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
@@ -106,27 +106,21 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
     if rowsToCalculate[0] == 0:
-        print("\nReading data from file...")
+        print("Reading data from file...")
         tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions later
-    if rowsToCalculate[0] == 0:
-        print("Converting to numpy array...")
-        tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)
-
+        print("    Time: ", time.time() - tRead)
+    
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     numCols = dataArr.shape[1]
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -137,7 +131,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
         
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         # if obsRow < dataArr.shape[0]:
         uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
@@ -151,7 +145,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath):
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
 def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
@@ -167,19 +161,13 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
     if rowsToCalculate[0] == 0:
-        print("\nReading data from file...")
+        print("Reading data from file...")
         tRead = time.time()
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions later
-    if rowsToCalculate[0] == 0:
-        print("Converting to numpy array...")
-        tConvert = time.time()
     dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
     if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)
+        print("    Time: ", time.time() - tRead)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -191,7 +179,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
     obsFreqArr = np.zeros((multiprocessRows, numStates, numStates))
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Observed Frequencies...")
+        print("Calculating Observed Frequencies...")
         tObs = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -204,7 +192,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
         for i, state1 in enumerate(uniqueStates):
@@ -219,7 +207,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -230,7 +218,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         # if obsRow < obsFreqArr.shape[0]:
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
@@ -242,7 +230,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath):
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
 def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, chrName, numProcesses):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
@@ -257,23 +245,13 @@ def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     # Read in the data
     if rowsToCalculate[0] == 0:
-        print("\nReading data from file...")
+        print("Reading data from file...")
         tRead = time.time()
-
     dataDF = pd.read_table(dataFilePath, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
-    
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead)
-
     # Converting to a np array for faster functions later
+    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1
     if rowsToCalculate[0] == 0:
-        print("Converting to numpy array...")
-        tConvert = time.time()
-
-    dataArr = dataDF.iloc[:,3:].to_numpy(dtype=int) - 1 
-    
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)
+        print("    Time: ", time.time() - tRead) 
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -289,7 +267,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)), expFreqArr)
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -301,7 +279,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath):
 
         if rowsToCalculate[0] == 0 and dataRow in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         if dataRow < dataArr.shape[0]:
 

@@ -114,7 +114,7 @@ def determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numSta
 def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
     # Read in the data
     if rowsToCalculate[0] == 0:
-        print("\nReading data from file 1...")
+        print("Reading data from file 1...")
         tRead1 = time.time()
     file1DF = pd.read_table(file1Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
     if rowsToCalculate[0] == 0:
@@ -129,22 +129,12 @@ def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
 
     if realOrNull.lower() == "real":
         # Converting to a np array for faster functions later
-        if rowsToCalculate[0] == 0:
-            print("Converting to numpy arrays...")
-            tConvert = time.time()
         file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
         file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        if rowsToCalculate[0] == 0:
-            print("    Time: ", time.time() - tConvert)
     elif realOrNull.lower() == "null":
         # Converting to a np array for faster functions later
-        if rowsToCalculate[0] == 0:
-            print("Converting to numpy arrays...")
-            tConvert = time.time()
         unshuffledFile1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
         unshuffledFile2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        if rowsToCalculate[0] == 0:
-            print("    Time: ", time.time() - tConvert)
 
         if rowsToCalculate[0] == 0:
             print("Shuffling input matrices...")
@@ -178,7 +168,7 @@ def _init(sharedArr1_, sharedArr2_, totalRows, numStates):
 
 # Function that calculates the scores for the S1 metric
 def s1Multi(file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     sharedArr1 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     sharedArr2 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
@@ -203,7 +193,7 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     scoreArr2 = sharedToNumpy(*sharedArr2)
     
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -213,7 +203,7 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         # if obsRow < file1Arr.shape[0]:
         uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
@@ -231,7 +221,7 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
 # Function that calculates the scores for the S2 metric
 def s2Multi(file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull):
-    print("NUM PROCESSES:", numProcesses)
+    print("\nNumber of Processes:", numProcesses)
 
     sharedArr1 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     sharedArr2 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
@@ -257,7 +247,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     obsFreqArr2 = np.zeros((multiprocessRows, numStates, numStates))
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Observed Frequencies...")
+        print("Calculating Observed Frequencies...")
         tObs = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -270,7 +260,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
         if rowsToCalculate[0] == 0 and row in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(file1Arr[row], return_counts=True)
         for i, state1 in enumerate(uniqueStates):
@@ -292,7 +282,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
 
     if rowsToCalculate[0] == 0:
-        print("\nCalculating Scores...")
+        print("Calculating Scores...")
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -304,7 +294,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
         if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
             percentDone += 10
-            print("{}% Completed".format(percentDone))
+            print("    {}% Completed".format(percentDone))
 
         # Inputs to klScoreND are obsFreqArr and expFreqArr respectively
         # if obsRow < obsFreqArr1.shape[0]:
@@ -313,7 +303,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 
     if rowsToCalculate[0] == 0:
         print("    Time:", time.time() - tScore)
-        
+
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)
 def klScore(obs, exp):

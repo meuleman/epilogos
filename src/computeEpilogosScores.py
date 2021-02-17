@@ -103,8 +103,8 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
         tScore = time.time()
-        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
+    printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
     scoreArr = sharedToNumpy(*sharedArr)
     # Calculate the observed frequencies and final scores for the designated rows
@@ -156,8 +156,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
         tScore = time.time()
-        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
+    printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)
@@ -229,8 +229,8 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
         tScore = time.time()
-        printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
+    printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
 
     # Calculte the scores and store them in the shared array
     scoreArr = sharedToNumpy(*sharedArr)

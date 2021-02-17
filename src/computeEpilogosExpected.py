@@ -87,8 +87,8 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating expected frequency...", flush=True)
         tExp = time.time()
-        printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
+    printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
 
     for i, state in enumerate(uniqueStates):
 
@@ -133,9 +133,9 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
         tExp = time.time()
-        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
-    
+    printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
+
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
     # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
@@ -189,8 +189,8 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
         tExp = time.time()
-        printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
+    printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
 
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in range(multiprocessRows):

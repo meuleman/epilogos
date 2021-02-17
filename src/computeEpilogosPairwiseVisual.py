@@ -39,14 +39,34 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time.time()
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time.time() - tRead)
+
+    print("MAX of distanceArrReal:", np.amax(np.abs(distanceArrReal)))
+    print("len of distanceArrReal:", len(distanceArrReal))
+    print(distanceArrReal[:10])
+    print("MAX of distanceArrNull:", np.amax(np.abs(distanceArrNull)))
+    print("len of distanceArrNull:", len(distanceArrNull))
+    print(distanceArrNull[:10])
+    print("MAX of maxDiffArr:", np.amax(np.abs(maxDiffArr)))
+    print("len of maxDiffArr:", len(maxDiffArr))
+    print(maxDiffArr[:10])
+    print("MAX of diffArr:", np.amax(np.abs(diffArr)))
+    print("len of diffArr:", len(diffArr))
+    print(diffArr[:10])
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time.time()
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates)
     print("    Time:", time.time() - tFit)
+
+    print("MAX of dataReal:", np.amax(np.abs(dataReal)))
+    print("len of dataReal:", len(dataReal))
+    print(dataReal[:10])
+    print("MAX of dataNull:", np.amax(np.abs(dataNull)))
+    print("len of dataNull:", len(dataNull))
+    print(dataNull[:10])
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
@@ -96,10 +116,9 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     print("Total Time:", time.time() - tTotal)
 
 # Helper to read in the necessary data to fit and visualize pairwise results
-def readInData(outputDirPath, numProcesses):
+def readInData(outputDirPath, numProcesses, numStates):
     # For keeping the data arrays organized correctly
-    realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, 19)]
-    nullNames = ["chr", "binStart", "binEnd", "distance"]
+    realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
     chrOrder = []
     for i in range(1, 23):
         chrOrder.append("chr{}".format(i))
@@ -110,8 +129,12 @@ def readInData(outputDirPath, numProcesses):
     
     # Multiprocess the reading
     with closing(multiprocessing.Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("temp_nullDistances_*.npz"), itertools.repeat(realNames), itertools.repeat(nullNames)))
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("temp_nullDistances_*.npz"), itertools.repeat(realNames)))
     pool.join()
+
+
+    print("len of pairwisedelta glob:", len(list(outputDirPath.glob("pairwiseDelta_*.txt.gz"))))
+    print("Lenght of results:", len(results))
 
     # Concatenating all chunks to the real differences dataframe
     for diffDFChunk, _ in results:
@@ -127,6 +150,7 @@ def readInData(outputDirPath, numProcesses):
 
     # Creating array of null distances ordered by chromosome based on the read in chunks
     nullChunks = list(zip(*list(zip(*results))[1]))
+    print("length of null chunks:", len(nullChunks))
     index = nullChunks[0].index(chrOrder[0])
     distanceArrNull = nullChunks[1][index]
     for chrName in chrOrder[1:]:
@@ -147,7 +171,7 @@ def readInData(outputDirPath, numProcesses):
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr
 
-def readTableMulti(realFile, nullFile, realNames, nullNames):
+def readTableMulti(realFile, nullFile, realNames):
     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
     npzFile = np.load(Path(nullFile))
 
@@ -157,6 +181,9 @@ def readTableMulti(realFile, nullFile, realNames, nullNames):
 def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
+    print("indices start:", idx[:10])
+    print("indices end:", idx[-10:])
+    print("indices len:", len(idx))
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 

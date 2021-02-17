@@ -110,25 +110,25 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             print(err)
             return
     else:
-        print("\nCalculating Per Datafile Background Frequency Arrays...")
+        print("\nCalculating Per Datafile Background Frequency Arrays...", flush=True)
         for file in inputDirPath.glob("*"):
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
                 computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
 
-        print("\nCombining Per Datafile Background Frequency Arrays....")
+        print("\nCombining Per Datafile Background Frequency Arrays....", flush=True)
         computeEpilogosExpectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
-        print("\nCalculating Per Datafile Scores...")
+        print("\nCalculating Per Datafile Scores...", flush=True)
         for file in inputDirPath.glob("*"):
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
                 computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
 
-        print("\nWriting to Score Files....")
+        print("\nWriting to Score Files....", flush=True)
         filesToWrite = []
         for file in inputDirPath.glob("*"):
             if file.name.split(".")[1] == "genome":
@@ -137,7 +137,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 filesToWrite.append(file)
         # Multiprocesing the writing in the minimal case
         with closing(multiprocessing.Pool(numProcesses)) as pool:
-            pool.starmap(computeEpilogosWrite.main, zip(filesToWrite, itertools.repeat(numStates), itertools.repeat(outputDirPath), itertools.repeat(fileTag), itertools.repeat(fileTag)))
+            pool.starmap(computeEpilogosWrite.main, zip(filesToWrite, itertools.repeat(numStates), itertools.repeat(outputDirPath), itertools.repeat(fileTag), itertools.repeat(verbose)))
         pool.join()
     
 if __name__ == "__main__":

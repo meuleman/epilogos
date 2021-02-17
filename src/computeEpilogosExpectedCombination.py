@@ -32,7 +32,7 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
     # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
-    print("Total Time:", time.time() - tTotal) if verbose else print("    Completed")
+    print("Total Time:", time.time() - tTotal) if verbose else print("    [Done]")
 
 # Helper for slurm to send boolean values
 def strToBool(string):

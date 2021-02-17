@@ -19,6 +19,8 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses, ve
 
     filename = dataFilePath.name.split(".")[0]
 
+    if not verbose: print("    {}\t".format(filename), end="", flush=True)
+
     if dataFilePath.name.endswith("gz"):
         with gzip.open(dataFilePath, "rb") as f:
             totalRows = sum(bl.count(b'\n') for bl in blocks(f))
@@ -38,7 +40,7 @@ def main(filename, numStates, saliency, outputDirPath, fileTag, numProcesses, ve
 
     determineSaliency(saliency, dataFilePath, rowList, numStates, outputDirPath, fileTag, filename, numProcesses, verbose)
 
-    print("Total Time:", time.time() - tTotal) if verbose else print("    {} Completed".format(filename))
+    print("Total Time:", time.time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
 
 def determineSaliency(saliency, dataFilePath, rowList, numStates, outputDirPath, fileTag, filename, numProcesses, verbose):
@@ -70,12 +72,12 @@ def s1Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, filename, nu
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s1Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     # Reading in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath)); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath), flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1 
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
@@ -83,18 +85,19 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
     
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating expected frequency...")
+        print("Calculating expected frequency...", flush=True)
         tExp = time.time()
         printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
 
     for i, state in enumerate(uniqueStates):
 
-        if verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: print(".", end="", flush=True)
 
         expFreqArr[state] += stateCounts[i]
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp, flush=True)
 
     return expFreqArr
 
@@ -116,19 +119,19 @@ def s2Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, filename, nu
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s2Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     # Reading in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath)); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath), flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
     multiprocessRows = dataArr.shape[0]
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
 
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating Scores...")
+        print("Calculating Scores...", flush=True)
         tExp = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -137,7 +140,8 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
 
-        if verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: print(".", end="", flush=True)
 
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
@@ -147,7 +151,7 @@ def s2Calc(dataFilePath, rowsToCalculate, numStates, verbose):
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp, flush=True)
 
     return expFreqArr
 
@@ -168,12 +172,12 @@ def s3Exp(dataFilePath, rowList, numStates, outputDirPath, fileTag, filename, nu
 # Function that calculates the expected frequencies for the S3 metric over a chunk of the data
 def s3Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     # Reading in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath)); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from {}...".format(dataFilePath), flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
     multiprocessRows, numCols = dataArr.shape
 
@@ -183,7 +187,7 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
     
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating Scores...")
+        print("Calculating Scores...", flush=True)
         tExp = time.time()
         printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -191,11 +195,12 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     # We tally a one for all the state/column combinations we observe (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in range(multiprocessRows):
 
-        if verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and row in printCheckmarks: print(".", end="", flush=True)
 
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]], dataArr[row, basePermutationArr[1]]] += 1
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp, flush=True)
 
     return expFreqArr
 

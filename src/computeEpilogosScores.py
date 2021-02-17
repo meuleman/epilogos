@@ -22,6 +22,8 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
 
         filename = dataFilePath.name.split(".")[0]
 
+        if not verbose: print("    {}\t".format(filename), end="", flush=True)
+
         if dataFilePath.name.endswith("gz"):
             with gzip.open(dataFilePath, "rb") as f:
                 totalRows = sum(bl.count(b'\n') for bl in blocks(f))
@@ -41,7 +43,7 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
 
         determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
 
-        print("Total Time:", time.time() - tTotal) if verbose else print("    {} Completed".format(filename))
+        print("Total Time:", time.time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
     except OSError as err:
         if err.errno == 16:
             print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
@@ -86,12 +88,12 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file..."); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
     
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -99,7 +101,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     numCols = dataArr.shape[1]
 
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating Scores...")
+        print("Calculating Scores...", flush=True)
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -108,14 +110,15 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         
-        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
 
         uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
         for i, state in enumerate(uniqueStates):
             # Function input is obsFreq and expFreq
             scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
     
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
@@ -137,12 +140,12 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s2 metric over a given range of rows
 def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file..."); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -151,7 +154,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     numStates = sharedArr[2]
 
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating Scores...")
+        print("Calculating Scores...", flush=True)
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -165,7 +168,8 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     permutations = numCols * (numCols - 1)
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
-        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
 
         uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
         for i, state1 in enumerate(uniqueStates):
@@ -181,7 +185,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         # Reset the array so it doesn't carry over values
         rowObsArr.fill(0)
     
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
     
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
@@ -202,12 +206,12 @@ def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Helper for the multiprocessing implemented in s3
 def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file..."); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead) 
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True) 
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -223,7 +227,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)), expFreqArr)
 
     if verbose and rowsToCalculate[0] == 0:
-        print("Calculating Scores...")
+        print("Calculating Scores...", flush=True)
         tScore = time.time()
         printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
         percentDone = 0
@@ -233,7 +237,8 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     rowScoreArr = np.zeros(numStates, dtype=np.float32)
     for dataRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
-        if verbose and rowsToCalculate[0] == 0 and dataRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
+        if verbose and rowsToCalculate[0] == 0 and dataRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and dataRow in printCheckmarks: print(".", end="", flush=True)
 
         if dataRow < dataArr.shape[0]:
             # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
@@ -245,7 +250,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
             # Reset the array so it doesn't carry over scores from other rows
             rowScoreArr.fill(0)
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):

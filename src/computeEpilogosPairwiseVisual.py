@@ -42,31 +42,11 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time.time() - tRead)
 
-    print("MAX of distanceArrReal:", np.amax(np.abs(distanceArrReal)))
-    print("len of distanceArrReal:", len(distanceArrReal))
-    print(distanceArrReal[:10])
-    print("MAX of distanceArrNull:", np.amax(np.abs(distanceArrNull)))
-    print("len of distanceArrNull:", len(distanceArrNull))
-    print(distanceArrNull[:10])
-    print("MAX of maxDiffArr:", np.amax(np.abs(maxDiffArr)))
-    print("len of maxDiffArr:", len(maxDiffArr))
-    print(maxDiffArr[:10])
-    print("MAX of diffArr:", np.amax(np.abs(diffArr)))
-    print("len of diffArr:", len(diffArr))
-    print(diffArr[:10])
-
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time.time()
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates)
     print("    Time:", time.time() - tFit)
-
-    print("MAX of dataReal:", np.amax(np.abs(dataReal)))
-    print("len of dataReal:", len(dataReal))
-    print(dataReal[:10])
-    print("MAX of dataNull:", np.amax(np.abs(dataNull)))
-    print("len of dataNull:", len(dataNull))
-    print(dataNull[:10])
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
@@ -132,10 +112,6 @@ def readInData(outputDirPath, numProcesses, numStates):
         results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("temp_nullDistances_*.npz"), itertools.repeat(realNames)))
     pool.join()
 
-
-    print("len of pairwisedelta glob:", len(list(outputDirPath.glob("pairwiseDelta_*.txt.gz"))))
-    print("Lenght of results:", len(results))
-
     # Concatenating all chunks to the real differences dataframe
     for diffDFChunk, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
@@ -181,9 +157,6 @@ def readTableMulti(realFile, nullFile, realNames):
 def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
-    print("indices start:", idx[:10])
-    print("indices end:", idx[-10:])
-    print("indices len:", len(idx))
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 

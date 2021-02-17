@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 import time
 
-def main(outputDirectory, storedExpInput, fileTag):
-    tTotal = time.time()
+def main(outputDirectory, storedExpInput, fileTag, verbose):
+    if verbose: tTotal = time.time()
 
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
@@ -27,13 +27,22 @@ def main(outputDirectory, storedExpInput, fileTag):
     # normalize expected frequency array
     expFreqArr = (expFreqArr / np.sum(expFreqArr)).astype(np.float32)
 
-    print("Total Sum:", np.sum(expFreqArr))
+    if verbose: print("Expected Frequency Array Sum (should == 1):", np.sum(expFreqArr))
 
     # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
-    print("Total Time:", time.time() - tTotal)
+    print("Total Time:", time.time() - tTotal) if verbose else print("    Completed")
+
+# Helper for slurm to send boolean values
+def strToBool(string):
+    if string == 'True':
+        return True
+    elif string == 'False':
+        return False
+    else:
+        raise ValueError("Invalid boolean string")
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]))
 

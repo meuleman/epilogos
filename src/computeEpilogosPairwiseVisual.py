@@ -13,6 +13,7 @@ import gzip
 import multiprocessing
 from contextlib import closing
 import itertools
+import os
 
 def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     tTotal = time.time()
@@ -86,8 +87,11 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     print("    Time:", time.time() - tMetrics)
 
     # Create Bed file of top 1000 loci with adjacent merged
+    print("Creating .bed file of top loci...")
+    tBed = time.time()
     roiPath = outputDirPath / "largestDistanceLoci_{}.bed".format(fileTag)
     sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
+    print("    Time:", time.time() - tBed)
 
     print("Total Time:", time.time() - tTotal)
 
@@ -101,30 +105,37 @@ def readInData(outputDirPath, numProcesses):
         chrOrder.append("chr{}".format(i))
     chrOrder.append("chrX")
 
-    # Data frames to dump inputed data into
+    # Data frame to dump inputed data into
     diffDF = pd.DataFrame(columns=realNames)
-    nullDistanceDF = pd.DataFrame(columns=nullNames)
     
     # Multiprocess the reading
     with closing(multiprocessing.Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("nullDistances_*.txt.gz"), itertools.repeat(realNames), itertools.repeat(nullNames)))
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("temp_nullDistances_*.npz"), itertools.repeat(realNames), itertools.repeat(nullNames)))
     pool.join()
 
-    # Concatenating all chunks to the DataFrames
-    for diffDFChunk, nullDistanceDFChunk in results:
+    # Concatenating all chunks to the real differences dataframe
+    for diffDFChunk, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
-        nullDistanceDF = pd.concat((nullDistanceDF, nullDistanceDFChunk), axis=0, ignore_index=True)
 
     # Sorting the dataframes by chromosomal location
     diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
-    nullDistanceDF["chr"] = pd.Categorical(nullDistanceDF["chr"], categories=chrOrder, ordered=True)
     diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-    nullDistanceDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
     # Convert dataframes to np arrays for easier manipulation
     locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
     diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=float)
-    distanceArrNull = nullDistanceDF.iloc[:,3].to_numpy(dtype=float).flatten()
+
+    # Creating array of null distances ordered by chromosome based on the read in chunks
+    nullChunks = list(zip(*list(zip(*results))[1]))
+    index = nullChunks[0].index(chrOrder[0])
+    distanceArrNull = nullChunks[1][index]
+    for chrName in chrOrder[1:]:
+        index = nullChunks[0].index(chrName)
+        distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
+
+    # Cleaning up the temp files after we've read them
+    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+        os.remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -138,9 +149,9 @@ def readInData(outputDirPath, numProcesses):
 
 def readTableMulti(realFile, nullFile, realNames, nullNames):
     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
-    nullDistanceDFChunk = pd.read_table(Path(nullFile), header=None, sep="\t", names=nullNames)
+    npzFile = np.load(Path(nullFile))
 
-    return diffDFChunk, nullDistanceDFChunk
+    return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
 # Helper to fit the distances
 def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):

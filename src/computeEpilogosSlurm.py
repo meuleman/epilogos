@@ -8,22 +8,25 @@ import subprocess
 from pathlib import PurePath
 import errno
 
+from pandas.core.algorithms import value_counts
+
 @click.command()
-@click.option("-f", "--file-directory", "fileDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
-@click.option("-s", "--state-model", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
-@click.option("-l", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1, 2, or 3)")
+@click.option("-n", "--number-of-states", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
+@click.option("-s", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1, 2, or 3)")
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default=["both"], show_default=True, multiple=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default=["null"], multiple=True, help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
-def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool):
+@click.option("-v", "--verbose", "verbose", is_flag=True, multiple=True, help="If flag is enabled, program will print verbose outputs on current processes")
+def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool, verbose):
     """
     This script computes scores for chromatin states across the genome.
     """
 
     # Handling case if user inputs flag multiples times
-    if len(fileDirectory) > 1:
+    if len(inputDirectory) > 1:
         raise ValueError("Too many [-f, --file-directory] arguments provided")
     elif len(outputDirectory) > 1:
         raise ValueError("Too many [-o, --output-directory] arguments provided")
@@ -39,7 +42,9 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         raise ValueError("Too many [-c, --num-cores] arguments provided")
     elif len(exitBool) > 1:
         raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
-    fileDirectory = fileDirectory[0]
+    elif len(verbose) > 1:
+        raise ValueError("Too many [-v, --verbose] arguments provided")
+    inputDirectory = inputDirectory[0]
     outputDirectory = outputDirectory[0]
     numStates = numStates[0]
     saliency = saliency[0]
@@ -48,13 +53,14 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     numProcesses = numProcesses[0]
     if exitBool:
         exitBool = exitBool[0]
+    if verbose:
+        verbose = verbose[0]
 
-
-    dataFilePath = Path(fileDirectory)
+    inputDirPath = Path(inputDirectory)
     outputDirPath = Path(outputDirectory)
 
     print()
-    print("Input Directory =", dataFilePath)
+    print("Input Directory =", inputDirPath)
     print("State Model =", numStates)
     print("Saliency level =", saliency)
     print("Output Directory =", outputDirPath)
@@ -68,22 +74,22 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     # Making paths absolute
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
-    if not PurePath(dataFilePath).is_absolute():
-        dataFilePath = Path.cwd() / dataFilePath
+    if not PurePath(inputDirPath).is_absolute():
+        inputDirPath = Path.cwd() / inputDirPath
 
     # For making sure all files are consistently named
-    fileTag = "{}_saliency{}".format(dataFilePath.name, saliency)
+    fileTag = "{}_s{}".format(inputDirPath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
 
     # Check that paths are valid before doing anything
-    if not dataFilePath.exists():
-        raise FileNotFoundError("Given path does not exist: {}".format(str(dataFilePath)))
-    if not dataFilePath.is_dir():
-        raise NotADirectoryError("Given path is not a directory: {}".format(str(dataFilePath)))
-    if not list(dataFilePath.glob("*")):
-        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(dataFilePath))
+    if not inputDirPath.exists():
+        raise FileNotFoundError("Given path does not exist: {}".format(str(inputDirPath)))
+    if not inputDirPath.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(inputDirPath)))
+    if not list(inputDirPath.glob("*")):
+        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(inputDirPath))
 
     # If the output directory does not exist yet, make it for the user 
     if not outputDirPath.exists():
@@ -124,7 +130,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
     else:     
         expJobIDArr = []   
         print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
-        for file in dataFilePath.glob("*"):
+        for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
             if file.name.split(".")[-1] == "genome":
                 continue
@@ -151,14 +157,14 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses)
+                pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
 
                 if saliency == 1:
-                    slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 2:
-                    slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 elif saliency == 3:
-                    slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                    slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -196,14 +202,14 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
 
-        pythonCommand = "python {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag)
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag, verbose)
 
         if saliency == 1:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 2:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
         elif saliency == 3:
-            slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(expJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -218,7 +224,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         # Calculate the observed frequencies and scores
         print("\nSubmitting Slurm Jobs for Score Calculation....")
         scoreJobIDArr = []
-        for file in dataFilePath.glob("*"):
+        for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
             if file.name.split(".")[-1] == "genome":
                 continue
@@ -245,22 +251,22 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
                 
                 computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
 
                 if modeOfOperation == "s":
                     if saliency == 1:
-                        slurmCommand = "sbatch --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 else:
                     if saliency == 1:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S1_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 2:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S2_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                     elif saliency == 3:
-                        slurmCommand = "sbatch --dependency=afterok:{} --job-name=S3_{}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+                        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -277,7 +283,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
         # Write scores out to gzipped text files
         print("\nSubmitting Slurm Jobs for Writing to Score Files....")
         writeJobIDArr = []
-        for file in dataFilePath.glob("*"):
+        for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
             if file.name.split(".")[-1] == "genome":
                 continue
@@ -304,7 +310,7 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
 
                 computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-                pythonCommand = "python {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag)
+                pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag, verbose)
 
                 slurmCommand = "sbatch --dependency=afterok:{} --job-name=S{}_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, saliency, jobName, jobOutPath, jobErrPath, pythonCommand)
 
@@ -339,7 +345,8 @@ def main(fileDirectory, outputDirectory, numStates, saliency, modeOfOperation, e
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
                 break
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
-                print("\nERROR RUNNING JOBS: CANCELLING ALL REMAING JOBS\n")
+                print("\nERROR RUNNING JOBS: CANCELLING ALL REMAINING JOBS\n")
+                print("Please check error logs in: {}/.err/\n".format(outputDirPath))
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
                 

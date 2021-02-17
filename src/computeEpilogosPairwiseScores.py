@@ -45,7 +45,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
     # totalRows = math.ceil(basePairs / 200)
 
     # Chrname is actually filename
-    chrName = file1Path.name.split(".")[0]
+    filename = file1Path.name.split(".")[0]
 
     if file1Path.name.endswith("gz"):
         with gzip.open(file1Path, "rb") as f:
@@ -87,12 +87,13 @@ def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag,
 
     print("Writing output to disk...")
     tWrite = time.time()
+    chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
     # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
     # If it's the null data, we will just write the signed squared euclidean distances
     if realOrNull.lower() == "real":
-        writeReal(diffArr, outputDirPath, fileTag, chrName)
+        writeReal(diffArr, outputDirPath, fileTag, filename, chrName)
     elif realOrNull.lower() == "null":
-        writeNull(nullDistancesArr, outputDirPath, fileTag, chrName)
+        writeNull(nullDistancesArr, outputDirPath, fileTag, filename, chrName)
     else:
         raise ValueError("Could not determine if writing real or null data")
     print("    Time:", time.time() - tWrite)
@@ -116,44 +117,43 @@ def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
     if rowsToCalculate[0] == 0:
         print("Reading data from file 1...")
         tRead1 = time.time()
-    file1DF = pd.read_table(file1Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
+    # Dont want to read in locations
+    cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
+    # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
+    file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tRead1)
 
     if rowsToCalculate[0] == 0:
         print("Reading data from file 2...")
         tRead2 = time.time()
-    file2DF = pd.read_table(file2Path, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t")
+    cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
+    # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
+    file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if rowsToCalculate[0] == 0:
         print("    Time: ", time.time() - tRead2)
 
     if realOrNull.lower() == "real":
-        # Converting to a np array for faster functions later
-        file1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        file2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
+        return file1Arr, file2Arr
     elif realOrNull.lower() == "null":
-        # Converting to a np array for faster functions later
-        unshuffledFile1Arr = file1DF.iloc[:,3:].to_numpy(dtype=int) - 1
-        unshuffledFile2Arr = file2DF.iloc[:,3:].to_numpy(dtype=int) - 1
-
         if rowsToCalculate[0] == 0:
             print("Shuffling input matrices...")
             tShuffle = time.time()
         # Combining the arrays for per row shuffling
-        combinedArr = np.concatenate((unshuffledFile1Arr, unshuffledFile2Arr), axis=1)
+        combinedArr = np.concatenate((file1Arr, file2Arr), axis=1)
 
         # Row independent vectorized shuffling of the 2 arrays
         randomIndices = np.argsort(np.random.rand(*combinedArr.shape), axis=1)
         shuffledCombinedArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
-        file1Arr = shuffledCombinedArr[:,:unshuffledFile1Arr.shape[1]]
-        file2Arr = shuffledCombinedArr[:,unshuffledFile1Arr.shape[1]:]
+        shuffledFile1Arr = shuffledCombinedArr[:,:file1Arr.shape[1]]
+        shuffledFile2Arr = shuffledCombinedArr[:,file1Arr.shape[1]:]
 
         if rowsToCalculate[0] == 0:
             print("    Time:", time.time() - tShuffle)
+        
+        return shuffledFile1Arr, shuffledFile2Arr
     else:
         raise ValueError("Could not determine whether score calculation is for real or null data")
-
-    return file1Arr, file2Arr
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
@@ -305,11 +305,11 @@ def klScoreND(obs, exp):
 
 
 # Helper for writing when we are working with real data
-def writeReal(diffArr, outputDirPath, fileTag, chrName):
+def writeReal(diffArr, outputDirPath, fileTag, filename, chrName):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    deltaTxtPath = outputDirPath / "pairwiseDelta_{}_{}.txt.gz".format(fileTag, chrName)
+    deltaTxtPath = outputDirPath / "pairwiseDelta_{}_{}.txt.gz".format(fileTag, filename)
     deltaTxt = gzip.open(deltaTxtPath, "wt")
 
     # Create a location array
@@ -325,23 +325,13 @@ def writeReal(diffArr, outputDirPath, fileTag, chrName):
 
 
 # Helper for writing when we are working with null data
-def writeNull(nullDistancesArr, outputDirPath, fileTag, chrName):
+def writeNull(nullDistancesArr, outputDirPath, fileTag, filename, chrName):
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
-    nullDistancesTxtPath = outputDirPath / "nullDistances_{}_{}.txt.gz".format(fileTag, chrName)
-    nullDistancesTxt = gzip.open(nullDistancesTxtPath, "wt")
+    nullDistancesPath = outputDirPath / "temp_nullDistances_{}_{}.npz".format(fileTag, filename)
 
-    # Create a location array
-    numRows = nullDistancesArr.shape[0]
-    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
-
-    # Creating a string to write out the nullDistancess array
-    nullDistancesTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\n"
-    nullDistancesStr = "".join(nullDistancesTemplate.format(locationArr[i], nullDistancesArr[i]) for i in range(len(nullDistancesArr)))
-
-    nullDistancesTxt.write(nullDistancesStr)
-    nullDistancesTxt.close()
+    np.savez_compressed(nullDistancesPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
 
 
 # Helper to store the score arrays combined with the location arrays

@@ -19,7 +19,6 @@ from pandas.core.algorithms import value_counts
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default=["null"], multiple=True, help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
-@click.option("-v", "--verbose", "verbose", is_flag=True, multiple=True, help="If flag is enabled, program will print verbose outputs on current processes")
 def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool, verbose):
     """
     This script computes scores for chromatin states across the genome.
@@ -42,8 +41,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         raise ValueError("Too many [-c, --num-cores] arguments provided")
     elif len(exitBool) > 1:
         raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
-    elif len(verbose) > 1:
-        raise ValueError("Too many [-v, --verbose] arguments provided")
     inputDirectory = inputDirectory[0]
     outputDirectory = outputDirectory[0]
     numStates = numStates[0]
@@ -53,8 +50,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     numProcesses = numProcesses[0]
     if exitBool:
         exitBool = exitBool[0]
-    if verbose:
-        verbose = verbose[0]
+    verbose=True
 
     inputDirPath = Path(inputDirectory)
     outputDirPath = Path(outputDirectory)

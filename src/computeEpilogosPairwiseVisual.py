@@ -89,7 +89,7 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     # Create Bed file of top 1000 loci with adjacent merged
     print("Creating .bed file of top loci...")
     tBed = time.time()
-    roiPath = outputDirPath / "largestDistanceLoci_{}.bed".format(fileTag)
+    roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
     sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
     print("    Time:", time.time() - tBed)
 

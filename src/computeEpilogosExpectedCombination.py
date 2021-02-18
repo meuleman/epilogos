@@ -29,7 +29,6 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
 
     if verbose: print("Expected Frequency Array Sum (should == 1):", np.sum(expFreqArr))
 
-    # Save the expected frequency array
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
     print("Total Time:", time.time() - tTotal) if verbose else print("    [Done]")

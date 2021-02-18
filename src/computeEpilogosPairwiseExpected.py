@@ -18,31 +18,6 @@ def main(filename1, filename2, numStates, saliency, outputDirPath, fileTag, numP
     file2Path = Path(filename2)
     outputDirPath = Path(outputDirPath)
 
-    ###################################################
-    ##
-    ##   chrName is hacky, find a better way later
-    ##
-    ####################################################
-    # chrName  = file1Path.name.split("_")[-1].split(".")[0]
-
-    # # Get the genome file
-    # genomeFileList = list(file1Path.parents[0].glob("*.genome"))
-    # if len(genomeFileList) > 1:
-    #     raise IOError("Too many '.genome' files provided")
-    # elif len(genomeFileList) < 1:
-    #     raise IOError("No '.genome' file provided")
-
-    # # Read line by line until we are on correct chromosome, then read out number of bp
-    # for genomeFile in genomeFileList:
-    #     with open(genomeFile, "r") as gf:
-    #         line = gf.readline()
-    #         while chrName not in line:
-    #             line = gf.readline()
-    #         basePairs = int(line.split()[1])
-
-    # totalRows = math.ceil(basePairs / 200)
-
-    # Chrname is actually filename
     filename = file1Path.name.split(".")[0]
 
     if file1Path.name.endswith("gz"):
@@ -91,32 +66,23 @@ def s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
 # Function that reads in data and calculates the expected frequencies for the S1 metric over a chunk of the data
 def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
     # Read in the data
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 1...")
-        tRead1 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 1..."); tRead1 = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead1)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead1)
 
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 2...")
-        tRead2 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 2..."); tRead2 = time.time()
     cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead2)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead2)
 
     # Combine the arrays to calculate a combined background
-    if rowsToCalculate[0] == 0:
-        print("Combining input matrices...")
-        tConvert = time.time()
+    if rowsToCalculate[0] == 0: print("Combining input matrices..."); tConvert = time.time()
     dataArr = np.concatenate((file1Arr, file2Arr), axis=1)
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tConvert)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
@@ -131,14 +97,11 @@ def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
 
     for i, state in enumerate(uniqueStates):
 
-        if rowsToCalculate[0] == 0 and i in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
+        if rowsToCalculate[0] == 0 and i in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
 
         expFreqArr[state] += stateCounts[i]
 
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tExp)
+    if rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp)
 
     return expFreqArr
 
@@ -160,33 +123,24 @@ def s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
 # Function that reads in data and calculates the expected frequencies for the S2 metric over a chunk of the data
 def s2Calc(file1Path, file2Path, rowsToCalculate, numStates):
     # Read in the data
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 1...")
-        tRead1 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 1..."); tRead1 = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead1)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead1)
 
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 2...")
-        tRead2 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 2..."); tRead2 = time.time()
     cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead2)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead2)
 
     # Converting to a np array for faster functions
     # Also combine the arrays to calculate a combined background
-    if rowsToCalculate[0] == 0:
-        print("Combining input matrices...")
-        tConvert = time.time()
+    if rowsToCalculate[0] == 0: print("Combining input matrices..."); tConvert = time.time()
     dataArr = np.concatenate((file1Arr, file2Arr), axis=1)
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tConvert)    
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tConvert)    
 
     multiprocessRows = dataArr.shape[0]
 
@@ -202,9 +156,7 @@ def s2Calc(file1Path, file2Path, rowsToCalculate, numStates):
     # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
 
-        if rowsToCalculate[0] == 0 and row in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
+        if rowsToCalculate[0] == 0 and row in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True) 
         for i, state1 in enumerate(uniqueStates):
@@ -214,8 +166,7 @@ def s2Calc(file1Path, file2Path, rowsToCalculate, numStates):
                 else: # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tExp)
+    if rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp)
 
     return expFreqArr
 

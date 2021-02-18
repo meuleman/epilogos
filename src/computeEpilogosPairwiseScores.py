@@ -92,31 +92,23 @@ def determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numSta
 
 def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
     # Read in the data
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 1...")
-        tRead1 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 1..."); tRead1 = time.time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead1)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead1)
 
-    if rowsToCalculate[0] == 0:
-        print("Reading data from file 2...")
-        tRead2 = time.time()
+    if rowsToCalculate[0] == 0: print("Reading data from file 2..."); tRead2 = time.time()
     cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if rowsToCalculate[0] == 0:
-        print("    Time: ", time.time() - tRead2)
+    if rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead2)
 
     if realOrNull.lower() == "real":
         return file1Arr, file2Arr
     elif realOrNull.lower() == "null":
-        if rowsToCalculate[0] == 0:
-            print("Shuffling input matrices...")
-            tShuffle = time.time()
+        if rowsToCalculate[0] == 0: print("Shuffling input matrices..."); tShuffle = time.time()
         # Combining the arrays for per row shuffling
         combinedArr = np.concatenate((file1Arr, file2Arr), axis=1)
 
@@ -126,8 +118,7 @@ def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
         shuffledFile1Arr = shuffledCombinedArr[:,:file1Arr.shape[1]]
         shuffledFile2Arr = shuffledCombinedArr[:,file1Arr.shape[1]:]
 
-        if rowsToCalculate[0] == 0:
-            print("    Time:", time.time() - tShuffle)
+        if rowsToCalculate[0] == 0: print("    Time:", time.time() - tShuffle)
         
         return shuffledFile1Arr, shuffledFile2Arr
     else:
@@ -179,11 +170,8 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
-        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
+        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
 
-        # if obsRow < file1Arr.shape[0]:
         uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
         for i, state in enumerate(uniqueStates):
             # Function input is obsFreq and expFreq
@@ -193,8 +181,7 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
             # Function input is obsFreq and expFreq
             scoreArr2[scoreRow, state] = klScore(stateCounts[i] / numCols2, expFreqArr[state])
 
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tScore)
+    if rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore)
         
 
 # Function that calculates the scores for the S2 metric
@@ -237,9 +224,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
     permutations = numCols * (numCols - 1)
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
 
-        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks:
-            percentDone += 10
-            print("    {}% Completed".format(percentDone))
+        if rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone))
 
         uniqueStates, stateCounts = np.unique(file1Arr[obsRow], return_counts=True)
         for i, state1 in enumerate(uniqueStates):
@@ -265,8 +250,7 @@ def s2Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
         # Reset the array so it doesn't carry over values
         rowObsArr.fill(0)
 
-    if rowsToCalculate[0] == 0:
-        print("    Time:", time.time() - tScore)
+    if rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore)
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)

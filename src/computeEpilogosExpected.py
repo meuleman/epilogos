@@ -206,7 +206,6 @@ def s3Calc(dataFilePath, rowsToCalculate, numStates, verbose):
 
 # Helper to store the expected frequency arrays
 def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
-    # Creating a file path
     expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, filename)
     expFreqPath = outputDirPath / expFreqFilename
 

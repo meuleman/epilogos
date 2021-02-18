@@ -260,11 +260,6 @@ def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
     numRows = scoreArr.shape[0]
     locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
-    # # Getting rid of potential empty row at end
-    # if np.all(scoreArr[-1] == 0):
-    #     scoreArr = scoreArr[:-1]
-
-    # Creating a file path
     scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
     scoreFilePath = outputDirPath / scoreFilename
 

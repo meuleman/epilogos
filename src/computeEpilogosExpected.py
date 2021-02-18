@@ -90,9 +90,6 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates, verbose):
         percentDone = 0
     printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
 
-    if rowsToCalculate[0] == 0: print("Unique States:", uniqueStates)
-    if rowsToCalculate[0] == 0: print("printCheckmarks:", printCheckmarks)
-
     for i, state in enumerate(uniqueStates):
 
         if verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)

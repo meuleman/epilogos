@@ -80,23 +80,12 @@ def s1Calc(dataFilePath, rowsToCalculate, numStates, verbose):
     if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
-
+    
+    if verbose and rowsToCalculate[0] == 0: print("Calculating expected frequency...", flush=True); tExp = time.time()
     # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
-    
-    if verbose and rowsToCalculate[0] == 0:
-        print("Calculating expected frequency...", flush=True)
-        tExp = time.time()
-        percentDone = 0
-    printCheckmarks = [int(len(uniqueStates) * float(i / 10)) for i in range(1, 10)]
-
     for i, state in enumerate(uniqueStates):
-
-        if verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
-        if not verbose and rowsToCalculate[0] == 0 and i in printCheckmarks: print(".", end="", flush=True)
-
         expFreqArr[state] += stateCounts[i]
-
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tExp, flush=True)
 
     return expFreqArr

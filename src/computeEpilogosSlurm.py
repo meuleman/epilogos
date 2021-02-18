@@ -19,7 +19,7 @@ from pandas.core.algorithms import value_counts
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default=["null"], multiple=True, help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
-def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool, verbose):
+def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool):
     """
     This script computes scores for chromatin states across the genome.
     """

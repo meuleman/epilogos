@@ -1,3 +1,4 @@
+from os import error
 import numpy as np
 import sys
 from pathlib import Path
@@ -14,92 +15,69 @@ import gzip
 from contextlib import closing
 
 def main(file1, file2, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses, realOrNull):
-    tTotal = time.time()
+    try:
+        tTotal = time.time()
 
-    file1Path = Path(file1)
-    file2Path = Path(file2)
-    outputDirPath = Path(outputDirPath)
+        file1Path = Path(file1)
+        file2Path = Path(file2)
+        outputDirPath = Path(outputDirPath)
 
-    ###################################################
-    ##
-    ##   chrName is hacky, find a better way later
-    ##
-    ####################################################
-    # chrName  = file1Path.name.split("_")[-1].split(".")[0]
+        filename = file1Path.name.split(".")[0]
 
-    # # Get the genome file
-    # genomeFileList = list(file1Path.parents[0].glob("*.genome"))
-    # if len(genomeFileList) > 1:
-    #     raise IOError("Too many '.genome' files provided")
-    # elif len(genomeFileList) < 1:
-    #     raise IOError("No '.genome' file provided")
+        if file1Path.name.endswith("gz"):
+            with gzip.open(file1Path, "rb") as f:
+                totalRows = sum(bl.count(b'\n') for bl in blocks(f))
+        else:
+            with open(file1Path, "rb") as f:
+                totalRows = sum(bl.count(b'\n') for bl in blocks(f))
 
-    # # Read line by line until we are on correct chromosome, then read out number of bp
-    # for genomeFile in genomeFileList:
-    #     with open(genomeFile, "r") as gf:
-    #         line = gf.readline()
-    #         while chrName not in line:
-    #             line = gf.readline()
-    #         basePairs = int(line.split()[1])
+        # If user doesn't want to choose number of cores use as many as available
+        if numProcesses == 0:
+            numProcesses = multiprocessing.cpu_count()
 
-    # totalRows = math.ceil(basePairs / 200)
+        # Split the rows up according to the number of cores we have available
+        rowList = []
+        for i in range(numProcesses):
+            rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+            rowList.append(rowsToCalculate)
 
-    # Chrname is actually filename
-    filename = file1Path.name.split(".")[0]
+        # Calculate the scores
+        scoreArr1, scoreArr2 = determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull)
 
-    if file1Path.name.endswith("gz"):
-        with gzip.open(file1Path, "rb") as f:
-            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
-    else:
-        with open(file1Path, "rb") as f:
-            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
+        print("Calculating Raw Differences...")
+        tDiff = time.time()
+        diffArr = scoreArr1 - scoreArr2
+        print("    Time:", time.time() - tDiff)
 
-    # If user doesn't want to choose number of cores use as many as available
-    if numProcesses == 0:
-        numProcesses = multiprocessing.cpu_count()
+        # Only calculate the distances for the null data in this step
+        if realOrNull.lower() == "null":
+            print("Calculating Squared Euclidean Distance and Maximum Contributing Difference...")
+            tDistance = time.time()
+            diffSign = np.sign(np.sum(diffArr, axis=1))
+            nullDistancesArr = np.sum(np.square(diffArr), axis=1) * diffSign
+            print("    Time:", time.time() - tDistance)
 
-    # Split the rows up according to the number of cores we have available
-    rowList = []
-    for i in range(numProcesses):
-        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
-        rowList.append(rowsToCalculate)
+        print("Writing output to disk...")
+        tWrite = time.time()
+        chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
+        # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
+        # If it's the null data, we will just write the signed squared euclidean distances
+        if realOrNull.lower() == "real":
+            writeReal(diffArr, outputDirPath, fileTag, filename, chrName)
+        elif realOrNull.lower() == "null":
+            writeNull(nullDistancesArr, outputDirPath, fileTag, filename, chrName)
+        else:
+            raise ValueError("Could not determine if writing real or null data")
+        print("    Time:", time.time() - tWrite)
 
-    # Calculate the scores
-    scoreArr1, scoreArr2 = determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull)
-
-    # # Getting rid of potential empty row at end
-    # if np.all(scoreArr1[-1] == 0):
-    #     scoreArr1 = scoreArr1[:-1]
-    #     scoreArr2 = scoreArr2[:-1]
-
-    print("Calculating Raw Differences...")
-    tDiff = time.time()
-    diffArr = scoreArr1 - scoreArr2
-    print("    Time:", time.time() - tDiff)
-
-    # Only calculate the distances for the null data in this step
-    if realOrNull.lower() == "null":
-        print("Calculating Squared Euclidean Distance and Maximum Contributing Difference...")
-        tDistance = time.time()
-        diffSign = np.sign(np.sum(diffArr, axis=1))
-        nullDistancesArr = np.sum(np.square(diffArr), axis=1) * diffSign
-        print("    Time:", time.time() - tDistance)
-
-    print("Writing output to disk...")
-    tWrite = time.time()
-    chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
-    # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
-    # If it's the null data, we will just write the signed squared euclidean distances
-    if realOrNull.lower() == "real":
-        writeReal(diffArr, outputDirPath, fileTag, filename, chrName)
-    elif realOrNull.lower() == "null":
-        writeNull(nullDistancesArr, outputDirPath, fileTag, filename, chrName)
-    else:
-        raise ValueError("Could not determine if writing real or null data")
-    print("    Time:", time.time() - tWrite)
-
-    print("Total Time:", time.time() - tTotal)
-
+        print("Total Time:", time.time() - tTotal)
+    except OSError as err:
+        if err.errno == 16:
+            print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
+        else:
+            print(err)
+    except:
+        print(sys.exc_info()[0])
 
 # Helper function to determine the pick the correct saliency function
 def determineSaliency(saliency, file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull):

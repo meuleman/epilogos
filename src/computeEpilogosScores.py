@@ -49,6 +49,8 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
             print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
         else:
             print(err)
+    except:
+        print(sys.exc_info()[0])
 
 def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if saliency == 1:

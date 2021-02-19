@@ -334,7 +334,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
     if not exitBool:
-        jobCheckStr = "sacct --format=JobID%15,JobName%45,State --jobs {}".format(allJobIDs)
+        jobCheckStr = "sacct --format=JobID%20,JobName%45,State --jobs {}".format(allJobIDs)
 
         # Run the job check once before the while loop to get the info lines
         sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
@@ -349,9 +349,9 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line:
-                    jobID = line.split()[0].split(".")[0]
+                    jobID = line.split()[0]
                     # Don't want to print if we have already printed
-                    if jobID not in completedJobs:
+                    if jobID not in completedJobs and ".batch" not in jobID:
                         completedJobs.append(jobID)
                         print(line, flush=True)
             # Check if there was an error, if so cancel everything and exit the program

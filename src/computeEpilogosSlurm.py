@@ -363,9 +363,11 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 break
             # If final job is done, exit the program
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+                print("All Jobs Finished. Exiting now")
                 break
 
             sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            spLines = sp.stdout.split("\n")
 
 
             

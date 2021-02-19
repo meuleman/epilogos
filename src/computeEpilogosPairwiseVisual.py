@@ -42,6 +42,16 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time.time() - tRead)
 
+    print("After full read:")
+    print("\tlocations:", locationArr[365340:365345])
+    print("\tReal Distances:", distanceArrReal[365340:365345])
+    print("\tnull distances:", distanceArrNull[365340:365345])
+    print("\tmax difference:", maxDiffArr[365340:365345])
+    print("\tdifferences:", diffArr[365340:365345])
+    print("\tMax Distances locs:", locationArr[(-np.abs(distanceArrReal)).argsort()[:5]])
+    print("\tMax Distances:", distanceArrReal[(-np.abs(distanceArrReal)).argsort()[:5]])
+
+
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time.time()
@@ -63,6 +73,19 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
     print("    Time:", time.time() - tPVal)
 
+    # Create an output file which summarizes the results
+    print("Writing metrics file...")
+    tMetrics = time.time()
+    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
+    print("    Time:", time.time() - tMetrics)
+
+    # Create Bed file of top 1000 loci with adjacent merged
+    print("Creating .bed file of top loci...")
+    tBed = time.time()
+    roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
+    print("    Time:", time.time() - tBed)
+
     # Determine Significance Threshold (based on n*)
     genomeAutoCorrelation = 0.987
     nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
@@ -79,19 +102,6 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses):
     tCManhattan = time.time()
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
     print("    Time:", time.time() - tCManhattan)
-
-    # Create an output file which summarizes the results
-    print("Writing metrics file...")
-    tMetrics = time.time()
-    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    print("    Time:", time.time() - tMetrics)
-
-    # Create Bed file of top 1000 loci with adjacent merged
-    print("Creating .bed file of top loci...")
-    tBed = time.time()
-    roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
-    print("    Time:", time.time() - tBed)
 
     print("Total Time:", time.time() - tTotal)
 
@@ -133,9 +143,9 @@ def readInData(outputDirPath, numProcesses, numStates):
         index = nullChunks[0].index(chrName)
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
-    # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-        os.remove(file)
+    # # Cleaning up the temp files after we've read them
+    # for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+    #     os.remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -268,6 +278,14 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
+    print("In Create Genome Manhattan:")
+    print("\tlocations:", locationArr[365340:365345])
+    print("\tReal Distances:", distanceArrReal[365340:365345])
+    print("\tmax difference:", maxDiffArr[365340:365345])
+    print("\tMax Distances locs:", locationArr[(-np.abs(distanceArrReal)).argsort()[:5]])
+    print("\tMax Distances:", distanceArrReal[(-np.abs(distanceArrReal)).argsort()[:5]])
+
+
     logSignificanceThreshold = -np.log10(significanceThreshold)
 
     fig = plt.figure(figsize=(16,9))
@@ -342,6 +360,13 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
     logSignificanceThreshold = -np.log10(significanceThreshold)    
     pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
     xticks = np.where(locationArr[:, 1] == "0")[0]
+
+    print("In Create Chromosome Manhattan:")
+    print("\tlocations:", locationArr[365340:365345])
+    print("\tReal Distances:", distanceArrReal[365340:365345])
+    print("\tmax difference:", maxDiffArr[365340:365345])
+    print("\tMax Distances locs:", locationArr[(-np.abs(distanceArrReal)).argsort()[:5]])
+    print("\tMax Distances:", distanceArrReal[(-np.abs(distanceArrReal)).argsort()[:5]])
 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
@@ -506,6 +531,13 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
 
+    print("In Write Metrics:")
+    print("\tlocations:", locationArr[365340:365345])
+    print("\tReal Distances:", distanceArrReal[365340:365345])
+    print("\tmax difference:", maxDiffArr[365340:365345])
+    print("\tMax Distances locs:", locationArr[(-np.abs(distanceArrReal)).argsort()[:5]])
+    print("\tMax Distances:", distanceArrReal[(-np.abs(distanceArrReal)).argsort()[:5]])
+
     metricsTxtPath = outputDirPath / "pairwiseMetrics_{}.txt.gz".format(fileTag)
     metricsTxt = gzip.open(metricsTxtPath, "wt")
 
@@ -519,6 +551,13 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
 
 # Helper function to create a roiURL bed file of the top 1000 loci (Adjacent loci are merged)
 def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr):
+    print("IN Send ROI URL:")
+    print("\tlocations:", locationArr[365340:365345])
+    print("\tReal Distances:", distanceArr[365340:365345])
+    print("\tmax difference:", maxDiffArr[365340:365345])
+    print("\tMax Distances locs:", locationArr[(-np.abs(distanceArr)).argsort()[:5]])
+    print("\tMax Distances:", distanceArr[(-np.abs(distanceArr)).argsort()[:5]])
+
     with open(filePath, 'w') as f:
         # Sort the significant values
         sortedIndices = (-np.abs(distanceArr)).argsort()[:1000]

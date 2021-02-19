@@ -137,11 +137,12 @@ def readInData(outputDirPath, numProcesses, numStates):
     # Creating array of null distances ordered by chromosome based on the read in chunks
     nullChunks = list(zip(*list(zip(*results))[1]))
     print("length of null chunks:", len(nullChunks))
-    index = nullChunks[0].index(chrOrder[0])
+    # index = nullChunks[0].index(chrOrder[0])
+    index = nullChunks[0].index(chrOrder[-1])
     distanceArrNull = nullChunks[1][index]
-    for chrName in chrOrder[1:]:
-        index = nullChunks[0].index(chrName)
-        distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
+    # for chrName in chrOrder[1:]:
+    #     index = nullChunks[0].index(chrName)
+    #     distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
     # # Cleaning up the temp files after we've read them
     # for file in outputDirPath.glob("temp_nullDistances_*.npz"):

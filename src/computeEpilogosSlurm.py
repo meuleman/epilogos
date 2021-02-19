@@ -336,6 +336,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     if not exitBool:
         jobCheckStr = "sacct --format=JobID%20,JobName%45,State --jobs {}".format(allJobIDs)
 
+        print(jobCheckStr)
+
         # Run the job check once before the while loop to get the info lines
         sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
         spLines = sp.stdout.split("\n")

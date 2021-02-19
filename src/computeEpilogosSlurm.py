@@ -104,7 +104,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
-    print("Slurm .out log files are located at: {}".format(outputDirPath / ".out/"))
+    print("\nSlurm .out log files are located at: {}".format(outputDirPath / ".out/"))
     print("Slurm .err log files are located at: {}".format(outputDirPath / ".err/"))
 
 
@@ -362,6 +362,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 break
             # If final job is done, exit the program
             if len(spLines) > 2 and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+                print(spLines)
+                print(sp.stdout)
                 print("All Jobs Finished. Exiting now")
                 break
             

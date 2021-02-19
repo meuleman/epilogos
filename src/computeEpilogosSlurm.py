@@ -346,7 +346,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
         # Every ten seconds check if the final job is done, if it is exit the program
         while True:
-            print(spLines[2:])
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line:

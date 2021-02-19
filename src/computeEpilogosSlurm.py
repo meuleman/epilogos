@@ -336,7 +336,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     if not exitBool:
         jobCheckStr = "sacct --format=JobID%20,JobName%45,State --jobs {}".format(allJobIDs)
 
-        print(jobCheckStr)
+        time.sleep(10)
 
         # Run the job check once before the while loop to get the info lines
         sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
@@ -350,7 +350,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         while True:
             # Print out jobs when they are completed
             for line in spLines[2:]:
-                if "COMPLETED" in line:
+                if "COMPLETED" in line and "allocation" not in line:
                     jobID = line.split()[0]
                     # Don't want to print if we have already printed
                     if jobID not in completedJobs and ".batch" not in jobID:
@@ -363,7 +363,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
             # If final job is done, exit the program
-            if len(spLines) > 2 and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+            if len(spLines) > 2 and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
                 print(spLines)
                 print(sp.stdout)
                 print("All Jobs Finished. Exiting now")

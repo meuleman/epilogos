@@ -48,8 +48,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     modeOfOperation = modeOfOperation[0]
     expFreqDir = expFreqDir[0]
     numProcesses = numProcesses[0]
-    if exitBool:
-        exitBool = not exitBool[0]
+    # if exitBool:
+    #     exitBool = not exitBool[0]
     verbose=True
 
     inputDirPath = Path(inputDirectory)
@@ -333,7 +333,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
-    if exitBool:
+    if not exitBool:
         jobCheckStr = "sacct --format=JobID,JobName,State --jobs {}".format(allJobIDs)
 
         # Run the job check once before the while loop to get the info lines

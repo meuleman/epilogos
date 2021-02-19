@@ -347,6 +347,14 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         # Every ten seconds check if the final job is done, if it is exit the program
         while True:
             time.sleep(10)
+            # Print out jobs when they are completed
+            for line in spLines[2:]:
+                if "COMPLETED" in line:
+                    jobID = line.split()[0]
+                    # Don't want to print if we have already printed
+                    if jobID not in completedJobs:
+                        completedJobs.append(jobID)
+                        print(line, flush=True)
             # Check if there was an error, if so cancel everything and exit the program
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
                 print("\nERROR RUNNING JOBS: CANCELLING ALL REMAINING JOBS\n")
@@ -356,14 +364,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             # If final job is done, exit the program
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
                 break
-            # Print out jobs when they are completed
-            for line in spLines[2:]:
-                if "COMPLETED" in line:
-                    jobID = line.split()[0]
-                    # Don't want to print if we have already printed
-                    if jobID not in completedJobs:
-                        completedJobs.append(jobID)
-                        print(line)
 
             sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

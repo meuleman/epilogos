@@ -296,18 +296,6 @@ def writeNull(nullDistancesArr, outputDirPath, fileTag, filename, chrName):
     np.savez_compressed(nullDistancesPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
 
 
-# Helper to store the score arrays combined with the location arrays
-def storeScores(dataArr, scoreArr, locationArr, outputDirPath, fileTag, filename):
-    # Creating a file path
-    scoreFilename = "temp_scores_{}_{}.npy".format(fileTag, filename)
-    scoreFilePath = outputDirPath / scoreFilename
-
-    # Concatenating the locationArr and dataArr into one helps writing later
-    combinedArr = np.concatenate((locationArr, scoreArr), axis=1)
-
-    np.save(scoreFilePath, combinedArr, allow_pickle=False)
-
-
 # Helper for reading number of lines in input file
 def blocks(files, size=65536):
     while True:

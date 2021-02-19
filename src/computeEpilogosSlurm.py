@@ -18,7 +18,7 @@ from pandas.core.algorithms import value_counts
 @click.option("-m", "--mode-of-operation", "modeOfOperation", type=click.Choice(["bg", "s", "both"]), default=["both"], show_default=True, multiple=True, help="bg for background, s for scores, both for both")
 @click.option("-b", "--background-directory", "expFreqDir", type=str, default=["null"], multiple=True, help="Path to where the background frequency array is read from (-m s) or written to (-m bg, -m both) [default: output-directory]")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
+@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool):
     """
     This script computes scores for chromatin states across the genome.
@@ -49,7 +49,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     expFreqDir = expFreqDir[0]
     numProcesses = numProcesses[0]
     if exitBool:
-        exitBool = exitBool[0]
+        exitBool = not exitBool[0]
     verbose=True
 
     inputDirPath = Path(inputDirectory)
@@ -104,11 +104,13 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
+    print("Slurm .out log files are located at: {}".format(outputDirPath / ".out/"))
+    print("Slurm .err log files are located at: {}".format(outputDirPath / ".err/"))
+
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
     storedExpPath = Path(expFreqDir) / "exp_freq_{}.npy".format(fileTag)
-    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -332,19 +334,42 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
     if exitBool:
-        lastJobCheckStr = "sacct --format=State --jobs {}".format(allJobIDs)
+        jobCheckStr = "sacct --format=JobID,JobName,State --jobs {}".format(allJobIDs)
+
+        # Run the job check once before the while loop to get the info lines
+        sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+        spLines = sp.stdout.split("\n")
+        # Print out the info lines
+        print(spLines[0])
+        print(spLines[1])
+        completedJobs = []
 
         # Every ten seconds check if the final job is done, if it is exit the program
         while True:
             time.sleep(10)
-            sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
-                break
+            # Check if there was an error, if so cancel everything and exit the program
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
                 print("\nERROR RUNNING JOBS: CANCELLING ALL REMAINING JOBS\n")
                 print("Please check error logs in: {}/.err/\n".format(outputDirPath))
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
+            # If final job is done, exit the program
+            if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+                break
+            # Print out jobs when they are completed
+            for line in spLines[2:]:
+                if "COMPLETED" in line:
+                    jobID = line.split()[0]
+                    # Don't want to print if we have already printed
+                    if jobID not in completedJobs:
+                        completedJobs.append(jobID)
+                        print(line)
+
+            sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+
+
+            
+
                 
 if __name__ == "__main__":
     main()

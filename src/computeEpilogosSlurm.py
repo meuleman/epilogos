@@ -363,7 +363,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
             # If final job is done, exit the program
-            if len(spLines) > 2 and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
+            # Checks are if the 3rd line is empty, if there are still running or pending values and if allocation is not the output
+            if not spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
                 print(spLines)
                 print(sp.stdout)
                 print("All Jobs Finished. Exiting now")

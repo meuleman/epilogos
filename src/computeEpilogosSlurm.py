@@ -346,7 +346,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
         # Every ten seconds check if the final job is done, if it is exit the program
         while True:
-            time.sleep(10)
+            print(spLines[2:])
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line:
@@ -365,6 +365,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
                 print("All Jobs Finished. Exiting now")
                 break
+            
+            time.sleep(10)
 
             sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             spLines = sp.stdout.split("\n")

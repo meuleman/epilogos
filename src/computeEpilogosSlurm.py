@@ -362,6 +362,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 break
             # If final job is done, exit the program
             if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
+                print(sp.stdout)
                 print("All Jobs Finished. Exiting now")
                 break
             

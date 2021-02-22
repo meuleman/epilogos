@@ -48,8 +48,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     modeOfOperation = modeOfOperation[0]
     expFreqDir = expFreqDir[0]
     numProcesses = numProcesses[0]
-    # if exitBool:
-    #     exitBool = not exitBool[0]
     verbose=True
 
     inputDirPath = Path(inputDirectory)
@@ -61,7 +59,15 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     print("Saliency level =", saliency)
     print("Output Directory =", outputDirPath)
     print("Mode of Operation =", modeOfOperation)
-    print("Background Directory =", expFreqDir)
+    if expFreqDir == "null":
+        print("Background Directory =", outputDirPath)
+    else:
+        print("Background Directory =", expFreqDir)
+    if numProcesses == 0:
+        print("Number of Cores = All available")
+    else:
+        print("Number of Cores =", numProcesses)
+    
 
     # If user does not specificy a directory to look for expected frequencies default the output directory
     if expFreqDir == "null":
@@ -127,7 +133,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             return
     else:     
         expJobIDArr = []   
-        print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
+        print("\nSTEP 1: Per data file background frequency calculation")
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
             if file.name.split(".")[-1] == "genome":
@@ -177,7 +183,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
         print("    JobIDs:", expJobIDStr)
 
-        print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
+        print("\nSTEP 2: Background frequency combination")
 
         jobName = "exp_comb_{}".format(fileTag)
         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -220,7 +226,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
-        print("\nSubmitting Slurm Jobs for Score Calculation....")
+        print("\nSTEP 3: Score calculation")
         scoreJobIDArr = []
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
@@ -279,7 +285,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         print("    JobIDs:", scoreJobIDStr)
 
         # Write scores out to gzipped text files
-        print("\nSubmitting Slurm Jobs for Writing to Score Files....")
+        print("\nSTEP 4: Writing score files")
         writeJobIDArr = []
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
@@ -310,7 +316,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
                 pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag, verbose)
 
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name=S{}_{}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, saliency, jobName, jobOutPath, jobErrPath, pythonCommand)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
                 sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -323,13 +329,13 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         print("    JobIDs:", writeJobIDStr)
         if modeOfOperation == "both":
             allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr)
-            print("\nAll JobIDs:", allJobIDs)
+            print("\nAll JobIDs:\n\t", allJobIDs)
         elif modeOfOperation == "s":
             allJobIDs = "{},{}".format(scoreJobIDStr, writeJobIDStr)
-            print("\nAll JobIDs:", allJobIDs)
+            print("\nAll JobIDs:\n\t", allJobIDs)
         elif modeOfOperation == "bg":
             allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
-            print("\nAll JobIDs:", allJobIDs)
+            print("\nAll JobIDs:\n\t", allJobIDs)
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
@@ -344,15 +350,34 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         print(spLines[0])
         print(spLines[1])
         completedJobs = []
+        calculationStep = 0
 
-        # Every ten seconds check if the final job is done, if it is exit the program
+        # Every ten seconds check what jobs are done and print accordingly
         while True:
+            # Check the jobs which are done
+            sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            spLines = sp.stdout.split("\n")
+
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line and "allocation" not in line:
                     jobID = line.split()[0]
                     # Don't want to print if we have already printed
                     if jobID not in completedJobs and ".batch" not in jobID:
+                        # Want to print out the calculation step we are on
+                        if calculationStep == 0 and line.split()[1].startswith("exp_calc"):
+                            print("\nStep 1\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            calculationStep += 1
+                        elif calculationStep == 1 and line.split()[1].startswith("exp_comb"):
+                            print("\nStep 2\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            calculationStep += 1
+                        elif calculationStep == 2 and line.split()[1].startswith("score"):
+                            print("\nStep 3\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            calculationStep += 1
+                        elif calculationStep == 3 and line.split()[1].startswith("write"):
+                            print("\nStep 4\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            calculationStep += 1
+
                         completedJobs.append(jobID)
                         print(line, flush=True)
             # Check if there was an error, if so cancel everything and exit the program
@@ -364,17 +389,14 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             # If final job is done, exit the program
             # Checks are if the 3rd line is not empty, if there are no more running or pending values and if an "allocation" job is not in the output
             if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
-                print("All Jobs Finished Successfully. Please find output in: {}".format(outputDirPath))
-                print("Please find logs in {}\nand{}".format(outputDirPath / ".out", outputDirPath / ".err"))
+                print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))
+                print("\nPlease find output and error logs in {} and {} respectively".format(outputDirPath / ".out", "/.err"))
                 break
             
             if saliency == 1:
                 time.sleep(2)
             else:
                 time.sleep(10)
-
-            sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            spLines = sp.stdout.split("\n")
                 
 if __name__ == "__main__":
     main()

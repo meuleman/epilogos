@@ -78,8 +78,13 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
     if verbose: print("\nNumber of Processes:", numProcesses)
 
     # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    # sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    sharedArr = multiprocessing.sharedctypes.RawArray('f', totalRows * numStates)
+    try:
+        sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    except OSError as err:
+        if err.errno == 16:
+            print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
+        else:
+            print(err)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:

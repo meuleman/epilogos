@@ -35,15 +35,23 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
         print(sys.exc_info()[0])
         print("IN line number determination")
 
-    # If user doesn't want to choose number of cores use as many as available
-    if numProcesses == 0:
-        numProcesses = multiprocessing.cpu_count()
+    try:
+        # If user doesn't want to choose number of cores use as many as available
+        if numProcesses == 0:
+            numProcesses = multiprocessing.cpu_count()
+    except:
+        print(sys.exc_info()[0])
+        print("In numprocesses")
 
-    # Split the rows up according to the number of cores we have available
-    rowList = []
-    for i in range(numProcesses):
-        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
-        rowList.append(rowsToCalculate)
+    try:
+        # Split the rows up according to the number of cores we have available
+        rowList = []
+        for i in range(numProcesses):
+            rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+            rowList.append(rowsToCalculate)
+    except:
+        print(sys.exc_info()[0])
+        print("In rowList")
 
     determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
 
@@ -57,24 +65,36 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
     #     print(sys.exc_info()[0])
 
 def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
-    if saliency == 1:
-        s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-    elif saliency == 2:
-        s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-    elif saliency == 3:
-        s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-    else:
-        raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
+    try:
+        if saliency == 1:
+            s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+        elif saliency == 2:
+            s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+        elif saliency == 3:
+            s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+        else:
+            raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
+    except:
+        print(sys.exc_info()[0])
+        print("In determine saliency")
 
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
-    return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    try:
+        return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    except:
+        print(sys.exc_info()[0])
+        print("In shared to numpy")
 
 # initiliazer for multiprocessing
 def _init(sharedArr_):
-    global sharedArr
-    sharedArr = sharedArr_
+    try:
+        global sharedArr
+        sharedArr = sharedArr_
+    except:
+        print(sys.exc_info()[0])
+        print("In init")
 
 # Function that deploys the processes used to calculate the scores for the s1 metric. Also call function to store scores
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
@@ -101,8 +121,11 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         print(sys.exc_info()[0])
         print("in chrName determinations")
 
-
-    storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
+    try:
+        storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
+    except:
+        print(sys.exc_info()[0])
+        print("in storing scores (shared to numpy)")
 
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):

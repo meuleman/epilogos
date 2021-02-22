@@ -153,21 +153,18 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
-    try:
-        scoreArr = sharedToNumpy(*sharedArr)
-        # Calculate the observed frequencies and final scores for the designated rows
-        for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
-            
-            if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
-            if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
+    scoreArr = sharedToNumpy(*sharedArr)
 
-            uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
-            for i, state in enumerate(uniqueStates):
-                # Function input is obsFreq and expFreq
-                scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In score calculation", flush=True)
+    # # Calculate the observed frequencies and final scores for the designated rows
+    # for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+        
+    #     if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+    #     if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
+
+    #     uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+    #     for i, state in enumerate(uniqueStates):
+    #         # Function input is obsFreq and expFreq
+    #         scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
 
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
 
@@ -305,16 +302,15 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
-    # # Create a location array
-    # numRows = scoreArr.shape[0]
-    # locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
+    # Create a location array
+    numRows = scoreArr.shape[0]
+    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
-    # scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
-    # scoreFilePath = outputDirPath / scoreFilename
+    scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
+    scoreFilePath = outputDirPath / scoreFilename
 
-    # # Savez saves space allowing location to be stored as string and scoreArr as float
-    # np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
-    pass
+    # Savez saves space allowing location to be stored as string and scoreArr as float
+    np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)

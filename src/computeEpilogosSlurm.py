@@ -8,7 +8,7 @@ import subprocess
 from pathlib import PurePath
 import errno
 
-from pandas.core.algorithms import value_counts
+from pandas.core.algorithms import mode, value_counts
 
 @click.command()
 @click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
@@ -125,6 +125,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
+    expJobIDArr = []   
     if modeOfOperation == "s":
         try:
             expFreqArr = np.load(storedExpPath, allow_pickle=False)
@@ -132,7 +133,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             print(err)
             return
     else:     
-        expJobIDArr = []   
         print("\nSTEP 1: Per data file background frequency calculation")
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
@@ -224,10 +224,10 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
         print("    JobID:", combinationJobID)
 
+    scoreJobIDArr = []
     if modeOfOperation == "s" or modeOfOperation == "both":
         # Calculate the observed frequencies and scores
         print("\nSTEP 3: Score calculation")
-        scoreJobIDArr = []
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files
             if file.name.split(".")[-1] == "genome":
@@ -351,34 +351,44 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             spLines = sp.stdout.split("\n")
 
+            # Printing separate step headers
+            if len(completedJobs) == 0 and calculationStep == 0 and (modeOfOperation == "bg" or modeOfOperation == "both"):
+                print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+            elif len(completedJobs) == len(expJobIDArr) and calculationStep == 1 and (modeOfOperation == "bg" or modeOfOperation == "both"):
+                print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+            elif modeOfOperation == "s":
+                if len(completedJobs) == 0 and calculationStep == 0:
+                    print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
+                elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
+                    print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
+            elif modeOfOperation == "both":
+                if len(completedJobs) == len(expJobIDArr) + 1 and calculationStep == 2:
+                    print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
+                elif len(completedJobs) == len(expJobIDArr) + 1 + len(scoreJobIDArr) and calculationStep == 3:
+                    print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
+
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line and "allocation" not in line:
                     jobID = line.split()[0]
                     # Don't want to print if we have already printed
                     if jobID not in completedJobs and ".batch" not in jobID:
-                        # Want to print out the calculation step we are on
-                        if calculationStep == 0 and line.split()[1].startswith("exp_calc"):
-                            print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                            calculationStep += 1
-                        elif calculationStep == 1 and line.split()[1].startswith("exp_comb"):
-                            print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                            calculationStep += 1
-                        elif calculationStep == 2 and line.split()[1].startswith("score"):
-                            print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                            calculationStep += 1
-                        elif calculationStep == 3 and line.split()[1].startswith("write"):
-                            print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                            calculationStep += 1
-
                         completedJobs.append(jobID)
                         print(line, flush=True)
+
             # Check if there was an error, if so cancel everything and exit the program
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
                 print("\nERROR RUNNING JOBS: CANCELLING ALL REMAINING JOBS\n")
                 print("Please check error logs in: {}/.err/\n".format(outputDirPath))
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
+
             # If final job is done, exit the program
             # Checks are if the 3rd line is not empty, if there are no more running or pending values and if an "allocation" job is not in the output
             if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:

@@ -305,19 +305,16 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
-    try:
-        # Create a location array
-        numRows = scoreArr.shape[0]
-        locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
+    # # Create a location array
+    # numRows = scoreArr.shape[0]
+    # locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
-        scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
-        scoreFilePath = outputDirPath / scoreFilename
+    # scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
+    # scoreFilePath = outputDirPath / scoreFilename
 
-        # Savez saves space allowing location to be stored as string and scoreArr as float
-        np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In storing scores", flush=True)
+    # # Savez saves space allowing location to be stored as string and scoreArr as float
+    # np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
+
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)

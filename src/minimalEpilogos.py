@@ -61,7 +61,14 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     print("Saliency level =", saliency)
     print("Output Directory =", outputDirPath)
     print("Mode of Operation =", modeOfOperation)
-    print("Background Directory =", expFreqDir)
+    if expFreqDir == "null":
+        print("Background Directory =", outputDirPath)
+    else:
+        print("Background Directory =", expFreqDir)
+    if numProcesses == 0:
+        print("Number of Cores = All available")
+    else:
+        print("Number of Cores =", numProcesses)
 
     # If user does not specificy a directory to look for expected frequencies default the output directory
     if expFreqDir == "null":
@@ -100,7 +107,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
     storedExpPath = Path(expFreqDir) / "exp_freq_{}.npy".format(fileTag)
-    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
     if modeOfOperation == "s":

@@ -383,7 +383,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             # Checks are if the 3rd line is not empty, if there are no more running or pending values and if an "allocation" job is not in the output
             if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
                 print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))
-                print("\nPlease find output and error logs in {} and {} respectively".format(outputDirPath / ".out", "/.err"))
+                print("\nPlease find output and error logs in {} and {} respectively\n".format(outputDirPath / ".out", "/.err"))
                 break
             
             if saliency == 1:

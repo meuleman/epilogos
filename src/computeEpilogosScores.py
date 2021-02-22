@@ -103,15 +103,11 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         print("In shared array", flush=True)
 
     # Start the processes
-    try:
-        with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-            pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
-        pool.join()
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In multiprocessing", flush=True)
+    # with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+    #     pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+    # pool.join()
 
-    # chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
+    chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
 
     storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
 

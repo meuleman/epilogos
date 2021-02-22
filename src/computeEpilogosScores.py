@@ -314,7 +314,7 @@ def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
 
     # # Savez saves space allowing location to be stored as string and scoreArr as float
     # np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
-
+    pass
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)

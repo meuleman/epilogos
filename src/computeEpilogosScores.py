@@ -126,20 +126,16 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
-    try:
-        # Read in the data
-        if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
-        # Dont want to read in locations
-        cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
-        # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
-        dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-        if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In reading data", flush=True)
+    # # Read in the data
+    # if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
+    # # Dont want to read in locations
+    # cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
+    # # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
+    # dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+    # if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
 
-    # # Loading the expected frequency array
-    # expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    # Loading the expected frequency array
+    expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     numCols = dataArr.shape[1]
 

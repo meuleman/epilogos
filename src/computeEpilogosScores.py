@@ -138,12 +138,8 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         print(sys.exc_info()[0], flush=True)
         print("In reading data", flush=True)
 
-    try:
-        # Loading the expected frequency array
-        expFreqArr = np.load(expFreqPath, allow_pickle=False)
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In reading in expFreqArr", flush=True)
+    # Loading the expected frequency array
+    expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     numCols = dataArr.shape[1]
 
@@ -153,7 +149,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
-    # scoreArr = sharedToNumpy(*sharedArr)
+    scoreArr = sharedToNumpy(*sharedArr)
 
     # Calculate the observed frequencies and final scores for the designated rows
     for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):

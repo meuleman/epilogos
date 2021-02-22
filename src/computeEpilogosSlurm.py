@@ -334,7 +334,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
     if not exitBool:
-        jobCheckStr = "sacct --format=JobID%20,JobName%45,State --jobs {}".format(allJobIDs)
+        jobCheckStr = "sacct --format=JobID%20,JobName%50,State%10 --jobs {}".format(allJobIDs)
 
         # Run the job check once before the while loop to get the info lines
         sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
@@ -375,10 +375,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
             sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
             spLines = sp.stdout.split("\n")
-
-
-            
-
                 
 if __name__ == "__main__":
     main()

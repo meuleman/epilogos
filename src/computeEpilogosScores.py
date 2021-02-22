@@ -24,34 +24,22 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
 
     if not verbose: print("    {}\t".format(filename), end="", flush=True)
 
-    try:
-        if dataFilePath.name.endswith("gz"):
-            with gzip.open(dataFilePath, "rb") as f:
-                totalRows = sum(bl.count(b'\n') for bl in blocks(f))
-        else:
-            with open(dataFilePath, "rb") as f:
-                totalRows = sum(bl.count(b'\n') for bl in blocks(f))
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("IN line number determination", flush=True)
+    if dataFilePath.name.endswith("gz"):
+        with gzip.open(dataFilePath, "rb") as f:
+            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
+    else:
+        with open(dataFilePath, "rb") as f:
+            totalRows = sum(bl.count(b'\n') for bl in blocks(f))
 
-    try:
-        # If user doesn't want to choose number of cores use as many as available
-        if numProcesses == 0:
-            numProcesses = multiprocessing.cpu_count()
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In numprocesses", flush=True)
+    # If user doesn't want to choose number of cores use as many as available
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
 
-    try:
-        # Split the rows up according to the number of cores we have available
-        rowList = []
-        for i in range(numProcesses):
-            rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
-            rowList.append(rowsToCalculate)
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In rowList", flush=True)
+    # Split the rows up according to the number of cores we have available
+    rowList = []
+    for i in range(numProcesses):
+        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+        rowList.append(rowsToCalculate)
 
     determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
 
@@ -65,18 +53,14 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
     #     print(sys.exc_info()[0], flush=True)
 
 def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
-    try:
-        if saliency == 1:
-            s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-        elif saliency == 2:
-            s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-        elif saliency == 3:
-            s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-        else:
-            raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In determine saliency", flush=True)
+    if saliency == 1:
+        s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+    elif saliency == 2:
+        s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+    elif saliency == 3:
+        s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+    else:
+        raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
 
 
 # Helper for unflattening a shared array into a 2d numpy array
@@ -85,18 +69,15 @@ def sharedToNumpy(sharedArr, numRows, numStates):
     
 # initiliazer for multiprocessing
 def _init(sharedArr_):
-    try:
-        global sharedArr
-        sharedArr = sharedArr_
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In init", flush=True)
+    global sharedArr
+    sharedArr = sharedArr_
 
 # Function that deploys the processes used to calculate the scores for the s1 metric. Also call function to store scores
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
     # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:

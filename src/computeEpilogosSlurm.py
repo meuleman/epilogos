@@ -329,26 +329,19 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         print("    JobIDs:", writeJobIDStr)
         if modeOfOperation == "both":
             allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr)
-            print("\nAll JobIDs:\n\t", allJobIDs)
+            print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "s":
             allJobIDs = "{},{}".format(scoreJobIDStr, writeJobIDStr)
-            print("\nAll JobIDs:\n\t", allJobIDs)
+            print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "bg":
             allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
-            print("\nAll JobIDs:\n\t", allJobIDs)
+            print("\nAll JobIDs:\n    ", allJobIDs)
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
     if not exitBool:
-        jobCheckStr = "sacct --format=JobID%20,JobName%50,State%10 --jobs {}".format(allJobIDs)
+        jobCheckStr = "sacct --format=JobID%18,JobName%50,State%10 --jobs {}".format(allJobIDs)
 
-        # Run the job check once before the while loop to get the info lines
-        sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-        spLines = sp.stdout.split("\n")
-        # Print out the info lines
-        print()
-        print(spLines[0])
-        print(spLines[1])
         completedJobs = []
         calculationStep = 0
 
@@ -366,16 +359,16 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                     if jobID not in completedJobs and ".batch" not in jobID:
                         # Want to print out the calculation step we are on
                         if calculationStep == 0 and line.split()[1].startswith("exp_calc"):
-                            print("\nStep 1\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                             calculationStep += 1
                         elif calculationStep == 1 and line.split()[1].startswith("exp_comb"):
-                            print("\nStep 2\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                             calculationStep += 1
                         elif calculationStep == 2 and line.split()[1].startswith("score"):
-                            print("\nStep 3\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                             calculationStep += 1
                         elif calculationStep == 3 and line.split()[1].startswith("write"):
-                            print("\nStep 4\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                            print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                             calculationStep += 1
 
                         completedJobs.append(jobID)

@@ -79,7 +79,7 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 
     # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     # sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    sharedArr = multiprocessing.RawArray('f', totalRows * numStates)
+    sharedArr = multiprocessing.sharedctypes.RawArray('f', totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:

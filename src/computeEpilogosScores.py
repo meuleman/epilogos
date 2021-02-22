@@ -81,8 +81,8 @@ def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, out
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
-    # return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
-    pass
+    return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    
 # initiliazer for multiprocessing
 def _init(sharedArr_):
     try:
@@ -111,11 +111,7 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
         print(sys.exc_info()[0], flush=True)
         print("In multiprocessing", flush=True)
 
-    try:
-        chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("in chrName determinations", flush=True)
+    # chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
 
     storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
 

@@ -138,8 +138,8 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         print(sys.exc_info()[0], flush=True)
         print("In reading data", flush=True)
 
-    # Loading the expected frequency array
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    # # Loading the expected frequency array
+    # expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
     numCols = dataArr.shape[1]
 

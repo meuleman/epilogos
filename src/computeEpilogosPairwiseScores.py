@@ -126,7 +126,7 @@ def readInData(file1Path, file2Path, rowsToCalculate, realOrNull):
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
-    return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
 
 # initiliazer for multiprocessing
 def _init(sharedArr1_, sharedArr2_, totalRows, numStates):
@@ -139,8 +139,8 @@ def _init(sharedArr1_, sharedArr2_, totalRows, numStates):
 def s1Multi(file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull):
     print("\nNumber of Processes:", numProcesses)
 
-    sharedArr1 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    sharedArr2 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr1 = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr2 = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=(sharedArr1, sharedArr2, totalRows, numStates))) as pool:
@@ -188,8 +188,8 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath, realOrNull):
 def s2Multi(file1Path, file2Path, rowList, totalRows, numStates, expFreqPath, numProcesses, realOrNull):
     print("\nNumber of Processes:", numProcesses)
 
-    sharedArr1 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    sharedArr2 = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr1 = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr2 = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=(sharedArr1, sharedArr2, totalRows, numStates))) as pool:

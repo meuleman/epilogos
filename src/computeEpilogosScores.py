@@ -77,7 +77,6 @@ def _init(sharedArr_):
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     try:
         sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     except OSError as err:
@@ -137,7 +136,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
@@ -204,7 +203,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start all the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:

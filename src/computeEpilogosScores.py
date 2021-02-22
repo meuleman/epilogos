@@ -153,18 +153,18 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
-    scoreArr = sharedToNumpy(*sharedArr)
+    # scoreArr = sharedToNumpy(*sharedArr)
 
-    # # Calculate the observed frequencies and final scores for the designated rows
-    # for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+    # Calculate the observed frequencies and final scores for the designated rows
+    for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
         
-    #     if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
-    #     if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
+        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+        if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
 
-    #     uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
-    #     for i, state in enumerate(uniqueStates):
-    #         # Function input is obsFreq and expFreq
-    #         scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+        for i, state in enumerate(uniqueStates):
+            # Function input is obsFreq and expFreq
+            scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
 
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
 

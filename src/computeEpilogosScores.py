@@ -65,7 +65,9 @@ def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, out
 
 # Helper for unflattening a shared array into a 2d numpy array
 def sharedToNumpy(sharedArr, numRows, numStates):
-    return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    # return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
+    return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
+
     
 # initiliazer for multiprocessing
 def _init(sharedArr_):

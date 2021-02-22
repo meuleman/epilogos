@@ -14,43 +14,47 @@ from contextlib import closing
 import gzip
 
 def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses, verbose):
+    # try:
+    if verbose: tTotal = time.time()
+    
+    dataFilePath = Path(file)
+    outputDirPath = Path(outputDirPath)
+
+    filename = dataFilePath.name.split(".")[0]
+
+    if not verbose: print("    {}\t".format(filename), end="", flush=True)
+
     try:
-        if verbose: tTotal = time.time()
-        
-        dataFilePath = Path(file)
-        outputDirPath = Path(outputDirPath)
-
-        filename = dataFilePath.name.split(".")[0]
-
-        if not verbose: print("    {}\t".format(filename), end="", flush=True)
-
         if dataFilePath.name.endswith("gz"):
             with gzip.open(dataFilePath, "rb") as f:
                 totalRows = sum(bl.count(b'\n') for bl in blocks(f))
         else:
             with open(dataFilePath, "rb") as f:
                 totalRows = sum(bl.count(b'\n') for bl in blocks(f))
-
-        # If user doesn't want to choose number of cores use as many as available
-        if numProcesses == 0:
-            numProcesses = multiprocessing.cpu_count()
-
-        # Split the rows up according to the number of cores we have available
-        rowList = []
-        for i in range(numProcesses):
-            rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
-            rowList.append(rowsToCalculate)
-
-        determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
-
-        print("Total Time:", time.time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
     except OSError as err:
-        if err.errno == 16:
-            print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
-        else:
-            print(err)
-    except:
-        print(sys.exc_info()[0])
+        print(err)
+        print("IN line number determination")
+
+    # If user doesn't want to choose number of cores use as many as available
+    if numProcesses == 0:
+        numProcesses = multiprocessing.cpu_count()
+
+    # Split the rows up according to the number of cores we have available
+    rowList = []
+    for i in range(numProcesses):
+        rowsToCalculate = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+        rowList.append(rowsToCalculate)
+
+    determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
+
+    print("Total Time:", time.time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
+    # except OSError as err:
+    #     if err.errno == 16:
+    #         print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
+    #     else:
+    #         print(err)
+    # except:
+    #     print(sys.exc_info()[0])
 
 def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if saliency == 1:
@@ -76,29 +80,50 @@ def _init(sharedArr_):
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    try:
+        sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    except OSError as err:
+        print(err)
+        print("In shared array")
 
     # Start the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-        pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
-    pool.join()
+    try:
+        with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+            pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+        pool.join()
+    except OSError as err:
+        print(err)
+        print("In multiprocessing")
 
-    chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
+    try:
+        chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
+    except OSError as err:
+        print(err)
+        print("in chrName determinations")
+
 
     storeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputDirPath, fileTag, filename, chrName)
 
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
-    # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
-    # Dont want to read in locations
-    cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
-    # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
-    dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
-    
-    # Loading the expected frequency array
-    expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    try:
+        # Read in the data
+        if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
+        # Dont want to read in locations
+        cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
+        # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
+        dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+        if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
+    except OSError as err:
+        print(err)
+        print("In reading data")
+
+    try:
+        # Loading the expected frequency array
+        expFreqArr = np.load(expFreqPath, allow_pickle=False)
+    except OSError as err:
+        print(err)
+        print("In reading in expFreqArr")
 
     numCols = dataArr.shape[1]
 
@@ -108,18 +133,22 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
-    scoreArr = sharedToNumpy(*sharedArr)
-    # Calculate the observed frequencies and final scores for the designated rows
-    for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
-        
-        if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
-        if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
+    try:
+        scoreArr = sharedToNumpy(*sharedArr)
+        # Calculate the observed frequencies and final scores for the designated rows
+        for obsRow, scoreRow in enumerate(range(rowsToCalculate[0], rowsToCalculate[1])):
+            
+            if verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: percentDone += 10; print("    {}% Completed".format(percentDone), flush=True)
+            if not verbose and rowsToCalculate[0] == 0 and obsRow in printCheckmarks: print(".", end="", flush=True)
 
-        uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
-        for i, state in enumerate(uniqueStates):
-            # Function input is obsFreq and expFreq
-            scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
-    
+            uniqueStates, stateCounts = np.unique(dataArr[obsRow], return_counts=True)
+            for i, state in enumerate(uniqueStates):
+                # Function input is obsFreq and expFreq
+                scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
+    except OSError as err:
+        print(err)
+        print("In score calculation")
+
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
 
 
@@ -256,15 +285,19 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
-    # Create a location array
-    numRows = scoreArr.shape[0]
-    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
+    try:
+        # Create a location array
+        numRows = scoreArr.shape[0]
+        locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
-    scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
-    scoreFilePath = outputDirPath / scoreFilename
+        scoreFilename = "temp_scores_{}_{}.npz".format(fileTag, filename)
+        scoreFilePath = outputDirPath / scoreFilename
 
-    # Savez saves space allowing location to be stored as string and scoreArr as float
-    np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
+        # Savez saves space allowing location to be stored as string and scoreArr as float
+        np.savez_compressed(scoreFilePath, locationArr=locationArr, scoreArr=scoreArr)
+    except OSError as err:
+        print(err)
+        print("In storing scores")
 
 
 # Helper to calculate KL-score (used because math.log2 errors out if obsFreq = 0)

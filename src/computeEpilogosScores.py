@@ -67,7 +67,6 @@ def determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, out
 def sharedToNumpy(sharedArr, numRows, numStates):
     # return np.frombuffer(sharedArr.get_obj(), dtype=np.float32).reshape((numRows, numStates))
     return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
-
     
 # initiliazer for multiprocessing
 def _init(sharedArr_):
@@ -79,7 +78,8 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
     if verbose: print("\nNumber of Processes:", numProcesses)
 
     # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    # sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = multiprocessing.RawArray('f', totalRows * numStates)
 
     # Start the processes
     with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:

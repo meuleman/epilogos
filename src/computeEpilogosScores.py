@@ -96,16 +96,12 @@ def _init(sharedArr_):
 def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    try:
-        sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
-    except:
-        print(sys.exc_info()[0], flush=True)
-        print("In shared array", flush=True)
+    # sharedArr = multiprocessing.Array(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
-    # with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-    #     pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
-    # pool.join()
+    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+        pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+    pool.join()
 
     chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
 

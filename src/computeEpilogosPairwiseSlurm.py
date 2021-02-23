@@ -17,8 +17,9 @@ import errno
 @click.option("-n", "--number-of-states", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1 or 2)")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon completion of all processes rather than SLURM submission of all processes")
-def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool):
+@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
+@click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True, help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data")
+def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool, diagnosticBool):
     """
     This script computes and visualizes differences between chromatin states across epigenomes
     """
@@ -37,14 +38,18 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         raise ValueError("Too many [-c, --num-cores] arguments provided")
     elif len(exitBool) > 1:
         raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
+    elif len(diagnosticBool) > 1:
+        raise ValueError("Too many [-d, --diagnostic-figures] arguments provided")
     inputDirectory1 = inputDirectory1[0]
     inputDirectory2 = inputDirectory2[0]
     outputDirectory = outputDirectory[0]
     numStates = numStates[0]
     saliency = saliency[0]
     numProcesses = numProcesses[0]
-    if exitBool:
-        exitBool = exitBool[0]
+    if diagnosticBool:
+        diagnosticBool = True
+    else:
+        diagnosticBool = False
 
     inputDirPath1 = Path(inputDirectory1)
     inputDirPath2 = Path(inputDirectory2)
@@ -56,6 +61,10 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     print("State Model =", numStates)
     print("Saliency level =", saliency)
     print("Output Directory =", outputDirPath)
+    if numProcesses == 0:
+        print("Number of Cores = All available")
+    else:
+        print("Number of Cores =", numProcesses)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         raise ValueError("Saliency Metric Invalid: {} Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison".format(saliency))
@@ -102,10 +111,11 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     # For slurm output and error later
     (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
+    print("\nSlurm .out log files are located at: {}".format(outputDirPath / ".out/"))
+    print("Slurm .err log files are located at: {}".format(outputDirPath / ".err/"))
 
     # Path for storing/retrieving the expected frequency array
     storedExpPath = outputDirPath / "exp_freq_{}.npy".format(fileTag)
-    print("\nBackground Frequency Array Location:", storedExpPath)
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
@@ -114,7 +124,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
 
     expJobIDArr = []   
-    print("\nSubmitting Slurm Jobs for Per Datafile Background Frequency Calculation....")
+    print("\nSTEP 1: Per data file background frequency calculation")
     for file1 in inputDirPath1.glob("*"):
         # Skip over ".genome" files
         if file1.name.split(".")[-1] == "genome":
@@ -169,7 +179,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     print("    JobIDs:", expJobIDStr)
 
-    print("\nSubmitting Slurm Job for Combining Background Frequency Arrays....")
+    print("\nSTEP 2: Background frequency combination")
 
     jobName = "exp_comb_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -211,7 +221,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
 
     # Calculate the observed frequencies and scores
-    print("\nSubmitting Slurm Jobs for Score Calculation....")
+    print("\nSTEP 3: Score calculation")
     scoreRealJobIDArr = []
     scoreNullJobIDArr = []
     for file1 in inputDirPath1.glob("*"):
@@ -287,7 +297,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     print("    Null JobIDs:", scoreNullJobIDStr)
 
     # Fitting, calculating p-values, and visualizing pairiwse differences
-    print("\nSubmitting Slurm Jobs for data visualization....")
+    print("\nSTEP 4: Generating p-values and figures")
 
     jobName = "visual_{}".format(fileTag)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
@@ -310,7 +320,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Create a string for the python commmand
     computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-    pythonCommand = "python {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses)
+    pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses, diagnosticBool)
 
     # Create a string for the slurm command
     if saliency == 1:
@@ -332,20 +342,59 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs
-    if exitBool:
-        lastJobCheckStr = "sacct --format=State --jobs {}".format(allJobIDs)
+    if not exitBool:
+        jobCheckStr = "sacct --format=JobID%18,JobName%50,State%10 --jobs {}".format(allJobIDs)
 
-        # Every ten seconds check if the final job is done, if it is exit the program
+        completedJobs = []
+        calculationStep = 0
+
+        # Every ten seconds check what jobs are done and print accordingly
         while True:
-            time.sleep(10)
-            sp = subprocess.run(lastJobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            if not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout):
-                break
+            # Check the jobs which are done
+            sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            spLines = sp.stdout.split("\n")
+
+            # Printing separate step headers
+            if len(completedJobs) == 0 and calculationStep == 0:
+                print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+            elif len(completedJobs) == len(expJobIDArr) and calculationStep == 1:
+                print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+            elif len(completedJobs) == (len(expJobIDArr) + 1) and calculationStep == 2:
+                print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+            elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == 3:
+                print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                calculationStep += 1
+
+            # Print out jobs when they are completed
+            for line in spLines[2:]:
+                if "COMPLETED" in line and "allocation" not in line:
+                    jobID = line.split()[0]
+                    # Don't want to print if we have already printed
+                    if jobID not in completedJobs and ".batch" not in jobID:
+                        completedJobs.append(jobID)
+                        print(line, flush=True)
+
+            # Check if there was an error, if so cancel everything and exit the program
             if "FAILED" in sp.stdout or "CANCELLED" in sp.stdout:
                 print("\nERROR RUNNING JOBS: CANCELLING ALL REMAINING JOBS\n")
                 print("Please check error logs in: {}/.err/\n".format(outputDirPath))
                 subprocess.run("scancel {}".format(allJobIDs), shell=True)
                 break
+
+            # If final job is done, exit the program
+            # Checks are if the 3rd line is not empty, if there are no more running or pending values and if an "allocation" job is not in the output
+            if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
+                print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))
+                print("\nPlease find output and error logs in {} and {} respectively\n".format(outputDirPath / ".out", "/.err"))
+                break
+            
+            if saliency == 1:
+                time.sleep(2)
+            else:
+                time.sleep(10)
 
 if __name__ == "__main__":
     main()

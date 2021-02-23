@@ -366,10 +366,10 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
             elif modeOfOperation == "both":
-                if len(completedJobs) == len(expJobIDArr) + 1 and calculationStep == 2:
+                if len(completedJobs) == (len(expJobIDArr) + 1) and calculationStep == 2:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                elif len(completedJobs) == len(expJobIDArr) + 1 + len(scoreJobIDArr) and calculationStep == 3:
+                elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
                     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
 

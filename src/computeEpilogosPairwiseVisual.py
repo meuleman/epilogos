@@ -42,11 +42,12 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time()
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses)
     print("    Time:", time() - tFit)
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
+    print("PARAMS: ", params)
 
     # Creating Diagnostic Figures
     if diagnosticBool:
@@ -147,21 +148,52 @@ def readTableMulti(realFile, nullFile, realNames):
 
     return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
+# # Helper to fit the distances
+# def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
+#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
+#     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
+#     dataReal = pd.Series(distanceArrReal[idx])
+#     dataNull = pd.Series(distanceArrNull[idx])
+
+#     # ignore warnings
+#     with warnings.catch_warnings():
+#         warnings.simplefilter("ignore")
+
+#         # Fit the data
+#         params = st.gennorm.fit(dataNull)
+
+#     return params, dataReal, dataNull
+
+
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
+    numTrials = 1000
+
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
+    pool.join()
+
+    params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
+
+    return params, dataReal, dataNull
+
+
+def fitOnBootstrap(distanceArrNull):
+    numSamples = 10000
+    bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=numSamples, replace=True))
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = st.gennorm.fit(dataNull)
+        params = st.gennorm.fit(bootstrapData)
 
-    return params, dataReal, dataNull
+    return params
 
 
 # Helper for creating and saving diagnostic figures
@@ -326,129 +358,6 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     figPath = manhattanDirPath / "manhattan_plot_genome.png"
     fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
-
-# # Helper for generating individual chromosome manhattan plots
-# def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
-#     manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
-#     if not manhattanDirPath.exists():
-#         manhattanDirPath.mkdir(parents=True)
-
-#     logSignificanceThreshold = -np.log10(significanceThreshold)    
-#     pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
-#     xticks = np.where(locationArr[:, 1] == "0")[0]
-
-#     for i in range(len(xticks)):
-#         if i == len(xticks)-1:
-#             fig = plt.figure(figsize=(16,9))
-#             ax = fig.add_subplot(111)
-#             ax.set_facecolor("#FFFFFF")
-#             ax.set_axisbelow(True)
-#             ax.grid(True, axis='y', color='k', linewidth=.25, linestyle="-")
-#             ax.spines["top"].set_visible(False)
-#             ax.spines["right"].set_visible(False)
-#             ax.spines["bottom"].set_visible(False)
-#             ax.set_ylabel("Distance")
-#             plt.xlabel("Location in Chromosome X (Mb)")
-#             plt.title("Differential epilogos between {} and {} donor biosamples (Chromosome X)".format(group1Name, group2Name))
-            
-#             plt.margins(x=0)
-#             ylim = np.amax(np.abs(distanceArrReal)) * 1.1
-#             ax.set_ylim(-ylim, ylim)
-#             yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
-
-#             ax.set_yticks(yticks)
-#             ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
-
-#             axR = ax.twinx()
-#             axR.set_ylabel("P-Value")
-#             axR.spines["top"].set_visible(False)
-#             axR.spines["left"].set_visible(False)
-#             axR.spines["bottom"].set_visible(False)
-#             axR.set_yticks(yticks)
-#             axR.set_ylim(ax.get_ylim())
-#             axR.set_yticklabels(ytickLabels)
-
-#             ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
-#             ax.text(0.99, 0.01, group2Name, verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
-
-#             locationOnGenome = np.arange(len(distanceArrReal))
-
-#             realxticks = np.where((locationOnGenome >= xticks[i]) & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
-#             plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
-
-#             points = np.where((locationOnGenome >= xticks[i]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-#             plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
-
-#             opaqueSigIndices = np.where((locationOnGenome >= xticks[i]) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
-
-#             colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
-#             opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
-#             rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
-#             sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
-
-#             plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none')
-#             ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-#             ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-            
-#             figPath = manhattanDirPath / "manhattan_plot_chrX.png"
-#             fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
-#             plt.close(fig)
-
-#         else:
-#             fig = plt.figure(figsize=(16,9))
-#             ax = fig.add_subplot(111)
-#             ax.set_facecolor("#FFFFFF")
-#             ax.set_axisbelow(True)
-#             ax.grid(True, axis='y', color='k', linewidth=.25, linestyle="-")
-#             ax.spines["top"].set_visible(False)
-#             ax.spines["right"].set_visible(False)
-#             ax.spines["bottom"].set_visible(False)
-#             ax.set_ylabel("Distance")
-#             plt.xlabel("Location in Chromosome {} (Mb)".format(i+1))
-#             plt.title("Differential epilogos between {} and {} donor biosamples (Chromosome {})".format(group1Name, group2Name, i+1))
-            
-#             plt.margins(x=0)
-#             ylim = np.amax(np.abs(distanceArrReal)) * 1.1
-#             ax.set_ylim(-ylim, ylim)
-#             yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
-
-#             ax.set_yticks(yticks)
-#             ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
-
-#             axR = ax.twinx()
-#             axR.set_ylabel("P-Value")
-#             axR.spines["top"].set_visible(False)
-#             axR.spines["left"].set_visible(False)
-#             axR.spines["bottom"].set_visible(False)
-#             axR.set_yticks(yticks)
-#             axR.set_ylim(ax.get_ylim())
-#             axR.set_yticklabels(ytickLabels)
-
-#             ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
-#             ax.text(0.99, 0.01, group2Name, verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
-
-#             locationOnGenome = np.arange(len(distanceArrReal))
-            
-#             realxticks = np.where(((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])) & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
-#             plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
-
-#             points = np.where(((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-#             plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
-
-#             opaqueSigIndices = np.where(((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
-
-#             colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
-#             opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
-#             rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
-#             sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
-
-#             plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none')
-#             ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-#             ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-            
-#             figPath = manhattanDirPath / "manhattan_plot_chr{}.png".format(i+1)
-#             fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
-#             plt.close(fig)
 
 
 # Helper for generating individual chromosome manhattan plots

@@ -1,11 +1,11 @@
-import sys
+from sys import argv
 import numpy as np
-import os
+from os import remove
 from pathlib import Path
-import time
+from time import time
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):
-    if verbose: tTotal = time.time()
+    if verbose: tTotal = time()
 
     outputDirPath = Path(outputDirectory)
     storedExpPath = Path(storedExpInput)
@@ -22,7 +22,7 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
     
     # Clean up temp files
     for file in outputDirPath.glob("temp_exp_freq_*.npy"):
-        os.remove(file)
+        remove(file)
 
     # normalize expected frequency array
     expFreqArr = (expFreqArr / np.sum(expFreqArr)).astype(np.float32)
@@ -31,7 +31,7 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
 
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
-    print("Total Time:", time.time() - tTotal) if verbose else print("    [Done]")
+    print("Total Time:", time() - tTotal) if verbose else print("    [Done]")
 
 # Helper for slurm to send boolean values
 def strToBool(string):
@@ -43,5 +43,5 @@ def strToBool(string):
         raise ValueError("Invalid boolean string")
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], strToBool(sys.argv[4]))
+    main(argv[1], argv[2], argv[3], strToBool(argv[4]))
 

@@ -1,21 +1,18 @@
 import numpy as np
-import sys
+from sys import argv
 from pathlib import Path
-import math
+from math import log2
 import pandas as pd
-import time
+from time import time
 import numpy.ma as ma
-import operator as op
-from functools import reduce
-import multiprocessing
-import itertools
-import ctypes as c
+from multiprocessing import cpu_count, Pool, RawArray
+from itertools import repeat, permutations
 from contextlib import closing
 import gzip
 
 def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProcesses, verbose):
     # try:
-    if verbose: tTotal = time.time()
+    if verbose: tTotal = time()
     
     dataFilePath = Path(file)
     outputDirPath = Path(outputDirPath)
@@ -33,7 +30,7 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
-        numProcesses = multiprocessing.cpu_count()
+        numProcesses = cpu_count()
 
     # Split the rows up according to the number of cores we have available
     rowList = []
@@ -43,7 +40,7 @@ def main(file, numStates, saliency, outputDirPath, expFreqPath, fileTag, numProc
 
     determineSaliency(saliency, dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose)
 
-    print("Total Time:", time.time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
+    print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
     # except OSError as err:
     #     if err.errno == 16:
     #         print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
@@ -78,7 +75,7 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
     if verbose: print("\nNumber of Processes:", numProcesses)
 
     try:
-        sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+        sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     except OSError as err:
         if err.errno == 16:
             print("Warning: OSError 16 thrown. In testing we have found this does not effect the program output, but please check output file to be certain")
@@ -86,8 +83,8 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
             print(err)
 
     # Start the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-        pool.starmap(s1Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+    with closing(Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+        pool.starmap(s1Score, zip(repeat(dataFilePath), rowList, repeat(expFreqPath), repeat(verbose)))
     pool.join()
 
     chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
@@ -98,12 +95,12 @@ def s1Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s1 metric over a given range of rows
 def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time() - tRead, flush=True)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -112,7 +109,7 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
-        tScore = time.time()
+        tScore = time()
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
     
@@ -129,18 +126,18 @@ def s1Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
             # Function input is obsFreq and expFreq
             scoreArr[scoreRow, state] = klScore(stateCounts[i] / numCols, expFreqArr[state])
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time() - tScore, flush=True)
 
 
 # Function that deploys the processes used to calculate the scores for the s2 metric. Also call function to store scores
 def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-        pool.starmap(s2Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+    with closing(Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+        pool.starmap(s2Score, zip(repeat(dataFilePath), rowList, repeat(expFreqPath), repeat(verbose)))
     pool.join()
 
     chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
@@ -151,12 +148,12 @@ def s2Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Calculates the scores for the s2 metric over a given range of rows
 def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True)
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time() - tRead, flush=True)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -166,7 +163,7 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
-        tScore = time.time()
+        tScore = time()
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
 
@@ -196,18 +193,18 @@ def s2Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
         # Reset the array so it doesn't carry over values
         rowObsArr.fill(0)
     
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time() - tScore, flush=True)
     
 
 # Function that deploys the processes used to calculate the scores for the s3 metric. Also call function to store scores
 def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses)
 
-    sharedArr = multiprocessing.RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start all the processes
-    with closing(multiprocessing.Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
-        pool.starmap(s3Score, zip(itertools.repeat(dataFilePath), rowList, itertools.repeat(expFreqPath), itertools.repeat(verbose)))
+    with closing(Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+        pool.starmap(s3Score, zip(repeat(dataFilePath), rowList, repeat(expFreqPath), repeat(verbose)))
     pool.join()
 
     chrName = pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").iloc[0, 0]
@@ -217,12 +214,12 @@ def s3Multi(dataFilePath, rowList, totalRows, numStates, outputDirPath, expFreqP
 # Helper for the multiprocessing implemented in s3
 def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     # Read in the data
-    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time.time()
+    if verbose and rowsToCalculate[0] == 0: print("Reading data from file...", flush=True); tRead = time()
     # Dont want to read in locations
     cols = range(3, pd.read_table(dataFilePath, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     dataArr = pd.read_table(dataFilePath, usecols=cols, skiprows=rowsToCalculate[0], nrows=rowsToCalculate[1]-rowsToCalculate[0], header=None, sep="\t").to_numpy(dtype=int) - 1
-    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time.time() - tRead, flush=True) 
+    if verbose and rowsToCalculate[0] == 0: print("    Time: ", time() - tRead, flush=True) 
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -231,7 +228,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
     numStates = sharedArr[2]
 
     # Gives us everyway to combine the column numbers in numpy indexing form
-    basePermutationArr = np.array(list(itertools.permutations(range(numCols), 2)), dtype=np.int16).T
+    basePermutationArr = np.array(list(permutations(range(numCols), 2)), dtype=np.int16).T
 
     # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
@@ -239,7 +236,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
 
     if verbose and rowsToCalculate[0] == 0:
         print("Calculating Scores...", flush=True)
-        tScore = time.time()
+        tScore = time()
         percentDone = 0
     printCheckmarks = [int(rowsToCalculate[1] * float(i / 10)) for i in range(1, 10)]
 
@@ -261,7 +258,7 @@ def s3Score(dataFilePath, rowsToCalculate, expFreqPath, verbose):
             # Reset the array so it doesn't carry over scores from other rows
             rowScoreArr.fill(0)
 
-    if verbose and rowsToCalculate[0] == 0: print("    Time:", time.time() - tScore, flush=True)
+    if verbose and rowsToCalculate[0] == 0: print("    Time:", time() - tScore, flush=True)
 
 # Helper to store the score arrays combined with the location arrays
 def storeScores(scoreArr, outputDirPath, fileTag, filename, chrName):
@@ -281,7 +278,7 @@ def klScore(obs, exp):
     if obs == 0.0:
         return 0.0
     else:
-        return obs * math.log2(obs / exp)
+        return obs * log2(obs / exp)
 
 
 # Helper to calculate KL-score for Nd arrays (cleans up the code)
@@ -307,4 +304,4 @@ def strToBool(string):
         raise ValueError("Invalid boolean string")
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5], sys.argv[6], int(sys.argv[7]), strToBool(sys.argv[8]))
+    main(argv[1], int(argv[2]), int(argv[3]), argv[4], argv[5], argv[6], int(argv[7]), strToBool(argv[8]))

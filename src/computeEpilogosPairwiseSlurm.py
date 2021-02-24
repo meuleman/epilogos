@@ -1,11 +1,7 @@
-import gzip
-from multiprocessing import Value
-import numpy as np
 from pathlib import Path
-import pandas as pd
-import time
+from time import sleep
 import click
-import os
+from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
@@ -143,9 +139,9 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
             # Creating the out and err files for the batch job
             if jobOutPath.exists():
-                os.remove(jobOutPath)
+                remove(jobOutPath)
             if jobErrPath.exists():
-                os.remove(jobErrPath)
+                remove(jobErrPath)
             try:
                 jout = open(jobOutPath, 'x')
                 jout.close()
@@ -187,9 +183,9 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Creating the out and err files for the batch job
     if jobOutPath.exists():
-        os.remove(jobOutPath)
+        remove(jobOutPath)
     if jobErrPath.exists():
-        os.remove(jobErrPath)
+        remove(jobErrPath)
     try:
         jout = open(jobOutPath, 'x')
         jout.close()
@@ -245,13 +241,13 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
             # Creating the out and err files for the batch job
             if jobOutPathReal.exists():
-                os.remove(jobOutPathReal)
+                remove(jobOutPathReal)
             if jobErrPathReal.exists():
-                os.remove(jobErrPathReal)
+                remove(jobErrPathReal)
             if jobOutPathNull.exists():
-                os.remove(jobOutPathNull)
+                remove(jobOutPathNull)
             if jobErrPathNull.exists():
-                os.remove(jobErrPathNull)
+                remove(jobErrPathNull)
             try:
                 jout = open(jobOutPathReal, 'x')
                 jout.close()
@@ -305,9 +301,9 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Creating the out and err files for the batch job
     if jobOutPath.exists():
-        os.remove(jobOutPath)
+        remove(jobOutPath)
     if jobErrPath.exists():
-        os.remove(jobErrPath)
+        remove(jobErrPath)
     try:
         jout = open(jobOutPath, 'x')
         jout.close()
@@ -392,9 +388,9 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
                 break
             
             if saliency == 1:
-                time.sleep(2)
+                sleep(2)
             else:
-                time.sleep(10)
+                sleep(10)
 
 if __name__ == "__main__":
     main()

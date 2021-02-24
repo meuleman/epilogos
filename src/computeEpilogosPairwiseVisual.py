@@ -1,22 +1,19 @@
-import sys
+from sys import argv
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from pathlib import Path
 import pandas as pd
-import math
 import scipy.stats as st
-import statsmodels as sm
 import warnings
-import time
+from time import time
 import gzip
-import multiprocessing
+from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
-import os
+from os import remove
 
 def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool):
-    tTotal = time.time()
+    tTotal = time()
 
     outputDirPath = Path(outputDir)
 
@@ -34,19 +31,19 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
-        numProcesses = multiprocessing.cpu_count()
+        numProcesses = cpu_count()
 
     # Read in observation files
     print("\nReading in observation files...")
-    tRead = time.time()
+    tRead = time()
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
-    print("    Time:", time.time() - tRead)
+    print("    Time:", time() - tRead)
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
-    tFit = time.time()
+    tFit = time()
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates)
-    print("    Time:", time.time() - tFit)
+    print("    Time:", time() - tFit)
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
@@ -54,28 +51,28 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Creating Diagnostic Figures
     if diagnosticBool:
         print("Creating diagnostic figures...")
-        tDiagnostic = time.time()
+        tDiagnostic = time()
         createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-        print("    Time:", time.time() - tDiagnostic)
+        print("    Time:", time() - tDiagnostic)
 
     # Calculating PValues
     print("Calculating P-Values...")
-    tPVal = time.time()
+    tPVal = time()
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    print("    Time:", time.time() - tPVal)
+    print("    Time:", time() - tPVal)
 
     # Create an output file which summarizes the results
     print("Writing metrics file...")
-    tMetrics = time.time()
+    tMetrics = time()
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    print("    Time:", time.time() - tMetrics)
+    print("    Time:", time() - tMetrics)
 
     # Create Bed file of top 1000 loci with adjacent merged
     print("Creating .bed file of top loci...")
-    tBed = time.time()
+    tBed = time()
     roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
     sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
-    print("    Time:", time.time() - tBed)
+    print("    Time:", time() - tBed)
 
     # Determine Significance Threshold (based on n*)
     genomeAutoCorrelation = 0.987
@@ -84,17 +81,17 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
 
     # Create Genome Manhattan Plot
     print("Creating Genome-Wide Manhattan Plot")
-    tGManhattan = time.time()
+    tGManhattan = time()
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    print("    Time:", time.time() - tGManhattan)
+    print("    Time:", time() - tGManhattan)
     
     # Create Chromosome Manhattan Plot
     print("Creating Individual Chromosome Manhattan Plots")
-    tCManhattan = time.time()
+    tCManhattan = time()
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    print("    Time:", time.time() - tCManhattan)
+    print("    Time:", time() - tCManhattan)
 
-    print("Total Time:", time.time() - tTotal)
+    print("Total Time:", time() - tTotal)
 
 # Helper to read in the necessary data to fit and visualize pairwise results
 def readInData(outputDirPath, numProcesses, numStates):
@@ -106,7 +103,7 @@ def readInData(outputDirPath, numProcesses, numStates):
     diffDF = pd.DataFrame(columns=realNames)
     
     # Multiprocess the reading
-    with closing(multiprocessing.Pool(numProcesses)) as pool:
+    with closing(Pool(numProcesses)) as pool:
         results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), outputDirPath.glob("temp_nullDistances_*.npz"), repeat(realNames)))
     pool.join()
 
@@ -132,7 +129,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Cleaning up the temp files after we've read them
     for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-        os.remove(file)
+        remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -472,7 +469,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
     chrOrder = [i for i in range(1, 23)] + ["X"]
 
     # Multiprocess the reading
-    with closing(multiprocessing.Pool(numProcesses)) as pool:
+    with closing(Pool(numProcesses)) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd, repeat(group1Name), repeat(group2Name), repeat(locationArr), repeat(distanceArrReal), repeat(maxDiffArr), repeat(beta), repeat(loc), repeat(scale), repeat(significanceThreshold), repeat(pvalsGraph), repeat(stateColorList), repeat(manhattanDirPath)))
     pool.join()
 
@@ -649,4 +646,4 @@ def strToBool(string):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4], sys.argv[5], int(sys.argv[6]), strToBool(sys.argv[7]))
+    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]))

@@ -30,7 +30,7 @@ To compute epilogos, you will need to have the following python libraries: [clic
 ```bash
 $ pip install click, numpy, pandas
 ```
-Additionally, it is recommended that python is updated to version 3.6 or later. We have not tested previous versions and thus cannot vouch for their accuracy.
+Additionally, it is recommended that python is updated to version 3.7 or later. In earlier versions, `src/computeEpilogosScores.py` may raise an OSError 16. It is worth noting that in our testing this error has not affected the results. 
 
 <a name="running-epilogos"></a>
 
@@ -159,7 +159,7 @@ To compute epilogos, you will need to have the following python libraries: [clic
 ```bash
 $ pip install click, numpy, pandas, scipy, statsmodels
 ```
-Additionally, it is recommended that python is updated to version 3.6 or later. We have not tested previous versions and thus cannot vouch for their accuracy.
+Additionally, it is recommended that python is updated to version 3.7 or later. In earlier versions, `src/computeEpilogosScores.py` may raise an OSError 16. It is worth noting that in our testing this error has not affected the results. 
 
 <a name="running-epilogos-pairwise"></a>
 

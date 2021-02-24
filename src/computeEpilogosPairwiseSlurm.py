@@ -11,13 +11,13 @@ from pathlib import PurePath
 import errno
 
 @click.command()
-@click.option("-a", "--directory-one", "inputDirectory1", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
-@click.option("-b", "--directory-two", "inputDirectory2", type=str, required=True, multiple=True, help="")
+@click.option("-a", "--directory-one", "inputDirectory1", type=str, required=True, multiple=True, help="Path to first directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-b", "--directory-two", "inputDirectory2", type=str, required=True, multiple=True, help="Path to second directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--number-of-states", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
-@click.option("-s", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1 or 2)")
+@click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1 or 2)")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit-when-complete", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
+@click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 @click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True, help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data")
 def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool, diagnosticBool):
     """
@@ -338,7 +338,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     print("    JobID:", visualJobID)
 
     allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID)
-    print("\nAll JobIDs: {}".format(allJobIDs))
+    print("\nAll JobIDs:\n    {}".format(allJobIDs))
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs

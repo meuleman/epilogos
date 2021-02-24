@@ -1,9 +1,9 @@
-import multiprocessing
+from multiprocessing import Pool, cpu_count
 import numpy as np
 from pathlib import Path
 from pathlib import PurePath
 import click
-import itertools
+from itertools import repeat
 from contextlib import closing
 import computeEpilogosExpected
 import computeEpilogosExpectedCombination
@@ -103,6 +103,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
     if numProcesses < 0:
         raise ValueError("Number of cores must be positive or zero (0 means use all cores)")
+    elif numProcesses == 0:
+        numProcesses = cpu_count()
 
     # Path for storing/retrieving the expected frequency array
     # Expected frequency arrays are stored according to path of the input file directory
@@ -142,8 +144,8 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             if not file.is_dir():
                 filesToWrite.append(file)
         # Multiprocesing the writing in the minimal case
-        with closing(multiprocessing.Pool(numProcesses)) as pool:
-            pool.starmap(computeEpilogosWrite.main, zip(filesToWrite, itertools.repeat(numStates), itertools.repeat(outputDirPath), itertools.repeat(fileTag), itertools.repeat(verbose)))
+        with closing(Pool(numProcesses)) as pool:
+            pool.starmap(computeEpilogosWrite.main, zip(filesToWrite, repeat(numStates), repeat(outputDirPath), repeat(fileTag), repeat(verbose)))
         pool.join()
     
 if __name__ == "__main__":

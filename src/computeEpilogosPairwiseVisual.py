@@ -98,7 +98,7 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
 def readInData(outputDirPath, numProcesses, numStates):
     # For keeping the data arrays organized correctly
     realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
-    chrOrder = ["chr{}".format(i) for i in range(1, 23)] + ["chrX"]
+    # chrOrder = ["chr{}".format(i) for i in range(1, 23)] + ["chrX"]
 
     # Data frame to dump inputed data into
     diffDF = pd.DataFrame(columns=realNames)
@@ -111,6 +111,27 @@ def readInData(outputDirPath, numProcesses, numStates):
     # Concatenating all chunks to the real differences dataframe
     for diffDFChunk, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
+
+    # Figuring out chromosome order
+    chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
+    rawChrNamesInts = []
+    rawChrNamesStrs = []
+
+    print("chr1".split("chr")[-1])
+
+    for chr in chromosomes:
+        try:
+            rawChrNamesInts.append(int(chr.split("chr")[-1]))
+        except ValueError:
+            rawChrNamesStrs.append(chr.split("chr")[-1])
+
+    rawChrNamesInts.sort()
+    rawChrNamesStrs.sort()
+
+    chrOrder = rawChrNamesInts + rawChrNamesStrs
+
+    for i in range(len(chrOrder)):
+        chrOrder[i] = "chr" + str(chrOrder[i])
 
     # Sorting the dataframes by chromosomal location
     diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
@@ -149,7 +170,7 @@ def readTableMulti(realFile, nullFile, realNames):
     return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])
@@ -308,7 +329,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     ax.set_ylabel("Distance")
     plt.xlabel("Chromosome")
     xticks = np.where(locationArr[:, 1] == "0")[0]
-    plt.xticks(ticks=xticks, labels=[i for i in range(1, 23)] + ["X"])
+    plt.xticks(ticks=xticks, labels=list(map(lambda x: x.split("chr")[-1], list(locationArr[:, 0][xticks]))))
 
     plt.margins(x=0)
     ylim = np.amax(np.abs(distanceArrReal)) * 1.1
@@ -375,7 +396,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
         else:
             startEnd.append((xticks[i], -1))
 
-    chrOrder = [i for i in range(1, 23)] + ["X"]
+    chrOrder = list(map(lambda x: x.split("chr")[-1], list(locationArr[:, 0][xticks])))
 
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:

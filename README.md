@@ -155,7 +155,7 @@ The software provided in this repository implements the methods underlying Pairw
 
 ## Prerequisites
 
-To compute epilogos, you will need to have the following python libraries: [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), and [pandas](https://pandas.pydata.org/). These can be installed with the following command.
+To compute epilogos, you will need to have the following python libraries: [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](#https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/). These can be installed with the following command.
 ```bash
 $ pip install click, numpy, pandas, scipy, statsmodels
 ```

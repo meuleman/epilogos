@@ -171,7 +171,7 @@ def readTableMulti(realFile, nullFile, realNames):
 
 
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates):
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])

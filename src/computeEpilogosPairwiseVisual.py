@@ -72,7 +72,9 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     print("Creating .bed file of top loci...")
     tBed = time()
     roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
+    with closing(Pool(numProcesses)) as pool:
+        pool.apply_async(sendRoiUrl, (roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList))
+    pool.join()
     print("    Time:", time() - tBed)
 
     # Determine Significance Threshold (based on n*)
@@ -169,6 +171,7 @@ def readTableMulti(realFile, nullFile, realNames):
 
     return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
+
 # Helper to fit the distances
 def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
@@ -176,45 +179,28 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
+    numTrials = 1000
+
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
+    pool.join()
+
+    params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
+
+    return params, dataReal, dataNull
+
+
+def fitOnBootstrap(distanceArrNull):
+    numSamples = 10000
+    bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=numSamples, replace=True))
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = st.gennorm.fit(dataNull)
+        params = st.gennorm.fit(bootstrapData)
 
-    return params, dataReal, dataNull
-
-
-# # Helper to fit the distances
-# def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
-#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-#     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
-#     dataReal = pd.Series(distanceArrReal[idx])
-#     dataNull = pd.Series(distanceArrNull[idx])
-
-#     numTrials = 1000
-
-#     with closing(Pool(numProcesses)) as pool:
-#         results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
-#     pool.join()
-
-#     params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
-
-#     return params, dataReal, dataNull
-
-
-# def fitOnBootstrap(distanceArrNull):
-#     numSamples = 10000
-#     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=numSamples, replace=True))
-#     # ignore warnings
-#     with warnings.catch_warnings():
-#         warnings.simplefilter("ignore")
-
-#         # Fit the data
-#         params = st.gennorm.fit(bootstrapData)
-
-#     return params
+    return params
 
 
 # Helper for creating and saving diagnostic figures

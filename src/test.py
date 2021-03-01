@@ -33,6 +33,8 @@ def main(file):
 
     avgDF = pd.read_table(filePath, skiprows=1000, header=None, sep="\t", names=names)
 
+    bootstrapDF.sort_values(by=["mle"], inplace=True)
+
     print("Top bootstrap")
     print(bootstrapDF.head(10))
 

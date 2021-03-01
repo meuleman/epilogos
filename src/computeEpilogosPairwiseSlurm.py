@@ -15,7 +15,9 @@ import errno
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 @click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True, help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data")
-def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool, diagnosticBool):
+@click.option("-j", "--numTrials", "numTrials", type=int)
+@click.option("-k", "--samplingSize", "samplingSize", type=int)
+def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
     """
     This script computes and visualizes differences between chromatin states across epigenomes
     """
@@ -316,7 +318,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Create a string for the python commmand
     computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-    pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses, diagnosticBool)
+    pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize)
 
     # Create a string for the slurm command
     if saliency == 1:

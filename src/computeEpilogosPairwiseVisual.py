@@ -12,11 +12,10 @@ from contextlib import closing
 from itertools import repeat
 from os import remove
 
-def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, inputDir):
+def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize):
     tTotal = time()
 
     outputDirPath = Path(outputDir)
-    inputDirPath = Path(inputDir)
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
@@ -37,8 +36,7 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time()
-    # locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(inputDirPath, numProcesses, numStates)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time() - tRead)
 
     # Fitting a gennorm distribution to the distances
@@ -608,4 +606,4 @@ def strToBool(string):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]), argv[10])
+    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]))

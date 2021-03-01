@@ -12,10 +12,11 @@ from contextlib import closing
 from itertools import repeat
 from os import remove
 
-def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool):
+def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, inputDir):
     tTotal = time()
 
     outputDirPath = Path(outputDir)
+    inputDirPath = Path(inputDir)
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
@@ -36,61 +37,62 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Read in observation files
     print("\nReading in observation files...")
     tRead = time()
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
+    # locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(inputDirPath, numProcesses, numStates)
     print("    Time:", time() - tRead)
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time()
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
     print("    Time:", time() - tFit)
 
-    # Splitting the params up
-    beta, loc, scale = params[:-2], params[-2], params[-1]
-    print("PARAMS: ", params)
+    # # Splitting the params up
+    # beta, loc, scale = params[:-2], params[-2], params[-1]
+    # print("PARAMS: ", params)
 
-    # Creating Diagnostic Figures
-    if diagnosticBool:
-        print("Creating diagnostic figures...")
-        tDiagnostic = time()
-        createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-        print("    Time:", time() - tDiagnostic)
+    # # Creating Diagnostic Figures
+    # if diagnosticBool:
+    #     print("Creating diagnostic figures...")
+    #     tDiagnostic = time()
+    #     createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
+    #     print("    Time:", time() - tDiagnostic)
 
-    # Calculating PValues
-    print("Calculating P-Values...")
-    tPVal = time()
-    pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    print("    Time:", time() - tPVal)
+    # # Calculating PValues
+    # print("Calculating P-Values...")
+    # tPVal = time()
+    # pvals = calculatePVals(distanceArrReal, beta, loc, scale)
+    # print("    Time:", time() - tPVal)
 
-    # Create an output file which summarizes the results
-    print("Writing metrics file...")
-    tMetrics = time()
-    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    print("    Time:", time() - tMetrics)
+    # # Create an output file which summarizes the results
+    # print("Writing metrics file...")
+    # tMetrics = time()
+    # writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
+    # print("    Time:", time() - tMetrics)
 
-    # Create Bed file of top 1000 loci with adjacent merged
-    print("Creating .bed file of top loci...")
-    tBed = time()
-    roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
-    print("    Time:", time() - tBed)
+    # # Create Bed file of top 1000 loci with adjacent merged
+    # print("Creating .bed file of top loci...")
+    # tBed = time()
+    # roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
+    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
+    # print("    Time:", time() - tBed)
 
-    # Determine Significance Threshold (based on n*)
-    genomeAutoCorrelation = 0.987
-    nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    significanceThreshold = .1 / nStar
+    # # Determine Significance Threshold (based on n*)
+    # genomeAutoCorrelation = 0.987
+    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
+    # significanceThreshold = .1 / nStar
 
-    # Create Genome Manhattan Plot
-    print("Creating Genome-Wide Manhattan Plot")
-    tGManhattan = time()
-    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    print("    Time:", time() - tGManhattan)
+    # # Create Genome Manhattan Plot
+    # print("Creating Genome-Wide Manhattan Plot")
+    # tGManhattan = time()
+    # createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
+    # print("    Time:", time() - tGManhattan)
     
-    # Create Chromosome Manhattan Plot
-    print("Creating Individual Chromosome Manhattan Plots")
-    tCManhattan = time()
-    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    print("    Time:", time() - tCManhattan)
+    # # Create Chromosome Manhattan Plot
+    # print("Creating Individual Chromosome Manhattan Plots")
+    # tCManhattan = time()
+    # createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
+    # print("    Time:", time() - tCManhattan)
 
     print("Total Time:", time() - tTotal)
 
@@ -187,16 +189,16 @@ def readTableMulti(realFile, nullFile, realNames):
 #     return params, dataReal, dataNull
 
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir):
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir, numTrials, samplingSize):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
-    numTrials = 1000
+    # numTrials = 1000
 
     with closing(Pool(numProcesses)) as pool:
-        results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
+        results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
     pool.join()
 
     with open(outputDir / "fitResults.txt", 'w') as f:
@@ -230,8 +232,8 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     return (betaAvg, locAvg, scaleAvg), dataReal, dataNull
 
 
-def fitOnBootstrap(distanceArrNull):
-    samplingSize = 10000
+def fitOnBootstrap(distanceArrNull, samplingSize):
+    # samplingSize = 10000
     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=True))
 
     # ignore warnings

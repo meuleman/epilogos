@@ -42,7 +42,7 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...")
     tFit = time()
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath)
     print("    Time:", time() - tFit)
 
     # Splitting the params up
@@ -170,22 +170,6 @@ def readTableMulti(realFile, nullFile, realNames):
     return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
 
-# Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
-    # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
-    dataReal = pd.Series(distanceArrReal[idx])
-    dataNull = pd.Series(distanceArrNull[idx])
-
-    # ignore warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        # Fit the data
-        params = st.gennorm.fit(dataNull)
-
-    return params, dataReal, dataNull
-
 # # Helper to fit the distances
 # def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses):
 #     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
@@ -193,28 +177,77 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
 #     dataReal = pd.Series(distanceArrReal[idx])
 #     dataNull = pd.Series(distanceArrNull[idx])
 
-#     numTrials = 1000
-
-#     with closing(Pool(numProcesses)) as pool:
-#         results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
-#     pool.join()
-
-#     params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
-
-#     return params, dataReal, dataNull
-
-
-# def fitOnBootstrap(distanceArrNull):
-#     numSamples = 10000
-#     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=numSamples, replace=True))
 #     # ignore warnings
 #     with warnings.catch_warnings():
 #         warnings.simplefilter("ignore")
 
 #         # Fit the data
-#         params = st.gennorm.fit(bootstrapData)
+#         params = st.gennorm.fit(dataNull)
 
-#     return params
+#     return params, dataReal, dataNull
+
+# Helper to fit the distances
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir):
+    # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
+    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
+    dataReal = pd.Series(distanceArrReal[idx])
+    dataNull = pd.Series(distanceArrNull[idx])
+
+    numTrials = 1000
+
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.map(fitOnBootstrap, repeat(distanceArrNull[idx], numTrials))
+    pool.join()
+
+    with open(outputDir / "fitResults.txt", 'w') as f:
+        betaAvg = 0
+        locAvg = 0
+        scaleAvg = 0
+
+        for i in range(len(results)):
+            beta = results[i][0][0]
+            loc = results[i][0][1]
+            scale = results[i][0][2]
+            mle = results[i][1]
+
+            betaAvg += beta
+            locAvg += loc
+            scaleAvg += scale
+
+            f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
+
+        betaAvg /= len(results)
+        locAvg /= len(results)
+        scaleAvg /= len(results)
+
+        mleAvg = st.gennorm.nnlf((betaAvg, locAvg, scaleAvg), dataNull)
+
+        f.write("{}\t{}\t{}\t{}\n".format(betaAvg, locAvg, scaleAvg, mleAvg))
+
+    # params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
+
+    # return params, dataReal, dataNull
+    return (betaAvg, locAvg, scaleAvg), dataReal, dataNull
+
+
+def fitOnBootstrap(distanceArrNull):
+    samplingSize = 10000
+    bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=True))
+
+    y, x = np.histogram(bootstrapData.values, bins=100, range=(np.amin(bootstrapData), np.amax(bootstrapData)), density=True)
+    x = (x + np.roll(x, -1))[:-1] / 2.0
+
+    # ignore warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        # Fit the data
+        params = st.gennorm.fit(bootstrapData)
+
+        # Calculate SSE and MLE
+        mle = st.gennorm.nnlf(params, bootstrapData)
+
+    return params, mle
 
 
 # Helper for creating and saving diagnostic figures

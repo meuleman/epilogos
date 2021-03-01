@@ -608,4 +608,4 @@ def strToBool(string):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]))
+    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]), argv[10])

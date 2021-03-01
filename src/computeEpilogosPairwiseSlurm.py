@@ -342,7 +342,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         jobCheckStr = "sacct --format=JobID%18,JobName%50,State%10 --jobs {}".format(allJobIDs)
 
         completedJobs = []
-        calculationStep = 0
+        calculationStep = ""
 
         # Every ten seconds check what jobs are done and print accordingly
         while True:
@@ -351,25 +351,26 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
             spLines = sp.stdout.split("\n")
 
             # Printing separate step headers
-            if len(completedJobs) == 0 and calculationStep == 0:
+            if len(completedJobs) == 0 and calculationStep == "":
                 print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                calculationStep += 1
-            elif len(completedJobs) >= len(expJobIDArr) and calculationStep == 1:
+                calculationStep = "exp_calc"
+            elif len(completedJobs) >= len(expJobIDArr) and calculationStep == "exp_calc":
                 print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                calculationStep += 1
-            elif len(completedJobs) >= (len(expJobIDArr) + 1) and calculationStep == 2:
+                calculationStep = "exp_comb"
+            elif len(completedJobs) >= (len(expJobIDArr) + 1) and calculationStep == "exp_comb":
                 print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                calculationStep += 1
-            elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == 3:
+                calculationStep = "score"
+            elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == "score":
                 print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                calculationStep += 1
+                calculationStep = "write"
 
             # Print out jobs when they are completed
             for line in spLines[2:]:
                 if "COMPLETED" in line and "allocation" not in line:
                     jobID = line.split()[0]
+                    jobName = line.split()[1]
                     # Don't want to print if we have already printed
-                    if jobID not in completedJobs and ".batch" not in jobID:
+                    if jobID not in completedJobs and ".batch" not in jobID and jobName.startswith(calculationStep):
                         completedJobs.append(jobID)
                         print(line, flush=True)
 

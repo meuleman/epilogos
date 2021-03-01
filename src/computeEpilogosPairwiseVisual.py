@@ -234,9 +234,6 @@ def fitOnBootstrap(distanceArrNull):
     samplingSize = 10000
     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=True))
 
-    y, x = np.histogram(bootstrapData.values, bins=100, range=(np.amin(bootstrapData), np.amax(bootstrapData)), density=True)
-    x = (x + np.roll(x, -1))[:-1] / 2.0
-
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -245,7 +242,7 @@ def fitOnBootstrap(distanceArrNull):
         params = st.gennorm.fit(bootstrapData)
 
         # Calculate SSE and MLE
-        mle = st.gennorm.nnlf(params, bootstrapData)
+        mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
 
     return params, mle
 

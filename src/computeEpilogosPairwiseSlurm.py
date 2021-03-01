@@ -362,7 +362,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
                 calculationStep = "score"
             elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == "score":
                 print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                calculationStep = "write"
+                calculationStep = "visual"
 
             # Print out jobs when they are completed
             for line in spLines[2:]:

@@ -45,52 +45,52 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
     print("    Time:", time() - tFit)
 
-    # # Splitting the params up
-    # beta, loc, scale = params[:-2], params[-2], params[-1]
-    # print("PARAMS: ", params)
+    # Splitting the params up
+    beta, loc, scale = params[:-2], params[-2], params[-1]
+    print("PARAMS: ", params)
 
-    # # Creating Diagnostic Figures
-    # if diagnosticBool:
-    #     print("Creating diagnostic figures...")
-    #     tDiagnostic = time()
-    #     createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-    #     print("    Time:", time() - tDiagnostic)
+    # Creating Diagnostic Figures
+    if diagnosticBool:
+        print("Creating diagnostic figures...")
+        tDiagnostic = time()
+        createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
+        print("    Time:", time() - tDiagnostic)
 
-    # # Calculating PValues
-    # print("Calculating P-Values...")
-    # tPVal = time()
-    # pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    # print("    Time:", time() - tPVal)
+    # Calculating PValues
+    print("Calculating P-Values...")
+    tPVal = time()
+    pvals = calculatePVals(distanceArrReal, beta, loc, scale)
+    print("    Time:", time() - tPVal)
 
-    # # Create an output file which summarizes the results
-    # print("Writing metrics file...")
-    # tMetrics = time()
-    # writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    # print("    Time:", time() - tMetrics)
+    # Create an output file which summarizes the results
+    print("Writing metrics file...")
+    tMetrics = time()
+    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
+    print("    Time:", time() - tMetrics)
 
-    # # Create Bed file of top 1000 loci with adjacent merged
-    # print("Creating .bed file of top loci...")
-    # tBed = time()
-    # roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
-    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
-    # print("    Time:", time() - tBed)
+    # Create Bed file of top 1000 loci with adjacent merged
+    print("Creating .bed file of top loci...")
+    tBed = time()
+    roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
+    print("    Time:", time() - tBed)
 
-    # # Determine Significance Threshold (based on n*)
-    # genomeAutoCorrelation = 0.987
-    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    # significanceThreshold = .1 / nStar
+    # Determine Significance Threshold (based on n*)
+    genomeAutoCorrelation = 0.987
+    nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
+    significanceThreshold = .1 / nStar
 
-    # # Create Genome Manhattan Plot
-    # print("Creating Genome-Wide Manhattan Plot")
-    # tGManhattan = time()
-    # createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    # print("    Time:", time() - tGManhattan)
+    # Create Genome Manhattan Plot
+    print("Creating Genome-Wide Manhattan Plot")
+    tGManhattan = time()
+    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
+    print("    Time:", time() - tGManhattan)
     
-    # # Create Chromosome Manhattan Plot
-    # print("Creating Individual Chromosome Manhattan Plots")
-    # tCManhattan = time()
-    # createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    # print("    Time:", time() - tCManhattan)
+    # Create Chromosome Manhattan Plot
+    print("Creating Individual Chromosome Manhattan Plots")
+    tCManhattan = time()
+    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
+    print("    Time:", time() - tCManhattan)
 
     print("Total Time:", time() - tTotal)
 
@@ -112,6 +112,7 @@ def readInData(outputDirPath, numProcesses, numStates):
     for diffDFChunk, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
+    tOrder = ()
     # Figuring out chromosome order
     chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
     rawChrNamesInts = []
@@ -132,6 +133,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     for i in range(len(chrOrder)):
         chrOrder[i] = "chr" + str(chrOrder[i])
+    print("time to figure out chrOrder:", tOrder)
 
     # Sorting the dataframes by chromosomal location
     diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
@@ -418,6 +420,8 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
         manhattanDirPath.mkdir(parents=True)
 
     pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
+
+    txticks = time()
     xticks = np.where(locationArr[:, 1] == "0")[0]
     startEnd = []
     for i in range(len(xticks)):
@@ -425,13 +429,18 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             startEnd.append((xticks[i], xticks[i+1]))
         else:
             startEnd.append((xticks[i], -1))
+    print("Time to create startEnd:", time() - txticks)
 
+    tChrOrder = time()
     chrOrder = list(map(lambda x: x.split("chr")[-1], list(locationArr[:, 0][xticks])))
+    print("Time to determine chrOrder:", time() - tChrOrder)
 
+    tChromosome = time()
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd, repeat(group1Name), repeat(group2Name), repeat(locationArr), repeat(distanceArrReal), repeat(maxDiffArr), repeat(beta), repeat(loc), repeat(scale), repeat(significanceThreshold), repeat(pvalsGraph), repeat(stateColorList), repeat(manhattanDirPath)))
     pool.join()
+    print("Time for chromosome manhattan:", time() - tChromosome)
 
 
 def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath):

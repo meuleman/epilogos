@@ -48,6 +48,11 @@ def main(file):
     print("average of bootstrap")
     print(avgDF)
 
+    print()
+    print()
+    print("Percent Diff Best/Worst:", bootstrapDF.iloc[0][-1] / bootstrapDF.iloc[-1][-1])
+    print("Percent Diff Avg/Worst:", avgDF.iloc[0][-1] / bootstrapDF.iloc[-1][-1])
+    print("Percent Diff Avg/Best:", avgDF.iloc[0][-1] / bootstrapDF.iloc[0][-1])
 
 if __name__ == "__main__":
     main(sys.argv[1])

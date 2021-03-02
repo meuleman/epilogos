@@ -7,6 +7,20 @@ import subprocess
 from pathlib import PurePath
 import errno
 
+print("""
+                  d8b 888                                     
+                  Y8P 888                                     
+                      888                                     
+ .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b  
+d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K      
+88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b. 
+Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88 
+ "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P' 
+         888                            888                   
+         888                       Y8b d88P                   
+         888                        "Y88P"                    
+""")
+
 @click.command()
 @click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
@@ -18,28 +32,6 @@ import errno
 @click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, expFreqDir, numProcesses, exitBool):
     """
-                  d8b 888                                     
-
-                  Y8P 888                                     
-
-                      888                                     
-
- .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b  
-
-d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K      
-
-88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b. 
-
-Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88 
-
- "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P' 
-
-         888                            888                   
-
-         888                       Y8b d88P                   
-
-         888                        "Y88P"                    
-
     This script computes scores for chromatin states across the genome.
     """
 

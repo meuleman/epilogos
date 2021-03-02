@@ -185,10 +185,13 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
 
         # Fit the data
         params = st.gennorm.fit(dataNull)
+        mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
+
+        print("MLE:", mle)
 
     return params, dataReal, dataNull
 
-# # Helper to fit the distances
+# Helper to fit the distances
 # def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir, numTrials, samplingSize):
 #     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
 #     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
@@ -232,21 +235,21 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
 #     return (betaAvg, locAvg, scaleAvg), dataReal, dataNull
 
 
-def fitOnBootstrap(distanceArrNull, samplingSize):
-    # samplingSize = 10000
-    bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=True))
+# def fitOnBootstrap(distanceArrNull, samplingSize):
+#     # samplingSize = 10000
+#     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=True))
 
-    # ignore warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+#     # ignore warnings
+#     with warnings.catch_warnings():
+#         warnings.simplefilter("ignore")
 
-        # Fit the data
-        params = st.gennorm.fit(bootstrapData)
+#         # Fit the data
+#         params = st.gennorm.fit(bootstrapData)
 
-        # Calculate SSE and MLE
-        mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
+#         # Calculate SSE and MLE
+#         mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
 
-    return params, mle
+#     return params, mle
 
 
 # Helper for creating and saving diagnostic figures

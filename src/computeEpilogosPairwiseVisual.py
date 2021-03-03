@@ -172,63 +172,63 @@ def readTableMulti(realFile, nullFile, realNames):
     return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
 
 
-# # Helper to fit the distances
-# def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize):
-#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-#     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
-#     dataReal = pd.Series(distanceArrReal[idx])
-#     dataNull = pd.Series(distanceArrNull[idx])
-
-#     # ignore warnings
-#     with warnings.catch_warnings():
-#         warnings.simplefilter("ignore")
-
-#         # Fit the data
-#         params = st.gennorm.fit(dataNull)
-#         mle = st.gennorm.nnlf(params, pd.Series(dataNull))
-
-#         print("MLE:", mle)
-
-#     return params, dataReal, dataNull
-
 # Helper to fit the distances
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir, numTrials, samplingSize):
+def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
-    # numTrials = 1000
+    # ignore warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
-    pool.join()
+        # Fit the data
+        params = st.gennorm.fit(dataNull)
+        mle = st.gennorm.nnlf(params, pd.Series(dataNull))
 
-    with open(outputDir / "fitResults.txt", 'w') as f:
-        index = [i for i in range(numTrials)]
-        columns = ["beta", "loc", "scale", "mle"]
+        print("MLE:", mle)
 
-        fitDF = pd.DataFrame(index=index, columns=columns)
+    return params, dataReal, dataNull
 
-        for i in range(len(results)):
-            beta  = results[i][0][0]
-            loc   = results[i][0][1]
-            scale = results[i][0][2]
-            mle   = results[i][1]
+# # Helper to fit the distances
+# def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir, numTrials, samplingSize):
+#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
+#     idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 or np.any(diffArr[i] != np.zeros((numStates)))]
+#     dataReal = pd.Series(distanceArrReal[idx])
+#     dataNull = pd.Series(distanceArrNull[idx])
 
-            f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
-            fitDF.iloc[i, 0] = results[i][0][0]
-            fitDF.iloc[i, 1] = results[i][0][1]
-            fitDF.iloc[i, 2] = results[i][0][2]
-            fitDF.iloc[i, 3] = results[i][1]
+#     # numTrials = 1000
 
-        fitDF.sort_values(by=["mle"], inplace=True)
+#     with closing(Pool(numProcesses)) as pool:
+#         results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
+#     pool.join()
 
-    # params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
+#     with open(outputDir / "fitResults.txt", 'w') as f:
+#         index = [i for i in range(numTrials)]
+#         columns = ["beta", "loc", "scale", "mle"]
 
-    # return params, dataReal, dataNull
-    medianIndex = int((numTrials-1)/2)
-    return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
+#         fitDF = pd.DataFrame(index=index, columns=columns)
+
+#         for i in range(len(results)):
+#             beta  = results[i][0][0]
+#             loc   = results[i][0][1]
+#             scale = results[i][0][2]
+#             mle   = results[i][1]
+
+#             f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
+#             fitDF.iloc[i, 0] = results[i][0][0]
+#             fitDF.iloc[i, 1] = results[i][0][1]
+#             fitDF.iloc[i, 2] = results[i][0][2]
+#             fitDF.iloc[i, 3] = results[i][1]
+
+#         fitDF.sort_values(by=["mle"], inplace=True)
+
+#     # params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
+
+#     # return params, dataReal, dataNull
+#     medianIndex = int((numTrials-1)/2)
+#     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
 
 
 def fitOnBootstrap(distanceArrNull, samplingSize):

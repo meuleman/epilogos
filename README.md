@@ -102,10 +102,11 @@ The argument to this flag is the path to the directory to which you would like t
 <details><summary><b> Saliency Level (-s, --saliency)</b></summary>
 <p></p>
 <p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The <code>-l</code> flag to the coordination script allows one to choose one of three possible metrics:</p>
-<code>
-1. Metric S1, implementing a standard Kullback-Leibler relative entropy
-2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
-3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
+<code>1. Metric S1, implementing a standard Kullback-Leibler relative entropy</code>
+
+<code>2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns</code>
+
+<code>3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
 </code>
 <p>
 Note that each increase in saliency level involves much more computation and thus each increase requires more time and computational power.

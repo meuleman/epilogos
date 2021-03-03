@@ -37,11 +37,13 @@ def main(file):
     print(bootstrapDF.shape)
 
     print("Top bootstrap")
+    print("MLE:", bootstrapDF.iloc[0, 3])
     print(bootstrapDF.head(10))
 
     print()
     print()
     print("Bottom bootstrap")
+    print("MLE:", bootstrapDF.iloc[-1, 3])
     print(bootstrapDF.tail(10))
 
     print()

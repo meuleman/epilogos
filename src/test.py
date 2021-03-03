@@ -24,16 +24,17 @@ import logging
 from multiprocessing import cpu_count, Pool
 from contextlib import closing
 
-def main(file, nrows):
+def main(file):
     filePath = Path(file)
 
     names = ["beta", "loc", "scale", "mle"]
 
-    bootstrapDF = pd.read_table(filePath, nrows=nrows, header=None, sep="\t", names=names)
+    bootstrapDF = pd.read_table(filePath, header=None, sep="\t", names=names)
 
-    avgDF = pd.read_table(filePath, skiprows=nrows, header=None, sep="\t", names=names)
 
     bootstrapDF.sort_values(by=["mle"], inplace=True)
+
+    print(bootstrapDF.shape)
 
     print("Top bootstrap")
     print(bootstrapDF.head(10))
@@ -45,14 +46,9 @@ def main(file, nrows):
 
     print()
     print()
-    print("average of bootstrap")
-    print(avgDF)
+    print("Median of bootstrap")
+    print(bootstrapDF.iloc[int((bootstrapDF.shape[0] - 1) / 2)])
 
-    print()
-    print()
-    print("Percent Diff Best/Worst:", bootstrapDF.iloc[0][-1] / bootstrapDF.iloc[-1][-1])
-    print("Percent Diff Avg/Worst:", avgDF.iloc[0][-1] / bootstrapDF.iloc[-1][-1])
-    print("Percent Diff Avg/Best:", avgDF.iloc[0][-1] / bootstrapDF.iloc[0][-1])
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]))
+    main(sys.argv[1])

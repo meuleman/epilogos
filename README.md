@@ -75,10 +75,10 @@ To customize your run of epilogos see the [Command Line Options](#command-line-o
 
 <a name="input-directory"></a>
 <details><summary><b> Input Directory (-i, --input-directory)</b></summary>
-<p style="margin-left:10%">Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)</p>
 
-<p style="margin-left:10%">
-The argument to this flag is the path to the directory which contains the files to be read in. Note that ALL files in this directory will be read in and errors may occur if other files are present.
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The argument to this flag is the path to the directory which contains the files to be read in. Note that ALL files in this directory will be read in and errors may occur if other files are present.
 </p>
 </details>
 

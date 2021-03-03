@@ -86,7 +86,7 @@ The argument to this flag is the path to the directory which contains the files 
 <a name="output-directory"></a>
 <details><summary><b> Output Directory (-o, --output-directory)</b></summary>
 <p></p>
-The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format `scores_{}_s$_[].txt.gz` where {} is replaced with the input directory name, $ is replaced with the saliency level, and [] is replaced with the name of the corresponding input file (extensions removed).</p>
+The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format `scores_{}_s$_[].txt.gz` where {} is replaced with the input directory name, $ is replaced with the saliency level, and [] is replaced with the name of the corresponding input file (extensions removed).
 <p></p>
 The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.
 </details>

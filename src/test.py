@@ -47,7 +47,7 @@ def main(file):
     print()
     print()
     print("Median of bootstrap")
-    print(bootstrapDF.iloc[int((bootstrapDF.shape[0] - 1) / 2)])
+    print("{},{},{}".format(bootstrapDF.iloc[int((bootstrapDF.shape[0] - 1) / 2), 0], bootstrapDF.iloc[int((bootstrapDF.shape[0] - 1) / 2), 1], bootstrapDF.iloc[int((bootstrapDF.shape[0] - 1) / 2), 2]))        
 
 
 if __name__ == "__main__":

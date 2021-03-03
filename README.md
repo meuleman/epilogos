@@ -101,7 +101,7 @@ The argument to this flag is the path to the directory to which you would like t
 <a name="saliency"></a>
 <details><summary><b> Saliency Level (-s, --saliency)</b></summary>
 <p></p>
-<p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The -l flag to the coordination script allows one to choose one of three possible metrics:</p>
+<p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The <code>-l</code> flag to the coordination script allows one to choose one of three possible metrics:</p>
 
 1. Metric S1, implementing a standard Kullback-Leibler relative entropy
 2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
@@ -112,7 +112,7 @@ Note that each increase in saliency level involves much more computation and thu
 </p>
 
 <p>
-The arguement to this flag must be an integer 1, 2, or 3. Note that Epilogos defaults to a saliency of 1.
+The arguement to this flag must be an integer <code>1, 2, or 3</code>. Note that Epilogos defaults to a saliency of 1.
 </p>
 </details>
 
@@ -122,25 +122,25 @@ The arguement to this flag must be an integer 1, 2, or 3. Note that Epilogos def
 <p>As epilogos has 2 different types of output files, we allow the user to designate which they would like to receive and thus minimize potentially repeated computation.</p>
 
 <p>
-The argument to this flag must be one of three strings: `bg`, `s`, `both`. If you would like to calculate only the background frequencies of the chromatin statesm use `bg`. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use `s`. If you would like to calculate both the background frequencies and the scores, use `both`. Note that Epilogos defaults to `both`.</p>
+The argument to this flag must be one of three strings: <code>bg</code>, <code>s</code>, <code>both</code>. If you would like to calculate only the background frequencies of the chromatin statesm use <code>bg</code>. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use <code>s</code>. If you would like to calculate both the background frequencies and the scores, use <code>both</code>. Note that Epilogos defaults to <code>both</code>.</p>
 </details>
 
 <a name="background-directory"></a>
 <details><summary><b> Background Directory (-b, --background-directory)</b></summary>
 <p></p>
-<p>In the case that the user chooses `s` as the mode of operation, the argument to this flag is the directory in which the background frequency file resides. Note that the file must maintain the same name as it was given upon original output. The format for this name is `exp_freq_{}.npy` where {} is replace with the name of the input directory. Note that Epilogos defaults to the ouput directory.</p>
+<p>In the case that the user chooses <code>s</code> as the mode of operation, the argument to this flag is the directory in which the background frequency file resides. Note that the file must maintain the same name as it was given upon original output. The format for this name is <code>exp_freq_{}.npy</code> where <code>{}</code> is replace with the name of the input directory. Note that Epilogos defaults to the ouput directory.</p>
 
 <p>
-In the case that the user chooses either `bg`" or `both` as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.</p>
+In the case that the user chooses either <code>bg</code> or <code>both</code> as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.</p>
 </details>
 
 <a name="number-of-cores"></a>
 <details><summary><b> Number of Cores (-c, --num-cores)</b></summary>
 <p></p>
-<p>Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library.</p>
+<p>Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's <a href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing library</a>.</p>
 
 <p>
-The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to `-c 0`).</p>
+The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to <code>-c 0</code>).</p>
 </details>
 
 <a name="exit"></a>

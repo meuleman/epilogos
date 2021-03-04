@@ -1,26 +1,39 @@
-# Epilogos
+<p align="center">
+  <br>
+  <a href="https://github.com/meuleman/epilogos"><img src="./data/epilogosLogo.png" align="center" height="280"></a>
+  <br>
+</p>
 
-1. [About](#about)
-2. [Prerequisites](#prerequisites)
-3. [Running Epilogos](#running-epilogos)
-4. [Minimal Example](#minimal-example)
-5. [Command Line Options](#command-line-options)
-    * [Input Directory (-i, --input-directory)](#input-directory)
-    * [Output Directory (-o, --output-directory)](#output-directory)
-    * [State Model (-n, --number-of-states)](#state-model)
-    * [Saliency Level (-s, --saliency)](#saliency)
-    * [Mode of Operation (-m, --mode-of-operation)](#mode-of-operation)
-    * [Background Directory (-b, --background-directory)](#background-directory)
-    * [Number of Cores (-c, --num-cores)](#number-of-cores)
-    * [Exit When Submitted (-x, --exit)](#exit)
+<br>
 
-<a name="about"></a>
+---
 
-## About
+<h2 align="center">
+    Insert TagLine Here
+</h2>
 
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
 
 The software provided in this repository implements the methods underlying Epilogos using only python. We provide a proof-of-principle dataset based on chromatin state calls from the BOIX dataset.
+
+<br>
+
+---
+
+<div align="center"><a name="menu"></a>
+  <h3>
+    <a href="#prerequisites">Prerequisites</a> •
+    <a href="#running-epilogos">Running Epilogos</a> •
+    <a href="#minimal-example">Minimal Example</a> •
+    <a href="#command-line-options">Command Line Options</a> •
+    <a href="#pairwise-epilogos">Pairwise Epilogos</a>
+  </h3>
+</div>
+
+---
+
+<br>
+
 
 <a name="prerequisites"></a>
 
@@ -47,12 +60,11 @@ The script, `src/computeEpilogosSlurm.py`, requires access to a computational cl
 Sample data has been provided under `~/epilogos/data/pyData/male/`. The file, `epilogos_matrix_chr1.txt.gz`, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the [BOIX dataset](https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486) and contains only those epigenomes which are tagged `Male` under the `Sex` column
 
 To compute epilogos (using the S1 saliency metric) for this sample data run one of the following commands (depending on if you want to use SLURM or not) within the `~/epilogos/` directory (replacing `OUTPUTDIR` with the output directory of your choice).
-```bash
-$ python ./src/computeEpilogosSlurm.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
-```
-```bash
-$ python ./src/minimalEpilogos.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR
-```
+
+Slurm: `$ python ./src/computeEpilogosSlurm.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR`
+
+Non-Slurm: `$ python ./src/minimalEpilogos.py -f ./data/pyData/male/ -s 18 -o OUTPUTDIR`
+
 Upon completion of the run, you should see the files `exp_freq_male.npy` and `scores_male_epilogos_matrix_chr1.txt.gz` in `OUTPUTDIR`
 
 To customize your run of epilogos see the [Command Line Options](#command-line-options) of the `README`
@@ -62,70 +74,83 @@ To customize your run of epilogos see the [Command Line Options](#command-line-o
 ## Command Line Options
 
 <a name="input-directory"></a>
+<details><summary><b> Input Directory (-i, --input-directory)</b></summary>
+<p></p>
+<p>Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)</p>
 
-#### Input Directory (-i, --input-directory)
-
-Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Additionally, it allows users to separate data as makes sense to them (e.g. split up the genome by chromosome)
-
+<p>
 The argument to this flag is the path to the directory which contains the files to be read in. Note that ALL files in this directory will be read in and errors may occur if other files are present.
+</p>
+</details>
 
 <a name="output-directory"></a>
-
-#### Output Directory (-o, --output-directory)
-
-The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format `scores_{}_s$_[].txt.gz` where {} is replaced with the input directory name, $ is replaced with the saliency level, and [] is replaced with the name of the corresponding input file (extensions removed).
-
-The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.
+<details><summary><b> Output Directory (-o, --output-directory)</b></summary>
+<p></p>
+<p>
+The output of Epilogos will vary depending on the number of input files present in the input directory (-f, --file-directory). All scores files will be gzipped txt files and of the format <code>scores_{}_s$_[].txt.gz</code> where <code>{}</code> is replaced with the input directory name, <code>$</code> is replaced with the saliency level, and <code>[]</code> is replaced with the name of the corresponding input file (extensions removed).</p>
+<p>
+The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.</p>
+</details>
 
 <a name="state-model"></a>
-
-#### State Model (-n, --number-of-states)
-
-The argument to this flag specifies the number of distinct labels (chromatin states) provided in the input data.
+<details><summary><b> State Model (-n, --number-of-states)</b></summary>
+<p></p>
+<p>The argument to this flag specifies the number of distinct labels (chromatin states) provided in the input data.</p>
+</details>
 
 <a name="saliency"></a>
+<details><summary><b> Saliency Level (-s, --saliency)</b></summary>
+<p></p>
+<p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The <code>-l</code> flag to the coordination script allows one to choose one of three possible metrics:</p>
+<code>1. Metric S1, implementing a standard Kullback-Leibler relative entropy</code>
 
-#### Saliency Level (-s, --saliency)
+<code>2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns</code>
 
-Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The -l flag to the coordination script allows one to choose one of three possible metrics:
-1. Metric S1, implementing a standard Kullback-Leibler relative entropy
-2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
-3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
-
+<code>3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
+</code>
+<p>
 Note that each increase in saliency level involves much more computation and thus each increase requires more time and computational power.
+</p>
 
-The arguement to this flag must be an integer 1, 2, or 3. Note that Epilogos defaults to a saliency of 1.
+<p>
+The arguement to this flag must be an integer <code>1, 2, or 3</code>. Note that Epilogos defaults to a saliency of 1.
+</p>
+</details>
 
 <a name="mode-of-operation"></a>
+<details><summary><b> Mode of Operation (-m, --mode-of-operation)</b></summary>
+<p></p>
+<p>As epilogos has 2 different types of output files, we allow the user to designate which they would like to receive and thus minimize potentially repeated computation.</p>
 
-#### Mode of Operation (-m, --mode-of-operation)
-
-As epilogos has 2 different types of output files, we allow the user to designate which they would like to receive and thus minimize potentially repeated computation.
-
-The argument to this flag must be one of three strings: `bg`, `s`, `both`. If you would like to calculate only the background frequencies of the chromatin statesm use `bg`. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use `s`. If you would like to calculate both the background frequencies and the scores, use `both`. Note that Epilogos defaults to `both`.
+<p>
+The argument to this flag must be one of three strings: <code>bg</code>, <code>s</code>, <code>both</code>. If you would like to calculate only the background frequencies of the chromatin statesm use <code>bg</code>. If you already have a file containing the background frequencies and would only like to calculate the per state scores, use <code>s</code>. If you would like to calculate both the background frequencies and the scores, use <code>both</code>. Note that Epilogos defaults to <code>both</code>.</p>
+</details>
 
 <a name="background-directory"></a>
+<details><summary><b> Background Directory (-b, --background-directory)</b></summary>
+<p></p>
+<p>In the case that the user chooses <code>s</code> as the mode of operation, the argument to this flag is the directory in which the background frequency file resides. Note that the file must maintain the same name as it was given upon original output. The format for this name is <code>exp_freq_{}.npy</code> where <code>{}</code> is replace with the name of the input directory. Note that Epilogos defaults to the ouput directory.</p>
 
-#### Background Directory (-b, --background-directory)
-
-In the case that the user chooses `s` as the mode of operation, the argument to this flag is the directory in which the background frequency file resides. Note that the file must maintain the same name as it was given upon original output. The format for this name is `exp_freq_{}.npy` where {} is replace with the name of the input directory. Note that Epilogos defaults to the ouput directory.
-
-In the case that the user chooses either `bg`" or `both` as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.
+<p>
+In the case that the user chooses either <code>bg</code> or <code>both</code> as the mode of operation, the argument to this flag is the directory to which the background frequencies should be written. This is in case you want the background frequency output directory to be different from the score output directory. Note that Epilogos defaults to the ouput directory.</p>
+</details>
 
 <a name="number-of-cores"></a>
+<details><summary><b> Number of Cores (-c, --num-cores)</b></summary>
+<p></p>
+<p>Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's <a href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing library</a>.</p>
 
-#### Number of Cores (-c, --num-cores)
-
-Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) library.
-
-The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to `-c 0`).
+<p>
+The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to <code>-c 0</code>).</p>
+</details>
 
 <a name="exit"></a>
+<details><summary><b> Exit When Submitted (-x, --exit)</b></summary>
+<p></p>
+<p>By default `src/computeEpilogosSlurm.py` only exits after it has completed all slurm jobs and prints progress updates to the console. If you would like the program to instead exit when all jobs are submitted (allowing use of the terminal while the jobs are running), enable this flag.</p>
+</details>
 
-#### Exit When Submitted (-x, --exit)
-
-By default `src/computeEpilogosSlurm.py` only exits after it has completed all slurm jobs and prints progress updates to the console. If you would like the program to instead exit when all jobs are submitted (allowing use of the terminal while the jobs are running), enable this flag.
-
+<a name="pairwise-epilogos"></a>
 
 # Pairwise Epilogos
 

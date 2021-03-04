@@ -11,7 +11,6 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-import timeit
 
 def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize):
     tTotal = time()
@@ -44,7 +43,7 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     print("Fitting gennorm distribution to distances...", flush=True)
     tFit = time()
     # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
-    print("  TimeIt:", timeit.timeit("fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)", setup="import numpy as np; from multiprocessing import Pool; from itertools import repeat; from contextlib import closing; import scipy.stats as st; from __main__ import fitOnBootstrap, fitDistances", number=1))
+    fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
     print("    Time:", time() - tFit, flush=True)
 
     # # Splitting the params up

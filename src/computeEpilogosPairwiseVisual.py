@@ -16,6 +16,8 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     tTotal = time()
 
     outputDirPath = Path(outputDir)
+    np.random.seed(7032016)
+
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000

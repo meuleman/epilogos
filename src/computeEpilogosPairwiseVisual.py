@@ -208,12 +208,17 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
         # fitDF = pd.DataFrame(index=index, columns=columns)
 
         for i in range(len(results)):
-            beta  = results[i][0][0]
-            loc   = results[i][0][1]
-            scale = results[i][0][2]
-            mle   = results[i][1]
+            resultsStr = "".join(str(results[i][j]) for j in range(len(results[i])))
+            f.write(resultsStr + "\n")
 
-            f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
+
+        # for i in range(len(results)):
+        #     beta  = results[i][0][0]
+        #     loc   = results[i][0][1]
+        #     scale = results[i][0][2]
+        #     mle   = results[i][1]
+
+        #     f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
             # fitDF.iloc[i, 0] = results[i][0][0]
             # fitDF.iloc[i, 1] = results[i][0][1]
             # fitDF.iloc[i, 2] = results[i][0][2]
@@ -226,24 +231,26 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     # return params, dataReal, dataNull
     # medianIndex = int((numTrials-1)/2)
     # return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
-    return (beta, loc, scale), dataReal, dataNull
+    # return (beta, loc, scale), dataReal, dataNull
 
 
 def fitOnBootstrap(distanceArrNull, samplingSize):
     # samplingSize = 10000
     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
-    # ignore warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    return bootstrapData
 
-        # Fit the data
-        params = st.gennorm.fit(bootstrapData)
+    # # ignore warnings
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
 
-        # Calculate SSE and MLE
-        mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
+    #     # Fit the data
+    #     params = st.gennorm.fit(bootstrapData)
 
-    return params, mle
+    #     # Calculate SSE and MLE
+    #     mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
+
+    # return params, mle
 
 
 # Helper for creating and saving diagnostic figures

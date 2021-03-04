@@ -201,6 +201,11 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
         results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
     pool.join()
 
+    index = [i for i in range(len(results))]
+    columns = [i for i in range(samplingSize)]
+
+    randomDF = pd.DataFrame(index=index, columns=columns)
+
     with open(outputDir / "fitResults.txt", 'w') as f:
         # index = [i for i in range(numTrials)]
         # columns = ["beta", "loc", "scale", "mle"]
@@ -210,8 +215,9 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
         for i in range(len(results)):
             resultsStr = "".join(str(results[i][j]) for j in range(len(results[i])))
             f.write(resultsStr + "\n")
+            randomDF.iloc[i] = list(results[i])
 
-
+        print("Unique values", randomDF.iloc[:,0].unique())
         # for i in range(len(results)):
         #     beta  = results[i][0][0]
         #     loc   = results[i][0][1]

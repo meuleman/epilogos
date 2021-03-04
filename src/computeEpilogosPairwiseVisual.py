@@ -41,6 +41,8 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time() - tRead, flush=True)
 
+    print("Unique Distances:", len(np.unique(distanceArrReal)))
+
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...", flush=True)
     tFit = time()

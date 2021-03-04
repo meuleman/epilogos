@@ -218,7 +218,7 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
             f.write(resultsStr + "\n")
             randomDF.iloc[i] = list(results[i])
 
-        print("Unique values", randomDF.iloc[:,0].unique())
+        print("Unique values", len(randomDF.iloc[:,0].unique()))
         # for i in range(len(results)):
         #     beta  = results[i][0][0]
         #     loc   = results[i][0][1]

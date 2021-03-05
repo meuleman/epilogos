@@ -54,7 +54,7 @@ def main(file):
 
     numProcesses = cpu_count()
     # np.random.seed(7062016)
-
+    # pairwiseMetrics = Path(file)
     pairwiseMetrics   = Path("/home/jquon/bootstrappingTest/100000/pairwiseMetrics_mmo_fmo_s1.txt.gz")
     names = ['chr', 'binStart', 'binEnd', 'distance']
     distanceDF = pd.read_table(pairwiseMetrics, usecols=[0, 1, 2, 4], header=None, sep="\t", names=names)
@@ -80,6 +80,7 @@ def main(file):
     print("Unique values", len(randomDF.iloc[:,0].unique()))
 
 def test(x, size):
+    np.random.seed()
     return np.random.choice(x, size=size, replace=False)
 
 if __name__ == "__main__":

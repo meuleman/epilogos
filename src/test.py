@@ -65,11 +65,11 @@ def main(file):
 
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(test, zip(itertools.repeat(dataNull, 1001), itertools.repeat(10000, 1001)))
+        results = pool.starmap(test, zip(itertools.repeat(dataNull, 1001), itertools.repeat(1000, 1001)))
     pool.join()
 
     index = [i for i in range(len(results))]
-    columns = [i for i in range(10)]
+    columns = [i for i in range(1000)]
 
     randomDF = pd.DataFrame(index=index, columns=columns)
 

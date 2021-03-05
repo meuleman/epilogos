@@ -54,8 +54,8 @@ def main(file):
 
     numProcesses = cpu_count()
     # np.random.seed(7062016)
-    # pairwiseMetrics = Path(file)
-    pairwiseMetrics   = Path("/home/jquon/bootstrappingTest/100000/pairwiseMetrics_mmo_fmo_s1.txt.gz")
+    pairwiseMetrics = Path(file)
+    # pairwiseMetrics   = Path("/home/jquon/bootstrappingTest/100000/pairwiseMetrics_mmo_fmo_s1.txt.gz")
     names = ['chr', 'binStart', 'binEnd', 'distance']
     distanceDF = pd.read_table(pairwiseMetrics, usecols=[0, 1, 2, 4], header=None, sep="\t", names=names)
     distanceArr = np.array(distanceDF['distance'])

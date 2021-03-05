@@ -34,6 +34,9 @@ def main(file):
 
     bootstrapDF.sort_values(by=["mle"], inplace=True)
 
+
+    print("UNIQUE", len(bootstrapDF['mle'].unique()))
+
     print(bootstrapDF.shape)
 
     print("Top bootstrap")

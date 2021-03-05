@@ -198,32 +198,11 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
-    results = []
-
-    for i in range(100):
-        bootstrapData = pd.Series(np.random.choice(dataNull, size=samplingSize, replace=False))
-        # ignore warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-
-            # Fit the data
-            params = st.gennorm.fit(bootstrapData)
-
-            # Calculate SSE and MLE
-            mle = st.gennorm.nnlf(params, pd.Series(dataNull))
-
-            results.append((params, mle))
-
     # numTrials = 1000
 
-    # with closing(Pool(numProcesses)) as pool:
-    #     results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
-    # pool.join()
-
-    # index = [i for i in range(len(results))]
-    # columns = [i for i in range(samplingSize)]
-
-    # randomDF = pd.DataFrame(index=index, columns=columns)
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
+    pool.join()
 
     with open(outputDir / "fitResults.txt", 'w') as f:
     #     # index = [i for i in range(numTrials)]
@@ -231,12 +210,6 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
 
     #     # fitDF = pd.DataFrame(index=index, columns=columns)
 
-        # for i in range(len(results)):
-        #     resultsStr = "".join(str(results[i][j]) for j in range(len(results[i])))
-        #     f.write(resultsStr + "\n")
-            # randomDF.iloc[i] = list(results[i])
-
-    #     print("Unique values", len(randomDF.iloc[:,0].unique()))
         for i in range(len(results)):
             beta  = results[i][0][0]
             loc   = results[i][0][1]
@@ -261,21 +234,20 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
 
 def fitOnBootstrap(distanceArrNull, samplingSize):
     # samplingSize = 10000
+    np.random.seed()
     bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
-    return bootstrapData
+    # ignore warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    # # ignore warnings
-    # with warnings.catch_warnings():
-    #     warnings.simplefilter("ignore")
+        # Fit the data
+        params = st.gennorm.fit(bootstrapData)
 
-    #     # Fit the data
-    #     params = st.gennorm.fit(bootstrapData)
+        # Calculate SSE and MLE
+        mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
 
-    #     # Calculate SSE and MLE
-    #     mle = st.gennorm.nnlf(params, pd.Series(distanceArrNull))
-
-    # return params, mle
+    return params, mle
 
 
 # Helper for creating and saving diagnostic figures

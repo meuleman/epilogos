@@ -46,44 +46,51 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...", flush=True)
     tFit = time()
-    # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
-    fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
+    # fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
     print("    Time:", time() - tFit, flush=True)
 
-    # # Splitting the params up
-    # beta, loc, scale = params[:-2], params[-2], params[-1]
-    # print("PARAMS: ", params)
+    # Splitting the params up
+    beta, loc, scale = params[:-2], params[-2], params[-1]
+    print("PARAMS: ", params)
 
-    # # Creating Diagnostic Figures
-    # if diagnosticBool:
-    #     print("Creating diagnostic figures...")
-    #     tDiagnostic = time()
-    #     createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-    #     print("    Time:", time() - tDiagnostic)
+    # Creating Diagnostic Figures
+    if diagnosticBool:
+        print("Creating diagnostic figures...")
+        tDiagnostic = time()
+        createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
+        print("    Time:", time() - tDiagnostic)
 
-    # # Calculating PValues
-    # print("Calculating P-Values...")
-    # tPVal = time()
-    # pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    # print("    Time:", time() - tPVal)
+    # Calculating PValues
+    print("Calculating P-Values...")
+    tPVal = time()
+    pvals = calculatePVals(distanceArrReal, beta, loc, scale)
+    print("    Time:", time() - tPVal)
 
-    # # Create an output file which summarizes the results
-    # print("Writing metrics file...")
-    # tMetrics = time()
-    # writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    # print("    Time:", time() - tMetrics)
+    # Create an output file which summarizes the results
+    print("Writing metrics file...")
+    tMetrics = time()
+    writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
+    print("    Time:", time() - tMetrics)
 
-    # # Create Bed file of top 1000 loci with adjacent merged
-    # print("Creating .bed file of top loci...")
-    # tBed = time()
-    # roiPath = outputDirPath / "greatestHits_{}.bed".format(fileTag)
-    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList)
-    # print("    Time:", time() - tBed)
+    # # Create txt file of top 1000 loci with adjacent merged
+    # print("Creating .txt file of top loci...")
+    # t1000 = time()
+    # roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
+    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, -1)
+    # print("    Time:", time() - t1000)
 
     # # Determine Significance Threshold (based on n*)
     # genomeAutoCorrelation = 0.987
     # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
     # significanceThreshold = .1 / nStar
+
+    # # Create txt file of significant loci
+    # print("Creating .txt file of significant loci...")
+    # tSig = time()
+    # roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
+    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold)
+    # print("    Time:", time() - tSig)
 
     # # Create Genome Manhattan Plot
     # print("Creating Genome-Wide Manhattan Plot")
@@ -205,10 +212,10 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     pool.join()
 
     with open(outputDir / "fitResults.txt", 'w') as f:
-    #     # index = [i for i in range(numTrials)]
-    #     # columns = ["beta", "loc", "scale", "mle"]
+        index = [i for i in range(numTrials)]
+        columns = ["beta", "loc", "scale", "mle"]
 
-    #     # fitDF = pd.DataFrame(index=index, columns=columns)
+        fitDF = pd.DataFrame(index=index, columns=columns)
 
         for i in range(len(results)):
             beta  = results[i][0][0]
@@ -217,25 +224,28 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
             mle   = results[i][1]
 
             f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, mle))
-            # fitDF.iloc[i, 0] = results[i][0][0]
-            # fitDF.iloc[i, 1] = results[i][0][1]
-            # fitDF.iloc[i, 2] = results[i][0][2]
-            # fitDF.iloc[i, 3] = results[i][1]
+            fitDF.iloc[i, 0] = results[i][0][0]
+            fitDF.iloc[i, 1] = results[i][0][1]
+            fitDF.iloc[i, 2] = results[i][0][2]
+            fitDF.iloc[i, 3] = results[i][1]
 
-        # fitDF.sort_values(by=["mle"], inplace=True)
+        fitDF.sort_values(by=["mle"], inplace=True)
 
     # params = tuple(map(lambda x: x/len(results), tuple(map(sum, zip(*results)))))
 
     # return params, dataReal, dataNull
-    # medianIndex = int((numTrials-1)/2)
-    # return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
+    medianIndex = int((numTrials-1)/2)
+    return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
     # return (beta, loc, scale), dataReal, dataNull
 
 
 def fitOnBootstrap(distanceArrNull, samplingSize):
     # samplingSize = 10000
-    np.random.seed()
-    bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
+    if len(distanceArrNull) <= samplingSize:
+        bootstrapData = distanceArrNull
+    else:
+        np.random.seed()
+        bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
     # ignore warnings
     with warnings.catch_warnings():
@@ -390,13 +400,13 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
             points = np.where((locationOnGenome >= xticks[i]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
+            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none', rasterize=True)
         elif i%2 == 0:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
+            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none', rasterize=True)
         else:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black", marker=".", alpha=0.1, edgecolors='none')
+            plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black", marker=".", alpha=0.1, edgecolors='none', rasterize=True)
             
     opaqueSigIndices = np.where(np.abs(pvalsGraph) >= logSignificanceThreshold)[0]
 
@@ -405,12 +415,12 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
 
-    plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none')
+    plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none', rasterize=True)
     ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
     ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 
-    figPath = manhattanDirPath / "manhattan_plot_genome.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = manhattanDirPath / "manhattan_plot_genome.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
 
@@ -486,7 +496,7 @@ def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locat
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
         points = np.where((locationOnGenome >= startEnd[0]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-        plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
+        plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none', rasterize=True)
 
         opaqueSigIndices = np.where((locationOnGenome >= startEnd[0]) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
     else:
@@ -494,7 +504,7 @@ def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locat
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
         points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
-        plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none')
+        plt.scatter(locationOnGenome[points], distanceArrReal[points], s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".", alpha=0.1, edgecolors='none', rasterize=True)
 
         opaqueSigIndices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
 
@@ -503,12 +513,12 @@ def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locat
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
 
-    plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none')
+    plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".", edgecolors='none', rasterize=True)
     ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
     ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
     
-    figPath = manhattanDirPath / "manhattan_plot_chr{}.png".format(chromosome)
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = manhattanDirPath / "manhattan_plot_chr{}.pdf".format(chromosome)
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
 # Helper function for generating proper tick marks on the manhattan plots
@@ -549,13 +559,17 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     metricsTxt.close()
 
 
-# Helper function to create a roiURL bed file of the top 1000 loci (Adjacent loci are merged)
-def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr):
+# Helper function to create a roiURL txt file of the top 1000 loci (Adjacent loci are merged)
+def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, significanceThreshold):
     with open(filePath, 'w') as f:
-        # Sort the significant values
-        sortedIndices = (-np.abs(distanceArr)).argsort()[:1000]
-        locations = np.concatenate((locationArr[sortedIndices], distanceArr[sortedIndices].reshape(len(sortedIndices), 1), maxDiffArr[sortedIndices].reshape(len(sortedIndices), 1)), axis=1)
-    
+        if significanceThreshold < 0:
+            # Sort the values
+            indices = (-np.abs(distanceArr)).argsort()[:1000]
+        else:
+            indices = np.where(pvals <= significanceThreshold)[0]
+
+        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1)), axis=1)
+
         # Iterate until all is merged
         while(hasAdjacent(locations)):
             locations = mergeAdjacent(locations)
@@ -579,7 +593,7 @@ def hasAdjacent(locationArr):
     return False
 
 
-# Helper function for merging adjacent loci in the roiURL bed file
+# Helper function for merging adjacent loci in the roiURL txt file
 def mergeAdjacent(locationArr):
     for i in range(locationArr.shape[0]):
         for j in range(locationArr.shape[0]):

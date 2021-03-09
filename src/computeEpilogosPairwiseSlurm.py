@@ -347,7 +347,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     visualJobID = int(sp.stdout.split()[-1])
     print("    JobID:", visualJobID)
 
-    allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, visualJobID)
+    allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, visualJobID)
     # allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID)
     print("\nAll JobIDs:\n    {}".format(allJobIDs))
 

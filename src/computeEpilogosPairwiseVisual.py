@@ -73,36 +73,36 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
     print("    Time:", time() - tMetrics)
 
-    # # Create txt file of top 1000 loci with adjacent merged
-    # print("Creating .txt file of top loci...")
-    # t1000 = time()
-    # roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, -1)
-    # print("    Time:", time() - t1000)
+    # Determine Significance Threshold (based on n*)
+    genomeAutoCorrelation = 0.987
+    nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
+    significanceThreshold = .1 / nStar
 
-    # # Determine Significance Threshold (based on n*)
-    # genomeAutoCorrelation = 0.987
-    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    # significanceThreshold = .1 / nStar
+    # Create txt file of top 1000 loci with adjacent merged
+    print("Creating .txt file of top loci...")
+    t1000 = time()
+    roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold, False)
+    print("    Time:", time() - t1000)
 
-    # # Create txt file of significant loci
-    # print("Creating .txt file of significant loci...")
-    # tSig = time()
-    # roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
-    # sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold)
-    # print("    Time:", time() - tSig)
+    # Create txt file of significant loci
+    print("Creating .txt file of significant loci...")
+    tSig = time()
+    roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold, True)
+    print("    Time:", time() - tSig)
 
-    # # Create Genome Manhattan Plot
-    # print("Creating Genome-Wide Manhattan Plot")
-    # tGManhattan = time()
-    # createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    # print("    Time:", time() - tGManhattan)
+    # Create Genome Manhattan Plot
+    print("Creating Genome-Wide Manhattan Plot")
+    tGManhattan = time()
+    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
+    print("    Time:", time() - tGManhattan)
     
-    # # Create Chromosome Manhattan Plot
-    # print("Creating Individual Chromosome Manhattan Plots")
-    # tCManhattan = time()
-    # createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    # print("    Time:", time() - tCManhattan)
+    # Create Chromosome Manhattan Plot
+    print("Creating Individual Chromosome Manhattan Plots")
+    tCManhattan = time()
+    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
+    print("    Time:", time() - tCManhattan)
 
     print("Total Time:", time() - tTotal, flush=True)
 
@@ -244,7 +244,7 @@ def fitOnBootstrap(distanceArrNull, samplingSize):
     if len(distanceArrNull) <= samplingSize:
         bootstrapData = distanceArrNull
     else:
-        np.random.seed()
+        np.random.seed() # On linux, multiprocessing inherits the master seed and doesn't generate fully random numbers
         bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
     # ignore warnings
@@ -269,74 +269,74 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(111)
-    dataReal.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True, ax=ax)
-    dataNull.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True, ax=ax)
+    dataReal.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True, ax=ax, rasterized=True)
+    dataNull.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True, ax=ax, rasterized=True)
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
-    figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-max(abs), max(abs)))
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
-    dataReal.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances', legend=True, ax=ax)
-    dataNull.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances', legend=True, ax=ax)
+    dataReal.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances', legend=True, ax=ax, rasterized=True)
+    dataNull.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances', legend=True, ax=ax, rasterized=True)
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
-    figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
     # Real vs Null distance scatter plot
     fig = plt.figure(figsize=(12,12))
-    plt.scatter(distanceArrReal, distanceArrNull, color='r')
+    plt.scatter(distanceArrReal, distanceArrNull, color='r', rasterized=True)
     plt.xlim(-rangeLim, rangeLim)
     plt.ylim(-rangeLim, rangeLim)
     plt.xlabel("Real Distances")
     plt.ylabel("Null Distances")
     plt.title("Real Distances vs Null Distances")
-    figPath = diagnosticDirPath / "real_vs_null_scatter.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "real_vs_null_scatter.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
     # Fit on data (range=(min, max))
-    y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True, rasterized=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
-    dataNull.plot(kind='hist', bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True, rasterized=True)
+    dataNull.plot(kind='hist', bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True, alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
     plt.title("Gennorm on data (range=(min,max))")
     plt.xlabel("Signed Squared Euclidean Distance")
-    figPath = diagnosticDirPath / "gennorm_on_data_minToMax.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "gennorm_on_data_minToMax.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
     # Fit on data (range=(-1, 1))
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True, rasterized=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
-    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True, rasterized=True)
+    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
     plt.title("Gennorm on data (range=(-1,1))")
     plt.xlabel("Signed Squared Euclidean Distance")
-    figPath = diagnosticDirPath / "gennorm_on_data_n1to1.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "gennorm_on_data_n1to1.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
     # Fit on data (range=(-0.1, 0.1))
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True, rasterized=True);
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12,8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True)
-    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True, rasterized=True)
+    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
     plt.title("Gennorm on data (range=(-0.1,0.1))")
     plt.xlim(-.1, .1)
     plt.xlabel("Signed Squared Euclidean Distance")
-    figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.png"
-    fig.savefig(figPath, bbox_inches='tight', dpi=300, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
 
@@ -560,23 +560,26 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
 
 
 # Helper function to create a roiURL txt file of the top 1000 loci (Adjacent loci are merged)
-def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, significanceThreshold):
+def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, significanceThreshold, onlySignificant):
     with open(filePath, 'w') as f:
-        if significanceThreshold < 0:
+        if onlySignificant:
+            # Pick values above significance threshold and then sort
+            indices = (-np.abs(distanceArr[np.where(pvals <= significanceThreshold)[0]])).argsort()
+        else:
             # Sort the values
             indices = (-np.abs(distanceArr)).argsort()[:1000]
-        else:
-            indices = np.where(pvals <= significanceThreshold)[0]
 
-        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1)), axis=1)
+        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
         # Iterate until all is merged
         while(hasAdjacent(locations)):
             locations = mergeAdjacent(locations)
+
+        stars = np.array(["*" if float(locations[i, 5]) <= significanceThreshold else "." for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
             
         # Write all the locations to the file
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}{4}\n"
+        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars) for i in range(locations.shape[0]))
         f.write(outString)
 
 
@@ -598,13 +601,14 @@ def mergeAdjacent(locationArr):
     for i in range(locationArr.shape[0]):
         for j in range(locationArr.shape[0]):
             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction merge and delete the originals
+            # The new merged distance is the larger of the two distances (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.array([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2], locationArr[i, 3], locationArr[i, 4]]).reshape(1, 5)
+                mergedLocation = np.array([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2], locationArr[i, 3], locationArr[i, 4], locationArr[i, 5]]).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.array([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2], locationArr[i, 3], locationArr[i, 4]]).reshape(1, 5)
+                mergedLocation = np.array([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2], locationArr[i, 3], locationArr[i, 4], locationArr[i, 5]]).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr

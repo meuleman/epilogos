@@ -564,12 +564,15 @@ def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, s
     with open(filePath, 'w') as f:
         if onlySignificant:
             # Pick values above significance threshold and then sort
-            indices = (-np.abs(distanceArr[np.where(pvals <= significanceThreshold)[0]])).argsort()
+            indices = np.where(pvals <= significanceThreshold)[0]
+            indicesSorted = (-np.abs(distanceArr[np.where(pvals <= significanceThreshold)[0]])).argsort()
+            locations = np.concatenate((locationArr[indices][indicesSorted], distanceArr[indices][indicesSorted].reshape(len(indices), 1), maxDiffArr[indices][indicesSorted].reshape(len(indices), 1), pvals[indices][indicesSorted].reshape(len(indices), 1)), axis=1)
+
         else:
             # Sort the values
             indices = (-np.abs(distanceArr)).argsort()[:1000]
+            locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
-        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
         # Iterate until all is merged
         while(hasAdjacent(locations)):
@@ -578,8 +581,8 @@ def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, s
         stars = np.array(["*" if float(locations[i, 5]) <= significanceThreshold else "." for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
             
         # Write all the locations to the file
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}{4}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars[i]) for i in range(locations.shape[0]))
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}\t{4}\n"
+        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars[i, 0]) for i in range(locations.shape[0]))
         f.write(outString)
 
 

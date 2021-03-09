@@ -220,8 +220,9 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Calculate the observed frequencies and scores
     print("\nSTEP 3: Score calculation")
-    scoreRealJobIDArr = []
-    scoreNullJobIDArr = []
+    # scoreRealJobIDArr = []
+    # scoreNullJobIDArr = []
+    scoreJobIDArr = []
     for file1 in inputDirPath1.glob("*"):
         # Skip over ".genome" files
         if file1.name.split(".")[-1] == "genome":
@@ -266,33 +267,42 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
             
             # Create a string for the python commands
             computeScorePy = pythonFilesDir / "computeEpilogosPairwiseScores.py"
-            pythonCommandReal = "python {} {} {} {} {} {} {} {} {} real".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
-            pythonCommandNull = "python {} {} {} {} {} {} {} {} {} null".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+            pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+            # pythonCommandReal = "python {} {} {} {} {} {} {} {} {} real".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+            # pythonCommandNull = "python {} {} {} {} {} {} {} {} {} null".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
             # Create a string for the slurm commands
             if saliency == 1:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommand)
+                # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
+                # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
             elif saliency == 2:
-                slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommand)
+                # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
+                # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
 
-            spReal = subprocess.run(slurmCommandReal, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            # spReal = subprocess.run(slurmCommandReal, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+            # spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-            if not spReal.stdout.startswith("Submitted batch") or not spNull.stdout.startswith("Submitted batch"):
+
+            if not sp.stdout.startswith("Submitted batch"):
                 raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+            # if not spReal.stdout.startswith("Submitted batch") or not spNull.stdout.startswith("Submitted batch"):
+            #     raise ChildProcessError("SlurmError: sbatch not submitted correctly")
 
-
-            scoreRealJobIDArr.append(int(spReal.stdout.split()[-1]))
-            scoreNullJobIDArr.append(int(spNull.stdout.split()[-1]))
+            scoreJobIDArr.append(int(sp.stdout.split()[-1]))
+            # scoreRealJobIDArr.append(int(spReal.stdout.split()[-1]))
+            # scoreNullJobIDArr.append(int(spNull.stdout.split()[-1]))
 
     # create a string for slurm dependency to work
-    scoreRealJobIDStr = str(scoreRealJobIDArr).strip('[]').replace(" ", "")
-    scoreNullJobIDStr = str(scoreNullJobIDArr).strip('[]').replace(" ", "")
+    scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
+    # scoreRealJobIDStr = str(scoreRealJobIDArr).strip('[]').replace(" ", "")
+    # scoreNullJobIDStr = str(scoreNullJobIDArr).strip('[]').replace(" ", "")
     
-    print("    Data JobIDs:", scoreRealJobIDStr)
-    print("    Null JobIDs:", scoreNullJobIDStr)
+    print("    JobIDs:", scoreJobIDStr)
+    # print("    Data JobIDs:", scoreRealJobIDStr)
+    # print("    Null JobIDs:", scoreNullJobIDStr)
 
     # Fitting, calculating p-values, and visualizing pairiwse differences
     print("\nSTEP 4: Generating p-values and figures")
@@ -322,9 +332,11 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        # slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
+        # slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -335,7 +347,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     visualJobID = int(sp.stdout.split()[-1])
     print("    JobID:", visualJobID)
 
-    allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID)
+    allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, visualJobID)
+    # allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID)
     print("\nAll JobIDs:\n    {}".format(allJobIDs))
 
     # If the user wants to exit upon job completion rather than submission
@@ -362,7 +375,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
             elif len(completedJobs) >= (len(expJobIDArr) + 1) and calculationStep == "exp_comb":
                 print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                 calculationStep = "score"
-            elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == "score":
+            elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == "score":
+            # elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreRealJobIDArr) + len(scoreNullJobIDArr)) and calculationStep == "score":
                 print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                 calculationStep = "visual"
 

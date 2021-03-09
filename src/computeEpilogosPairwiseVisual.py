@@ -579,7 +579,7 @@ def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, s
             
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}{4}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars) for i in range(locations.shape[0]))
+        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars[i]) for i in range(locations.shape[0]))
         f.write(outString)
 
 

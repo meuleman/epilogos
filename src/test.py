@@ -63,10 +63,12 @@ def main(file1, file2):
     for i in range(df1.shape[0]):
         if df1.iloc[i, 0] != df2.iloc[i, 0] or df1.iloc[i, 1] != df2.iloc[i, 1] or df1.iloc[i, 2] != df2.iloc[i, 2]:
             boolean = False
+            print(i)
+            break
 
     print(boolean)
 
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])

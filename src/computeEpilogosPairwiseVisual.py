@@ -101,7 +101,8 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Create Chromosome Manhattan Plot
     print("Creating Individual Chromosome Manhattan Plots")
     tCManhattan = time()
-    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
+    createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
+    # createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
     print("    Time:", time() - tCManhattan)
 
     print("Total Time:", time() - tTotal, flush=True)
@@ -423,9 +424,36 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
+def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, significanceThreshold_, pvalsGraph_, stateColorList_, manhattanDirPath_):
+    global group1Name
+    global group2Name
+    global locationArr
+    global distanceArrReal
+    global maxDiffArr
+    global beta
+    global loc
+    global scale
+    global significanceThreshold
+    global pvalsGraph
+    global stateColorList
+    global manhattanDirPath
+
+    group1Name = group1Name_
+    group2Name = group2Name_
+    locationArr = locationArr_
+    distanceArrReal = distanceArrReal_
+    maxDiffArr = maxDiffArr_
+    beta, loc, scale = params[:-2], params[-2], params[-1]
+    significanceThreshold = significanceThreshold_
+    pvalsGraph = pvalsGraph_
+    stateColorList = stateColorList_
+    manhattanDirPath = manhattanDirPath_
+
+
 
 # Helper for generating individual chromosome manhattan plots
-def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
+def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
+# def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
     manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
@@ -448,13 +476,17 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
 
     tChromosome = time()
     # Multiprocess the reading
-    with closing(Pool(numProcesses)) as pool:
-        pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd, repeat(group1Name), repeat(group2Name), repeat(locationArr), repeat(distanceArrReal), repeat(maxDiffArr), repeat(beta), repeat(loc), repeat(scale), repeat(significanceThreshold), repeat(pvalsGraph), repeat(stateColorList), repeat(manhattanDirPath)))
+    with closing(Pool(numProcesses, initializer=_init, initargs=(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath))) as pool:
+        pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
+
+    # with closing(Pool(numProcesses)) as pool:
+    #     pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd, repeat(group1Name), repeat(group2Name), repeat(locationArr), repeat(distanceArrReal), repeat(maxDiffArr), repeat(beta), repeat(loc), repeat(scale), repeat(significanceThreshold), repeat(pvalsGraph), repeat(stateColorList), repeat(manhattanDirPath)))
+    # pool.join()
     print("Time for chromosome manhattan:", time() - tChromosome)
 
-
-def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath):
+def graphChromosomeManhattan(chromosome, startEnd):
+# def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath):
     logSignificanceThreshold = -np.log10(significanceThreshold)    
 
     fig = plt.figure(figsize=(16,9))

@@ -255,10 +255,6 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
                 jout.close()
                 jerr = open(jobErrPath, 'x')
                 jerr.close()
-                jout = open(jobOutPath, 'x')
-                jout.close()
-                jerr = open(jobErrPath, 'x')
-                jerr.close()
             except FileExistsError as err:
                 # This error should never occur because we are deleting the files first
                 print(err)

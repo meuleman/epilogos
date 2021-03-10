@@ -235,35 +235,57 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
         if not file1.is_dir() and not file2.is_dir():
             filename = file1.name.split(".")[0]
-            jobNameReal = "score_real_{}_{}".format(fileTag, filename)
-            jobNameNull = "score_null_{}_{}".format(fileTag, filename)
-            jobOutPathReal = outputDirPath / (".out/" + jobNameReal + ".out")
-            jobErrPathReal = outputDirPath / (".err/" + jobNameReal + ".err")
-            jobOutPathNull = outputDirPath / (".out/" + jobNameNull + ".out")
-            jobErrPathNull = outputDirPath / (".err/" + jobNameNull + ".err")
+            jobName = "score_{}_{}".format(fileTag, filename)
+            jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+            jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+            # jobNameReal = "score_real_{}_{}".format(fileTag, filename)
+            # jobNameNull = "score_null_{}_{}".format(fileTag, filename)
+            # jobOutPathReal = outputDirPath / (".out/" + jobNameReal + ".out")
+            # jobErrPathReal = outputDirPath / (".err/" + jobNameReal + ".err")
+            # jobOutPathNull = outputDirPath / (".out/" + jobNameNull + ".out")
+            # jobErrPathNull = outputDirPath / (".err/" + jobNameNull + ".err")
 
             # Creating the out and err files for the batch job
-            if jobOutPathReal.exists():
-                remove(jobOutPathReal)
-            if jobErrPathReal.exists():
-                remove(jobErrPathReal)
-            if jobOutPathNull.exists():
-                remove(jobOutPathNull)
-            if jobErrPathNull.exists():
-                remove(jobErrPathNull)
+            if jobOutPath.exists():
+                remove(jobOutPath)
+            if jobErrPath.exists():
+                remove(jobErrPath)
             try:
-                jout = open(jobOutPathReal, 'x')
+                jout = open(jobOutPath, 'x')
                 jout.close()
-                jerr = open(jobErrPathReal, 'x')
+                jerr = open(jobErrPath, 'x')
                 jerr.close()
-                jout = open(jobOutPathNull, 'x')
+                jout = open(jobOutPath, 'x')
                 jout.close()
-                jerr = open(jobErrPathNull, 'x')
+                jerr = open(jobErrPath, 'x')
                 jerr.close()
             except FileExistsError as err:
                 # This error should never occur because we are deleting the files first
                 print(err)
                 return
+
+            # # Creating the out and err files for the batch job
+            # if jobOutPathReal.exists():
+            #     remove(jobOutPathReal)
+            # if jobErrPathReal.exists():
+            #     remove(jobErrPathReal)
+            # if jobOutPathNull.exists():
+            #     remove(jobOutPathNull)
+            # if jobErrPathNull.exists():
+            #     remove(jobErrPathNull)
+            # try:
+            #     jout = open(jobOutPathReal, 'x')
+            #     jout.close()
+            #     jerr = open(jobErrPathReal, 'x')
+            #     jerr.close()
+            #     jout = open(jobOutPathNull, 'x')
+            #     jout.close()
+            #     jerr = open(jobErrPathNull, 'x')
+            #     jerr.close()
+            # except FileExistsError as err:
+            #     # This error should never occur because we are deleting the files first
+            #     print(err)
+            #     return
             
             # Create a string for the python commands
             computeScorePy = pythonFilesDir / "computeEpilogosPairwiseScores.py"
@@ -273,11 +295,11 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
             # Create a string for the slurm commands
             if saliency == 1:
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommand)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
                 # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
             elif saliency == 2:
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommand)
+                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
                 # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
                 # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
 

@@ -35,9 +35,9 @@ def main(filename1, filename2, numStates, saliency, outputDirPath, fileTag, numP
         rowList.append(rowsToCalculate)
 
     if saliency == 1:
-        s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, filename, numProcesses)
+        s1Exp(file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses)
     elif saliency == 2:
-        s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, filename, numProcesses)
+        s2Exp(file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses)
     elif saliency == 3:
         raise ValueError("A saliency metric of 3 is unsupported for pairwise comparisons")
     else:
@@ -47,7 +47,7 @@ def main(filename1, filename2, numStates, saliency, outputDirPath, fileTag, numP
 
 
 # Function that deploys the processes used to calculate the expected frequencies for the s1 metric. Also calls function to store expected frequency
-def s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, filename, numProcesses):
+def s1Exp(file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses):
     print("\nNumber of Processes:", numProcesses)
     
     # Start the processes
@@ -55,8 +55,7 @@ def s1Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
         results = pool.starmap(s1Calc, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(numStates)))
     pool.join()
 
-    # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis=0) / totalRows
+    expFreqArr = np.sum(results, axis=0)
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, filename)
 
@@ -103,7 +102,7 @@ def s1Calc(file1Path, file2Path, rowsToCalculate, numStates):
     return expFreqArr
 
 # Function that deploys the processes used to calculate the expected frequencies for the s2 metric. Also calls function to store expected frequency
-def s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fileTag, filename, numProcesses):
+def s2Exp(file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses):
     print("\nNumber of Processes:", numProcesses)
 
     # Start the processes
@@ -111,8 +110,7 @@ def s2Exp(file1Path, file2Path, rowList, totalRows, numStates, outputDirPath, fi
         results = pool.starmap(s2Calc, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(numStates)))
     pool.join()
 
-    # Sum all the expected frequency arrays from the seperate processes and normalize by dividing by numRows
-    expFreqArr = np.sum(results, axis = 0) / totalRows
+    expFreqArr = np.sum(results, axis = 0)
 
     storeExpArray(expFreqArr, outputDirPath, fileTag, filename)
 

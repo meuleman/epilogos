@@ -82,14 +82,14 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     print("Creating .txt file of top loci...")
     t1000 = time()
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold, False)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
     print("    Time:", time() - t1000)
 
     # Create txt file of significant loci
     print("Creating .txt file of significant loci...")
     tSig = time()
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, significanceThreshold, True)
+    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
     print("    Time:", time() - tSig)
 
     # Create Genome Manhattan Plot
@@ -592,25 +592,28 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
 
 
 # Helper function to create a roiURL txt file of the top 1000 loci (Adjacent loci are merged)
-def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, significanceThreshold, onlySignificant):
+def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
+    significantAt1 = .1 / nStar
+    significantAt05 = .05 / nStar
+    significantAt01 = .01 / nStar
+    
     with open(filePath, 'w') as f:
         if onlySignificant:
             # Pick values above significance threshold and then sort
-            indices = np.where(pvals <= significanceThreshold)[0]
-            indicesSorted = (-np.abs(distanceArr[np.where(pvals <= significanceThreshold)[0]])).argsort()
-            locations = np.concatenate((locationArr[indices][indicesSorted], distanceArr[indices][indicesSorted].reshape(len(indices), 1), maxDiffArr[indices][indicesSorted].reshape(len(indices), 1), pvals[indices][indicesSorted].reshape(len(indices), 1)), axis=1)
-
+            indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
         else:
             # Sort the values
             indices = (-np.abs(distanceArr)).argsort()[:1000]
-            locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
+        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1), maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
-        # Iterate until all is merged
-        while(hasAdjacent(locations)):
-            locations = mergeAdjacent(locations)
+        # Iterate until all is merged, but only for the general case
+        if not onlySignificant:
+            while(hasAdjacent(locations)):
+                locations = mergeAdjacent(locations)
 
-        stars = np.array(["*" if float(locations[i, 5]) <= significanceThreshold else "." for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+        # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
+        stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else ("**" if float(locations[i, 5]) <= significantAt05 else ("*" if float(locations[i, 5]) <= significantAt1 else ".")) for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
             
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}\t{4}\n"

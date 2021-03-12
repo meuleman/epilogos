@@ -186,7 +186,7 @@ def s1Score(file1Path, file2Path, rowsToCalculate, expFreqPath):
 
     if rowsToCalculate[0] == 0: print("    Time:", time() - tScore)
         
-# Helper for calculating observed in s2 case
+# Helper for calculating observed in s1 case
 def rowObsS1(dataArr, row, numCols, numStates):
     rowObsArr = np.zeros(numStates)
     uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)

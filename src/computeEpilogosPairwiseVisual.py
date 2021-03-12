@@ -11,13 +11,13 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
+from epilogosHelpers import strToBool
 
 def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize):
     tTotal = time()
 
     outputDirPath = Path(outputDir)
     np.random.seed(7032016)
-
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
@@ -40,8 +40,6 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     tRead = time()
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     print("    Time:", time() - tRead, flush=True)
-
-    print("Unique Distances:", len(np.unique(distanceArrReal)))
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...", flush=True)
@@ -659,17 +657,6 @@ def findSign(x):
         return "+"
     else:
         return "-"
-
-
-# Helper for slurm to send boolean values
-def strToBool(string):
-    if string == 'True':
-        return True
-    elif string == 'False':
-        return False
-    else:
-        raise ValueError("Invalid boolean string")
-
 
 if __name__ == "__main__":
     main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]))

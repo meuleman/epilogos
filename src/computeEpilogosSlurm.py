@@ -170,9 +170,9 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                     print(err)
                     return
 
-                computeExpectedPy = pythonFilesDir / "computeEpilogosExpected.py"
+                computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
 
                 if saliency == 1:
                     slurmCommand = "sbatch --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
@@ -264,9 +264,9 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                     print(err)
                     return
                 
-                computeScorePy = pythonFilesDir / "computeEpilogosScores.py"
+                computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
 
-                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
 
                 if modeOfOperation == "s":
                     if saliency == 1:
@@ -295,54 +295,64 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         
         print("    JobIDs:", scoreJobIDStr)
 
-        # Write scores out to gzipped text files
-        print("\nSTEP 4: Writing score files")
-        writeJobIDArr = []
-        for file in inputDirPath.glob("*"):
-            # Skip over ".genome" files
-            if file.name.split(".")[-1] == "genome":
-                continue
-            if not file.is_dir():
-                filename = file.name.split(".")[0]
-                jobName = "write_{}_{}".format(fileTag, filename)
-                jobOutPath = outputDirPath / (".out/" + jobName + ".out")
-                jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+        # # Write scores out to gzipped text files
+        # print("\nSTEP 4: Writing score files")
+        # writeJobIDArr = []
+        # for file in inputDirPath.glob("*"):
+        #     # Skip over ".genome" files
+        #     if file.name.split(".")[-1] == "genome":
+        #         continue
+        #     if not file.is_dir():
+        #         filename = file.name.split(".")[0]
+        #         jobName = "write_{}_{}".format(fileTag, filename)
+        #         jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        #         jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 
-                # Creating the out and err files for the batch job
-                if jobOutPath.exists():
-                    remove(jobOutPath)
-                if jobErrPath.exists():
-                    remove(jobErrPath)
-                try:
-                    jout = open(jobOutPath, 'x')
-                    jout.close()
-                    jerr = open(jobErrPath, 'x')
-                    jerr.close()
-                except FileExistsError as err:
-                    # This error should never occur because we are deleting the files first
-                    print(err)
-                    return
+        #         # Creating the out and err files for the batch job
+        #         if jobOutPath.exists():
+        #             remove(jobOutPath)
+        #         if jobErrPath.exists():
+        #             remove(jobErrPath)
+        #         try:
+        #             jout = open(jobOutPath, 'x')
+        #             jout.close()
+        #             jerr = open(jobErrPath, 'x')
+        #             jerr.close()
+        #         except FileExistsError as err:
+        #             # This error should never occur because we are deleting the files first
+        #             print(err)
+        #             return
 
-                computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
+        #         computeExpectedWritePy = pythonFilesDir / "computeEpilogosWrite.py"
 
-                pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag, verbose)
+        #         pythonCommand = "python {} {} {} {} {} {}".format(computeExpectedWritePy, file, numStates, outputDirPath, fileTag, verbose)
 
-                slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        #         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=64000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
 
-                sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+        #         sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
-                if not sp.stdout.startswith("Submitted batch"):
-                    raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+        #         if not sp.stdout.startswith("Submitted batch"):
+        #             raise ChildProcessError("SlurmError: sbatch not submitted correctly")
 
-                writeJobIDArr.append(int(sp.stdout.split()[-1]))
+        #         writeJobIDArr.append(int(sp.stdout.split()[-1]))
 
-        writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
-        print("    JobIDs:", writeJobIDStr)
+        # writeJobIDStr = str(writeJobIDArr).strip('[]').replace(" ", "")
+        # print("    JobIDs:", writeJobIDStr)
+        # if modeOfOperation == "both":
+        #     allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr)
+        #     print("\nAll JobIDs:\n    ", allJobIDs)
+        # elif modeOfOperation == "s":
+        #     allJobIDs = "{},{}".format(scoreJobIDStr, writeJobIDStr)
+        #     print("\nAll JobIDs:\n    ", allJobIDs)
+        # elif modeOfOperation == "bg":
+        #     allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
+        #     print("\nAll JobIDs:\n    ", allJobIDs)
+
         if modeOfOperation == "both":
-            allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, writeJobIDStr)
+            allJobIDs = "{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr)
             print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "s":
-            allJobIDs = "{},{}".format(scoreJobIDStr, writeJobIDStr)
+            allJobIDs = scoreJobIDStr
             print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "bg":
             allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
@@ -373,16 +383,16 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 if len(completedJobs) == 0 and calculationStep == 0:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
-                    print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                    calculationStep += 1
+                # elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
+                #     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                #     calculationStep += 1
             elif modeOfOperation == "both":
                 if len(completedJobs) == (len(expJobIDArr) + 1) and calculationStep == 2:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
-                    print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                    calculationStep += 1
+                # elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
+                #     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                #     calculationStep += 1
 
             # Print out jobs when they are completed
             for line in spLines[2:]:

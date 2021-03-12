@@ -48,6 +48,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         diagnosticBool = True
     else:
         diagnosticBool = False
+    verbose=True
 
     inputDirPath1 = Path(inputDirectory1)
     inputDirPath2 = Path(inputDirectory2)
@@ -64,7 +65,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     else:
         print("Number of Cores =", numProcesses)
 
-    if saliency != 1 and saliency != 2 and saliency != 3:
+    if saliency != 1 and saliency != 2:
         raise ValueError("Saliency Metric Invalid: {} Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison".format(saliency))
 
     # Making paths absolute
@@ -155,8 +156,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
                 return
 
             # Create a string for the python command
-            computeExpectedPy = pythonFilesDir / "computeEpilogosPairwiseExpected.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {}".format(computeExpectedPy, file1, file2, numStates, saliency, outputDirPath, fileTag, numProcesses)
+            computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
+            pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file1, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
 
             # Create a string for the slurm command
             if saliency == 1:
@@ -200,7 +201,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Create a string for the python commmand
     computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
-    pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag, True)
+    pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag, verbose)
 
     # Create a string for the slurm command
     if saliency == 1:
@@ -284,8 +285,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
             #     return
             
             # Create a string for the python commands
-            computeScorePy = pythonFilesDir / "computeEpilogosPairwiseScores.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
+            computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
             # pythonCommandReal = "python {} {} {} {} {} {} {} {} {} real".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
             # pythonCommandNull = "python {} {} {} {} {} {} {} {} {} null".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 

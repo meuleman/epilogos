@@ -1,6 +1,6 @@
 <br>
-    <p1 style="text-align:center;">
-        <pre>
+    <div align="center">
+      <pre>
                   d8b 888                                     
                   Y8P 888                                     
                       888                                     
@@ -12,8 +12,8 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
          888                            888                   
          888                       Y8b d88P                   
          888                        "Y88P"                    
-        </pre>
-    </p1>
+    </pre>
+  </div>
 <br>
 
 ---

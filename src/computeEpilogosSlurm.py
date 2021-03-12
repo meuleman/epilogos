@@ -22,7 +22,7 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 """)
 
 @click.command()
-@click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--number-of-states", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1, 2, or 3)")
@@ -79,7 +79,6 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     else:
         print("Number of Cores =", numProcesses)
     
-
     # If user does not specificy a directory to look for expected frequencies default the output directory
     if expFreqDir == "null":
         expFreqDir = outputDirectory
@@ -137,13 +136,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
     expJobIDArr = []   
-    if modeOfOperation == "s":
-        try:
-            expFreqArr = np.load(storedExpPath, allow_pickle=False)
-        except IOError as err:
-            print(err)
-            return
-    else:     
+    if modeOfOperation != "s":   
         print("\nSTEP 1: Per data file background frequency calculation")
         for file in inputDirPath.glob("*"):
             # Skip over ".genome" files

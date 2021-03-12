@@ -6,17 +6,31 @@ import subprocess
 from pathlib import PurePath
 import errno
 
+print("""
+                  d8b 888                                     
+                  Y8P 888                                     
+                      888                                     
+ .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b  
+d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K      
+88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b. 
+Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88 
+ "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P' 
+         888                            888                   
+         888                       Y8b d88P                   
+         888                        "Y88P"                    
+""")
+
 @click.command()
-@click.option("-a", "--directory-one", "inputDirectory1", type=str, required=True, multiple=True, help="Path to first directory that contains files to read from (All files in this directory will be read in)")
-@click.option("-b", "--directory-two", "inputDirectory2", type=str, required=True, multiple=True, help="Path to second directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-a", "--directory-one", "inputDirectory1", type=str, required=True, multiple=True, help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
+@click.option("-b", "--directory-two", "inputDirectory2", type=str, required=True, multiple=True, help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--number-of-states", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1 or 2)")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True, help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 @click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True, help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data")
-@click.option("-j", "--numTrials", "numTrials", type=int)
-@click.option("-k", "--samplingSize", "samplingSize", type=int)
+@click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True, help="The number of times subsamples of the scores are fit")
+@click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True, help="The size of the subsamples on which the scores are fit")
 def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency, numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
     """
     This script computes and visualizes differences between chromatin states across epigenomes
@@ -38,6 +52,10 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
     elif len(diagnosticBool) > 1:
         raise ValueError("Too many [-d, --diagnostic-figures] arguments provided")
+    elif len(numTrials) > 1:
+        raise ValueError("Too many [-t, --num-trials] arguments provided")
+    elif len(samplingSize) > 1:
+        raise ValueError("Too many [-z, --sampling-size] arguments provided")
     inputDirectory1 = inputDirectory1[0]
     inputDirectory2 = inputDirectory2[0]
     outputDirectory = outputDirectory[0]
@@ -48,6 +66,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
         diagnosticBool = True
     else:
         diagnosticBool = False
+    numTrials = numTrials[0]
+    samplingSize = samplingSize[0]
     verbose=True
 
     inputDirPath1 = Path(inputDirectory1)
@@ -127,7 +147,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     for file1 in inputDirPath1.glob("*"):
         # Skip over ".genome" files
         if file1.name.split(".")[-1] == "genome":
-                continue
+            continue
+
         # Find matching file in other directory
         if not list(inputDirPath2.glob(file1.name)):
             raise FileNotFoundError("File not found: {} Please ensure corresponding files within input directories directories 1 and 2 have the same name".format(str(inputDirPath2 / file1.name)))
@@ -221,13 +242,12 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Calculate the observed frequencies and scores
     print("\nSTEP 3: Score calculation")
-    # scoreRealJobIDArr = []
-    # scoreNullJobIDArr = []
     scoreJobIDArr = []
     for file1 in inputDirPath1.glob("*"):
         # Skip over ".genome" files
         if file1.name.split(".")[-1] == "genome":
-                continue
+            continue
+
         # Find matching file in other directory
         if not list(inputDirPath2.glob(file1.name)):
             raise FileNotFoundError("File not found: {} Please ensure corresponding files within input directories directories 1 and 2 have the same name".format(str(inputDirPath2 / file1.name)))
@@ -239,12 +259,6 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
             jobName = "score_{}_{}".format(fileTag, filename)
             jobOutPath = outputDirPath / (".out/" + jobName + ".out")
             jobErrPath = outputDirPath / (".err/" + jobName + ".err")
-            # jobNameReal = "score_real_{}_{}".format(fileTag, filename)
-            # jobNameNull = "score_null_{}_{}".format(fileTag, filename)
-            # jobOutPathReal = outputDirPath / (".out/" + jobNameReal + ".out")
-            # jobErrPathReal = outputDirPath / (".err/" + jobNameReal + ".err")
-            # jobOutPathNull = outputDirPath / (".out/" + jobNameNull + ".out")
-            # jobErrPathNull = outputDirPath / (".err/" + jobNameNull + ".err")
 
             # Creating the out and err files for the batch job
             if jobOutPath.exists():
@@ -260,68 +274,29 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
                 # This error should never occur because we are deleting the files first
                 print(err)
                 return
-
-            # # Creating the out and err files for the batch job
-            # if jobOutPathReal.exists():
-            #     remove(jobOutPathReal)
-            # if jobErrPathReal.exists():
-            #     remove(jobErrPathReal)
-            # if jobOutPathNull.exists():
-            #     remove(jobOutPathNull)
-            # if jobErrPathNull.exists():
-            #     remove(jobErrPathNull)
-            # try:
-            #     jout = open(jobOutPathReal, 'x')
-            #     jout.close()
-            #     jerr = open(jobErrPathReal, 'x')
-            #     jerr.close()
-            #     jout = open(jobOutPathNull, 'x')
-            #     jout.close()
-            #     jerr = open(jobErrPathNull, 'x')
-            #     jerr.close()
-            # except FileExistsError as err:
-            #     # This error should never occur because we are deleting the files first
-            #     print(err)
-            #     return
             
             # Create a string for the python commands
             computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
             pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
-            # pythonCommandReal = "python {} {} {} {} {} {} {} {} {} real".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
-            # pythonCommandNull = "python {} {} {} {} {} {} {} {} {} null".format(computeScorePy, file1, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses)
 
             # Create a string for the slurm commands
             if saliency == 1:
                 slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
-                # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
             elif saliency == 2:
                 slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
-                # slurmCommandReal = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameReal, jobOutPathReal, jobErrPathReal, numTasks, pythonCommandReal)
-                # slurmCommandNull = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(combinationJobID, jobNameNull, jobOutPathNull, jobErrPathNull, numTasks, pythonCommandNull)
 
             sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            # spReal = subprocess.run(slurmCommandReal, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
-            # spNull = subprocess.run(slurmCommandNull, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
 
             if not sp.stdout.startswith("Submitted batch"):
                 raise ChildProcessError("SlurmError: sbatch not submitted correctly")
-            # if not spReal.stdout.startswith("Submitted batch") or not spNull.stdout.startswith("Submitted batch"):
-            #     raise ChildProcessError("SlurmError: sbatch not submitted correctly")
 
             scoreJobIDArr.append(int(sp.stdout.split()[-1]))
-            # scoreRealJobIDArr.append(int(spReal.stdout.split()[-1]))
-            # scoreNullJobIDArr.append(int(spNull.stdout.split()[-1]))
 
     # create a string for slurm dependency to work
     scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
-    # scoreRealJobIDStr = str(scoreRealJobIDArr).strip('[]').replace(" ", "")
-    # scoreNullJobIDStr = str(scoreNullJobIDArr).strip('[]').replace(" ", "")
     
     print("    JobIDs:", scoreJobIDStr)
-    # print("    Data JobIDs:", scoreRealJobIDStr)
-    # print("    Null JobIDs:", scoreNullJobIDStr)
 
     # Fitting, calculating p-values, and visualizing pairiwse differences
     print("\nSTEP 4: Generating p-values and figures")
@@ -352,10 +327,8 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     # Create a string for the slurm command
     if saliency == 1:
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
-        # slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
     elif saliency == 2:
         slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
-        # slurmCommand = "sbatch --dependency=afterok:{},{} --job-name={}.job --output={} --partition=queue1 --error={} {} --mem=0 --wrap='{}'".format(scoreRealJobIDStr, scoreNullJobIDStr, jobName, jobOutPath, jobErrPath, numTasks, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -367,7 +340,6 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
     print("    JobID:", visualJobID)
 
     allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, visualJobID)
-    # allJobIDs = "{},{},{},{},{}".format(expJobIDStr, combinationJobID, scoreRealJobIDStr, scoreNullJobIDStr, visualJobID)
     print("\nAll JobIDs:\n    {}".format(allJobIDs))
 
     # If the user wants to exit upon job completion rather than submission

@@ -1,7 +1,6 @@
 import numpy as np
 from sys import argv
 from pathlib import Path
-from math import log2
 import pandas as pd
 from time import time
 import numpy.ma as ma

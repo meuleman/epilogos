@@ -1,18 +1,14 @@
-from multiprocessing import Pool, cpu_count
-import numpy as np
+from multiprocessing import cpu_count
 from pathlib import Path
 from pathlib import PurePath
 import click
-from itertools import repeat
-from contextlib import closing
-import computeEpilogosExpected
+import computeEpilogosExpectedMaster
 import computeEpilogosExpectedCombination
-import computeEpilogosScores
-import computeEpilogosWrite
+import computeEpilogosScoresMaster
 import errno
 
 @click.command()
-@click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (All files in this directory will be read in)")
+@click.option("-i", "--input-directory", "inputDirectory", type=str, required=True, multiple=True, help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, required=True, multiple=True, help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--state-model", "numStates", type=int, required=True, multiple=True, help="Number of states in chromatin state model")
 @click.option("-s", "--saliency-level", "saliency", type=int, default=[1], show_default=True, multiple=True, help="Desired saliency level (1, 2, or 3)")
@@ -81,7 +77,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         inputDirPath = Path.cwd() / inputDirPath
 
     # For making sure all files are consistently named
-    fileTag = "{}_saliency{}".format(inputDirPath.name, saliency)
+    fileTag = "{}_s{}".format(inputDirPath.name, saliency)
 
     if saliency != 1 and saliency != 2 and saliency != 3:
         raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
@@ -111,42 +107,24 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     storedExpPath = Path(expFreqDir) / "exp_freq_{}.npy".format(fileTag)
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
-    if modeOfOperation == "s":
-        try:
-            expFreqArr = np.load(storedExpPath, allow_pickle=False)
-        except IOError as err:
-            print(err)
-            return
-    else:
-        print("\nCalculating Per Datafile Background Frequency Arrays...", flush=True)
+    if modeOfOperation != "s":
+        print("\nSTEP 1: Per data file background frequency calculation", flush=True)
         for file in inputDirPath.glob("*"):
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
-                computeEpilogosExpected.main(file, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                computeEpilogosExpectedMaster.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
 
-        print("\nCombining Per Datafile Background Frequency Arrays....", flush=True)
+        print("\nSTEP 2: Background frequency combination", flush=True)
         computeEpilogosExpectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
 
     if modeOfOperation == "s" or modeOfOperation == "both":
-        print("\nCalculating Per Datafile Scores...", flush=True)
+        print("\nSTEP 3: Score calculation", flush=True)
         for file in inputDirPath.glob("*"):
             if file.name.split(".")[1] == "genome":
                 continue
             if not file.is_dir():
-                computeEpilogosScores.main(file, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
-
-        print("\nWriting to Score Files....", flush=True)
-        filesToWrite = []
-        for file in inputDirPath.glob("*"):
-            if file.name.split(".")[1] == "genome":
-                continue
-            if not file.is_dir():
-                filesToWrite.append(file)
-        # Multiprocesing the writing in the minimal case
-        with closing(Pool(numProcesses)) as pool:
-            pool.starmap(computeEpilogosWrite.main, zip(filesToWrite, repeat(numStates), repeat(outputDirPath), repeat(fileTag), repeat(verbose)))
-        pool.join()
+                computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
     
 if __name__ == "__main__":
     main()

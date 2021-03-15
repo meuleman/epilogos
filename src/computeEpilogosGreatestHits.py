@@ -48,7 +48,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     with closing(Pool(numProcesses)) as pool:
         # results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
-        results = pool.map(readTableMulti, outputDirPath.glob("scores_*.txt.gz"))
+        results = pool.map(readTableMulti, outputDirPath.glob("temp_scores_*.npz"))
     pool.join()
 
     # # Concatenating all chunks to the real differences dataframe

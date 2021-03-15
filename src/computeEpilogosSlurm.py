@@ -341,11 +341,53 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
         #     allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
         #     print("\nAll JobIDs:\n    ", allJobIDs)
 
+
+        # Create a greatest hits text file
+        print("\nSTEP 4: Finding greatest hits")
+
+        jobName = "hits_{}".format(fileTag)
+        jobOutPath = outputDirPath / (".out/" + jobName + ".out")
+        jobErrPath = outputDirPath / (".err/" + jobName + ".err")
+
+        # Creating the out and err files for the batch job
+        if jobOutPath.exists():
+            remove(jobOutPath)
+        if jobErrPath.exists():
+            remove(jobErrPath)
+        try:
+            jout = open(jobOutPath, 'x')
+            jout.close()
+            jerr = open(jobErrPath, 'x')
+            jerr.close()
+        except FileExistsError as err:
+            # This error should never occur because we are deleting the files first
+            print(err)
+            return
+
+        computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
+        pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, numStates, fileTag, numProcesses)
+
+        if saliency == 1:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        elif saliency == 2:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+        elif saliency == 3:
+            slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)
+
+        sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
+
+        if not sp.stdout.startswith("Submitted batch"):
+            raise ChildProcessError("SlurmError: sbatch not submitted correctly")
+        
+        greatestHitsJobID = int(sp.stdout.split()[-1])
+
+        print("    JobID:", greatestHitsJobID)
+
         if modeOfOperation == "both":
-            allJobIDs = "{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr)
+            allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, greatestHitsJobID)
             print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "s":
-            allJobIDs = scoreJobIDStr
+            allJobIDs = "{},{}".format(scoreJobIDStr, greatestHitsJobID)
             print("\nAll JobIDs:\n    ", allJobIDs)
         elif modeOfOperation == "bg":
             allJobIDs = "{},{}".format(expJobIDStr, combinationJobID)
@@ -376,16 +418,16 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 if len(completedJobs) == 0 and calculationStep == 0:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                # elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
-                #     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                #     calculationStep += 1
+                elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
+                    print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
             elif modeOfOperation == "both":
                 if len(completedJobs) == (len(expJobIDArr) + 1) and calculationStep == 2:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                # elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
-                #     print("\n Step 4: Writing score files\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
-                #     calculationStep += 1
+                elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
+                    print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
+                    calculationStep += 1
 
             # Print out jobs when they are completed
             for line in spLines[2:]:

@@ -80,14 +80,14 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     print("Creating .txt file of top loci...")
     t1000 = time()
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
+    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
     print("    Time:", time() - t1000)
 
     # Create txt file of significant loci
     print("Creating .txt file of significant loci...")
     tSig = time()
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
-    sendRoiUrl(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
+    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
     print("    Time:", time() - tSig)
 
     # Create Genome Manhattan Plot
@@ -109,7 +109,6 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
 def readInData(outputDirPath, numProcesses, numStates):
     # For keeping the data arrays organized correctly
     realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
-    # chrOrder = ["chr{}".format(i) for i in range(1, 23)] + ["chrX"]
 
     # Data frame to dump inputed data into
     diffDF = pd.DataFrame(columns=realNames)
@@ -127,18 +126,14 @@ def readInData(outputDirPath, numProcesses, numStates):
     chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
     rawChrNamesInts = []
     rawChrNamesStrs = []
-
-    for chr in chromosomes:
+    for chromosome in chromosomes:
         try:
-            rawChrNamesInts.append(int(chr.split("chr")[-1]))
+            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
         except ValueError:
-            rawChrNamesStrs.append(chr.split("chr")[-1])
-
+            rawChrNamesStrs.append(chromosome.split("chr")[-1])
     rawChrNamesInts.sort()
     rawChrNamesStrs.sort()
-
     chrOrder = rawChrNamesInts + rawChrNamesStrs
-
     for i in range(len(chrOrder)):
         chrOrder[i] = "chr" + str(chrOrder[i])
 
@@ -564,8 +559,8 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     metricsTxt.close()
 
 
-# Helper function to create a roiURL txt file of the top 1000 loci (Adjacent loci are merged)
-def sendRoiUrl(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
+# Helper function to create a txt file of either the top 1000 loci (Adjacent loci are merged) or the significant loci (adjacent are not merged)
+def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
     significantAt1 = .1 / nStar
     significantAt05 = .05 / nStar
     significantAt01 = .01 / nStar
@@ -614,19 +609,19 @@ def mergeAdjacent(locationArr):
             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction merge and delete the originals
             # The new merged distance is the larger of the two distances (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.array([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2], locationArr[i, 3], locationArr[i, 4], locationArr[i, 5]]).reshape(1, 6)
+                mergedLocation = np.concatenate((arr[i, :2], arr[j, 2], arr[i, 3:]), axis=None).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.array([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2], locationArr[i, 3], locationArr[i, 4], locationArr[i, 5]]).reshape(1, 6)
+                mergedLocation = np.concatenate((arr[i, 0], arr[j, 1], arr[i, 2:]), axis=None).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
     return locationArr
 
 
-# Helper function for sendRoiUrl
+# Helper function for createTopScoresTxt
 def findSign(x):
     if (x >= 0):
         return "+"

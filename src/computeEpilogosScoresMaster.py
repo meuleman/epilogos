@@ -85,6 +85,10 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
 
     outputTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
     writeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputTxtPath, chrName)
+    # Temporary scores for greatest hits (np files are faster to read in)
+    tempScoresPath = outputDirPath / "temp_scores_{}_{}.npz".format(fileTag, filename)
+    np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scores=sharedToNumpy(sharedArr, totalRows, numStates))
+
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
     if verbose: print("\nNumber of Processes:", numProcesses, flush=True)
@@ -263,7 +267,7 @@ def s3Score(file1Path, rowsToCalculate, expFreqPath, verbose):
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
 
-    multiprocessRows, numCols = dataArr.shape
+    numCols = dataArr.shape[1]
     numStates = sharedArr[2]
 
     # Gives us everyway to combine the column numbers in numpy indexing form
@@ -299,7 +303,7 @@ def s3Score(file1Path, rowsToCalculate, expFreqPath, verbose):
 
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time() - tScore, flush=True)
 
-# Helper for writing when we are working with real data
+# Helper for writing the final output
 def writeScores(dataArr, outputTxtPath, chrName):
     outputTxt = gzip.open(outputTxtPath, "wt")
 

@@ -1,14 +1,17 @@
 from sys import argv
+from computeEpilogosExpectedCombination import strToBool
 from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
+from epilogosHelpers import strToBool
 from pathlib import Path
 from contextlib import closing
 from multiprocessing import Pool, cpu_count
 import pandas as pd
 from itertools import repeat
 import numpy as np
+from time import time
 
 
-def main(outputDir, numStates, fileTag, numProcesses):
+def main(outputDir, numStates, fileTag, numProcesses, verbose):
     outputDirPath = Path(outputDir)
 
     if numStates == 18:
@@ -22,10 +25,19 @@ def main(outputDir, numStates, fileTag, numProcesses):
     if numProcesses == 0:
         numProcesses = cpu_count()
 
+    if verbose: print("\nReading in score files...", flush=True); tRead = time()
+    else: print("    Reading in files\t", end="", flush=True)
     locationArr, scoreArr, maxScoreArr = readInData(outputDirPath, numProcesses, numStates)
+    if verbose: print("    Time:", time() - tRead, flush=True)
+    else: print("\t[Done]", flush=True)
 
+    if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
+    else: print("    Greatest hits txt\t", end="", flush=True)
     greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList)
+    if verbose: print("    Time:", time() - tHits, flush=True)
+    else: print("\t[Done]", flush=True)
+
 
 def readInData(outputDirPath, numProcesses, numStates):
     # For keeping the data arrays organized correctly
@@ -35,12 +47,13 @@ def readInData(outputDirPath, numProcesses, numStates):
     diffDF = pd.DataFrame(columns=names)
 
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
+        # results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
+        results = pool.map(readTableMulti, outputDirPath.glob("scores_*.txt.gz"))
     pool.join()
 
-    # Concatenating all chunks to the real differences dataframe
-    for diffDFChunk in results:
-        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
+    # # Concatenating all chunks to the real differences dataframe
+    # for diffDFChunk in results:
+    #     diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Figuring out chromosome order
     chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
@@ -57,21 +70,34 @@ def readInData(outputDirPath, numProcesses, numStates):
     for i in range(len(chrOrder)):
         chrOrder[i] = "chr" + str(chrOrder[i])
 
-    # Sorting the dataframes by chromosomal location
-    diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
-    diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    # # Sorting the dataframes by chromosomal location
+    # diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
+    # diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+    # Creating array of null distances ordered by chromosome based on the read in chunks
+    nullChunks = list(zip(*results))
+    index = nullChunks[0].index(chrOrder[0])
+    scoreArr = nullChunks[1][index]
+    locationArr = np.array([[nullChunks[0][index], 200*i, 200*i+200] for i in range(len(scoreArr))])
+    for chrName in chrOrder[1:]:
+        index = nullChunks[0].index(chrName)
+        scoreArr = np.concatenate((scoreArr, nullChunks[1][index]))
+        locationArr = np.concatenate((locationArr, np.array([[nullChunks[0][index], 200*i, 200*i+200] for i in range(len(nullChunks[1][index]))])))
 
     # Convert dataframes to np arrays for easier manipulation
-    locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
-    scoreArr        = diffDF.iloc[:,3:].to_numpy(dtype=float)
+    # locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
+    # scoreArr        = diffDF.iloc[:,3:].to_numpy(dtype=float)
 
     maxScoreArr = np.abs(np.argmax(np.abs(np.flip(scoreArr, axis=1)), axis=1) - scoreArr.shape[1]).astype(int)
 
     return locationArr, scoreArr.sum(axis=1), maxScoreArr
 
-def readTableMulti(file, names):
-    diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)
-    return diffDFChunk
+
+# def readTableMulti(file, names):
+def readTableMulti(file):
+    # diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)
+    npzFile = np.load(Path(file))
+    return npzFile['chrName'][0], npzFile['scores']
+
 
 def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
     with open(filePath, 'w') as f:
@@ -91,4 +117,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
 
 if __name__ == "__main__":
-    main(argv[1], int(argv[2]), argv[3], int(argv[4]))
+    main(argv[1], int(argv[2]), argv[3], int(argv[4]), strToBool(argv[5]))

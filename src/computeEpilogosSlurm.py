@@ -411,21 +411,21 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             if len(completedJobs) == 0 and calculationStep == 0 and (modeOfOperation == "bg" or modeOfOperation == "both"):
                 print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                 calculationStep += 1
-            elif len(completedJobs) == len(expJobIDArr) and calculationStep == 1 and (modeOfOperation == "bg" or modeOfOperation == "both"):
+            elif len(completedJobs) >= len(expJobIDArr) and calculationStep == 1 and (modeOfOperation == "bg" or modeOfOperation == "both"):
                 print("\n Step 2: Background frequency combination\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                 calculationStep += 1
             elif modeOfOperation == "s":
                 if len(completedJobs) == 0 and calculationStep == 0:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                elif len(completedJobs) == len(scoreJobIDArr) and calculationStep == 1:
+                elif len(completedJobs) >= len(scoreJobIDArr) and calculationStep == 1:
                     print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
             elif modeOfOperation == "both":
-                if len(completedJobs) == (len(expJobIDArr) + 1) and calculationStep == 2:
+                if len(completedJobs) >= (len(expJobIDArr) + 1) and calculationStep == 2:
                     print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
-                elif len(completedJobs) == (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
+                elif len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) and calculationStep == 3:
                     print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]))
                     calculationStep += 1
 

@@ -37,38 +37,43 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
 
     # Read in observation files
     if verbose: print("\nReading in observation files...", flush=True); tRead = time()
+    else: print("    Reading in files\t", end="", flush=True)
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
     if verbose: print("    Time:", time() - tRead, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
-    print("Fitting gennorm distribution to distances...", flush=True)
-    tFit = time()
+    if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
+    else: print("    Fitting distances\t", end="", flush=True)
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
     # fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDirPath, numTrials, samplingSize)
-    print("    Time:", time() - tFit, flush=True)
+    if verbose: print("    Time:", time() - tFit, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
-    print("PARAMS: ", params)
 
     # Creating Diagnostic Figures
     if diagnosticBool:
-        print("Creating diagnostic figures...")
-        tDiagnostic = time()
+        if verbose: print("Creating diagnostic figures..."); tDiagnostic = time()
+        else: print("    Diagnostic figures\t", end="", flush=True)
         createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-        print("    Time:", time() - tDiagnostic)
+        if verbose: print("    Time:", time() - tDiagnostic)
+        else: print("\t[Done]", flush=True)
 
     # Calculating PValues
-    print("Calculating P-Values...")
-    tPVal = time()
+    if verbose: print("Calculating P-Values..."); tPVal = time()
+    else: print("    Calculating p-vals\t", end="", flush=True)
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    print("    Time:", time() - tPVal)
+    if verbose: print("    Time:", time() - tPVal)
+    else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
-    print("Writing metrics file...")
-    tMetrics = time()
+    if verbose: print("Writing metrics file..."); tMetrics = time()
+    else: print("    Writing metrics\t", end="", flush=True)
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    print("    Time:", time() - tMetrics)
+    if verbose: print("    Time:", time() - tMetrics)
+    else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
     genomeAutoCorrelation = 0.987
@@ -76,33 +81,38 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     significanceThreshold = .1 / nStar
 
     # Create txt file of top 1000 loci with adjacent merged
-    print("Creating .txt file of top loci...")
-    t1000 = time()
+    if verbose: print("Creating .txt file of top loci..."); t1000 = time()
+    else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
-    print("    Time:", time() - t1000)
+    if verbose: print("    Time:", time() - t1000)
+    else: print("\t[Done]", flush=True)
+
 
     # Create txt file of significant loci
-    print("Creating .txt file of significant loci...")
-    tSig = time()
+    if verbose: print("Creating .txt file of significant loci..."); tSig = time()
+    else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
-    print("    Time:", time() - tSig)
+    if verbose: print("    Time:", time() - tSig)
+    else: print("\t[Done]", flush=True)
 
     # Create Genome Manhattan Plot
-    print("Creating Genome-Wide Manhattan Plot")
-    tGManhattan = time()
+    if verbose: print("Creating Genome-Wide Manhattan Plot"); tGManhattan = time()
+    else: print("    Genome-wide Manhattan\t", end="", flush=True)
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    print("    Time:", time() - tGManhattan)
+    if verbose: print("    Time:", time() - tGManhattan)
+    else: print("\t[Done]", flush=True)
     
     # Create Chromosome Manhattan Plot
-    print("Creating Individual Chromosome Manhattan Plots")
-    tCManhattan = time()
+    if verbose: print("Creating Individual Chromosome Manhattan Plots"); tCManhattan = time()
+    else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
     # createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    print("    Time:", time() - tCManhattan)
+    if verbose: print("    Time:", time() - tCManhattan)
+    else: print("\t[Done]", flush=True)
 
-    print("Total Time:", time() - tTotal, flush=True)
+    if verbose: print("Total Time:", time() - tTotal, flush=True)
 
 # Helper to read in the necessary data to fit and visualize pairwise results
 def readInData(outputDirPath, numProcesses, numStates):
@@ -427,7 +437,6 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
 
     pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
 
-    txticks = time()
     xticks = np.where(locationArr[:, 1] == "0")[0]
     startEnd = []
     for i in range(len(xticks)):
@@ -435,22 +444,13 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
             startEnd.append((xticks[i], xticks[i+1]))
         else:
             startEnd.append((xticks[i], -1))
-    print("Time to create startEnd:", time() - txticks)
 
-    tChrOrder = time()
     chrOrder = list(map(lambda x: x.split("chr")[-1], list(locationArr[:, 0][xticks])))
-    print("Time to determine chrOrder:", time() - tChrOrder)
 
-    tChromosome = time()
     # Multiprocess the reading
     with closing(Pool(numProcesses, initializer=_init, initargs=(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath))) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
-
-    # with closing(Pool(numProcesses)) as pool:
-    #     pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd, repeat(group1Name), repeat(group2Name), repeat(locationArr), repeat(distanceArrReal), repeat(maxDiffArr), repeat(beta), repeat(loc), repeat(scale), repeat(significanceThreshold), repeat(pvalsGraph), repeat(stateColorList), repeat(manhattanDirPath)))
-    # pool.join()
-    print("Time for chromosome manhattan:", time() - tChromosome)
 
 def graphChromosomeManhattan(chromosome, startEnd):
 # def graphChromosomeManhattan(chromosome, startEnd, group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath):
@@ -608,12 +608,12 @@ def mergeAdjacent(locationArr):
             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction merge and delete the originals
             # The new merged distance is the larger of the two distances (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((locationArr[i, :2], locationArr[j, 2], locationArr[i, 3:]), axis=None).reshape(1, 6)
+                mergedLocation = np.concatenate((locationArr[i, :2], locationArr[j, 2], locationArr[i, 3:]), axis=None).reshape(1, locationArr.shape[1])
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((locationArr[i, 0], locationArr[j, 1], locationArr[i, 2:]), axis=None).reshape(1, 6)
+                mergedLocation = np.concatenate((locationArr[i, 0], locationArr[j, 1], locationArr[i, 2:]), axis=None).reshape(1, locationArr.shape[1])
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr

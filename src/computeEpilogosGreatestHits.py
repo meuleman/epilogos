@@ -67,7 +67,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     maxScoreArr = np.abs(np.argmax(np.abs(np.flip(scoreArr, axis=1)), axis=1) - scoreArr.shape[1]).astype(int)
 
-    return locationArr, scoreArr, maxScoreArr
+    return locationArr, scoreArr.sum(axis=1), maxScoreArr
 
 def readTableMulti(file, names):
     diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)

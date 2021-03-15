@@ -13,7 +13,7 @@ from itertools import repeat
 from os import remove
 from epilogosHelpers import strToBool
 
-def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize):
+def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose):
     tTotal = time()
 
     outputDirPath = Path(outputDir)
@@ -36,10 +36,9 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
         numProcesses = cpu_count()
 
     # Read in observation files
-    print("\nReading in observation files...", flush=True)
-    tRead = time()
+    if verbose: print("\nReading in observation files...", flush=True); tRead = time()
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
-    print("    Time:", time() - tRead, flush=True)
+    if verbose: print("    Time:", time() - tRead, flush=True)
 
     # Fitting a gennorm distribution to the distances
     print("Fitting gennorm distribution to distances...", flush=True)
@@ -609,12 +608,12 @@ def mergeAdjacent(locationArr):
             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction merge and delete the originals
             # The new merged distance is the larger of the two distances (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((arr[i, :2], arr[j, 2], arr[i, 3:]), axis=None).reshape(1, 6)
+                mergedLocation = np.concatenate((locationArr[i, :2], locationArr[j, 2], locationArr[i, 3:]), axis=None).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((arr[i, 0], arr[j, 1], arr[i, 2:]), axis=None).reshape(1, 6)
+                mergedLocation = np.concatenate((locationArr[i, 0], locationArr[j, 1], locationArr[i, 2:]), axis=None).reshape(1, 6)
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
@@ -629,4 +628,4 @@ def findSign(x):
         return "-"
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]))
+    main(argv[1], argv[2], int(argv[3]), argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]), strToBool(argv[10]))

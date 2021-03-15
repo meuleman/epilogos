@@ -7,7 +7,7 @@ import subprocess
 from pathlib import PurePath
 import errno
 
-print("""
+print("""\n
                   d8b 888                                     
                   Y8P 888                                     
                       888                                     
@@ -365,7 +365,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             return
 
         computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
-        pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, numStates, fileTag, numProcesses)
+        pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, numStates, fileTag, numProcesses, verbose)
 
         if saliency == 1:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)

@@ -583,7 +583,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else ("**" if float(locations[i, 5]) <= significantAt05 else ("*" if float(locations[i, 5]) <= significantAt1 else ".")) for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
             
         # Write all the locations to the file
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\t{0[5]}\t{4}\n"
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{0[5]:.5e}\t{4}\n"
         outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3])), stars[i, 0]) for i in range(locations.shape[0]))
         f.write(outString)
 

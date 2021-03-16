@@ -70,14 +70,17 @@ def readInData(outputDirPath, numProcesses, numStates):
     for i in range(len(chrOrder)):
         chrOrder[i] = "chr" + str(chrOrder[i])
 
-    print(results)
 
     # # Sorting the dataframes by chromosomal location
     # diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
     # diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
     # Creating array of null distances ordered by chromosome based on the read in chunks
     nullChunks = list(zip(*results))
-    print(nullChunks)
+    print(nullChunks[0])
+    print(chrOrder)
+    print(chrOrder[0])
+    print(type(nullChunks[0][0]))
+    print(type(chrOrder[0][0]))
     index = nullChunks[0].index(chrOrder[0])
     scoreArr = nullChunks[1][index]
     locationArr = np.array([[nullChunks[0][index], 200*i, 200*i+200] for i in range(len(scoreArr))])

@@ -138,9 +138,10 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
-        pythonFilesDir = Path(__file__).parents[0]
+        pythonFilesDir = Path(__file__).parents[1] / "src/"
     else:
-        pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
+        pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "src/"
+        print("Path generate from current working directory. May cause errors")
 
     expJobIDArr = []   
     print("\nSTEP 1: Per data file background frequency calculation")

@@ -129,9 +129,10 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
 
     # Finding the location of the .py files that must be run
     if PurePath(__file__).is_absolute():
-        pythonFilesDir = Path(__file__).parents[0]
+        pythonFilesDir = Path(__file__).parents[1] / "src/"
     else:
-        pythonFilesDir = Path.cwd() / Path(__file__).parents[0]
+        pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "src/"
+        print("Path generate from current working directory. May cause errors")
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
     expJobIDArr = []   

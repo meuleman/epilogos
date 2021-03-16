@@ -142,7 +142,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
                 computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
 
     print("\nSTEP 4: Generating p-values and figures")            
-    computeEpilogosGreatestHits.main(outputDirPath, numStates, fileTag, numProcesses)
+    computeEpilogosGreatestHits.main(outputDirPath, numStates, fileTag, False)
 
 if __name__ == "__main__":
     main()

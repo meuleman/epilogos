@@ -8,7 +8,7 @@ import computeEpilogosExpectedCombination
 import computeEpilogosScoresMaster
 import computeEpilogosPairwiseVisual
 
-print("""
+print("""\n
                   d8b 888                                     
                   Y8P 888                                     
                       888                                     

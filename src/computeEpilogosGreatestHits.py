@@ -1,3 +1,4 @@
+from struct import unpack
 from sys import argv
 from computeEpilogosExpectedCombination import strToBool
 from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
@@ -44,12 +45,14 @@ def readInData(outputDirPath, numProcesses, numStates):
     names = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
 
     # Data frame to dump inputed data into
-    diffDF = pd.DataFrame(columns=names)
+    # diffDF = pd.DataFrame(columns=names)
 
-    with closing(Pool(numProcesses)) as pool:
-        # results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
-        results = pool.map(readTableMulti, outputDirPath.glob("temp_scores_*.npz"))
-    pool.join()
+    # with closing(Pool(numProcesses)) as pool:
+    #     # results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
+    #     results = pool.map(readTableMulti, outputDirPath.glob("temp_scores_*.npz"))
+    # pool.join()
+
+    results = map(unpackNPZ, outputDirPath.glob("temp_scores_*.npz"))
 
     # # Concatenating all chunks to the real differences dataframe
     # for diffDFChunk in results:
@@ -100,7 +103,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
 
 # def readTableMulti(file, names):
-def readTableMulti(file):
+def unpackNPZ(file):
     # diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)
     npzFile = np.load(Path(file))
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
@@ -118,7 +121,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
             locations = mergeAdjacent(locations)
             
         # Write all the locations to the file
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2}\t{3}\n"
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
         f.write(outString)
 

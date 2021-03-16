@@ -55,11 +55,13 @@ def readInData(outputDirPath, numProcesses, numStates):
     # for diffDFChunk in results:
     #     diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
+    # Split up read results into tuples of chromosomes, scores, and locations
+    dataChunks = list(zip(*results))
+
     # Figuring out chromosome order
-    chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
     rawChrNamesInts = []
     rawChrNamesStrs = []
-    for chromosome in chromosomes:
+    for chromosome in dataChunks[0]:
         try:
             rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
         except ValueError:
@@ -75,19 +77,18 @@ def readInData(outputDirPath, numProcesses, numStates):
     # diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
     # diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
     # Creating array of null distances ordered by chromosome based on the read in chunks
-    nullChunks = list(zip(*results))
-    print(nullChunks[0])
+    print(dataChunks[0])
     print(chrOrder)
     print(chrOrder[0])
-    print(type(nullChunks[0][0]))
+    print(type(dataChunks[0][0]))
     print(type(chrOrder[0][0]))
-    index = nullChunks[0].index(chrOrder[0])
-    scoreArr = nullChunks[1][index]
-    locationArr = np.array([[nullChunks[0][index], 200*i, 200*i+200] for i in range(len(scoreArr))])
+    index = dataChunks[0].index(chrOrder[0])
+    scoreArr = dataChunks[1][index]
+    locationArr = dataChunks[2][index]
     for chrName in chrOrder[1:]:
-        index = nullChunks[0].index(chrName)
-        scoreArr = np.concatenate((scoreArr, nullChunks[1][index]))
-        locationArr = np.concatenate((locationArr, np.array([[nullChunks[0][index], 200*i, 200*i+200] for i in range(len(nullChunks[1][index]))])))
+        index = dataChunks[0].index(chrName)
+        scoreArr = np.concatenate((scoreArr, dataChunks[1][index]))
+        locationArr = np.concatenate((locationArr, dataChunks[2][index]))
 
     # Convert dataframes to np arrays for easier manipulation
     # locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
@@ -102,7 +103,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 def readTableMulti(file):
     # diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)
     npzFile = np.load(Path(file))
-    return npzFile['chrName'][0], npzFile['scores']
+    return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
 def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):

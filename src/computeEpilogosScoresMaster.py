@@ -82,12 +82,13 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
     pool.join()
 
     chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
+    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
 
     outputTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
-    writeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputTxtPath, chrName)
+    writeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputTxtPath, locationArr)
     # Temporary scores for greatest hits (np files are faster to read in)
     tempScoresPath = outputDirPath / "temp_scores_{}_{}.npz".format(fileTag, filename)
-    np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scores=sharedToNumpy(sharedArr, totalRows, numStates))
+    np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scoreArr=sharedToNumpy(sharedArr, totalRows, numStates), locationArr=locationArr)
 
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses, verbose):
@@ -128,8 +129,9 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     # If it's the null data, we will just save the signed squared euclidean distances as a temporary npz file as we don't care about saving the data
     if verbose: print("Writing output to disk...", flush=True); tWrite = time()
     chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
+    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
     realOutputPath = outputDirPath / "pairwiseDelta_{}_{}.txt.gz".format(fileTag, filename)
-    writeScores(realDiffArr, realOutputPath, chrName)
+    writeScores(realDiffArr, realOutputPath, locationArr)
     nullOutputPath = outputDirPath / "temp_nullDistances_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(nullOutputPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
     if verbose: print("    Time:", time() - tWrite, flush=True)
@@ -304,13 +306,12 @@ def s3Score(file1Path, rowsToCalculate, expFreqPath, verbose):
     if verbose and rowsToCalculate[0] == 0: print("    Time:", time() - tScore, flush=True)
 
 # Helper for writing the final output
-def writeScores(dataArr, outputTxtPath, chrName):
+def writeScores(dataArr, outputTxtPath, locationArr):
     outputTxt = gzip.open(outputTxtPath, "wt")
 
     # Create a location array
     numRows = dataArr.shape[0]
     numStates = dataArr.shape[1]
-    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(numRows)])
 
     # Creating a string to write out the data (faster than np.savetxt)
     outputTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates - 1)) + "{1[%d]:.5f}\n" % (numStates - 1)

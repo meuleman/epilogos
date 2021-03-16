@@ -373,7 +373,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
             return
 
         computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
-        pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, numStates, fileTag, numProcesses, verbose)
+        pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, numStates, fileTag, verbose)
 
         if saliency == 1:
             slurmCommand = "sbatch --dependency=afterok:{} --job-name={}.job --output={} --partition=queue1 --error={} --ntasks=1 --mem-per-cpu=8000 --wrap='{}'".format(scoreJobIDStr, jobName, jobOutPath, jobErrPath, pythonCommand)

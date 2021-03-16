@@ -1,13 +1,8 @@
-from struct import unpack
 from sys import argv
 from computeEpilogosExpectedCombination import strToBool
 from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
 from epilogosHelpers import strToBool
 from pathlib import Path
-from contextlib import closing
-from multiprocessing import Pool, cpu_count
-import pandas as pd
-from itertools import repeat
 import numpy as np
 from time import time
 

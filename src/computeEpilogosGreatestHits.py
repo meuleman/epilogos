@@ -12,7 +12,7 @@ import numpy as np
 from time import time
 
 
-def main(outputDir, numStates, fileTag, numProcesses, verbose):
+def main(outputDir, numStates, fileTag, verbose):
     outputDirPath = Path(outputDir)
 
     if numStates == 18:
@@ -22,13 +22,9 @@ def main(outputDir, numStates, fileTag, numProcesses, verbose):
     else:
         raise ValueError("State model not supported for plotting")
 
-    # If user doesn't want to choose number of cores use as many as available
-    if numProcesses == 0:
-        numProcesses = cpu_count()
-
     if verbose: print("\nReading in score files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
-    locationArr, scoreArr, maxScoreArr = readInData(outputDirPath, numProcesses, numStates)
+    locationArr, scoreArr, maxScoreArr = readInData(outputDirPath)
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -40,23 +36,8 @@ def main(outputDir, numStates, fileTag, numProcesses, verbose):
     else: print("\t[Done]", flush=True)
 
 
-def readInData(outputDirPath, numProcesses, numStates):
-    # For keeping the data arrays organized correctly
-    names = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
-
-    # Data frame to dump inputed data into
-    # diffDF = pd.DataFrame(columns=names)
-
-    # with closing(Pool(numProcesses)) as pool:
-    #     # results = pool.starmap(readTableMulti, zip(outputDirPath.glob("scores_*.txt.gz"), repeat(names)))
-    #     results = pool.map(readTableMulti, outputDirPath.glob("temp_scores_*.npz"))
-    # pool.join()
-
+def readInData(outputDirPath):
     results = map(unpackNPZ, outputDirPath.glob("temp_scores_*.npz"))
-
-    # # Concatenating all chunks to the real differences dataframe
-    # for diffDFChunk in results:
-    #     diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Split up read results into tuples of chromosomes, scores, and locations
     dataChunks = list(zip(*results))
@@ -75,16 +56,8 @@ def readInData(outputDirPath, numProcesses, numStates):
     for i in range(len(chrOrder)):
         chrOrder[i] = "chr" + str(chrOrder[i])
 
-
-    # # Sorting the dataframes by chromosomal location
-    # diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
-    # diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-    # Creating array of null distances ordered by chromosome based on the read in chunks
-    print(dataChunks[0])
-    print(chrOrder)
-    print(chrOrder[0])
-    print(type(dataChunks[0][0]))
-    print(type(chrOrder[0][0]))
+    # Sorting the dataframes by chromosomal location
+    # Creating array of scores and locations ordered by chromosome based on the read in chunks
     index = dataChunks[0].index(chrOrder[0])
     scoreArr = dataChunks[1][index]
     locationArr = dataChunks[2][index]
@@ -93,18 +66,12 @@ def readInData(outputDirPath, numProcesses, numStates):
         scoreArr = np.concatenate((scoreArr, dataChunks[1][index]))
         locationArr = np.concatenate((locationArr, dataChunks[2][index]))
 
-    # Convert dataframes to np arrays for easier manipulation
-    # locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
-    # scoreArr        = diffDF.iloc[:,3:].to_numpy(dtype=float)
-
     maxScoreArr = np.abs(np.argmax(np.abs(np.flip(scoreArr, axis=1)), axis=1) - scoreArr.shape[1]).astype(int)
 
     return locationArr, scoreArr.sum(axis=1), maxScoreArr
 
 
-# def readTableMulti(file, names):
 def unpackNPZ(file):
-    # diffDFChunk = pd.read_table(Path(file), header=None, sep="\t", names=names)
     npzFile = np.load(Path(file))
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
@@ -127,4 +94,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
 
 if __name__ == "__main__":
-    main(argv[1], int(argv[2]), argv[3], int(argv[4]), strToBool(argv[5]))
+    main(argv[1], int(argv[2]), argv[3], strToBool(argv[4]))

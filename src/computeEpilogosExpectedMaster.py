@@ -1,12 +1,12 @@
 import numpy as np
 from sys import argv
 from pathlib import Path
-import pandas as pd
 from time import time
 from multiprocessing import cpu_count, Pool
 from itertools import repeat, permutations
 from contextlib import closing
-from epilogosHelpers import strToBool, blocks, splitRows, readStates
+# from epilogosHelpers import strToBool, blocks, splitRows, readStates
+from epilogosHelpers import strToBool, splitRows, readStates
 
 def main(file1, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose):
     if verbose: tTotal = time()

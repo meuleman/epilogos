@@ -136,7 +136,7 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     #     print("Path generate from current working directory. May cause errors")
     pythonFilesDir = ""
     for path in os.environ['PATH'].split(os.pathsep):
-        if path.endswith("epilogos/dist") or path.endswith("epilogos/dist/"):
+        if str(Path(path)).endswith("dist") and str(Path(path).parents[0]).endswith("epilogos"):
             pythonFilesDir = Path(path).parents[0] / "src/"
     if not pythonFilesDir:
         raise RuntimeError("Please ensure */epilogos/dist/ is added to system PATH")

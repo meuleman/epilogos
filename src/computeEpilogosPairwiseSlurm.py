@@ -330,7 +330,7 @@ def main(inputDirectory1, inputDirectory2, outputDirectory, numStates, saliency,
 
     # Create a string for the python commmand
     computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-    pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize)
+    pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath1.name, inputDirPath2.name, numStates, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose)
 
     # Create a string for the slurm command
     if saliency == 1:

@@ -134,11 +134,12 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     # else:
     #     pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "src/"
     #     print("Path generate from current working directory. May cause errors")
-    if "epilogos/dist" not in os.environ['PATH']:
-        raise RuntimeError("Please ensure */epilogos/dist/ is added to system PATH")
+    pythonFilesDir = ""
     for path in os.environ['PATH'].split(os.pathsep):
-        if "epilogos/dist" in path:
+        if path.endswith("epilogos/dist") or path.endswith("epilogos/dist/"):
             pythonFilesDir = Path(path).parents[0] / "src/"
+    if not pythonFilesDir:
+        raise RuntimeError("Please ensure */epilogos/dist/ is added to system PATH")
     
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said

@@ -5,6 +5,7 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
+import os
 
 print("""\n
                   d8b 888                                     
@@ -128,11 +129,17 @@ def main(inputDirectory, outputDirectory, numStates, saliency, modeOfOperation, 
     storedExpPath = Path(expFreqDir) / "exp_freq_{}.npy".format(fileTag)
 
     # Finding the location of the .py files that must be run
-    if PurePath(__file__).is_absolute():
-        pythonFilesDir = Path(__file__).parents[1] / "src/"
-    else:
-        pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "src/"
-        print("Path generate from current working directory. May cause errors")
+    # if PurePath(__file__).is_absolute():
+    #     pythonFilesDir = Path(__file__).parents[1] / "src/"
+    # else:
+    #     pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "src/"
+    #     print("Path generate from current working directory. May cause errors")
+    if "epilogos/dist" not in os.environ['PATH']:
+        raise RuntimeError("Please ensure */epilogos/dist/ is added to system PATH")
+    for path in os.environ['PATH'].split(os.pathsep):
+        if "epilogos/dist" in path:
+            pythonFilesDir = Path(path).parents[0] / "src/"
+    
 
     # Only calculate the expected frequencies if user asks for it, otherwise just load from where the user said
     expJobIDArr = []   

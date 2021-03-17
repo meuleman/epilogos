@@ -3,6 +3,7 @@ import numpy as np
 from os import remove
 from pathlib import Path
 from time import time
+from epilogosHelpers import strToBool
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):
     if verbose: tTotal = time()
@@ -30,15 +31,6 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
     np.save(storedExpPath, expFreqArr, allow_pickle=False)
 
     print("Total Time:", time() - tTotal) if verbose else print("    [Done]")
-
-# Helper for slurm to send boolean values
-def strToBool(string):
-    if string == 'True':
-        return True
-    elif string == 'False':
-        return False
-    else:
-        raise ValueError("Invalid boolean string")
 
 if __name__ == "__main__":
     main(argv[1], argv[2], argv[3], strToBool(argv[4]))

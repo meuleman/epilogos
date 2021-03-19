@@ -281,10 +281,10 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
             raise NotADirectoryError("Given path is not a directory: {}".format(str(inputDirPath2)))
         if not list(inputDirPath2.glob("*")):
             raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(inputDirPath2))
-    if not outputDirPath.is_dir():
-        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDirPath)))
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
+    if not outputDirPath.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDirPath)))
     
     if numProcesses < 0:
         raise ValueError("Number of cores must be positive or zero (0 means use all cores)")

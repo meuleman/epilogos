@@ -50,8 +50,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     
     # Needed to make sure user doesn't input more than one argument for each flag
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize = mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0]
-    diagnosticBool = True if diagnosticBool else diagnosticBool = False
-    verbose = True if commandLineBool else verbose = False
+    diagnosticBool = True if diagnosticBool else False
+    verbose = True if commandLineBool else False
     numStates = getNumStates(stateInfo)
     
     # Get paths from arguments and turn them into absolute paths

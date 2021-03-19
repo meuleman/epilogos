@@ -1,10 +1,22 @@
-from multiprocessing import cpu_count
 import gzip
 from time import time
 import pandas as pd
 import numpy as np
 from pathlib import Path
 
+def getNumStates(stateFile):
+    return pd.read_table(Path(stateFile), header=0, sep="\t").shape[0]
+
+def getStateNames(stateFile):
+    return pd.read_table(Path(stateFile), header=0, sep="\t")['short_name'].values
+
+def getStateColorsRGB(stateFile):
+    series = pd.read_table(Path(stateFile), header=0, sep="\t")['rgba']
+    rgbList = []
+    for rgba in series:
+        rgba = rgba.split("rgba(")[-1].split(",")
+        rgbList.append((int(rgba[0]) / 255, int(rgba[1]) / 255, int(rgba[2]) / 255))
+    return np.array(rgbList)
 
 # Helper for slurm to send boolean values
 def strToBool(string):

@@ -11,9 +11,9 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-from epilogosHelpers import strToBool
+from epilogosHelpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 
-def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose):
+def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose):
     tTotal = time()
 
     outputDirPath = Path(outputDir)
@@ -22,14 +22,9 @@ def main(group1Name, group2Name, numStates, outputDir, fileTag, numProcesses, di
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
     
-    if numStates == 18:
-        stateColorList = np.array([(1.0, 0.0, 0.0), (1.0, 0.2706, 0.0), (1.0, 0.2706, 0.0), (1.0, 0.2706, 0.0), (0.0, 0.502, 0.0), (0.0, 0.3922, 0.0), (0.7608, 0.8824, 0.0196), (0.7608, 0.8824, 0.0196), (1.0, 0.7647, 0.302), (1.0, 0.7647, 0.302), (1.0, 1.0, 0.0), (0.4, 0.8039, 0.6667), (0.5412, 0.5686, 0.8157), (0.8039, 0.3608, 0.3608), (0.7412, 0.7176, 0.4196), (0.502, 0.502, 0.502), (0.7529, 0.7529, 0.7529), (1.0, 1.0, 1.0)])
-        stateNameList = np.array(["TssA", "TssFlnk", "TssFlnkU", "TssFlnkD", "Tx", "TxWk", "EnhG1", "EnhG2", "EnhA1", "EnhA2", "EnhWk", "ZNF/Rpts", "Het", "TssBiv", "EnhBiv", "ReprPC", "ReprPCWk", "Quies"])
-    elif numStates == 15:
-        stateColorList = np.array([(1.0, 0.0, 0.0), (1.0, 0.27059, 0.0), (0.19608, 0.80392, 0.19608), (0.0, 0.50196, 0.0), (0.0, 0.39216, 0.0), (0.76078, 0.88235, 0.01961), (1.0, 1.0, 0.0), (0.4, 0.80392, 0.66667), (0.54118, 0.56863, 0.81569), (0.80392, 0.36078, 0.36078), (0.91373, 0.58824, 0.47843), (0.74118, 0.71765, 0.41961), (0.50196, 0.50196, 0.50196), (0.75294, 0.75294, 0.75294), (1.0, 1.0, 1.0)])
-        stateNameList = np.array(["TssA", "TssAFlnk", "TxFlnk", "Tx", "TxWk", "EnhG", "Enh", "ZNF/Rpts", "Het", "TssBiv", "BivFlnk", "EnhBiv", "ReprPC", "ReprPCWk", "Quies"])
-    else:
-        raise ValueError("State model not supported for plotting")
+    numStates = getNumStates(stateInfo)
+    stateColorList = getStateColorsRGB(stateInfo)
+    stateNameList = getStateNames(stateInfo)
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
@@ -388,7 +383,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
             
     opaqueSigIndices = np.where(np.abs(pvalsGraph) >= logSignificanceThreshold)[0]
 
-    colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
+    colorArr=stateColorList[maxDiffArr[opaqueSigIndices].astype(int) - 1]
     opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100
@@ -507,7 +502,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
         opaqueSigIndices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
 
-    colorArr=np.array(stateColorList)[maxDiffArr[opaqueSigIndices].astype(int) - 1]
+    colorArr=stateColorList[maxDiffArr[opaqueSigIndices].astype(int) - 1]
     opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[opaqueSigIndices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[opaqueSigIndices]) / np.amax(np.abs(distanceArrReal)) * 100

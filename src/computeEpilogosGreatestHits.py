@@ -1,21 +1,15 @@
 from sys import argv
 from computeEpilogosExpectedCombination import strToBool
 from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
-from epilogosHelpers import strToBool
+from epilogosHelpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time
 
-
-def main(outputDir, numStates, fileTag, verbose):
+def main(outputDir, stateInfo, fileTag, verbose):
     outputDirPath = Path(outputDir)
 
-    if numStates == 18:
-        stateNameList = np.array(["TssA", "TssFlnk", "TssFlnkU", "TssFlnkD", "Tx", "TxWk", "EnhG1", "EnhG2", "EnhA1", "EnhA2", "EnhWk", "ZNF/Rpts", "Het", "TssBiv", "EnhBiv", "ReprPC", "ReprPCWk", "Quies"])
-    elif numStates == 15:
-        stateNameList = np.array(["TssA", "TssAFlnk", "TxFlnk", "Tx", "TxWk", "EnhG", "Enh", "ZNF/Rpts", "Het", "TssBiv", "BivFlnk", "EnhBiv", "ReprPC", "ReprPCWk", "Quies"])
-    else:
-        raise ValueError("State model not supported for plotting")
+    stateNameList = getStateNames(stateInfo)
 
     if verbose: print("\nReading in score files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)

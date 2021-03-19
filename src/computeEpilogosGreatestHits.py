@@ -1,10 +1,10 @@
 from sys import argv
-from computeEpilogosExpectedCombination import strToBool
 from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
 from epilogosHelpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time
+
 
 def main(outputDir, stateInfo, fileTag, verbose):
     outputDirPath = Path(outputDir)
@@ -70,17 +70,20 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         # Sort the values
         indices = (-np.abs(scoreArr)).argsort()[:1000]
 
-        locations = np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1), maxScoreArr[indices].reshape(len(indices), 1)), axis=1)
+        locations = np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1), \
+            maxScoreArr[indices].reshape(len(indices), 1)), axis=1)
 
         # Iterate until all is merged
         while(hasAdjacent(locations)):
             locations = mergeAdjacent(locations)
-            
+
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
+        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], \
+            abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
         f.write(outString)
 
 
 if __name__ == "__main__":
     main(argv[1], argv[2], argv[3], strToBool(argv[4]))
+    

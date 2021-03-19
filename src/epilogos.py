@@ -59,10 +59,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     This script computes scores for chromatin states across the genome.
     """
 
+    # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency, \
         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize)
-
-    # Needed to make sure user doesn't input more than one argument for each flag
+    
+    # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize = mode[0], outputDirectory[0], \
         stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0]
     diagnosticBool = True if diagnosticBool else False
@@ -87,6 +88,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     if not PurePath(outputDirPath).is_absolute():
         outputDirPath = Path.cwd() / outputDirPath
 
+    # Make sure argments are valid
     checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses)
 
     # Informing user of their inputs
@@ -114,13 +116,13 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     storedExpPath = outputDirPath / "exp_freq_{}.npy".format(fileTag)
 
     if not commandLineBool:
-        # Variable the sbatch submission in case we are using slurm
+        # Variable for the sbatch submission in case we are using slurm
         if numProcesses == 0:
             numTasks = "--exclusive"
         else:
             numTasks = "--ntasks={}".format(numProcesses)
 
-        # For slurm output and error logs
+        # Creating directories for slurm output and error logs
         (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
         (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
         print("\nSlurm .out log files are located at: {}".format(outputDirPath / ".out/"))
@@ -374,7 +376,7 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
     completedJobs = []
     calculationStep = ""
 
-    # Every ten seconds check what jobs are done and print accordingly
+    # Every x seconds check what jobs are done and print accordingly
     while True:
         # Check the jobs which are done
         sp = subprocess.run(jobCheckStr, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
@@ -419,7 +421,7 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             break
 
         # If final job is done, exit the program
-        # Checks are if the 3rd line is not empty, if there are no more running or pending values 
+        # Checks are if the 3rd line is not empty, if there are no more running or pending values, 
         # and if an "allocation" job is not in the output
         if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
             print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))

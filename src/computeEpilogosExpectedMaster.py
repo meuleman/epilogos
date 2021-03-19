@@ -20,7 +20,7 @@ def main(file1, file2, numStates, saliency, outputDirPath, fileTag, numProcesses
 
     if not verbose: print("    {}\t".format(filename), end="", flush=True)
 
-    # If user doesn't want to choose number of cores use as many as available
+    # If user doesn't want to choose number of cores, use as many as available
     if numProcesses == 0:
         numProcesses = cpu_count()
 
@@ -65,6 +65,7 @@ def s1Calc(file1Path, file2Path, rowsToCalculate, numStates, verbose):
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
     if verbose and rowsToCalculate[0] == 0: print("Calculating expected frequency...", flush=True); tExp = time()
+    
     # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
     for i, state in enumerate(uniqueStates):

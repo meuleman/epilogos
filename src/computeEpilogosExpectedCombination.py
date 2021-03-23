@@ -7,6 +7,15 @@ from epilogosHelpers import strToBool
 
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):
+    """
+    Combines all the temporary expected frequency numpy arrays into one expected frequency array
+
+    Input:
+    outputDirectory -- The output directory for epilogos
+    storedExpInput -- The path of the expected frequency array which is being created
+    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    verbose -- Boolean which if True, causes much more detailed prints
+    """
     if verbose: tTotal = time()
 
     outputDirPath = Path(outputDirectory)

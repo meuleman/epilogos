@@ -7,6 +7,15 @@ from time import time
 
 
 def main(outputDir, stateInfo, fileTag, verbose):
+    """
+    Finds the top scoring regions across all epilogos score files and puts them into a txt file
+
+    Input:
+    outputDir -- The path of the output directory
+    stateInfo -- State model tab seperated information file
+    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    verbose -- Boolean which if True, causes much more detailed prints
+    """
     outputDirPath = Path(outputDir)
 
     stateNameList = getStateNames(stateInfo)
@@ -26,6 +35,17 @@ def main(outputDir, stateInfo, fileTag, verbose):
 
 
 def readInData(outputDirPath):
+    """
+    Reads all the epilogos score files in and combines them into a numpy array ordered by location
+
+    Input:
+    outputDirPath -- Path to the epilogos output directory (this contains the score files)
+
+    Output:
+    locationArr -- Numpy array containing the genomic locations for all the scores
+    scoreArr.sum(axis=1) -- Numpy array containing sums of the KL-Scores for each genomic bin
+    maxScoreArr -- Numpy array containing the state which had the highest KL-score in each bin
+    """
     results = map(unpackNPZ, outputDirPath.glob("temp_scores_*.npz"))
 
     # Split up read results into tuples of chromosomes, scores, and locations
@@ -61,16 +81,38 @@ def readInData(outputDirPath):
 
 
 def unpackNPZ(file):
+    """
+    Takes in an .npz file containing scores and returns the individual numpy arrays
+
+    Input:
+    file -- The .npz file to unpack
+
+    Output:
+    npzFile['chrName'][0] -- The name of the chromosome which the scores are of
+    npzFile['scoreArr'] -- Numpy array containing the kullback leibler scores
+    npzFile['locationArr'] -- Numpy array containing the genomic locations for all the scores
+    """
     npzFile = np.load(Path(file))
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
 def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
+    """
+    Finds the top 1000 scoring bins and merges adjacent bins, then outputs a txt containing these top scoring regions and
+    some information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
+
+    Input:
+    filePath -- The path of the file to write to
+    locationArr -- Numpy array containing the genomic locations of all the bins
+    scoreArr -- Numpy array containing the sum of the scores within each bin
+    maxScoreArr -- Numpy array containing the states which had the highest score in each bin
+    nameArr -- Numpy array containing the names of all the states
+    """
     with open(filePath, 'w') as f:
         # Sort the values
         indices = (-np.abs(scoreArr)).argsort()[:1000]
 
-        locations = np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1), \
+        locations = np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
             maxScoreArr[indices].reshape(len(indices), 1)), axis=1)
 
         # Iterate until all is merged
@@ -79,7 +121,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1], \
+        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1],
             abs(float(locations[i, 3])), findSign(float(locations[i, 3]))) for i in range(locations.shape[0]))
         f.write(outString)
 

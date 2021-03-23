@@ -28,39 +28,40 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 
 
 @click.command()
-@click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True, \
+@click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
     multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
-@click.option("-l", "--command-line", "commandLineBool", is_flag=True, multiple=True, \
+@click.option("-l", "--command-line", "commandLineBool", is_flag=True, multiple=True,
     help="If enabled, Epilogos will run in your terminal rather than on a SLURM cluster")
-@click.option("-i", "--input-directory", "inputDirectory", type=str, multiple=True, \
+@click.option("-i", "--input-directory", "inputDirectory", type=str, multiple=True,
     help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-a", "--directory-one", "inputDirectory1", type=str, multiple=True, \
+@click.option("-a", "--directory-one", "inputDirectory1", type=str, multiple=True,
     help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-b", "--directory-two", "inputDirectory2", type=str, multiple=True, \
+@click.option("-b", "--directory-two", "inputDirectory2", type=str, multiple=True,
     help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, multiple=True, \
+@click.option("-o", "--output-directory", "outputDirectory", type=str, multiple=True,
     help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--state-info", "stateInfo", type=str, multiple=True, help="State model info file")
-@click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True, \
+@click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True,
     help="Desired saliency level (1, 2, or 3)")
-@click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True, \
+@click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True,
     help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True, \
+@click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True,
     help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
-@click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True, \
-    help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data")
-@click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True, \
+@click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True,
+    help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
+        "comparisons between the null and real data")
+@click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True,
     help="The number of times subsamples of the scores are fit")
-@click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True, \
+@click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
     help="The size of the subsamples on which the scores are fit")
-def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency, \
+def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
     """
-    This script computes scores for chromatin states across the genome.
+    Wrapper function that determines which epilogos functions to use and how to deploy them
     """
 
     # Make sure all flags are submitted as expected
-    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency, \
+    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize)
     
     # Pull info out of the flags
@@ -141,30 +142,30 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                computeEpilogosExpectedMaster.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, \
+                computeEpilogosExpectedMaster.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses,
                     verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency, \
+                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                     outputDirPath, fileTag, numProcesses, verbose)
-                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand, \
+                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
-                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) + \
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
                     "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                computeEpilogosExpectedMaster.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, \
+                computeEpilogosExpectedMaster.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses,
                     verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
-                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates, \
+                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
                     saliency, outputDirPath, fileTag, numProcesses, verbose)
-                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand, \
+                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", ""))
 
     if not commandLineBool:
@@ -178,9 +179,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         computeEpilogosExpectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
-        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag, \
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
             verbose)
-        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1", \
+        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
             "--mem-per-cpu=8000", "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID)
 
@@ -190,30 +191,30 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, \
+                computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag,
                     numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency, \
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                     outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
-                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand, \
+                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
-                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) + \
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
                     "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                computeEpilogosScoresMaster.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, \
+                computeEpilogosScoresMaster.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag,
                     numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
-                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates, \
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                     saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
-                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand, \
+                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
     
     if not commandLineBool:
@@ -229,20 +230,20 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         else:
             computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
             pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, verbose)
-            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1", \
+            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
                 "--mem-per-cpu=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            computeEpilogosPairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, \
+            computeEpilogosPairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag,
                 numProcesses, diagnosticBool, numTrials, samplingSize)
         else:
             computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name, \
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
                 inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose)
-            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, numTasks, "--mem=0", \
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, numTasks, "--mem=0",
                 "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID)
 
@@ -256,8 +257,14 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
         
 
-def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency, \
+def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
+    """
+    Checks all the input flags are makes sure that there are not duplicates and that required flags are present
+
+    Input:
+    See click options at top of script
+    """
     # Checking if user inputs flag multiples times
     if len(mode) > 1:
         raise ValueError("Too many [-m, --mode] arguments provided")
@@ -300,12 +307,23 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses):
+    """
+    Checks whether user submitted arguments have valid values
+
+    Input:
+    mode -- 'single' or 'paired'; tells us which version of epilogos we are running
+    saliency -- The saliency metric input by the user
+    inputDirPath -- The path to the only input directory in single epilogos and the first input directory in paired epilogos
+    inputDirPath2 -- The path to the second input directory in the paired epilogos case
+    outputDirPath -- The path to the output directory for epilogos
+    numProcesses -- The number of cores the user would like to use
+    """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
-        raise ValueError("Saliency Metric Invalid: {}".format(saliency) + \
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
             "Please ensure that saliency metric is either 1, 2, or 3")
     elif mode == "paired" and saliency != 1 and saliency != 2:
-        raise ValueError("Saliency Metric Invalid: {}".format(saliency) + \
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
             "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
 
     # Check validity of directories
@@ -332,6 +350,23 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
 
 
 def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, numTasks, memory, dependency):
+    """
+    Submits a epilogos job to a SLURM cluster
+
+    Input:
+    filename -- The name of the file epilogos is using
+    jobPrefix -- The step of epilogos we are on ('exp_calc', 'exp_comb', 'score', 'visual', 'hits')
+    fileTag -- String that helps us ensure jobs are named consistenly across one epilogos run
+    outputDirPath -- The output directory for epilogos will be used for error and output logs
+    pythonCommand -- The python command to run on the SLURM job
+    saliency -- The saliency metric being used in this epilogos run
+    numTasks -- Either '--exclusive' or '--numTasks=x' where x is the number of cores to run on
+    memory -- The amount of memory to be allocated to the slurm job
+    dependency -- Which jobs the SLURM job must wait for before starting
+
+    Output:
+    The job number
+    """
     jobName = "{}_{}_{}".format(jobPrefix, fileTag, filename)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
@@ -371,6 +406,18 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
 
 
 def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency):
+    """
+    Prevents exiting of the main script until there is an error in one of the SLURM jobs or all SLURM jobs have finished
+
+    Input:
+    mode -- 'single' or 'paired' depending on which version of epilogos we are running
+    allJobIDs -- String of all the SLURM job IDs
+    expJobIDArr -- List of the SLURM job IDs for the expected frequency step
+    scoreJobIDArr -- List of the SLURM job IDs for the score calculation step
+    outputDirPath -- Epilogos' output directory
+    saliency -- The saliency metric epilogos is using
+    """
+
     jobCheckStr = "sacct --format=JobID%18,JobName%50,State%10 --jobs {}".format(allJobIDs)
 
     completedJobs = []

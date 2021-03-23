@@ -203,4 +203,4 @@ def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, diffArr, numSt
             f.write("gausshyper:\tParams={}\t\tMLE={}".format(params, mle))
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), strToBool([sys.argv[4]]))
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), strToBool(sys.argv[4]))

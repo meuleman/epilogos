@@ -162,8 +162,8 @@ def readInData(outputDirPath, numProcesses, numStates):
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
     # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-        remove(file)
+    # for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+    #     remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))

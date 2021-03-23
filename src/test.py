@@ -4,10 +4,11 @@ from pathlib import Path
 import pandas as pd
 from multiprocessing import cpu_count, Pool
 from contextlib import closing
-from epilogosHelpers import getNumStates
+from epilogosHelpers import getNumStates, strToBool
 from itertools import repeat
 import scipy.stats as st
 import warnings
+import sys
 
 def main(stateInfo, outputDir, numProcesses, verbose):
     tTotal = time()
@@ -202,4 +203,4 @@ def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, diffArr, numSt
             f.write("gausshyper:\tParams={}\t\tMLE={}".format(params, mle))
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1], sys.argv[2], int(sys.argv[3]), strToBool([sys.argv[4]]))

@@ -1,14 +1,14 @@
-from time import time
+from sys
 import numpy as np
 from pathlib import Path
 import pandas as pd
-from multiprocessing import cpu_count, Pool
-from contextlib import closing
-from epilogosHelpers import getNumStates, strToBool
-from itertools import repeat
 import scipy.stats as st
 import warnings
-import sys
+from time import time
+from multiprocessing import cpu_count, Pool
+from contextlib import closing
+from itertools import repeat
+from epilogosHelpers import strToBool, getNumStates
 
 def main(stateInfo, outputDir, numProcesses, verbose):
     tTotal = time()

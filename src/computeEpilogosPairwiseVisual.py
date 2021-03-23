@@ -256,35 +256,26 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     dataNull = pd.Series(distanceArrNull[idx])
 
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(fitOnBootstrap, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
+        results = pool.starmap(fitOnSample, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
     pool.join()
 
-    with open(outputDir / "fitResults.txt", 'w') as f:
-        index = [i for i in range(numTrials)]
-        columns = ["beta", "loc", "scale", "nnlf"]
-
-        fitDF = pd.DataFrame(index=index, columns=columns)
-
-        for i in range(len(results)):
-            beta  = results[i][0][0]
-            loc   = results[i][0][1]
-            scale = results[i][0][2]
-            nnlf   = results[i][1]
-
-            f.write("{}\t{}\t{}\t{}\n".format(beta, loc, scale, nnlf))
-            fitDF.iloc[i, 0] = results[i][0][0]
-            fitDF.iloc[i, 1] = results[i][0][1]
-            fitDF.iloc[i, 2] = results[i][0][2]
-            fitDF.iloc[i, 3] = results[i][1]
-
-        fitDF.sort_values(by=["nnlf"], inplace=True)
+    # Creating dataframe of all params and nnlf so that we can figure out median
+    index = [i for i in range(numTrials)]
+    columns = ["beta", "loc", "scale", "nnlf"]
+    fitDF = pd.DataFrame(index=index, columns=columns)
+    for i in range(len(results)):
+        fitDF.iloc[i, 0] = results[i][0][0]
+        fitDF.iloc[i, 1] = results[i][0][1]
+        fitDF.iloc[i, 2] = results[i][0][2]
+        fitDF.iloc[i, 3] = results[i][1]
+    fitDF.sort_values(by=["nnlf"], inplace=True)
 
     # return params, dataReal, dataNull
     medianIndex = int((numTrials-1)/2)
     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
 
 
-def fitOnBootstrap(distanceArrNull, samplingSize):
+def fitOnSample(distanceArrNull, samplingSize):
     """
     Fits a sample of the null distances
 
@@ -297,17 +288,17 @@ def fitOnBootstrap(distanceArrNull, samplingSize):
     nnlf -- The negative loglikelihood function obtained by the fit
     """
     if len(distanceArrNull) <= samplingSize:
-        bootstrapData = distanceArrNull
+        sampleData = distanceArrNull
     else:
         np.random.seed() # On linux, multiprocessing inherits the master seed and doesn't generate fully random numbers
-        bootstrapData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
+        sampleData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
     # ignore warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         # Fit the data
-        params = st.gennorm.fit(bootstrapData)
+        params = st.gennorm.fit(sampleData)
 
         # Calculate SSE and MLE
         nnlf = st.gennorm.nnlf(params, pd.Series(distanceArrNull))

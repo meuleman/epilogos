@@ -124,83 +124,83 @@ def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, diffArr, numSt
 
             params = st.gennorm.fit(dataNull)
             mle = st.gennorm.nnlf(params, pd.Series(dataNull))
-            f.write("Gennorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("Gennorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.johnsonsu.fit(dataNull)
             mle = st.johnsonsu.nnlf(params, pd.Series(dataNull))
-            f.write("johnsonsu:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("johnsonsu:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.t.fit(dataNull)
             mle = st.t.nnlf(params, pd.Series(dataNull))
-            f.write("t:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("t:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.norminvgauss.fit(dataNull)
             mle = st.norminvgauss.nnlf(params, pd.Series(dataNull))
-            f.write("norminvgauss:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("norminvgauss:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.cauchy.fit(dataNull)
             mle = st.cauchy.nnlf(params, pd.Series(dataNull))
-            f.write("cauchy:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("cauchy:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.laplace.fit(dataNull)
             mle = st.laplace.nnlf(params, pd.Series(dataNull))
-            f.write("laplace:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("laplace:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.hypsecant.fit(dataNull)
             mle = st.hypsecant.nnlf(params, pd.Series(dataNull))
-            f.write("hypsecant:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("hypsecant:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.genlogistic.fit(dataNull)
             mle = st.genlogistic.nnlf(params, pd.Series(dataNull))
-            f.write("genlogistic:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("genlogistic:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.logistic.fit(dataNull)
             mle = st.logistic.nnlf(params, pd.Series(dataNull))
-            f.write("logistic:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("logistic:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.lognorm.fit(dataNull)
             mle = st.lognorm.nnlf(params, pd.Series(dataNull))
-            f.write("lognorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("lognorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.powernorm.fit(dataNull)
             mle = st.powernorm.nnlf(params, pd.Series(dataNull))
-            f.write("powernorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("powernorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.norm.fit(dataNull)
             mle = st.norm.nnlf(params, pd.Series(dataNull))
-            f.write("norm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("norm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.loglaplace.fit(dataNull)
             mle = st.loglaplace.nnlf(params, pd.Series(dataNull))
-            f.write("loglaplace:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("loglaplace:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.gumbel_l.fit(dataNull)
             mle = st.gumbel_l.nnlf(params, pd.Series(dataNull))
-            f.write("gumbel_l:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("gumbel_l:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.gumbel_r.fit(dataNull)
             mle = st.gumbel_r.nnlf(params, pd.Series(dataNull))
-            f.write("gumbel_r:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("gumbel_r:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.exponnorm.fit(dataNull)
             mle = st.exponnorm.nnlf(params, pd.Series(dataNull))
-            f.write("exponnorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("exponnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.skewnorm.fit(dataNull)
             mle = st.skewnorm.nnlf(params, pd.Series(dataNull))
-            f.write("skewnorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("skewnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.foldnorm.fit(dataNull)
             mle = st.foldnorm.nnlf(params, pd.Series(dataNull))
-            f.write("foldnorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("foldnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.powerlognorm.fit(dataNull)
             mle = st.powerlognorm.nnlf(params, pd.Series(dataNull))
-            f.write("powerlognorm:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("powerlognorm:\tParams={}\t\tMLE={}\n".format(params, mle))
 
             params = st.gausshyper.fit(dataNull)
             mle = st.gausshyper.nnlf(params, pd.Series(dataNull))
-            f.write("gausshyper:\tParams={}\t\tMLE={}".format(params, mle))
+            f.write("gausshyper:\tParams={}\t\tMLE={}\n".format(params, mle))
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], int(sys.argv[3]), strToBool(sys.argv[4]))

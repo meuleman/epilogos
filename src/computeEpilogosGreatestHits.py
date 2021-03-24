@@ -4,7 +4,7 @@ from epilogosHelpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time
-
+from os import remove
 
 def main(outputDir, stateInfo, fileTag, verbose):
     """
@@ -74,6 +74,10 @@ def readInData(outputDirPath):
         index = dataChunks[0].index(chrName)
         scoreArr = np.concatenate((scoreArr, dataChunks[1][index]))
         locationArr = np.concatenate((locationArr, dataChunks[2][index]))
+
+    # Cleaning up the temp files after we've read them
+    for file in outputDirPath.glob("temp_scores_*.npz"):
+        remove(file)
 
     maxScoreArr = np.abs(np.argmax(np.abs(np.flip(scoreArr, axis=1)), axis=1) - scoreArr.shape[1]).astype(int)
 

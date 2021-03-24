@@ -194,8 +194,8 @@ def readInData(outputDirPath, numProcesses, numStates):
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
     # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-        remove(file)
+    # for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+    #     remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -785,12 +785,10 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     significantAt01 = .01 / nStar
 
     with open(filePath, 'w') as f:
-        if onlySignificant:
-            # Pick values above significance threshold and then sort
-            indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]]))\
-                .argsort()]
-        else:
-            # Sort the values
+        # Pick values above significance threshold and then sort
+        indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
+        # Make sure that there are at least 1000 values if creating greatestHits.txt
+        if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
 
         locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
@@ -807,11 +805,12 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
                 ("*" if float(locations[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
 
-        # Write all the locations to the file
+        # Write all the locations to the file for significantLoci.txt
+        # Write only top 100 loci to file for greatestHits.txt
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"
         outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1],
             abs(float(locations[i, 3])), findSign(float(locations[i, 3])), float(locations[i, 5]), stars[i, 0])
-                for i in range(locations.shape[0]))
+                for i in range(locations.shape[0] if onlySignificant else 100))
         f.write(outString)
 
 

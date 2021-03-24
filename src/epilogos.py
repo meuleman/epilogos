@@ -260,7 +260,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
     """
-    Checks all the input flags are makes sure that there are not duplicates and that required flags are present
+    Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
+    are not present together
 
     Input:
     See click options at top of script
@@ -285,7 +286,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif len(numProcesses) > 1:
         raise ValueError("Too many [-c, --num-cores] arguments provided")
     elif len(exitBool) > 1:
-        raise ValueError("Too many [-x, --exit-when-complete] arguments provided")
+        raise ValueError("Too many [-x, --exit] arguments provided")
     elif len(diagnosticBool) > 1:
         raise ValueError("Too many [-d, --diagnostic-figures] arguments provided")
     elif len(numTrials) > 1:
@@ -293,7 +294,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif len(samplingSize) > 1:
         raise ValueError("Too many [-z, --sampling-size] arguments provided")
 
-    # Checking that all required flags are inputed
+    # Checking that all required flags are inputted
     if mode[0] == "single" and not inputDirectory:
         raise ValueError("[-i, --input-directory] required in 'single' group mode")
     elif mode[0] == "paired" and not inputDirectory1:
@@ -304,6 +305,22 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         raise ValueError("[-o, --output-directory] required")
     elif not stateInfo:
         raise ValueError("[-n, --state-info] required")
+
+    # Checking that incompatible flags are not input together
+    if mode[0] == "single" and inputDirectory1:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-a, --directory-one] option")
+    elif mode[0] == "single" and inputDirectory2:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
+    elif mode[0] == "single" and diagnosticBool:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
+    elif mode[0] == "single" and numTrials:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-t, --num-trials] option")
+    elif mode[0] == "single" and samplingSize:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-z, --sampling-size] option")
+    elif mode[0] == "paired" and inputDirectory:
+        raise ValueError("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
+    elif commandLineBool and exitBool:
+        raise ValueError("[-l, --command-line] flag not compatible with [-x, --exit] flag")
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses):

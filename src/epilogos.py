@@ -24,7 +24,7 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
          888                            888                   
          888                       Y8b d88P                   
          888                        "Y88P"                    
-""")
+""", flush=True)
 
 
 @click.command()
@@ -171,7 +171,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     if not commandLineBool:
         # Create a string for slurm dependency to work and to print more nicely
         expJobIDStr = str(expJobIDArr).strip('[]').replace(" ", "")
-        print("    JobIDs:", expJobIDStr)
+        print("    JobIDs:", expJobIDStr, flush=True)
 
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
@@ -183,7 +183,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             verbose)
         combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
             "--mem-per-cpu=8000", "--dependency=afterok:{}".format(expJobIDStr))
-        print("    JobID:", combinationJobID)
+        print("    JobID:", combinationJobID, flush=True)
 
     scoreJobIDArr = []
     # Calculate the observed frequencies and scores
@@ -220,7 +220,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     if not commandLineBool:
         # Create a string for slurm dependency to work
         scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
-        print("    JobIDs:", scoreJobIDStr)
+        print("    JobIDs:", scoreJobIDStr, flush=True)
 
     if mode == "single":
         # Create a greatest hits text file
@@ -232,7 +232,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
                 "--mem-per-cpu=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
-            print("    JobID:", summaryJobID)
+            print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
@@ -245,11 +245,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose)
             summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, numTasks, "--mem=0",
                 "--dependency=afterok:{}".format(scoreJobIDStr))
-            print("    JobID:", summaryJobID)
+            print("    JobID:", summaryJobID, flush=True)
 
     if not commandLineBool:
         allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, summaryJobID)
-        print("\nAll JobIDs:\n    ", allJobIDs)
+        print("\nAll JobIDs:\n    ", allJobIDs, flush=True)
 
     # If the user wants to exit upon job completion rather than submission
     # If a job fails, it cancels all other jobs

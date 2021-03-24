@@ -1,0 +1,16 @@
+zero_index	one_index	short_name	long_name	hex	rgba	color
+0	1	TssA	Active TSS	#ff0000	rgba(255,0,0,1)	Red
+1	2	TssAFlnk	Flanking Active TSS	#ff4500	rgba(255,69,0,1)	Orange Red
+2	3	TxFlnk	Transcription at gene 5p and 3p	#32cd32	rgba(50,205,50,1)	LimeGreen
+3	4	Tx	Strong transcription	#008000	rgba(0,128,0,1)	Green
+4	5	TxWk	Weak transcription	#006400	rgba(0,100,0,1)	DarkGreen
+5	6	EnhG	Genic enhancers	#c2e105	rgba(194,225,5,1)	GreenYellow
+6	7	Enh	Enhancers	#ffff00	rgba(255,255,0,1)	Yellow
+7	8	ZNF/Rpts	ZNF genes + repeats	#66cdaa	rgba(102,205,170,1)	Medium Aquamarine
+8	9	Het	Heterochromatin	#8a91d0	rgba(138,145,208,1)	PaleTurquoise
+9	10	TssBiv	Bivalent/Poised TSS	#cd5c5c	rgba(205,92,92,1)	IndianRed
+10	11	BivFlnk	Flanking Bivalent TSS/Enh	#e9967a	rgba(233,150,122,1)	DarkSalmon
+11	12	EnhBiv	Bivalent Enhancer	#bdb76b	rgba(189,183,107,1)	DarkKhaki
+12	13	ReprPC	Repressed PolyComb	#808080	rgba(128,128,128,1)	Silver
+13	14	ReprPCWk	Weak Repressed PolyComb	#c0c0c0	rgba(192,192,192,1)	Gainsboro
+14	15	Quies	Quiescent/Low	#ffffff	rgba(255,255,255,1)	White

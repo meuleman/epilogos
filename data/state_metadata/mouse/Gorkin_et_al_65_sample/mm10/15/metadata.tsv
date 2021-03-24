@@ -1,0 +1,16 @@
+zero_index	one_index	short_name	long_name	hex	rgba	color
+0	1	Pr-A	Promoter - Active	#0e6f37	rgba(14,111,55,1)	Fun Green
+1	2	Pr-W	Promoter - Weak/Inactive	#c7e4c0	rgba(199,228,192,1)	Surf Crest
+2	3	Pr-B	Promoter - Bivalent	#cdcdcd	rgba(205,205,205,1)	Very Light Grey
+3	4	Pr-F	Promoter - Flanking	#41ac5e	rgba(65,172,94,1)	Chateau Green
+4	5	En-Sd	Enhancer - Strong, TSS-distal	#f3eb1a	rgba(243,235,26,1)	Lemon
+5	6	En-Sp	Enhancer - Strong, TSS-proximal	#f3eb1a	rgba(243,235,26,1)	Lemon
+6	7	En-W	Enhancer - Weak, TSS-distal	#faf8c8	rgba(250,248,200,1)	Mimosa
+7	8	En-Pd	Enhancer - Poised, TSS-distal	#808080	rgba(128,128,128,1)	Grey
+8	9	En-Pp	Enhancer - Poised, TSS-proximal	#808080	rgba(128,128,128,1)	Grey
+9	10	Tx-S	Transcription - Strong	#0454a3	rgba(4,84,163,1)	Cobalt
+10	11	Tx-P	Transcription - Permissive	#deecf7	rgba(222,236,247,1)	Pattens Blue
+11	12	Tx-I	Transcription - Initiation	#4290cf	rgba(66,144,207,1)	Curious Blue
+12	13	Hc-P	Heterochromatin - Polycomb	#f48c8f	rgba(244,140,143,1)	Wewak
+13	14	Hc-H	Heterochromatin - H3K9me3	#fde2e5	rgba(253,226,229,1)	Carousel Pink
+14	15	NS	No signal	#ffffff	rgba(255,255,255,1)	White

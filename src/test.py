@@ -20,8 +20,8 @@ def main():
         locationArr = mergeAdjacent(locationArr)
     print("Original Time", time() - t)
 
-    t1 = time()
     locationArr1 = pd.read_table(inPath, header=None, usecols=[0,1,2], sep="\t").to_numpy()
+    t1 = time()
     while(hasAdjacent1(locationArr1)):
         locationArr1 = mergeAdjacent1(locationArr1)
     print("j < i Time", time() - t1)
@@ -29,8 +29,8 @@ def main():
     print("locationArr == locationArr1", locationArr.shape[0] == locationArr1.shape[0])
     print("locationArr == locationArr1", np.all(locationArr == locationArr1))
 
-    t2 = time()
     locationArr2 = pd.read_table(inPath, header=None, usecols=[0,1,2], sep="\t").to_numpy()
+    t2 = time()
     while(hasAdjacent(locationArr1)):
         locationArr2 = mergeAdjacent2(locationArr2)
     print("first speed attempt", time() - t2)

@@ -145,7 +145,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     # Read in the data from file 2
     if verbose and rowsToCalc[0] == 0: print("Reading data from file 2...", flush=True); tRead2 = time()
     # Dont want to read in locations
-    cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
+    cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalc[0],
         nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1

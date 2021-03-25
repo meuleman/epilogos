@@ -68,7 +68,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize = mode[0], outputDirectory[0], \
         stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0]
     diagnosticBool = True if diagnosticBool else False
-    verbose = True if commandLineBool else False
+    verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
 
     # Get paths from arguments and turn them into absolute paths

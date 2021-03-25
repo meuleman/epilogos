@@ -837,7 +837,6 @@ def hasAdjacent(locationArr):
     return False
 
 
-# Helper function for merging adjacent loci in the roiURL txt file
 def mergeAdjacent(locationArr):
     """
     Merges the first two adjacent loci found in the input array

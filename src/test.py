@@ -46,9 +46,7 @@ def hasAdjacent(locationArr):
         for j in range(locationArr.shape[0]):
             # If the chromosomes are the same and they are adjacent return True
             # Also check if the distance is in the same direction
-            if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-                or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0) \
-                    and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+            if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0):
                 return True
     # If we have gotten through everything and not found adjacent locations, return false
     return False
@@ -59,9 +57,7 @@ def hasAdjacent1(locationArr):
         for j in range(i):
             # If the chromosomes are the same and they are adjacent return True
             # Also check if the distance is in the same direction
-            if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-                or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0) \
-                    and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+            if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0):
                 return True
     # If we have gotten through everything and not found adjacent locations, return false
     return False

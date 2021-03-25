@@ -313,10 +313,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         raise ValueError("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
     elif mode[0] == "single" and diagnosticBool:
         raise ValueError("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
-    elif mode[0] == "single" and numTrials:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-t, --num-trials] option")
-    elif mode[0] == "single" and samplingSize:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-z, --sampling-size] option")
     elif mode[0] == "paired" and inputDirectory:
         raise ValueError("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
     elif commandLineBool and exitBool:

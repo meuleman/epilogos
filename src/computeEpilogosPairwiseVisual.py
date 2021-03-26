@@ -794,10 +794,28 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
+        locations1 = np.copy(locations)
+
         # Iterate until all is merged, but only for the general case
         if not onlySignificant:
+            tOriginal = time()
             while(hasAdjacent(locations)):
                 locations = mergeAdjacent(locations)
+            print("Original Time:", time() - tOriginal)
+
+            tNew = time()
+            while(hasAdjacent(locations1)):
+                locations1 = mergeAdjacent1(locations)
+            print("New Time:", time() - tNew)
+
+            print("locationArr == locationArr1 SHAPE:", locationArr.shape[0] == locations1.shape[0])
+            print("locationArr == locationArr1 ALL", np.all(locationArr == locations1))
+
+            b = True
+            for row in locationArr:
+                if not row in locations1:
+                    b = False
+            print("locationArr == locationArr1 Values:", b)
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
         stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else
@@ -867,6 +885,50 @@ def mergeAdjacent(locationArr):
                 locationArr = np.delete(locationArr, [i, j], axis=0)
                 locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
                 return locationArr
+    return locationArr
+
+def mergeAdjacent1(locationArr):
+    """
+    Merges all adjacent loci (which haven't already been merged in this function call) found in the input array
+
+    Input:
+    locationArr -- Numpy array containing genomic loci in the first 3 columns
+
+    Output:
+    Array with merged loci
+    """
+    lociToMerge = [["null", "null", "null"]]
+    for i in range(locationArr.shape[0]):
+        for j in range(i + 1, locationArr.shape[0]):
+            # If the chromosomes are the same, they are adjacent, and their distances are in the same direction we merge them
+            if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
+                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+                mergedStarts = list(zip(*lociToMerge))[1]
+                mergedEnds = list(zip(*lociToMerge))[2]
+
+                if not(locationArr[i, 1] in mergedStarts or locationArr[j, 2] in mergedEnds
+                    or locationArr[j, 1] in mergedEnds or locationArr[i, 2] in mergedStarts):
+                    lociToMerge.append([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]])
+
+            elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 \
+                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+                mergedStarts = list(zip(*lociToMerge))[1]
+                mergedEnds = list(zip(*lociToMerge))[2]
+
+                if not(locationArr[j, 1] in mergedStarts or locationArr[i, 2] in mergedEnds
+                    or locationArr[i, 1] in mergedEnds or locationArr[j, 2] in mergedStarts):
+                    lociToMerge.append([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2]])
+
+    for mergeIndex in range(1, len(lociToMerge)):
+        i = np.where((locationArr[:, 1] == lociToMerge[mergeIndex][1]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
+        j = np.where((locationArr[:, 2] == lociToMerge[mergeIndex][2]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
+        
+        # The new merged distance is the larger of the two distances 
+        # (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
+        mergedLocation = np.concatenate((locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]), axis=None).reshape(1, 3)
+        mergedLocation = np.concatenate((locationArr[min(i, j), 0], locationArr[i, 1], locationArr[j, 2], locationArr[min(i, j), 3:]), axis=None).reshape(1, locationArr.shape[1])
+        locationArr = np.delete(locationArr, [i, j], axis=0)
+        locationArr = np.insert(locationArr, min(i, j), mergedLocation, axis=0)
     return locationArr
 
 

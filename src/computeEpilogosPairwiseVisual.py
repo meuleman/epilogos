@@ -163,7 +163,7 @@ def readInData(outputDirPath, numProcesses, numStates):
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Figuring out chromosome order
-    chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
+    chromosomes = diffDF['chr'].unique()
     rawChrNamesInts = []
     rawChrNamesStrs = []
     for chromosome in chromosomes:
@@ -785,112 +785,144 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     significantAt01 = .01 / nStar
 
     with open(filePath, 'w') as f:
-        print("stuck at finding significant", flush=True)
         # Pick values above significance threshold and then sort
         indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
-        print("Number of Significant values:", indices, flush=True)
-        print("stuck at making sure there are > 1000", flush=True)
         # Make sure that there are at least 1000 values if creating greatestHits.txt
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
-        print("stuck at concatenating locations", flush=True)
 
-        locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-            maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
+        locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
+            maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
+            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])
 
-        print("locations dimensions:", locations.shape, flush=True)
+        # Figuring out chromosome order
+        chromosomes = locations['chr'].unique()
+        rawChrNamesInts = []
+        rawChrNamesStrs = []
+        for chromosome in chromosomes:
+            try:
+                rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+            except ValueError:
+                rawChrNamesStrs.append(chromosome.split("chr")[-1])
+        rawChrNamesInts.sort()
+        rawChrNamesStrs.sort()
+        chrOrder = rawChrNamesInts + rawChrNamesStrs
+        for i in range(len(chrOrder)):
+            chrOrder[i] = "chr" + str(chrOrder[i])
 
-        print("stuck at merging", flush=True)
+
+        # Sorting the dataframes by chromosomal location
+        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
+        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+
 
         # Iterate until all is merged, but only for the general case
-        if not onlySignificant:
-            while(hasAdjacent(locations)):
-                locations = mergeAdjacent(locations)
+        # if not onlySignificant:
+        #     while(hasAdjacent(locations)):
+        #         locations = mergeAdjacent(locations)
 
-        print("stuck at stars", flush=True)
+        if not onlySignificant:
+            t = time()
+            locations = mergeAdjacent(locations)
+            print("Merge Time:", time() - t)
+
+        locations = locations.iloc[-locations["distance"].abs().argsort()]
+
+        # locations.sort_values(by=["distance", "chr", "binStart", "binEnd"], inplace=True, ascending=False)
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
-        stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else
-            ("**" if float(locations[i, 5]) <= significantAt05 else
-                ("*" if float(locations[i, 5]) <= significantAt1 else "."))
+        stars = np.array(["***" if float(locations.iloc[i, 5]) <= significantAt01 else
+            ("**" if float(locations.iloc[i, 5]) <= significantAt05 else
+                ("*" if float(locations.iloc[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
 
-        print("stuck at writing", flush=True)
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"
-        outString = "".join(outTemplate.format(locations[i], nameArr[int(float(locations[i, 4])) - 1],
-            abs(float(locations[i, 3])), findSign(float(locations[i, 3])), float(locations[i, 5]), stars[i, 0])
+        outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
+            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations[i, 5]), stars[i, 0])
                 for i in range(locations.shape[0] if onlySignificant else 100))
         f.write(outString)
 
 
-def hasAdjacent(locationArr):
-    """
-    Determines whether there are adjacent loci in the input array
+# def hasAdjacent(locationArr):
+#     """
+#     Determines whether there are adjacent loci in the input array
 
-    Input:
-    locationArr -- Numpy array containing genomic loci in the first 3 columns
+#     Input:
+#     locationArr -- Numpy array containing genomic loci in the first 3 columns
 
-    Output:
-    True if there are directly adjacent loci in the input array and False otherwise
-    """
-    # Checks each location against every other location
-    for i in range(locationArr.shape[0]):
-        for j in range(locationArr.shape[0]):
-            # If the chromosomes are the same and they are adjacent return True
-            # Also check if the distance is in the same direction
-            if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-                or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0) \
-                    and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                return True
-    # If we have gotten through everything and not found adjacent locations, return false
-    return False
+#     Output:
+#     True if there are directly adjacent loci in the input array and False otherwise
+#     """
+#     # Checks each location against every other location
+#     for i in range(locationArr.shape[0]):
+#         for j in range(locationArr.shape[0]):
+#             # If the chromosomes are the same and they are adjacent return True
+#             # Also check if the distance is in the same direction
+#             if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
+#                 or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0) \
+#                     and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+#                 return True
+#     # If we have gotten through everything and not found adjacent locations, return false
+#     return False
     
 
-def mergeAdjacent(locationArr):
-    """
-    Merges all adjacent loci (which haven't already been merged in this function call) found in the input array
+# def mergeAdjacent(locationArr):
+#     """
+#     Merges all adjacent loci (which haven't already been merged in this function call) found in the input array
 
-    Input:
-    locationArr -- Numpy array containing genomic loci in the first 3 columns
+#     Input:
+#     locationArr -- Numpy array containing genomic loci in the first 3 columns
 
-    Output:
-    Array with merged loci
-    """
-    lociToMerge = [["null", "null", "null"]]
-    for i in range(locationArr.shape[0]):
-        for j in range(i + 1, locationArr.shape[0]):
-            # If the chromosomes are the same, they are adjacent, and their distances are in the same direction we merge them
-            if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedStarts = list(zip(*lociToMerge))[1]
-                mergedEnds = list(zip(*lociToMerge))[2]
+#     Output:
+#     Array with merged loci
+#     """
+#     lociToMerge = [["null", "null", "null"]]
+#     for i in range(locationArr.shape[0]):
+#         for j in range(i + 1, locationArr.shape[0]):
+#             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction we merge them
+#             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
+#                 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+#                 mergedStarts = list(zip(*lociToMerge))[1]
+#                 mergedEnds = list(zip(*lociToMerge))[2]
 
-                if not(locationArr[i, 1] in mergedStarts or locationArr[j, 2] in mergedEnds
-                    or locationArr[j, 1] in mergedEnds or locationArr[i, 2] in mergedStarts):
-                    lociToMerge.append([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]])
+#                 if not(locationArr[i, 1] in mergedStarts or locationArr[j, 2] in mergedEnds
+#                     or locationArr[j, 1] in mergedEnds or locationArr[i, 2] in mergedStarts):
+#                     lociToMerge.append([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]])
 
-            elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 \
-                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedStarts = list(zip(*lociToMerge))[1]
-                mergedEnds = list(zip(*lociToMerge))[2]
+#             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 \
+#                 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
+#                 mergedStarts = list(zip(*lociToMerge))[1]
+#                 mergedEnds = list(zip(*lociToMerge))[2]
 
-                if not(locationArr[j, 1] in mergedStarts or locationArr[i, 2] in mergedEnds
-                    or locationArr[i, 1] in mergedEnds or locationArr[j, 2] in mergedStarts):
-                    lociToMerge.append([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2]])
+#                 if not(locationArr[j, 1] in mergedStarts or locationArr[i, 2] in mergedEnds
+#                     or locationArr[i, 1] in mergedEnds or locationArr[j, 2] in mergedStarts):
+#                     lociToMerge.append([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2]])
 
-    for mergeIndex in range(1, len(lociToMerge)):
-        i = np.where((locationArr[:, 1] == lociToMerge[mergeIndex][1]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
-        j = np.where((locationArr[:, 2] == lociToMerge[mergeIndex][2]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
+#     for mergeIndex in range(1, len(lociToMerge)):
+#         i = np.where((locationArr[:, 1] == lociToMerge[mergeIndex][1]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
+#         j = np.where((locationArr[:, 2] == lociToMerge[mergeIndex][2]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
         
-        # The new merged distance is the larger of the two distances 
-        # (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
-        mergedLocation = np.concatenate((locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]), axis=None).reshape(1, 3)
-        mergedLocation = np.concatenate((locationArr[min(i, j), 0], locationArr[i, 1], locationArr[j, 2], locationArr[min(i, j), 3:]), axis=None).reshape(1, locationArr.shape[1])
-        locationArr = np.delete(locationArr, [i, j], axis=0)
-        locationArr = np.insert(locationArr, min(i, j), mergedLocation, axis=0)
-    return locationArr
+#         # The new merged distance is the larger of the two distances 
+#         # (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
+#         mergedLocation = np.concatenate((locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]), axis=None).reshape(1, 3)
+#         mergedLocation = np.concatenate((locationArr[min(i, j), 0], locationArr[i, 1], locationArr[j, 2], locationArr[min(i, j), 3:]), axis=None).reshape(1, locationArr.shape[1])
+#         locationArr = np.delete(locationArr, [i, j], axis=0)
+#         locationArr = np.insert(locationArr, min(i, j), mergedLocation, axis=0)
+#     return locationArr
+
+def mergeAdjacent(originalLocations):
+    i = 0
+    mergedLocations = []
+    while i < len(originalLocations) - 1:
+        j = 1
+        while i < len(originalLocations) - 1 and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+            j += 1
+        maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
+        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] + list(originalLocations.iloc[maxDistIndex, 3:]))
+        i += j
+    return pd.DataFrame(mergedLocations, columns=['chr', 'binStart', 'binEnd', 'distance'])
 
 
 def findSign(x):

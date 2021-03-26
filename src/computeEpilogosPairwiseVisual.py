@@ -70,24 +70,24 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
 
     # Creating Diagnostic Figures
     if diagnosticBool:
-        if verbose: print("Creating diagnostic figures..."); tDiagnostic = time()
+        if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
         else: print("    Diagnostic figures\t", end="", flush=True)
         createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-        if verbose: print("    Time:", time() - tDiagnostic)
+        if verbose: print("    Time:", time() - tDiagnostic, flush=True)
         else: print("\t[Done]", flush=True)
 
     # Calculating PValues
-    if verbose: print("Calculating P-Values..."); tPVal = time()
+    if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
     else: print("    Calculating p-vals\t", end="", flush=True)
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    if verbose: print("    Time:", time() - tPVal)
+    if verbose: print("    Time:", time() - tPVal, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
-    if verbose: print("Writing metrics file..."); tMetrics = time()
+    if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
     else: print("    Writing metrics\t", end="", flush=True)
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tMetrics)
+    if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
@@ -96,35 +96,35 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     significanceThreshold = .1 / nStar
 
     # Create txt file of top 1000 loci with adjacent merged
-    if verbose: print("Creating .txt file of top loci..."); t1000 = time()
+    if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
-    if verbose: print("    Time:", time() - t1000)
+    if verbose: print("    Time:", time() - t1000, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create txt file of significant loci
-    if verbose: print("Creating .txt file of significant loci..."); tSig = time()
+    if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
     else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
-    if verbose: print("    Time:", time() - tSig)
+    if verbose: print("    Time:", time() - tSig, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create Genome Manhattan Plot
-    if verbose: print("Creating Genome-Wide Manhattan Plot"); tGManhattan = time()
+    if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
     else: print("    Genome-wide Manhattan\t", end="", flush=True)
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tGManhattan)
+    if verbose: print("    Time:", time() - tGManhattan, flush=True)
     else: print("\t[Done]", flush=True)
     
     # Create Chromosome Manhattan Plot
-    if verbose: print("Creating Individual Chromosome Manhattan Plots"); tCManhattan = time()
+    if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
     else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    if verbose: print("    Time:", time() - tCManhattan)
+    if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
 
     if verbose: print("Total Time:", time() - tTotal, flush=True)

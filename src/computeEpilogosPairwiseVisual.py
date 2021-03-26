@@ -923,7 +923,7 @@ def mergeAdjacent(originalLocations):
         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] + list(originalLocations.iloc[maxDistIndex, 3:]))
         i += j
-    return pd.DataFrame(mergedLocations, columns=['chr', 'binStart', 'binEnd', 'distance'])
+    return pd.DataFrame(mergedLocations, columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])
 
 
 def findSign(x):

@@ -808,11 +808,11 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
                 locations1 = mergeAdjacent1(locations)
             print("New Time:", time() - tNew)
 
-            print("locationArr == locationArr1 SHAPE:", locationArr.shape[0] == locations1.shape[0])
-            print("locationArr == locationArr1 ALL", np.all(locationArr == locations1))
+            print("locationArr == locationArr1 SHAPE:", locations.shape[0] == locations1.shape[0])
+            print("locationArr == locationArr1 ALL", np.all(locations == locations1))
 
             b = True
-            for row in locationArr:
+            for row in locations:
                 if not row in locations1:
                     b = False
             print("locationArr == locationArr1 Values:", b)

@@ -794,28 +794,10 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
 
-        locations1 = np.copy(locations)
-
         # Iterate until all is merged, but only for the general case
         if not onlySignificant:
-            tOriginal = time()
             while(hasAdjacent(locations)):
                 locations = mergeAdjacent(locations)
-            print("Original Time:", time() - tOriginal)
-
-            tNew = time()
-            while(hasAdjacent(locations1)):
-                locations1 = mergeAdjacent1(locations)
-            print("New Time:", time() - tNew)
-
-            print("locationArr == locationArr1 SHAPE:", locations.shape[0] == locations1.shape[0])
-            print("locationArr == locationArr1 ALL", np.all(locations == locations1))
-
-            b = True
-            for row in locations:
-                if not row in locations1:
-                    b = False
-            print("locationArr == locationArr1 Values:", b)
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
         stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else
@@ -853,41 +835,9 @@ def hasAdjacent(locationArr):
                 return True
     # If we have gotten through everything and not found adjacent locations, return false
     return False
-
+    
 
 def mergeAdjacent(locationArr):
-    """
-    Merges the first two adjacent loci found in the input array
-
-    Input:
-    locationArr -- Numpy array containing genomic loci in the first 3 columns
-
-    Output:
-    Array with merged loci
-    """
-    for i in range(locationArr.shape[0]):
-        for j in range(locationArr.shape[0]):
-            # If the chromosomes are the same, they are adjacent, and their distances are in the same direction 
-            # merge and delete the originals
-            # The new merged distance is the larger of the two distances 
-            # (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
-            if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((locationArr[i, :2], locationArr[j, 2], locationArr[i, 3:]), axis=None)\
-                    .reshape(1, locationArr.shape[1])
-                locationArr = np.delete(locationArr, [i, j], axis=0)
-                locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
-                return locationArr
-            elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 \
-                and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-                mergedLocation = np.concatenate((locationArr[i, 0], locationArr[j, 1], locationArr[i, 2:]), axis=None)\
-                    .reshape(1, locationArr.shape[1])
-                locationArr = np.delete(locationArr, [i, j], axis=0)
-                locationArr = np.insert(locationArr, i, mergedLocation, axis=0)
-                return locationArr
-    return locationArr
-
-def mergeAdjacent1(locationArr):
     """
     Merges all adjacent loci (which haven't already been merged in this function call) found in the input array
 

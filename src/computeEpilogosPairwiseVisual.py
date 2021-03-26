@@ -785,19 +785,29 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     significantAt01 = .01 / nStar
 
     with open(filePath, 'w') as f:
+        print("stuck at finding significant")
         # Pick values above significance threshold and then sort
         indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
+        print("Number of Significant values:", indices)
+        print("stuck at making sure there are > 1000")
         # Make sure that there are at least 1000 values if creating greatestHits.txt
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
+        print("stuck at concatenating locations")
 
         locations = np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1)
+
+        print("locations dimensions:", locations.shape)
+
+        print("stuck at merging")
 
         # Iterate until all is merged, but only for the general case
         if not onlySignificant:
             while(hasAdjacent(locations)):
                 locations = mergeAdjacent(locations)
+
+        print("stuck at stars")
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
         stars = np.array(["***" if float(locations[i, 5]) <= significantAt01 else
@@ -805,6 +815,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
                 ("*" if float(locations[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
 
+        print("stuck at writing")
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"

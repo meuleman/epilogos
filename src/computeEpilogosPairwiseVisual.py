@@ -793,7 +793,8 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])
+            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
+                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
 
         # Figuring out chromosome order
         chromosomes = locations['chr'].unique()

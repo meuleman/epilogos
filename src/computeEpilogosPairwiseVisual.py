@@ -825,7 +825,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         if not onlySignificant:
             locations = mergeAdjacent(locations)
 
-        locations = locations.iloc[-locations["distance"].abs().argsort()]
+        locations = locations.iloc[-locations.loc[:, 3].abs().argsort()]
 
         # locations.sort_values(by=["distance", "chr", "binStart", "binEnd"], inplace=True, ascending=False)
 
@@ -921,7 +921,7 @@ def mergeAdjacent(originalLocations):
         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] + list(originalLocations.iloc[maxDistIndex, 3:]))
         i += j
-    return pd.DataFrame(mergedLocations, columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])
+    return pd.DataFrame(mergedLocations)
 
 
 def findSign(x):

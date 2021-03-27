@@ -1,10 +1,11 @@
 from sys import argv
-from computeEpilogosPairwiseVisual import hasAdjacent, mergeAdjacent, findSign
+from computeEpilogosPairwiseVisual import mergeAdjacent, findSign
 from epilogosHelpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time
 from os import remove
+import pandas as pd
 
 def main(outputDir, stateInfo, fileTag, verbose):
     """
@@ -116,12 +117,35 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         # Sort the values
         indices = (-np.abs(scoreArr)).argsort()[:1000]
 
-        locations = np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
-            maxScoreArr[indices].reshape(len(indices), 1)), axis=1)
+        locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
+            maxScoreArr[indices].reshape(len(indices), 1)), axis=1), 
+            columns=["chr", "binStart", "binEnd", "score", "maxScoreLoc"])\
+                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32}))
+
+        # Figuring out chromosome order
+        chromosomes = locations['chr'].unique()
+        rawChrNamesInts = []
+        rawChrNamesStrs = []
+        for chromosome in chromosomes:
+            try:
+                rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+            except ValueError:
+                rawChrNamesStrs.append(chromosome.split("chr")[-1])
+        rawChrNamesInts.sort()
+        rawChrNamesStrs.sort()
+        chrOrder = rawChrNamesInts + rawChrNamesStrs
+        for i in range(len(chrOrder)):
+            chrOrder[i] = "chr" + str(chrOrder[i])
+
+
+        # Sorting the dataframes by chromosomal location
+        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
+        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
         # Iterate until all is merged
-        while(hasAdjacent(locations)):
-            locations = mergeAdjacent(locations)
+        locations = mergeAdjacent(locations)
+
+        locations = locations.iloc[-locations.loc[:, 3].abs().argsort()]
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"

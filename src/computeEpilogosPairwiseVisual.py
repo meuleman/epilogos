@@ -823,9 +823,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         #         locations = mergeAdjacent(locations)
 
         if not onlySignificant:
-            t = time()
             locations = mergeAdjacent(locations)
-            print("Merge Time:", time() - t)
 
         locations = locations.iloc[-locations["distance"].abs().argsort()]
 

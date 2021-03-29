@@ -916,7 +916,7 @@ def mergeAdjacent(originalLocations):
     mergedLocations = []
     while i < len(originalLocations) - 1:
         j = 1
-        while i < len(originalLocations) - 1 and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
             j += 1
         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] + list(originalLocations.iloc[maxDistIndex, 3:]))

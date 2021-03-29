@@ -145,7 +145,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         # Iterate until all is merged
         locations = mergeAdjacent(locations)
 
-        locations = locations.iloc[-locations.loc[:, 3].abs().argsort()]
+        locations = locations.iloc[-locations.iloc[:, 3].abs().argsort()]
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"

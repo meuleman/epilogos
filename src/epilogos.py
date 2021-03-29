@@ -488,6 +488,8 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             print("\nPlease find output and error logs in {} and {} respectively\n".format(outputDirPath / ".out", "/.err"))
             break
 
+        # Don't want to spam cluster with commands so sleep
+        # Sleep less time for saliency one since it is much faster
         if saliency == 1:
             sleep(2)
         else:

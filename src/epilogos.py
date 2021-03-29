@@ -390,10 +390,8 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
     if jobErrPath.exists():
         remove(jobErrPath)
     try:
-        jout = open(jobOutPath, 'x')
-        jout.close()
-        jerr = open(jobErrPath, 'x')
-        jerr.close()
+        jobOutPath.touch()
+        jobErrPath.touch()
     except FileExistsError as err:
         # This error should never occur because we are deleting the files first
         print(err)

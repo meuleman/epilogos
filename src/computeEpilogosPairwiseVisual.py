@@ -194,8 +194,8 @@ def readInData(outputDirPath, numProcesses, numStates):
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
     # Cleaning up the temp files after we've read them
-    # for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-    #     remove(file)
+    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+        remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -844,82 +844,26 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         f.write(outString)
 
 
-# def hasAdjacent(locationArr):
-#     """
-#     Determines whether there are adjacent loci in the input array
-
-#     Input:
-#     locationArr -- Numpy array containing genomic loci in the first 3 columns
-
-#     Output:
-#     True if there are directly adjacent loci in the input array and False otherwise
-#     """
-#     # Checks each location against every other location
-#     for i in range(locationArr.shape[0]):
-#         for j in range(locationArr.shape[0]):
-#             # If the chromosomes are the same and they are adjacent return True
-#             # Also check if the distance is in the same direction
-#             if locationArr[i, 0] == locationArr[j, 0] and (int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-#                 or int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0) \
-#                     and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-#                 return True
-#     # If we have gotten through everything and not found adjacent locations, return false
-#     return False
-    
-
-# def mergeAdjacent(locationArr):
-#     """
-#     Merges all adjacent loci (which haven't already been merged in this function call) found in the input array
-
-#     Input:
-#     locationArr -- Numpy array containing genomic loci in the first 3 columns
-
-#     Output:
-#     Array with merged loci
-#     """
-#     lociToMerge = [["null", "null", "null"]]
-#     for i in range(locationArr.shape[0]):
-#         for j in range(i + 1, locationArr.shape[0]):
-#             # If the chromosomes are the same, they are adjacent, and their distances are in the same direction we merge them
-#             if locationArr[i, 0] == locationArr[j, 0] and int(locationArr[i, 2]) - int(locationArr[j, 1]) == 0 \
-#                 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-#                 mergedStarts = list(zip(*lociToMerge))[1]
-#                 mergedEnds = list(zip(*lociToMerge))[2]
-
-#                 if not(locationArr[i, 1] in mergedStarts or locationArr[j, 2] in mergedEnds
-#                     or locationArr[j, 1] in mergedEnds or locationArr[i, 2] in mergedStarts):
-#                     lociToMerge.append([locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]])
-
-#             elif locationArr[i, 0] == locationArr[j, 0] and int(locationArr[j, 2]) - int(locationArr[i, 1]) == 0 \
-#                 and np.sign(float(locationArr[i, 3])) == np.sign(float(locationArr[j, 3])):
-#                 mergedStarts = list(zip(*lociToMerge))[1]
-#                 mergedEnds = list(zip(*lociToMerge))[2]
-
-#                 if not(locationArr[j, 1] in mergedStarts or locationArr[i, 2] in mergedEnds
-#                     or locationArr[i, 1] in mergedEnds or locationArr[j, 2] in mergedStarts):
-#                     lociToMerge.append([locationArr[i, 0], locationArr[j, 1], locationArr[i, 2]])
-
-#     for mergeIndex in range(1, len(lociToMerge)):
-#         i = np.where((locationArr[:, 1] == lociToMerge[mergeIndex][1]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
-#         j = np.where((locationArr[:, 2] == lociToMerge[mergeIndex][2]) & (locationArr[:, 0] == lociToMerge[mergeIndex][0]))[0]
-        
-#         # The new merged distance is the larger of the two distances 
-#         # (can use the fact that locationArr is sorted by distance and that i < j whenever adjacency is found)
-#         mergedLocation = np.concatenate((locationArr[i, 0], locationArr[i, 1], locationArr[j, 2]), axis=None).reshape(1, 3)
-#         mergedLocation = np.concatenate((locationArr[min(i, j), 0], locationArr[i, 1], locationArr[j, 2], locationArr[min(i, j), 3:]), axis=None).reshape(1, locationArr.shape[1])
-#         locationArr = np.delete(locationArr, [i, j], axis=0)
-#         locationArr = np.insert(locationArr, min(i, j), mergedLocation, axis=0)
-#     return locationArr
-
 def mergeAdjacent(originalLocations):
+    """
+    Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
+
+    Input:
+    locationArr -- pandas dataframe containing genomic loci in the first 3 columns
+
+    Output:
+    dataframe with merged loci
+    """
     i = 0
     mergedLocations = []
     while i < len(originalLocations) - 1:
         j = 1
-        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
+            and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
             j += 1
         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
-        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] + list(originalLocations.iloc[maxDistIndex, 3:]))
+        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
+                               + list(originalLocations.iloc[maxDistIndex, 3:]))
         i += j
     return pd.DataFrame(mergedLocations)
 

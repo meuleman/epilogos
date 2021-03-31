@@ -86,7 +86,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p><code>$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male_s1.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> in <code>OUTPUTDIR</code></p>
 
@@ -102,11 +104,13 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos for this sample data run one of the following commands (depending on the desired saliency metric) within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p>Saliency 1: <code>$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+Saliency 1: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-<p>Saliency 2: <code>$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2</code></p>
+Saliency 2: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-<p>Saliency 3: <code>$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3</code></p>
+Saliency 3: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
+```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code>, <code>scores_male_s2_epilogos_matrix_chr1.txt.gz</code>, or <code>scores_male_s3_epilogos_matrix_chr1.txt.gz</code> depending on the saliency metric you chose. in <code>OUTPUTDIR</code></p>
 
@@ -125,7 +129,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
-<p><code>$ epilogos -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR</code></p>
+```bash
+$ epilogos -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+```
 
 </details>
 
@@ -140,7 +146,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p><code>$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male_s1.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> in <code>OUTPUTDIR</code></p>
 
@@ -156,11 +164,13 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos for this sample data run one of the following commands (depending on the desired saliency metric) within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p>Saliency 1: <code>$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+Saliency 1: $ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-<p>Saliency 2: <code>$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2</code></p>
+Saliency 2: $ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-<p>Saliency 3: <code>$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3</code></p>
+Saliency 3: $ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
+```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code>, <code>scores_male_s2_epilogos_matrix_chr1.txt.gz</code>, or <code>scores_male_s3_epilogos_matrix_chr1.txt.gz</code> depending on the saliency metric you chose. in <code>OUTPUTDIR</code></p>
 
@@ -179,7 +189,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
-<p><code>$ epilogos -l -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR</code></p>
+```bash
+$ epilogos -l -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+```
 
 </details>
 
@@ -240,11 +252,13 @@ Note that tsv must contain a header row with the exact names above and that valu
 <p></p>
 <p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The <code>-l</code> flag to the coordination script allows one to choose one of three possible metrics:</p>
 
-<p><code>1. Metric S1, implementing a standard Kullback-Leibler relative entropy</code></p>
+```
+1. Metric S1, implementing a standard Kullback-Leibler relative entropy
 
-<p><code>2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns</code></p>
+2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
 
-<p><code>3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities</code></p>
+3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
+```
 
 <p>
 Note that each increase in saliency level involves much more computation and thus each increase requires more time and computational power.
@@ -343,7 +357,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p><code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
@@ -359,12 +375,12 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos for this sample data run one of the following commands (depending on the desired saliency metric) within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-```
-<p>Saliency 1: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+Saliency 1: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-<p>Saliency 2: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2</code></p>
+Saliency 2: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-<p>Saliency 3: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3</code></p>
+Saliency 3: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
 ```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s$_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s$.txt.gz</code>, <code>greatestHits_male_female_s$.bed</code>, and <code>exp_freq_male_female_s$.npy</code> as well as the directory <code>manhattanPlots_male_female_s$</code> (where $ is replaced with the saliency metric you chose) in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
@@ -384,7 +400,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
-<p><code>$ epilogos -m paired -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR</code></p>
+```bash
+$ epilogos -m paired -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+```
 
 </details>
 
@@ -400,7 +418,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p><code>$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
@@ -416,11 +436,13 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos for this sample data run one of the following commands (depending on the desired saliency metric) within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
-<p>Saliency 1: <code>$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
+```bash
+Saliency 1: $ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-<p>Saliency 2: <code>$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2</code></p>
+Saliency 2: $ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-<p>Saliency 3: <code>$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3</code></p>
+Saliency 3: $ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
+```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s$_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s$.txt.gz</code>, <code>greatestHits_male_female_s$.bed</code>, and <code>exp_freq_male_female_s$.npy</code> as well as the directory <code>manhattanPlots_male_female_s$</code> (where $ is replaced with the saliency metric you chose) in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
@@ -439,7 +461,9 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
-<p><code>$ epilogos -m paired -l -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR</code></p>
+```bash
+$ epilogos -m paired -l -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+```
 
 </details>
 
@@ -516,11 +540,14 @@ Note that tsv must contain a header row with the exact names above and that valu
 <details><summary><b> Saliency Level [-s, --saliency]</b></summary>
 <p></p>
 <p>Epilogos implements information-theoretic metrics to quantify saliency levels of datasets. The <code>-l</code> flag to the coordination script allows one to choose one of three possible metrics:</p>
-<code>1. Metric S1, implementing a standard Kullback-Leibler relative entropy</code>
 
-<code>2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns</code>
+```
+1. Metric S1, implementing a standard Kullback-Leibler relative entropy
 
-<code>3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities</code>
+2. Metric S2, implementing a version of S1 that additionally models label co-occurrence patterns
+
+3. Metric S3, implementing a version of S2 that additionally models between-biosample similarities
+```
 
 <p>
 Note that each increase in saliency level involves much more computation and thus each increase requires more time and computational power.

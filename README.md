@@ -270,6 +270,9 @@ The argument to this flag is an integer number of cores you would like to utiliz
 <p>By default <code>src/computeEpilogosSlurm.py</code> only exits after it has completed all slurm jobs and prints progress updates to the console. If you would like the program to instead exit when all jobs are submitted (allowing use of the terminal while the jobs are running), enable this flag.</p>
 </details>
 
+<br>
+<br>
+
 <a name="pairwise-epilogos"></a>
 
 <h2 align="center">
@@ -356,11 +359,13 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 
 <p>To compute epilogos for this sample data run one of the following commands (depending on the desired saliency metric) within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
+```
 <p>Saliency 1: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR</code></p>
 
 <p>Saliency 2: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2</code></p>
 
 <p>Saliency 3: <code>$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3</code></p>
+```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s$_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s$.txt.gz</code>, <code>greatestHits_male_female_s$.bed</code>, and <code>exp_freq_male_female_s$.npy</code> as well as the directory <code>manhattanPlots_male_female_s$</code> (where $ is replaced with the saliency metric you chose) in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 

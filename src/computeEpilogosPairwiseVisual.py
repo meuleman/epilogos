@@ -792,13 +792,19 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
 
+        # locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
+        #     maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
+        #     columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
+        #         .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
+
         locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
-                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
+            columns=["Chromosome", "Start", "End", "distance", "maxDiffLoc", "pval"])\
+                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
 
         # Figuring out chromosome order
-        chromosomes = locations['chr'].unique()
+        # chromosomes = locations['chr'].unique()
+        chromosomes = locations['Chromosome'].unique()
         rawChrNamesInts = []
         rawChrNamesStrs = []
         for chromosome in chromosomes:
@@ -814,8 +820,11 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
 
         # Sorting the dataframes by chromosomal location
-        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
-        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+        # locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
+        # locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+
+        locations["chr"] = pd.Categorical(locations["Chromosome"], categories=chrOrder, ordered=True)
+        locations.sort_values(by=["Chromosome", "Start", "End"], inplace=True)
 
 
         # Iterate until all is merged, but only for the general case

@@ -12,6 +12,7 @@ from contextlib import closing
 from itertools import repeat
 from os import remove
 from epilogosHelpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
+import pyranges as pr
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
@@ -824,6 +825,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
         if not onlySignificant:
             tMerge = time()
+            locations = pr.PyRanges(locations)
             locations = mergeAdjacent(locations)
             print("TIME TO MERGE:", time() - tMerge)
 
@@ -846,28 +848,45 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         f.write(outString)
 
 
+# def mergeAdjacent(originalLocations):
+#     """
+#     Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
+
+#     Input:
+#     locationArr -- pandas dataframe containing genomic loci in the first 3 columns
+
+#     Output:
+#     dataframe with merged loci
+#     """
+#     i = 0
+#     mergedLocations = []
+#     while i < len(originalLocations) - 1:
+#         j = 1
+#         while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
+#             and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+#             j += 1
+#         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
+#         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
+#                                + list(originalLocations.iloc[maxDistIndex, 3:]))
+#         i += j
+#     return pd.DataFrame(mergedLocations)
+
 def mergeAdjacent(originalLocations):
-    """
-    Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
+    merged_data = originalLocations.merge()
+    join_merged_to_all = merged_data.join(originalLocations)
 
-    Input:
-    locationArr -- pandas dataframe containing genomic loci in the first 3 columns
+    # res is a pyranges object
+    res = join_merged_to_all.apply(max_scoring_element)
+    # res.df is a pandas dataframe
+    return res.df
 
-    Output:
-    dataframe with merged loci
-    """
-    i = 0
-    mergedLocations = []
-    while i < len(originalLocations) - 1:
-        j = 1
-        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
-            and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
-            j += 1
-        maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
-        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
-                               + list(originalLocations.iloc[maxDistIndex, 3:]))
-        i += j
-    return pd.DataFrame(mergedLocations)
+def max_scoring_element(df):
+    return df \
+        .sort_values('Score', ascending=False) \
+        .drop_duplicates(['Chromosome', 'Start', 'End', 'Strand'], keep='first') \
+        .sort_index() \
+        .reset_index(drop=True)
+
 
 
 def findSign(x):

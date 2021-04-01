@@ -891,8 +891,8 @@ def mergeAdjacent(originalLocations):
 
 def max_scoring_element(df):
     return df \
-        .sort_values('Score', ascending=False) \
-        .drop_duplicates(['Chromosome', 'Start', 'End', 'Strand'], keep='first') \
+        .sort_values('distance', ascending=False) \
+        .drop_duplicates(['Chromosome', 'Start', 'End', 'maxDiffLoc', 'pval'], keep='first') \
         .sort_index() \
         .reset_index(drop=True)
 

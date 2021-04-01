@@ -17,7 +17,7 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 ---
 
 <h2 align="center">
-    INSERT TAGLINE HERE
+    Epilogos: information-theoretic navigation of multi-tissue functional genomic annotations
 </h2>
 
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.

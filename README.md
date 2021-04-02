@@ -5,7 +5,7 @@
 ---
 
 <h2 align="center">
-    INSERT TAGLINE HERE
+    Epilogos: information-theoretic navigation of multi-tissue functional genomic annotations
 </h2>
 
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.

@@ -5,7 +5,7 @@
 ---
 
 <h2 align="center">
-    Epilogos: information-theoretic navigation of multi-tissue functional genomic annotations
+    Information-theoretic navigation of multi-tissue functional genomic annotations
 </h2>
 
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
@@ -70,17 +70,17 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>~/epilogos/data/pyData/male/</code>. The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
+<p>Example data has been provided under <code>data/pyData/male/</code>. The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
-<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code></code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male_s1.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> in <code>OUTPUTDIR</code></p>
 
-<p>To customize your run of epilogos see the <a href="command-line-options">Command Line Options</a> of the <code>README</code></p>
+<p>To customize your run of epilogos see the <a href="#command-line-options">Command Line Options</a> of the <code>README</code></p>
 
 </details>
 
@@ -89,9 +89,9 @@ $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_83
 
 <p>In order to run Epilogos on your own data, you will need to do two things.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>~/epilogos/scripts/preprocess_data_ChromHMM.sh</code></p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code></p>
 
-<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>~/epilogos/data/state_metadata/</code> directory. For more information on the structure of these files see <code>~/epilogos/data/state_metadata/README.txt</code> or <a href="state-info">State Info [-n, --state-info]</a></p>
+<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>data/state_metadata/</code> directory. For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
@@ -108,17 +108,17 @@ $ epilogos -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>~/epilogos/data/pyData/male/</code>. The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
+<p>Example data has been provided under <code>data/pyData/male/</code>. The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
-<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code></code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -l -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
 <p>Upon completion of the run, you should see the files <code>exp_freq_male_s1.npy</code> and <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> in <code>OUTPUTDIR</code></p>
 
-<p>To customize your run of epilogos see the <a href="command-line-options">Command Line Options</a> of the <code>README</code></p>
+<p>To customize your run of epilogos see the <a href="#command-line-options">Command Line Options</a> of the <code>README</code></p>
 
 </details>
 
@@ -128,9 +128,9 @@ $ epilogos -l -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al
 
 <p>In order to run Epilogos on your own data, you will need to do two things.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>~/epilogos/scripts/preprocess_data_ChromHMM.sh</code></p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code></p>
 
-<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>~/epilogos/data/state_metadata/</code> directory. For more information on the structure of these files see <code>~/epilogos/data/state_metadata/README.txt</code> or <a href="state-info">State Info [-n, --state-info]</a></p>
+<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>data/state_metadata/</code> directory. For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
@@ -175,7 +175,7 @@ The argument to this flag is the path to the directory which contains the files 
 <details><summary><b> Output Directory [-o, --output-directory]</b></summary>
 <p></p>
 <p>
-The output of Epilogos will vary depending on the number of input files present in the input directory <a href="input-directory">[-i, --input-directory]</a>. All scores files will be gzipped txt files and of the format <code>scores_{}_s$_[].txt.gz</code> where <code>{}</code> is replaced with the input directory name, <code>$</code> is replaced with the saliency level, and <code>[]</code> is replaced with the name of the corresponding input file (extensions removed).</p>
+The output of Epilogos will vary depending on the number of input files present in the input directory <a href="#input-directory">[-i, --input-directory]</a>. All scores files will be gzipped txt files and of the format <code>scores_{}_s$_[].txt.gz</code> where <code>{}</code> is replaced with the input directory name, <code>$</code> is replaced with the saliency level, and <code>[]</code> is replaced with the name of the corresponding input file (extensions removed).</p>
 <p>
 The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.</p>
 </details>
@@ -184,9 +184,11 @@ The argument to this flag is the path to the directory to which you would like t
 <details><summary><b> State Info [-n, --state-info]</b></summary>
 <p></p>
 <p>The argument to this flag is a tab separated file specifying information about the state model being used. Example below (for more detail see <code>epilogos/data/state_metadata/README.md</code> or <code>epilogos/data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv</code></p>
+
 | zero_index | one_index | short_name | long_name | hex | rgba | color |
 |------------|-----------|------------|-----------|-----|------|-------|
 | 0 | 1 | TssA | Active TSS | #ff0000 | rgba(255,0,0,1) | Red |
+
 <p>
 Note that tsv must contain a header row with the exact names above and that values within the table should follow the same formatting as above.
 </p>
@@ -216,11 +218,11 @@ The arguement to this flag must be an integer <code>1, 2, or 3</code>. Note that
 <p>Example:</p>
 
 ```bash
-Saliency 1: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+Saliency 1: $ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-Saliency 2: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
+Saliency 2: $ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-Saliency 3: $ epilogos -i ./data/pyData/male/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
+Saliency 3: $ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
 ```
 
 </details>
@@ -283,17 +285,17 @@ By default, Epilogos assumes access to a computational cluster managed by [SLURM
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>~/epilogos/data/pyData/male/</code> and <code>~/epilogos/data/pyData/female/</code>. The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
+<p>Example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
-<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code></code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -m paired -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -m paired -a data/pyData/male/ -b data/pyData/female/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="#output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
-<p>To customize your run of epilogos see the <a href="command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
+<p>To customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
 
 </details>
 
@@ -302,9 +304,9 @@ $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/s
 
 <p>In order to run Epilogos on your own data, you will need to do two things.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>~/epilogos/scripts/preprocess_data_ChromHMM.sh</code></p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code></p>
 
-<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>~/epilogos/data/state_metadata/</code> directory. For more information on the structure of these files see <code>~/epilogos/data/state_metadata/README.txt</code> or <a href="state-info">State Info [-n, --state-info]</a></p>
+<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>data/state_metadata/</code> directory. For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
@@ -322,17 +324,17 @@ $ epilogos -m paired -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n P
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>~/epilogos/data/pyData/male/</code> and <code>~/epilogos/data/pyData/female/</code>. The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
+<p>Example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1. The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">BOIX dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
-<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>~/epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code></code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>greatestHits_male_female_s1.bed</code>, and <code>exp_freq_male_female_s1.npy</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>. For further explanation of the contents of these outputs see <a href="#output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
-<p>To customize your run of epilogos see the <a href="command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
+<p>To customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
 
 </details>
 
@@ -341,9 +343,9 @@ $ epilogos -m paired -l -a ./data/pyData/male/ -b ./data/pyData/female/ -n ./dat
 
 <p>In order to run Epilogos on your own data, you will need to do two things.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>~/epilogos/scripts/preprocess_data_ChromHMM.sh</code></p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code></p>
 
-<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>~/epilogos/data/state_metadata/</code> directory. For more information on the structure of these files see <code>~/epilogos/data/state_metadata/README.txt</code> or <a href="state-info">State Info [-n, --state-info]</a></p>
+<p>Second, you will need to create a state info file. This is a tab separated file which tells epilogos various information about each of the states in the state model. We have provided some files already for common models in the <code>data/state_metadata/</code> directory. For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
 
 <p>Once you have completed these two things, you can run epilogos with the following command:</p>
 
@@ -394,7 +396,7 @@ The argument to this flag either <code>single</code> or <code>paired</code> as t
 <a name="output-directory-pairwise"></a>
 <details><summary><b> Output Directory [-o, --output-directory]</b></summary>
 <p></p>
-<p>The output of paired group Epilogos will vary depending on the number of input files present in the input directories <a href="#directory-one">[-a, --directory-one]</a><a href="#directory-two">[-b, --directory-two]</a>. All score difference files will be gzipped txt files and of the format <code>pairwiseDelta_{}_()_s$_[].txt.gz</code> where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively, <code>$</code> is replaced with the saliency level, and <code>[]</code> is replaced with the name of the corresponding input file (extensions removed).</p>
+<p>The output of paired group Epilogos will vary depending on the number of input files present in the input directories <a href="#directory-one">[-a, --directory-one]</a> or <a href="#directory-two">[-b, --directory-two]</a>. All score difference files will be gzipped txt files and of the format <code>pairwiseDelta_{}_()_s$_[].txt.gz</code> where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively, <code>$</code> is replaced with the saliency level, and <code>[]</code> is replaced with the name of the corresponding input file (extensions removed).</p>
 
 <p>The output directory will contain one <code>pairwiseMetrics_{}_()_s$.txt.gz</code> file where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level. Columns 1-3 contain the locations, column 4 contains the state with the largest difference between the scores, column 5 contains the squared euclidean distance between the scores, and column 6 contains the p-value of this distance.</p>
 
@@ -404,7 +406,7 @@ The argument to this flag either <code>single</code> or <code>paired</code> as t
 
 <p>The output directory will contain one <code>manhattanPlots_{}_()_s$</code> directory where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level. This directory will contain all the manhattan plots generated by pairwise epilogos. These plots show the signed squared euclidean distances between groups 1 and 2 as well as the p-values of these distances. There is one genome-wide plot generated and another plot generate for each chromosome.</p>
 
-<p>Depending on the <a href="#diagnostic-figures">[-d, --diagnostic-figures] flag</a> the output directory may contain one <code>diagnosticPlots_{}_()_s$</code> directory where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level. This directory will contain diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data.</p>
+<p>Depending on the <a href="#diagnostic-figures">[-d, --diagnostic-figures]</a> flag the output directory may contain one <code>diagnosticFigures_{}_()_s$</code> directory where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level. This directory will contain diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data.</p>
 
 <p>The argument to this flag is the path to the directory to which you would like to output. Note that this <strong>CANNOT</strong> be the same as the input directory.</p>
 </details>
@@ -413,9 +415,11 @@ The argument to this flag either <code>single</code> or <code>paired</code> as t
 <details><summary><b> State Info [-n, --state-info]</b></summary>
 <p></p>
 <p>The argument to this flag is a tab separated file specifying information about the state model being used. Example below (for more detail see <code>epilogos/data/state_metadata/README.md</code> or <code>epilogos/data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv</code></p>
+
 | zero_index | one_index | short_name | long_name | hex | rgba | color |
 |------------|-----------|------------|-----------|-----|------|-------|
 | 0 | 1 | TssA | Active TSS | #ff0000 | rgba(255,0,0,1) | Red |
+
 <p>
 Note that tsv must contain a header row with the exact names above and that values within the table should follow the same formatting as above.
 </p>
@@ -446,11 +450,11 @@ The arguement to this flag must be an integer <code>1, 2, or 3</code>. Note that
 <p>Example:</p>
 
 ```bash
-Saliency 1: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+Saliency 1: $ epilogos -m paired -a data/pyData/male/ -b data/pydata/female/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 
-Saliency 2: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
+Saliency 2: $ epilogos -m paired -a data/pyData/male/ -b data/pydata/female/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 2
 
-Saliency 3: $ epilogos -m paired -a ./data/pyData/male/ -b ./data/pydata/female/ -n ./data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
+Saliency 3: $ epilogos -m paired -a data/pyData/male/ -b data/pydata/female/ -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR -s 3
 ```
 </details>
 
@@ -472,7 +476,7 @@ The argument to this flag is an integer number of cores you would like to utiliz
 <a name="diagnostic-figures"></a>
 <details><summary><b> Diagnostic Figures [-d, --diagnostic-figures]</b></summary>
 <p></p>
-<p>If this flag is enabled, Pairwise Epilogos will output diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data. These can be found in a sub-directory of the output directory named <code>manhattanPlots_{}_()_s$</code> directory where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level.</p>
+<p>If this flag is enabled, Pairwise Epilogos will output diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data. These can be found in a sub-directory of the output directory named <code>diagnosticFigures_{}_()_s$</code> directory where <code>{}</code> and <code>()</code> are replaced with the names of input directories one and two respectively and <code>$</code> is replaced with the saliency level.</p>
 </details>
 
 <a name="num-trials"></a>

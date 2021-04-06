@@ -493,7 +493,8 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             if "COMPLETED" in line and "allocation" not in line:
                 jobID = line.split()[0]
                 # Don't want to print if we have already printed
-                if jobID not in completedJobs and ".batch" not in jobID:
+                # Also ensure we're only printing jobs from correct step
+                if jobID not in completedJobs and ".batch" not in jobID and calculationStep in line:
                     completedJobs.append(jobID)
                     print(line, flush=True)
 

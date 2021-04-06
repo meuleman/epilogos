@@ -264,7 +264,7 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
     dataNull -- Pandas series containing the null distances filtered for quiescence
     """
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-    idx = np.where(quiescenceArr)[0]
+    idx = np.where(quiescenceArr == False)[0]
     print("Len of non quiescent bins", len(idx))
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])

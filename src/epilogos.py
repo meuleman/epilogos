@@ -76,6 +76,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Quiescent value is -1 from user input because states are read in to be -1 from their values
     quiescentVal = quiescentVal[0] - 1 if quiescentVal else numStates - 1
 
+    print("Quiescent Val:", quiescentVal)
 
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":

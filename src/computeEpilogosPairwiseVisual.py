@@ -856,6 +856,9 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
         locations = locations.iloc[-locations.iloc[:, 3].abs().argsort()]
 
+        print("end locations shape", locations.shape)
+        print("end locations", locations.head())
+
         # locations.sort_values(by=["distance", "chr", "binStart", "binEnd"], inplace=True, ascending=False)
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
@@ -863,6 +866,9 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
             ("**" if float(locations.iloc[i, 5]) <= significantAt05 else
                 ("*" if float(locations.iloc[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+
+        print("stars shape", stars.shape)
+
 
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt

@@ -54,15 +54,15 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # Read in observation files
     if verbose: print("\nReading in observation files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
     if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
     else: print("    Fitting distances\t", end="", flush=True)
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses,
-        outputDirPath, numTrials, samplingSize)
+    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
+        numTrials, samplingSize)
     if verbose: print("    Time:", time() - tFit, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -156,11 +156,11 @@ def readInData(outputDirPath, numProcesses, numStates):
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:
         results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"),
-            outputDirPath.glob("temp_nullDistances_*.npz"), repeat(realNames)))
+            outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz"), repeat(realNames)))
     pool.join()
 
     # Concatenating all chunks to the real differences dataframe
-    for diffDFChunk, _ in results:
+    for diffDFChunk, _, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Figuring out chromosome order
@@ -194,8 +194,16 @@ def readInData(outputDirPath, numProcesses, numStates):
         index = nullChunks[0].index(chrName)
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
+    # Creating quiescence array ordered by chromosome based on the read in chunks
+    quiescenceChunks = list(zip(*list(zip(*results))[2]))
+    index = quiescenceChunks[0].index(chrOrder[0])
+    quiescenceArr = quiescenceChunks[1][index]
+    for chrName in chrOrder[1:]:
+        index = quiescenceChunks[0].index(chrName)
+        quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
+
     # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_nullDistances_*.npz"):
+    for file in outputDirPath.glob("temp_*.npz"):
         remove(file)
 
     # Calculate the distance array for the real data
@@ -206,10 +214,10 @@ def readInData(outputDirPath, numProcesses, numStates):
     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
 
-    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr
+    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 
 
-def readTableMulti(realFile, nullFile, realNames):
+def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     """
     Reads in the real and null scores
 
@@ -224,12 +232,14 @@ def readTableMulti(realFile, nullFile, realNames):
                                                          distances
     """
     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
-    npzFile = np.load(Path(nullFile))
+    npzFileNull = np.load(Path(nullFile))
+    npzFileQuiescence = np.load(Path(quiescenceFile))
 
-    return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
+    return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
+                                                                                    npzFileQuiescence['quiescenceArr'])
 
 
-def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProcesses, outputDir, numTrials, samplingSize):
+def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
     """
     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
     on the negative loglikelihood function
@@ -237,10 +247,10 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     Input:
     distanceArrReal -- Numpy array containing the distances between the real scores
     distanceArrNull -- Numpy array containing the distances between the null scores
+    quiescenceArr -- Numpy array containing booleans informing us which bins to filter out
     diffArr -- Numpy array containing the raw differences between the real scores
     numStates -- The number of states in the state model
     numProcesses -- The number of cores to run on
-    outputDir -- The output directory for epilogos
     numTrials -- The number of fits to do
     samplingSize -- The amount of data to fit each time
 
@@ -251,8 +261,8 @@ def fitDistances(distanceArrReal, distanceArrNull, diffArr, numStates, numProces
     dataNull -- Pandas series containing the null distances filtered for quiescence
     """
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0
-        or np.any(diffArr[i] != np.zeros((numStates)))]
+    idx = np.where(quiescenceArr)[0]
+    print("Len of non quiescent bins", len(idx))
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 
@@ -792,15 +802,15 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
 
-        # locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-        #     maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-        #     columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
-        #         .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
-
         locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["Chromosome", "Start", "End", "distance", "maxDiffLoc", "pval"])\
-                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
+            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
+                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
+
+        # locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
+        #     maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
+        #     columns=["Chromosome", "Start", "End", "distance", "maxDiffLoc", "pval"])\
+        #         .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
 
         # Figuring out chromosome order
         # chromosomes = locations['chr'].unique()
@@ -820,23 +830,22 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
 
         # Sorting the dataframes by chromosomal location
-        # locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
-        # locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
+        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
 
-        locations["chr"] = pd.Categorical(locations["Chromosome"], categories=chrOrder, ordered=True)
-        locations.sort_values(by=["Chromosome", "Start", "End"], inplace=True)
+        # locations["chr"] = pd.Categorical(locations["Chromosome"], categories=chrOrder, ordered=True)
+        # locations.sort_values(by=["Chromosome", "Start", "End"], inplace=True)
 
 
         # Iterate until all is merged, but only for the general case
-        # if not onlySignificant:
-        #     while(hasAdjacent(locations)):
-        #         locations = mergeAdjacent(locations)
-
         if not onlySignificant:
-            tMerge = time()
-            locations = pr.PyRanges(locations)
             locations = mergeAdjacent(locations)
-            print("TIME TO MERGE:", time() - tMerge)
+
+        # if not onlySignificant:
+        #     tMerge = time()
+        #     locations = pr.PyRanges(locations)
+        #     locations = mergeAdjacent(locations)
+        #     print("TIME TO MERGE:", time() - tMerge)
 
         locations = locations.iloc[-locations.iloc[:, 3].abs().argsort()]
 
@@ -857,44 +866,44 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         f.write(outString)
 
 
-# def mergeAdjacent(originalLocations):
-#     """
-#     Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
-
-#     Input:
-#     locationArr -- pandas dataframe containing genomic loci in the first 3 columns
-
-#     Output:
-#     dataframe with merged loci
-#     """
-#     i = 0
-#     mergedLocations = []
-#     while i < len(originalLocations) - 1:
-#         j = 1
-#         while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
-#             and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
-#             j += 1
-#         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
-#         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
-#                                + list(originalLocations.iloc[maxDistIndex, 3:]))
-#         i += j
-#     return pd.DataFrame(mergedLocations)
-
 def mergeAdjacent(originalLocations):
-    merged_data = originalLocations.merge()
-    join_merged_to_all = merged_data.join(originalLocations)
+    """
+    Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
 
-    # res is a pyranges object
-    res = join_merged_to_all.apply(max_scoring_element)
-    # res.df is a pandas dataframe
-    return res.df
+    Input:
+    locationArr -- pandas dataframe containing genomic loci in the first 3 columns
 
-def max_scoring_element(df):
-    return df \
-        .sort_values('distance', ascending=False) \
-        .drop_duplicates(['Chromosome', 'Start', 'End', 'maxDiffLoc', 'pval'], keep='first') \
-        .sort_index() \
-        .reset_index(drop=True)
+    Output:
+    dataframe with merged loci
+    """
+    i = 0
+    mergedLocations = []
+    while i < len(originalLocations) - 1:
+        j = 1
+        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
+            and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+            j += 1
+        maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
+        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
+                               + list(originalLocations.iloc[maxDistIndex, 3:]))
+        i += j
+    return pd.DataFrame(mergedLocations)
+
+# def mergeAdjacent(originalLocations):
+#     merged_data = originalLocations.merge()
+#     join_merged_to_all = merged_data.join(originalLocations)
+
+#     # res is a pyranges object
+#     res = join_merged_to_all.apply(max_scoring_element)
+#     # res.df is a pandas dataframe
+#     return res.df
+
+# def max_scoring_element(df):
+#     return df \
+#         .sort_values('distance', ascending=False) \
+#         .drop_duplicates(['Chromosome', 'Start', 'End', 'maxDiffLoc', 'pval'], keep='first') \
+#         .sort_index() \
+#         .reset_index(drop=True)
 
 
 

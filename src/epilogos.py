@@ -29,40 +29,43 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 
 @click.command()
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
-    multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
-@click.option("-l", "--command-line", "commandLineBool", is_flag=True, multiple=True,
-    help="If enabled, Epilogos will run in your terminal rather than on a SLURM cluster")
+              multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
+@click.option("-l", "--cli", "commandLineBool", is_flag=True, multiple=True,
+              help="If enabled, Epilogos will run in your terminal rather than on a SLURM cluster")
 @click.option("-i", "--input-directory", "inputDirectory", type=str, multiple=True,
-    help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
+              help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-a", "--directory-one", "inputDirectory1", type=str, multiple=True,
-    help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
+              help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-b", "--directory-two", "inputDirectory2", type=str, multiple=True,
-    help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
+              help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, multiple=True,
-    help="Output Directory (CANNOT be the same as input directory)\n")
+              help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-n", "--state-info", "stateInfo", type=str, multiple=True, help="State model info file")
 @click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True,
-    help="Desired saliency level (1, 2, or 3)")
+              help="Desired saliency level (1, 2, or 3)")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True,
-    help="The number of cores to run on [default: 0 = Uses all cores]")
+              help="The number of cores to run on [default: 0 = Uses all cores]")
 @click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True,
-    help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
+              help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of all processes")
 @click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True,
-    help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
-        "comparisons between the null and real data")
+              help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
+                   "comparisons between the null and real data")
 @click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True,
-    help="The number of times subsamples of the scores are fit")
+              help="The number of times subsamples of the scores are fit")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
-    help="The size of the subsamples on which the scores are fit")
+              help="The size of the subsamples on which the scores are fit")
+@click.option("-q", "--quiescent-val", "quiescentVal", type=int, multiple=True, 
+              help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." + 
+                   "If set to 0, filtering is not done. [default: last state]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
+    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal):
     """
     Wrapper function that determines which epilogos functions to use and how to deploy them
     """
 
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-        numProcesses, exitBool, diagnosticBool, numTrials, samplingSize)
+        numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal)
     
     # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize = mode[0], outputDirectory[0], \
@@ -70,6 +73,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
+    # Quiescent value is -1 from user input because states are read in to be -1 from their values
+    quiescentVal = quiescentVal[0] - 1 if quiescentVal else numStates - 1
+
 
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":
@@ -90,7 +96,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentVal)
 
     # Informing user of their inputs
     print()
@@ -195,8 +201,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                     numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
-                    outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
+                    outputDirPath, storedExpPath, fileTag, numProcesses, quiescentVal, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
         else:
@@ -212,8 +218,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                     numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
-                pythonCommand = "python {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
-                    saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
+                    saliency, outputDirPath, storedExpPath, fileTag, numProcesses, quiescentVal, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                     saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
     
@@ -258,7 +264,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize):
+    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -266,11 +272,37 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     Input:
     See click options at top of script
     """
+    # Checking that all required flags are inputted
+    if mode[0] == "single" and not inputDirectory:
+        raise ValueError("[-i, --input-directory] required in 'single' group mode")
+    elif mode[0] == "paired" and not inputDirectory1:
+        raise ValueError("[-a, --directory-one] required in 'paired' group mode")
+    elif mode[0] == "paired" and not inputDirectory2:
+        raise ValueError("[-b, --directory-two] required in 'paired' group mode")
+    elif not outputDirectory:
+        raise ValueError("[-o, --output-directory] required")
+    elif not stateInfo:
+        raise ValueError("[-n, --state-info] required")
+
+    # Checking that incompatible flags are not input together
+    if mode[0] == "single" and inputDirectory1:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-a, --directory-one] option")
+    elif mode[0] == "single" and inputDirectory2:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
+    elif mode[0] == "single" and diagnosticBool:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
+    elif mode[0] == "single" and quiescentVal:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-q, --quiescent-val] flag")
+    elif mode[0] == "paired" and inputDirectory:
+        raise ValueError("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
+    elif commandLineBool and exitBool:
+        raise ValueError("[-l, --cli] flag not compatible with [-x, --exit] flag")
+
     # Checking if user inputs flag multiples times
     if len(mode) > 1:
         raise ValueError("Too many [-m, --mode] arguments provided")
     elif len(commandLineBool) > 1:
-        raise ValueError("Too many [-l, --command-line] arguments provided")
+        raise ValueError("Too many [-l, --cli] arguments provided")
     elif len(inputDirectory) > 1:
         raise ValueError("Too many [-i, --input-directory] arguments provided")
     elif len(inputDirectory1) > 1:
@@ -293,33 +325,11 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         raise ValueError("Too many [-t, --num-trials] arguments provided")
     elif len(samplingSize) > 1:
         raise ValueError("Too many [-z, --sampling-size] arguments provided")
-
-    # Checking that all required flags are inputted
-    if mode[0] == "single" and not inputDirectory:
-        raise ValueError("[-i, --input-directory] required in 'single' group mode")
-    elif mode[0] == "paired" and not inputDirectory1:
-        raise ValueError("[-a, --directory-one] required in 'paired' group mode")
-    elif mode[0] == "paired" and not inputDirectory2:
-        raise ValueError("[-b, --directory-two] required in 'paired' group mode")
-    elif not outputDirectory:
-        raise ValueError("[-o, --output-directory] required")
-    elif not stateInfo:
-        raise ValueError("[-n, --state-info] required")
-
-    # Checking that incompatible flags are not input together
-    if mode[0] == "single" and inputDirectory1:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-a, --directory-one] option")
-    elif mode[0] == "single" and inputDirectory2:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
-    elif mode[0] == "single" and diagnosticBool:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
-    elif mode[0] == "paired" and inputDirectory:
-        raise ValueError("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
-    elif commandLineBool and exitBool:
-        raise ValueError("[-l, --command-line] flag not compatible with [-x, --exit] flag")
+    elif len(quiescentVal) > 1:
+        raise ValueError("Too many [-z, --sampling-size] arguments provided")
 
 
-def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses):
+def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentVal):
     """
     Checks whether user submitted arguments have valid values
 
@@ -330,6 +340,8 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     inputDirPath2 -- The path to the second input directory in the paired epilogos case
     outputDirPath -- The path to the output directory for epilogos
     numProcesses -- The number of cores the user would like to use
+    numStates -- The number of states in the state model
+    quiescentVal -- The state used to filter out quiescent bins
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
@@ -361,6 +373,10 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     if numProcesses < 0:
         raise ValueError("Number of cores must be positive or zero (0 means use all cores)")
 
+    if quiescentVal < -1:
+        raise ValueError("Quiescent state value must be positive or zero (0 means do not filter)")
+    elif quiescentVal >= numStates:
+        raise ValueError("Quiescent state value must be a state provided in the state model")
 
 def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, numTasks, memory, dependency):
     """

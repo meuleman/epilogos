@@ -9,9 +9,10 @@ from itertools import repeat, permutations
 from contextlib import closing
 from epilogosHelpers import strToBool, splitRows, readStates
 import gzip
+from os import remove
 
 
-def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, verbose):
+def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentVal, verbose):
     """
     Wrapper function which prepares inputs for the score calculation
 
@@ -48,8 +49,11 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
             verbose)
     else:
         calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-            filename, numProcesses, verbose)
+            filename, numProcesses, quiescentVal, verbose)
     
+    # Delete expected frequency array as it's no longer needed
+    remove(expFreqPath)
+
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
 
@@ -65,18 +69,26 @@ def sharedToNumpy(sharedArr, numRows, numStates):
     return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
 
 
-def _init(sharedArr_):
+def _init(sharedArr_, expFreqPath_, verbose_):
     """
     Initializes global variables for multiprocessing in the single epilogos case
 
     Input:
     sharedArr_ -- A tuple containing relevant information about the shared score array
+    expFreqPath_ -- A pathlib path to the expected frequency array
+    verbose_ -- A boolean which tells us the amount we need to print
     """
     global sharedArr
+    global expFreqPath
+    global verbose
+
     sharedArr = sharedArr_
+    expFreqPath = expFreqPath_
+    verbose = verbose_
 
 
-def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, totalRows, numStates):
+def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, quiescenceSharedArr_, totalRows, 
+                  numStates, quiescentVal_, expFreqPath_, verbose_):
     """
     Initializes global variables for multiprocessing in the paired epilogos case
 
@@ -87,17 +99,27 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     shuffledSharedArr2_ -- The second shared null score array
     totalRows -- The number of rows of the input files
     numStates -- The number of states in the state model
+    quiescentVal_ -- The state used to filter out quiescent bins 
+    expFreqPath_ -- A pathlib path to the expected frequency array
+    verbose_ -- A boolean which tells us the amount we need to print
     """
     global sharedArr1
     global sharedArr2
     global shuffledSharedArr1
     global shuffledSharedArr2
+    global quiescenceSharedArr
+    global quiescentVal
+    global expFreqPath
+    global verbose
 
     sharedArr1 = (sharedArr1_, totalRows, numStates)
     sharedArr2 = (sharedArr2_, totalRows, numStates)
     shuffledSharedArr1 = (shuffledSharedArr1_, totalRows, numStates)
     shuffledSharedArr2 = (shuffledSharedArr2_, totalRows, numStates)
-
+    quiescenceSharedArr = quiescenceSharedArr_
+    quiescentVal = quiescentVal_
+    expFreqPath = expFreqPath_
+    verbose = verbose_
 
 def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
     verbose):
@@ -126,13 +148,14 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
     sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
-    with closing(Pool(numProcesses, initializer=_init, initargs=((sharedArr, totalRows, numStates), ))) as pool:
+    with closing(Pool(numProcesses, initializer=_init, 
+                      initargs=((sharedArr, totalRows, numStates, expFreqPath, verbose), ))) as pool:
         if saliency == 1:
-            pool.starmap(s1Score, zip(repeat(file1Path), repeat(Path("null")), rowList, repeat(expFreqPath), repeat(verbose)))
+            pool.starmap(s1Score, zip(repeat(file1Path), repeat(Path("null")), rowList))
         elif saliency == 2:
-            pool.starmap(s2Score, zip(repeat(file1Path), repeat(Path("null")), rowList, repeat(expFreqPath), repeat(verbose)))
+            pool.starmap(s2Score, zip(repeat(file1Path), repeat(Path("null")), rowList))
         elif saliency == 3:
-            pool.starmap(s3Score, zip(repeat(file1Path), rowList, repeat(expFreqPath), repeat(verbose)))
+            pool.starmap(s3Score, zip(repeat(file1Path), rowList))
         else:
             raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
     pool.join()
@@ -149,7 +172,7 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
 
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-    filename, numProcesses, verbose):
+    filename, numProcesses, quiescentVal, verbose):
     """
     Function responsible for deploying the processes used to calculate the scores in the paired epilogos case
 
@@ -176,14 +199,15 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     sharedArr2 = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     shuffledSharedArr1 = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
     shuffledSharedArr2 = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
+    quiescenceSharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.bool_), totalRows)
 
     # Start the processes
     with closing(Pool(numProcesses, initializer=_initPairwise, initargs=(sharedArr1, sharedArr2, shuffledSharedArr1,
-        shuffledSharedArr2, totalRows, numStates))) as pool:
+        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentVal, expFreqPath, verbose))) as pool:
         if saliency == 1:
-            pool.starmap(s1Score, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(expFreqPath), repeat(verbose)))
+            pool.starmap(s1Score, zip(repeat(file1Path), repeat(file2Path), rowList))
         elif saliency == 2:
-            pool.starmap(s2Score, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(expFreqPath), repeat(verbose)))
+            pool.starmap(s2Score, zip(repeat(file1Path), repeat(file2Path), rowList))
         else:
             raise ValueError("Please ensure that saliency metric is either 1 or 2 for Pairwise Epilogos")
     pool.join()
@@ -205,6 +229,8 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
     # If it's the null data, we will just save the signed squared euclidean distances as a temporary npz file as we don't 
     # care about saving the data
+    # We also want to write the locations of any quiescent bins (where all states are in the quiescent state). This ensures
+    # that our eventual fit on the null data is more accurate.
     if verbose: print("Writing output to disk...", flush=True); tWrite = time()
     chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
     locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
@@ -212,10 +238,13 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     writeScores(realDiffArr, realOutputPath, locationArr)
     nullOutputPath = outputDirPath / "temp_nullDistances_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(nullOutputPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
+    quiescentOutputPath = outputDirPath / "temp_quiescence_{}_{}.npz".format(fileTag, filename)
+    np.savez_compressed(quiescentOutputPath, chrName=np.array([chrName]), 
+                        quiescenceArr=np.frombuffer(quiescenceSharedArr, dtype=np.bool_))
     if verbose: print("    Time:", time() - tWrite, flush=True)
 
 
-def s1Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
+def s1Score(file1Path, file2Path, rowsToCalc):
     """
     Function responsible for score calculation over a set of rows for a saliency metric of 1. Note that there are global
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
@@ -224,8 +253,6 @@ def s1Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
     file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
     file2Path -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
-    expFreqPath -- The path to the expected frequency array
-    verbose -- Boolean which if True, causes much more detailed prints
     """
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -248,6 +275,17 @@ def s1Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
         realScoreArr2 = sharedToNumpy(*sharedArr2)
         nullScoreArr1 = sharedToNumpy(*shuffledSharedArr1)
         nullScoreArr2 = sharedToNumpy(*shuffledSharedArr2)
+        quiescenceArr = np.frombuffer(quiescenceSharedArr, dtype=np.bool_)
+
+        if quiescentVal != -1:
+            # Figure out the quiescent bins
+            sortedArr1 = np.sort(file1Arr, axis=1)
+            sortedArr2 = np.sort(file2Arr, axis=1)
+            # If all values in a bin are equal to the quiescentVal in both file1Arr and file2Arr, then the bin is quiescent
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentVal) 
+                                                                & (sortedArr1[:, -1] == quiescentVal) 
+                                                                & (sortedArr2[:, 0] == quiescentVal) 
+                                                                & (sortedArr2[:, -1] == quiescentVal))] = True
 
     if verbose and rowsToCalc[0] == 0: print("Calculating Scores...", flush=True); tScore = time(); percentDone = 0
     printCheckmarks = [int(rowsToCalc[1] * float(i / 10)) for i in range(1, 10)]
@@ -288,7 +326,7 @@ def rowObsS1(dataArr, row, numStates):
     return rowObsArr
 
 
-def s2Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
+def s2Score(file1Path, file2Path, rowsToCalc):
     """
     Function responsible for score calculation over a set of rows for a saliency metric of 2. Note that there are global
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
@@ -297,8 +335,6 @@ def s2Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
     file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
     file2Path -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
-    expFreqPath -- The path to the expected frequency array
-    verbose -- Boolean which if True, causes much more detailed prints
     """
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -324,6 +360,17 @@ def s2Score(file1Path, file2Path, rowsToCalc, expFreqPath, verbose):
         realScoreArr2 = sharedToNumpy(*sharedArr2)
         nullScoreArr1 = sharedToNumpy(*shuffledSharedArr1)
         nullScoreArr2 = sharedToNumpy(*shuffledSharedArr2)
+        quiescenceArr = np.frombuffer(quiescenceSharedArr, dtype=np.bool_)
+
+        if quiescentVal != -1:
+            # Figure out the quiescent bins
+            sortedArr1 = np.sort(file1Arr, axis=1)
+            sortedArr2 = np.sort(file2Arr, axis=1)
+            # If all values in a bin are equal to the quiescentVal in both file1Arr and file2Arr, then the bin is quiescent
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentVal) 
+                                                                & (sortedArr1[:, -1] == quiescentVal) 
+                                                                & (sortedArr2[:, 0] == quiescentVal) 
+                                                                & (sortedArr2[:, -1] == quiescentVal))] = True
 
         # Need the permuations to effective count state pairs (see rowObsS2() for theory)
         permutations1 = file1Arr.shape[1] * (file1Arr.shape[1] - 1)
@@ -379,7 +426,7 @@ def rowObsS2(dataArr, row, permutations, numStates):
     return rowObsArr
 
 
-def s3Score(file1Path, rowsToCalc, expFreqPath, verbose):
+def s3Score(file1Path, rowsToCalc):
     """
     Function responsible for score calculation over a set of rows for a saliency metric of 3. Note that there are global
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
@@ -387,8 +434,6 @@ def s3Score(file1Path, rowsToCalc, expFreqPath, verbose):
     Input:
     file1Path -- The path of the only file to read states from
     rowsToCalc -- The rows to count expected frequencies from the files
-    expFreqPath -- The path to the expected frequency array
-    verbose -- Boolean which if True, causes much more detailed prints
     """
     dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
@@ -473,4 +518,5 @@ def klScoreND(obs, exp):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), strToBool(argv[9]))
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
+         strToBool(argv[10]))

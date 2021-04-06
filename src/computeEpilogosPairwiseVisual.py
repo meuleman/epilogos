@@ -816,8 +816,8 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         #         .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
 
         # Figuring out chromosome order
-        # chromosomes = locations['chr'].unique()
-        chromosomes = locations['Chromosome'].unique()
+        chromosomes = locations['chr'].unique()
+        # chromosomes = locations['Chromosome'].unique()
         rawChrNamesInts = []
         rawChrNamesStrs = []
         for chromosome in chromosomes:

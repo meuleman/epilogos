@@ -205,9 +205,9 @@ def readInData(outputDirPath, numProcesses, numStates):
         index = quiescenceChunks[0].index(chrName)
         quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
 
-    # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_*.npz"):
-        remove(file)
+    # # Cleaning up the temp files after we've read them
+    # for file in outputDirPath.glob("temp_*.npz"):
+    #     remove(file)
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -265,7 +265,6 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
     """
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
     idx = np.where(quiescenceArr == False)[0]
-    print("Len of non quiescent bins", len(idx))
     dataReal = pd.Series(distanceArrReal[idx])
     dataNull = pd.Series(distanceArrNull[idx])
 

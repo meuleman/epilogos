@@ -809,6 +809,8 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
             columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
                 .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
 
+        print("premerge lenght", locations.shape[0])
+
         # locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
         #     maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
         #     columns=["Chromosome", "Start", "End", "distance", "maxDiffLoc", "pval"])\
@@ -843,6 +845,9 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         if not onlySignificant:
             locations = mergeAdjacent(locations)
 
+        print("postmerge lenght", locations.shape[0])
+
+
         # if not onlySignificant:
         #     tMerge = time()
         #     locations = pr.PyRanges(locations)
@@ -864,7 +869,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
             abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations.iloc[i, 5]), stars[i, 0])
-                for i in range(locations.shape[0] if onlySignificant else 100))
+                for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
         f.write(outString)
 
 

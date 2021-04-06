@@ -76,8 +76,6 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Quiescent value is -1 from user input because states are read in to be -1 from their values
     quiescentVal = quiescentVal[0] - 1 if quiescentVal else numStates - 1
 
-    print("Quiescent Val:", quiescentVal)
-
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":
         inputDirectory = inputDirectory[0]
@@ -113,6 +111,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("Number of Cores = All available", flush=True)
     else:
         print("Number of Cores =", numProcesses, flush=True)
+    if mode == "paired" and quiescentVal == -1:
+        print("Quiescent Value = No quiescent filtering")
+    elif mode == "paired":
+        print("Quiescent Value =", quiescentVal + 1)
 
     # For making sure all files are consistently named
     if mode == "single":

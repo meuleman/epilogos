@@ -25,14 +25,14 @@ def main(stateInfo, outputDir, numProcesses, verbose):
     # Read in observation files
     if verbose: print("\nReading in observation files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr = readInData(outputDirPath, numProcesses, numStates)
+    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
     if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
     else: print("    Fitting distances\t", end="", flush=True)
-    fitDistances(outputDirPath, distanceArrReal, distanceArrNull, diffArr, numStates)
+    fitDistances(outputDirPath, distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates)
     if verbose: print("    Time:", time() - tFit, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -50,16 +50,16 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), \
-            outputDirPath.glob("temp_nullDistances_*.npz"), repeat(realNames)))
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"),
+            outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz"), repeat(realNames)))
     pool.join()
 
     # Concatenating all chunks to the real differences dataframe
-    for diffDFChunk, _ in results:
+    for diffDFChunk, _, _ in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Figuring out chromosome order
-    chromosomes = diffDF.loc[diffDF['binStart'] == 0]['chr'].values
+    chromosomes = diffDF['chr'].unique()
     rawChrNamesInts = []
     rawChrNamesStrs = []
     for chromosome in chromosomes:
@@ -89,9 +89,13 @@ def readInData(outputDirPath, numProcesses, numStates):
         index = nullChunks[0].index(chrName)
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
-    # Cleaning up the temp files after we've read them
-    # for file in outputDirPath.glob("temp_nullDistances_*.npz"):
-    #     remove(file)
+    # Creating quiescence array ordered by chromosome based on the read in chunks
+    quiescenceChunks = list(zip(*list(zip(*results))[2]))
+    index = quiescenceChunks[0].index(chrOrder[0])
+    quiescenceArr = quiescenceChunks[1][index]
+    for chrName in chrOrder[1:]:
+        index = quiescenceChunks[0].index(chrName)
+        quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
 
     # Calculate the distance array for the real data
     diffSign = np.sign(np.sum(diffArr, axis=1))
@@ -101,106 +105,138 @@ def readInData(outputDirPath, numProcesses, numStates):
     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
 
-    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr
+    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 
 
-def readTableMulti(realFile, nullFile, realNames):
+def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
-    npzFile = np.load(Path(nullFile))
+    npzFileNull = np.load(Path(nullFile))
+    npzFileQuiescence = np.load(Path(quiescenceFile))
 
-    return diffDFChunk, (npzFile['chrName'][0], npzFile['nullDistances'])
+    return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
+                                                                                    npzFileQuiescence['quiescenceArr'])
 
 
 # Helper to fit the distances
-def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, diffArr, numStates):
+def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates):
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-    idx = [i for i in range(len(distanceArrReal)) if round(distanceArrReal[i], 5) != 0 \
-        or np.any(diffArr[i] != np.zeros((numStates)))]
+    idx = np.where(quiescenceArr == False)[0]
     dataNull = pd.Series(distanceArrNull[idx])
 
+    paramDict = {}
+    mleDict = {}
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        params = st.gennorm.fit(dataNull)
+        mle = st.gennorm.nnlf(params, pd.Series(dataNull))
+        paramDict['gennorm'] = params
+        mleDict['gennorm'] = mle
+
+        params = st.johnsonsu.fit(dataNull)
+        mle = st.johnsonsu.nnlf(params, pd.Series(dataNull))
+        paramDict['johnsonsu'] = params
+        mleDict['johnsonsu'] = mle
+
+        params = st.t.fit(dataNull)
+        mle = st.t.nnlf(params, pd.Series(dataNull))
+        paramDict['t'] = params
+        mleDict['t'] = mle
+
+        params = st.norminvgauss.fit(dataNull)
+        mle = st.norminvgauss.nnlf(params, pd.Series(dataNull))
+        paramDict['norminvgauss'] = params
+        mleDict['norminvgauss'] = mle
+
+        params = st.cauchy.fit(dataNull)
+        mle = st.cauchy.nnlf(params, pd.Series(dataNull))
+        paramDict['cauchy'] = params
+        mleDict['cauchy'] = mle
+
+        params = st.laplace.fit(dataNull)
+        mle = st.laplace.nnlf(params, pd.Series(dataNull))
+        paramDict['laplace'] = params
+        mleDict['laplace'] = mle
+
+        params = st.hypsecant.fit(dataNull)
+        mle = st.hypsecant.nnlf(params, pd.Series(dataNull))
+        paramDict['hypsecant'] = params
+        mleDict['hypsecant'] = mle
+
+        params = st.genlogistic.fit(dataNull)
+        mle = st.genlogistic.nnlf(params, pd.Series(dataNull))
+        paramDict['genlogistic'] = params
+        mleDict['genlogistic'] = mle
+
+        params = st.logistic.fit(dataNull)
+        mle = st.logistic.nnlf(params, pd.Series(dataNull))
+        paramDict['logistic'] = params
+        mleDict['logistic'] = mle
+
+        params = st.lognorm.fit(dataNull)
+        mle = st.lognorm.nnlf(params, pd.Series(dataNull))
+        paramDict['lognorm'] = params
+        mleDict['lognorm'] = mle
+
+        params = st.powernorm.fit(dataNull)
+        mle = st.powernorm.nnlf(params, pd.Series(dataNull))
+        paramDict['powernorm'] = params
+        mleDict['powernorm'] = mle
+
+        params = st.norm.fit(dataNull)
+        mle = st.norm.nnlf(params, pd.Series(dataNull))
+        paramDict['norm'] = params
+        mleDict['norm'] = mle
+
+        params = st.loglaplace.fit(dataNull)
+        mle = st.loglaplace.nnlf(params, pd.Series(dataNull))
+        paramDict['loglaplace'] = params
+        mleDict['loglaplace'] = mle
+
+        params = st.gumbel_l.fit(dataNull)
+        mle = st.gumbel_l.nnlf(params, pd.Series(dataNull))
+        paramDict['gumbel_l'] = params
+        mleDict['gumbel_l'] = mle
+
+        params = st.gumbel_r.fit(dataNull)
+        mle = st.gumbel_r.nnlf(params, pd.Series(dataNull))
+        paramDict['gumbel_r'] = params
+        mleDict['gumbel_r'] = mle
+
+        params = st.exponnorm.fit(dataNull)
+        mle = st.exponnorm.nnlf(params, pd.Series(dataNull))
+        paramDict['exponnorm'] = params
+        mleDict['exponnorm'] = mle
+
+        params = st.skewnorm.fit(dataNull)
+        mle = st.skewnorm.nnlf(params, pd.Series(dataNull))
+        paramDict['skewnorm'] = params
+        mleDict['skewnorm'] = mle
+
+        params = st.foldnorm.fit(dataNull)
+        mle = st.foldnorm.nnlf(params, pd.Series(dataNull))
+        paramDict['foldnorm'] = params
+        mleDict['foldnorm'] = mle
+
+        params = st.powerlognorm.fit(dataNull)
+        mle = st.powerlognorm.nnlf(params, pd.Series(dataNull))
+        paramDict['powerlognorm'] = params
+        mleDict['powerlognorm'] = mle
+
+        params = st.gausshyper.fit(dataNull)
+        mle = st.gausshyper.nnlf(params, pd.Series(dataNull))
+        paramDict['gausshyper'] = params
+        mleDict['gausshyper'] = mle
+
     with open(outputDirPath / "fits.txt", "w") as f:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        for k, v in paramDict.items():
+            f.write("{}\t{}\n".format(k, v))
 
-            params = st.gennorm.fit(dataNull)
-            mle = st.gennorm.nnlf(params, pd.Series(dataNull))
-            f.write("Gennorm:\tParams={}\t\tMLE={}\n".format(params, mle))
+        f.write("\n\n")
 
-            params = st.johnsonsu.fit(dataNull)
-            mle = st.johnsonsu.nnlf(params, pd.Series(dataNull))
-            f.write("johnsonsu:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.t.fit(dataNull)
-            mle = st.t.nnlf(params, pd.Series(dataNull))
-            f.write("t:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.norminvgauss.fit(dataNull)
-            mle = st.norminvgauss.nnlf(params, pd.Series(dataNull))
-            f.write("norminvgauss:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.cauchy.fit(dataNull)
-            mle = st.cauchy.nnlf(params, pd.Series(dataNull))
-            f.write("cauchy:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.laplace.fit(dataNull)
-            mle = st.laplace.nnlf(params, pd.Series(dataNull))
-            f.write("laplace:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.hypsecant.fit(dataNull)
-            mle = st.hypsecant.nnlf(params, pd.Series(dataNull))
-            f.write("hypsecant:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.genlogistic.fit(dataNull)
-            mle = st.genlogistic.nnlf(params, pd.Series(dataNull))
-            f.write("genlogistic:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.logistic.fit(dataNull)
-            mle = st.logistic.nnlf(params, pd.Series(dataNull))
-            f.write("logistic:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.lognorm.fit(dataNull)
-            mle = st.lognorm.nnlf(params, pd.Series(dataNull))
-            f.write("lognorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.powernorm.fit(dataNull)
-            mle = st.powernorm.nnlf(params, pd.Series(dataNull))
-            f.write("powernorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.norm.fit(dataNull)
-            mle = st.norm.nnlf(params, pd.Series(dataNull))
-            f.write("norm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.loglaplace.fit(dataNull)
-            mle = st.loglaplace.nnlf(params, pd.Series(dataNull))
-            f.write("loglaplace:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.gumbel_l.fit(dataNull)
-            mle = st.gumbel_l.nnlf(params, pd.Series(dataNull))
-            f.write("gumbel_l:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.gumbel_r.fit(dataNull)
-            mle = st.gumbel_r.nnlf(params, pd.Series(dataNull))
-            f.write("gumbel_r:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.exponnorm.fit(dataNull)
-            mle = st.exponnorm.nnlf(params, pd.Series(dataNull))
-            f.write("exponnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.skewnorm.fit(dataNull)
-            mle = st.skewnorm.nnlf(params, pd.Series(dataNull))
-            f.write("skewnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.foldnorm.fit(dataNull)
-            mle = st.foldnorm.nnlf(params, pd.Series(dataNull))
-            f.write("foldnorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.powerlognorm.fit(dataNull)
-            mle = st.powerlognorm.nnlf(params, pd.Series(dataNull))
-            f.write("powerlognorm:\tParams={}\t\tMLE={}\n".format(params, mle))
-
-            params = st.gausshyper.fit(dataNull)
-            mle = st.gausshyper.nnlf(params, pd.Series(dataNull))
-            f.write("gausshyper:\tParams={}\t\tMLE={}\n".format(params, mle))
+        for k, v in mleDict.items():
+            f.write("{}\t{}\n".format(k, v))
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2], int(sys.argv[3]), strToBool(sys.argv[4]))

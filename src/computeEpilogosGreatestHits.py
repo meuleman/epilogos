@@ -7,7 +7,7 @@ from time import time
 from os import remove
 import pandas as pd
 
-def main(outputDir, stateInfo, fileTag, verbose):
+def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
 
@@ -34,6 +34,8 @@ def main(outputDir, stateInfo, fileTag, verbose):
     if verbose: print("    Time:", time() - tHits, flush=True)
     else: print("\t[Done]", flush=True)
 
+    # Removing the expected frequency array
+    remove(Path(expFreqPath))
 
 def readInData(outputDirPath):
     """
@@ -155,4 +157,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], strToBool(argv[4]))
+    main(argv[1], argv[2], argv[3], argv[4], strToBool(argv[5]))

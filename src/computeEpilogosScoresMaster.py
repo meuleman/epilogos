@@ -9,8 +9,6 @@ from itertools import repeat, permutations
 from contextlib import closing
 from epilogosHelpers import strToBool, splitRows, readStates
 import gzip
-from os import remove
-
 
 def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentVal, verbose):
     """
@@ -50,9 +48,6 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
     else:
         calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
             filename, numProcesses, quiescentVal, verbose)
-    
-    # Delete expected frequency array as it's no longer needed
-    remove(expFreqPath)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 

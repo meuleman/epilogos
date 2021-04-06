@@ -16,7 +16,7 @@ import pyranges as pr
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
-    verbose):
+         expFreqPath, verbose):
     """
     Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
     distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are written out,
@@ -127,6 +127,9 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
+
+    # Removing the expected frequency array
+    remove(Path(expFreqPath))
 
     if verbose: print("Total Time:", time() - tTotal, flush=True)
 
@@ -925,4 +928,4 @@ def findSign(x):
 
 if __name__ == "__main__":
     main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]),
-        strToBool(argv[10]))
+         argv[10], strToBool(argv[11]))

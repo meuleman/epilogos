@@ -150,13 +150,13 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         if mode == "single":
             if commandLineBool:
                 computeEpilogosExpectedMaster.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses,
-                    verbose)
+                                                   verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
-                    outputDirPath, fileTag, numProcesses, verbose)
+                                                                            outputDirPath, fileTag, numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
-                    saliency, numTasks, "--mem=0", ""))
+                                                  saliency, numTasks, "--mem=0", ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
@@ -167,13 +167,14 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
             if commandLineBool:
                 computeEpilogosExpectedMaster.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses,
-                    verbose)
+                                                   verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
-                    saliency, outputDirPath, fileTag, numProcesses, verbose)
+                                                                           saliency, outputDirPath, fileTag, numProcesses,
+                                                                           verbose)
                 expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
-                    saliency, numTasks, "--mem=0", ""))
+                                                  saliency, numTasks, "--mem=0", ""))
 
     if not commandLineBool:
         # Create a string for slurm dependency to work and to print more nicely
@@ -187,9 +188,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     else:
         computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
-            verbose)
+                                                       verbose)
         combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
-            "--mem-per-cpu=8000", "--dependency=afterok:{}".format(expJobIDStr))
+                                          "--mem-per-cpu=8000", "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID, flush=True)
 
     scoreJobIDArr = []
@@ -199,13 +200,15 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         if mode == "single":
             if commandLineBool:
                 computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag,
-                    numProcesses, verbose)
+                                                 numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
-                    outputDirPath, storedExpPath, fileTag, numProcesses, quiescentVal, verbose)
+                                                                                   outputDirPath, storedExpPath, fileTag,
+                                                                                   numProcesses, quiescentVal, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
-                    saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
+                                                    saliency, numTasks, "--mem=0",
+                                                    "--dependency=afterok:{}".format(combinationJobID)))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
@@ -216,13 +219,15 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
             if commandLineBool:
                 computeEpilogosScoresMaster.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag,
-                    numProcesses, verbose)
+                                                 numProcesses, verbose)
             else:
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
-                    saliency, outputDirPath, storedExpPath, fileTag, numProcesses, quiescentVal, verbose)
+                                                                                 saliency, outputDirPath, storedExpPath,
+                                                                                 fileTag, numProcesses, quiescentVal, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
-                    saliency, numTasks, "--mem=0", "--dependency=afterok:{}".format(combinationJobID)))
+                                                    saliency, numTasks, "--mem=0",
+                                                    "--dependency=afterok:{}".format(combinationJobID)))
     
     if not commandLineBool:
         # Create a string for slurm dependency to work
@@ -236,22 +241,26 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             computeEpilogosGreatestHits.main(outputDirPath, stateInfo, fileTag, False)
         else:
             computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
-            pythonCommand = "python {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, verbose)
+            pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
+                                                              storedExpPath, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
-                "--mem-per-cpu=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          "--mem-per-cpu=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
             computeEpilogosPairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag,
-                numProcesses, diagnosticBool, numTrials, samplingSize)
+                                               numProcesses, diagnosticBool, numTrials, samplingSize)
         else:
             computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
-                inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize, verbose)
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
+                                                                                inputDirPath2.name, stateInfo, outputDirPath,
+                                                                                fileTag, numProcesses, diagnosticBool,
+                                                                                numTrials, samplingSize, storedExpPath,
+                                                                                verbose)
             summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, numTasks, "--mem=0",
-                "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
 
     if not commandLineBool:

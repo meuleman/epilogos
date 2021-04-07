@@ -319,9 +319,9 @@ e.g. $ epilogos -x
 
 <a name="pairwise-epilogos"></a>
 
-<h2 align="center">
-    Pairwise Epilogos
-</h2>
+<h1 align="center">
+  <a href="https://github.com/meuleman/epilogos#pairwise-epilogos"><img src="./data/pairwise_logo.png" width="840"></a>
+</h1>
 
 Pairwise Epilogos, like Epilogos, is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations. However, its role is to provide a structure by which to compare these genomic annotations accross different groups.
 

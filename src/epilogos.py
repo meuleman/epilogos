@@ -5,12 +5,12 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
-import computeEpilogosExpectedMaster
-import computeEpilogosExpectedCombination
-import computeEpilogosScoresMaster
-import computeEpilogosGreatestHits
-import computeEpilogosPairwiseVisual
-from epilogosHelpers import getNumStates
+import expected
+import expectedCombination
+import scores
+import greatestHits
+import pairwiseVisual
+from helpers import getNumStates
 
 print("""\n
                   d8b 888                                     
@@ -151,10 +151,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                computeEpilogosExpectedMaster.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses,
-                                                   verbose)
+                expected.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
-                computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
+                computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                                                                             outputDirPath, fileTag, numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
@@ -168,10 +167,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                computeEpilogosExpectedMaster.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses,
-                                                   verbose)
+                expected.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
-                computeExpectedPy = pythonFilesDir / "computeEpilogosExpectedMaster.py"
+                computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
                                                                            saliency, outputDirPath, fileTag, numProcesses,
                                                                            verbose)
@@ -186,9 +184,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
     if commandLineBool:
-        computeEpilogosExpectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
+        expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
     else:
-        computeExpectedCombinationPy = pythonFilesDir / "computeEpilogosExpectedCombination.py"
+        computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
                                                        verbose)
         combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
@@ -201,10 +199,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                computeEpilogosScoresMaster.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag,
-                                                 numProcesses, verbose)
+                scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
             else:
-                computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
+                computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
                                                                                    numProcesses, quiescentState, verbose)
@@ -220,10 +217,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                computeEpilogosScoresMaster.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag,
-                                                 numProcesses, verbose)
+                scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
             else:
-                computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
+                computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
                                                                                  fileTag, numProcesses, quiescentState, verbose)
@@ -240,9 +236,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            computeEpilogosGreatestHits.main(outputDirPath, stateInfo, fileTag, False)
+            greatestHits.main(outputDirPath, stateInfo, fileTag, False)
         else:
-            computeGreatestHitsPy = pythonFilesDir / "computeEpilogosGreatestHits.py"
+            computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
                                                               storedExpPath, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
@@ -252,10 +248,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            computeEpilogosPairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag,
-                                               numProcesses, diagnosticBool, numTrials, samplingSize)
+            pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+                                diagnosticBool, numTrials, samplingSize)
         else:
-            computeVisualPy = pythonFilesDir / "computeEpilogosPairwiseVisual.py"
+            computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
             pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
                                                                                 inputDirPath2.name, stateInfo, outputDirPath,
                                                                                 fileTag, numProcesses, diagnosticBool,

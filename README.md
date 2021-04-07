@@ -183,12 +183,20 @@ $ epilogos -l -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_D
 <p>
 The argument to this flag either <code>single</code> or <code>paired</code> as the mode of operation, with <code>single</code> being the default.
 </p>
+
+```bash
+e.g. $ epilogos -m single
+```
 </details>
 
 <a name="command-line"></a>
-<details><summary><b> Command Line [-l, --cli]</b></summary>
+<details><summary><b> Command Line [-l, --local]</b></summary>
 <p></p>
-<p>By default, Epilogos assumes use of a SLURM cluster. However, if you would like to run Epilogos directly in the command line enable this flag</p>
+<p>By default, Epilogos assumes use of a SLURM cluster. However, if you would like to run Epilogos locally in the command line enable this flag.</p>
+
+```bash
+e.g. $ epilogos -l
+```
 </details>
 
 <a name="input-directory"></a>
@@ -199,6 +207,10 @@ The argument to this flag either <code>single</code> or <code>paired</code> as t
 <p>
 The argument to this flag is the path to the directory which contains the files to be read in. Note that <strong>ALL</strong> files in this directory will be read in and errors may occur if other files are present.
 </p>
+
+```bash
+e.g. $ epilogos -i data/pyData/male/
+```
 
 <p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
 
@@ -220,8 +232,12 @@ The output of Epilogos will vary depending on the number of input files present 
 
 <p>Additionally, you will find a <code>greatestHits_*.txt</code> file which follows the same naming convention except for the input file name. This file contains the top 1000 highest scoring regions (with adjacent regions merged). Columns 1-3 contain the locations, column 4 contains name of the largest scoring states, column 5 contains the scores, and column 6 contains the direction of these scores.</p>
 
-<p>
-The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.</p>
+<p>The argument to this flag is the path to the directory to which you would like to output. Note that this may not be the same as the input directory.</p>
+
+```bash
+e.g. $ epilogos -o epilogosOutput/
+```
+
 </details>
 
 <a name="state-info"></a>
@@ -236,6 +252,11 @@ The argument to this flag is the path to the directory to which you would like t
 <p>
 Note that tsv must contain a header row with the exact names above and that values within the table should follow the same formatting as above.
 </p>
+
+```bash
+e.g. $ epilogos -n data/state_metadata/human/Adsera_et_al_833_sample/hg19/18/metadata.tsv
+```
+
 </details>
 
 <a name="saliency"></a>
@@ -276,14 +297,21 @@ Saliency 3: $ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_
 <p></p>
 <p>Epilogos will always try and parallelize where it can. Computation done on each input file is parallelized using python's <a href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing library</a>.</p>
 
-<p>
-The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to <code>-c 0</code>).</p>
+<p>The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Note that Epilogos defaults to using all available cores (equivalent to <code>-c 0</code>).</p>
+
+```bash
+e.g. $ epilogos -c 4
+```
 </details>
 
 <a name="exit"></a>
 <details><summary><b> Exit [-x, --exit]</b></summary>
 <p></p>
 <p>By default <code>src/computeEpilogosSlurm.py</code> only exits after it has completed all slurm jobs and prints progress updates to the console. If you would like the program to instead exit when all jobs are submitted (allowing use of the terminal while the jobs are running), enable this flag.</p>
+
+```bash
+e.g. $ epilogos -x
+```
 </details>
 
 <br>
@@ -441,8 +469,13 @@ In addition to the command line options offered for [single group epilogos](#com
 <p></p>
 <p>Rather than just read in one input file, Epilogos reads the contents of an entire directory. This allows the computation to be chunked and parallelized. Note that the genome files in the directory <strong>MUST</strong> be split by chromosome. Input files should be formatted such that the first three columns are the chromosome, bin start, and bin end respectively with the rest of the columns containing state data.</p>
 
-<p>In the paired group version of epilogos, the user must input two directories (one for each group). Note that <strong>ALL</strong> files in this directory will be read in and errors may occur if other files are present. Additionally, the files to compare within the directories must have the same name in both directories (e.g. chr1Male.txt and chr1Female.txt --> chr1.txt and chr1.txt)
-</p>
+<p>In the paired group version of epilogos, the user must input two directories (one for each group). Note that <strong>ALL</strong> files in this directory will be read in and errors may occur if other files are present. Additionally, the files to compare within the directories must have the same name in both directories (e.g. chr1Male.txt and chr1Female.txt --> chr1.txt and chr1.txt)</p>
+
+<p>The arguments to these flags are the two directories you would like to read data from.</p>
+
+```bash
+e.g. $ epilogos -a data/pyData/male/ -b data/pydata/female/
+```
 
 <p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
 
@@ -472,12 +505,20 @@ Column n: State data for epigenome n-3
 <p>Depending on the <a href="#diagnostic-figures">[-d, --diagnostic-figures]</a> flag the output directory may contain one <code>diagnosticFigures_*</code> directory. This directory will contain figures showing the quality of the fit the null data and comparisons between the null and real data.</p>
 
 <p>The argument to this flag is the path to the directory to which you would like to output. Note that this <strong>CANNOT</strong> be the same as the input directory.</p>
+
+```bash
+e.g. $ epilogos -o epilgosOutput/
+```
 </details>
 
 <a name="diagnostic-figures"></a>
 <details><summary><b> Diagnostic Figures [-d, --diagnostic-figures]</b></summary>
 <p></p>
 <p>If this flag is enabled, Pairwise Epilogos will output diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data. These can be found in a sub-directory of the output directory named <code>diagnosticFigures_*</code> directory where 'diagnosticFigures_' is followed by the names of input directory one, input directory two, and the saliency metric.</p>
+
+```bash
+e.g. $ epilogos -d
+```
 </details>
 
 <a name="num-trials"></a>
@@ -486,6 +527,10 @@ Column n: State data for epigenome n-3
 <p>In order to save time when fitting in paired group Epilogos, samples of the null data are fit rather than the whole null data and then the median fit is used.</p>
 
 <p>The argument to this flag is the number of times these samples are fit. Epilogos defaults to 101</P>
+
+```bash
+e.g. $ epilogos -t 1001
+```
 </details>
 
 <a name="sampling-size"></a>
@@ -494,6 +539,28 @@ Column n: State data for epigenome n-3
 <p>In order to save time when fitting in paired group Epilogos, samples of the null data are fit rather than the whole null data and then the median fit is used.</p>
 
 <p>The argument to this flag is the size of the samples that are fit. Epilogos defaults to 100000</P>
+
+```bash
+e.g. $ epilogos -t 10000
+```
+</details>
+
+<a name="quiescent-state"></a>
+<details><summary><b> Quiescent State [-q, --quiescent-state]</b></summary>
+<p></p>
+<p>As a proxy for disregarding unmappable genomic regions, epilogos does not consider regions entirely in a quiescent state in the fitting used to determine p-values.</p>
+
+<p>The argument to this flag is the 1-index of quiescent state. Note that by default epilogos assumes the quiescent state is the last state in the inputted state model (in an 18 state model <code>$ epilogos -q 18</code> is equivalent to <code>$ epilogos</code>).</P>
+
+```bash
+e.g. $ epilogos -q 18
+```
+
+<p>If you would prefer that epilogos does not filter out any data, use 0 as the argument for this flag</p>
+
+```bash
+e.g. $ epilogos -q 0
+```
 </details>
 
 <a name="visual-output"></a>
@@ -513,3 +580,7 @@ Seeing that these differences are primarily present in chromosome X, we now look
 <h1 align="center">
   <img src="./data/manhattan_male_female_chrX.png" width="840">
 </h1>
+
+
+
+

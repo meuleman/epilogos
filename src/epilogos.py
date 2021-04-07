@@ -30,8 +30,8 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 @click.command()
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
               multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
-@click.option("-l", "--cli", "commandLineBool", is_flag=True, multiple=True,
-              help="If enabled, Epilogos will run in your terminal rather than on a SLURM cluster")
+@click.option("-l", "--local", "commandLineBool", is_flag=True, multiple=True,
+              help="If enabled, Epilogos will run locally in your terminal rather than on a SLURM cluster")
 @click.option("-i", "--input-directory", "inputDirectory", type=str, multiple=True,
               help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-a", "--directory-one", "inputDirectory1", type=str, multiple=True,

@@ -54,18 +54,18 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
               help="The number of times subsamples of the scores are fit")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
               help="The size of the subsamples on which the scores are fit")
-@click.option("-q", "--quiescent-val", "quiescentVal", type=int, multiple=True, 
+@click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True, 
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." + 
                    "If set to 0, filtering is not done. [default: last state]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal):
+    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState):
     """
     Wrapper function that determines which epilogos functions to use and how to deploy them
     """
 
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-        numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal)
+        numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState)
     
     # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize = mode[0], outputDirectory[0], \
@@ -74,7 +74,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
     # Quiescent value is -1 from user input because states are read in to be -1 from their values
-    quiescentVal = quiescentVal[0] - 1 if quiescentVal else numStates - 1
+    quiescentState = quiescentState[0] - 1 if quiescentState else numStates - 1
 
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":
@@ -95,7 +95,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentVal)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState)
 
     # Informing user of their inputs
     print()
@@ -111,10 +111,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("Number of Cores = All available", flush=True)
     else:
         print("Number of Cores =", numProcesses, flush=True)
-    if mode == "paired" and quiescentVal == -1:
-        print("Quiescent Value = No quiescent filtering")
+    if mode == "paired" and quiescentState == -1:
+        print("Quiescent State = No quiescent filtering")
     elif mode == "paired":
-        print("Quiescent Value =", quiescentVal + 1)
+        print("Quiescent State =", quiescentState + 1)
 
     # For making sure all files are consistently named
     if mode == "single":
@@ -207,7 +207,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
-                                                                                   numProcesses, quiescentVal, verbose)
+                                                                                   numProcesses, quiescentState, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                                                     saliency, numTasks, "--mem=0",
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -226,7 +226,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 computeScorePy = pythonFilesDir / "computeEpilogosScoresMaster.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
-                                                                                 fileTag, numProcesses, quiescentVal, verbose)
+                                                                                 fileTag, numProcesses, quiescentState, verbose)
                 scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                                                     saliency, numTasks, "--mem=0",
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -276,7 +276,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentVal):
+    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -303,8 +303,8 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         raise ValueError("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
     elif mode[0] == "single" and diagnosticBool:
         raise ValueError("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
-    elif mode[0] == "single" and quiescentVal:
-        raise ValueError("[-m, --mode] 'single' not compatible with [-q, --quiescent-val] flag")
+    elif mode[0] == "single" and quiescentState:
+        raise ValueError("[-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
     elif mode[0] == "paired" and inputDirectory:
         raise ValueError("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
     elif commandLineBool and exitBool:
@@ -337,11 +337,11 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         raise ValueError("Too many [-t, --num-trials] arguments provided")
     elif len(samplingSize) > 1:
         raise ValueError("Too many [-z, --sampling-size] arguments provided")
-    elif len(quiescentVal) > 1:
-        raise ValueError("Too many [-z, --sampling-size] arguments provided")
+    elif len(quiescentState) > 1:
+        raise ValueError("Too many [-q, --quiescent-state] arguments provided")
 
 
-def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentVal):
+def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState):
     """
     Checks whether user submitted arguments have valid values
 
@@ -353,7 +353,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     outputDirPath -- The path to the output directory for epilogos
     numProcesses -- The number of cores the user would like to use
     numStates -- The number of states in the state model
-    quiescentVal -- The state used to filter out quiescent bins
+    quiescentState -- The state used to filter out quiescent bins
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
@@ -385,9 +385,9 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     if numProcesses < 0:
         raise ValueError("Number of cores must be positive or zero (0 means use all cores)")
 
-    if quiescentVal < -1:
+    if quiescentState < -1:
         raise ValueError("Quiescent state value must be positive or zero (0 means do not filter)")
-    elif quiescentVal >= numStates:
+    elif quiescentState >= numStates:
         raise ValueError("Quiescent state value must be a state provided in the state model")
 
 def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, numTasks, memory, dependency):

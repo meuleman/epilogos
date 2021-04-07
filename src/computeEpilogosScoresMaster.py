@@ -10,7 +10,7 @@ from contextlib import closing
 from epilogosHelpers import strToBool, splitRows, readStates
 import gzip
 
-def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentVal, verbose):
+def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, verbose):
     """
     Wrapper function which prepares inputs for the score calculation
 
@@ -47,7 +47,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
             verbose)
     else:
         calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-            filename, numProcesses, quiescentVal, verbose)
+            filename, numProcesses, quiescentState, verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
@@ -83,7 +83,7 @@ def _init(sharedArr_, expFreqPath_, verbose_):
 
 
 def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, quiescenceSharedArr_, totalRows, 
-                  numStates, quiescentVal_, expFreqPath_, verbose_):
+                  numStates, quiescentState_, expFreqPath_, verbose_):
     """
     Initializes global variables for multiprocessing in the paired epilogos case
 
@@ -94,7 +94,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     shuffledSharedArr2_ -- The second shared null score array
     totalRows -- The number of rows of the input files
     numStates -- The number of states in the state model
-    quiescentVal_ -- The state used to filter out quiescent bins 
+    quiescentState_ -- The state used to filter out quiescent bins 
     expFreqPath_ -- A pathlib path to the expected frequency array
     verbose_ -- A boolean which tells us the amount we need to print
     """
@@ -103,7 +103,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     global shuffledSharedArr1
     global shuffledSharedArr2
     global quiescenceSharedArr
-    global quiescentVal
+    global quiescentState
     global expFreqPath
     global verbose
 
@@ -112,7 +112,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     shuffledSharedArr1 = (shuffledSharedArr1_, totalRows, numStates)
     shuffledSharedArr2 = (shuffledSharedArr2_, totalRows, numStates)
     quiescenceSharedArr = quiescenceSharedArr_
-    quiescentVal = quiescentVal_
+    quiescentState = quiescentState_
     expFreqPath = expFreqPath_
     verbose = verbose_
 
@@ -167,7 +167,7 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
 
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-    filename, numProcesses, quiescentVal, verbose):
+    filename, numProcesses, quiescentState, verbose):
     """
     Function responsible for deploying the processes used to calculate the scores in the paired epilogos case
 
@@ -198,7 +198,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
 
     # Start the processes
     with closing(Pool(numProcesses, initializer=_initPairwise, initargs=(sharedArr1, sharedArr2, shuffledSharedArr1,
-        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentVal, expFreqPath, verbose))) as pool:
+        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentState, expFreqPath, verbose))) as pool:
         if saliency == 1:
             pool.starmap(s1Score, zip(repeat(file1Path), repeat(file2Path), rowList))
         elif saliency == 2:
@@ -272,15 +272,15 @@ def s1Score(file1Path, file2Path, rowsToCalc):
         nullScoreArr2 = sharedToNumpy(*shuffledSharedArr2)
         quiescenceArr = np.frombuffer(quiescenceSharedArr, dtype=np.bool_)
 
-        if quiescentVal != -1:
+        if quiescentState != -1:
             # Figure out the quiescent bins
             sortedArr1 = np.sort(file1Arr, axis=1)
             sortedArr2 = np.sort(file2Arr, axis=1)
-            # If all values in a bin are equal to the quiescentVal in both file1Arr and file2Arr, then the bin is quiescent
-            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentVal) 
-                                                                & (sortedArr1[:, -1] == quiescentVal) 
-                                                                & (sortedArr2[:, 0] == quiescentVal) 
-                                                                & (sortedArr2[:, -1] == quiescentVal))] = True
+            # If all values in a bin are equal to the quiescentState in both file1Arr and file2Arr, then the bin is quiescent
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState) 
+                                                                & (sortedArr1[:, -1] == quiescentState) 
+                                                                & (sortedArr2[:, 0] == quiescentState) 
+                                                                & (sortedArr2[:, -1] == quiescentState))] = True
 
     if verbose and rowsToCalc[0] == 0: print("Calculating Scores...", flush=True); tScore = time(); percentDone = 0
     printCheckmarks = [int(rowsToCalc[1] * float(i / 10)) for i in range(1, 10)]
@@ -357,15 +357,15 @@ def s2Score(file1Path, file2Path, rowsToCalc):
         nullScoreArr2 = sharedToNumpy(*shuffledSharedArr2)
         quiescenceArr = np.frombuffer(quiescenceSharedArr, dtype=np.bool_)
 
-        if quiescentVal != -1:
+        if quiescentState != -1:
             # Figure out the quiescent bins
             sortedArr1 = np.sort(file1Arr, axis=1)
             sortedArr2 = np.sort(file2Arr, axis=1)
-            # If all values in a bin are equal to the quiescentVal in both file1Arr and file2Arr, then the bin is quiescent
-            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentVal) 
-                                                                & (sortedArr1[:, -1] == quiescentVal) 
-                                                                & (sortedArr2[:, 0] == quiescentVal) 
-                                                                & (sortedArr2[:, -1] == quiescentVal))] = True
+            # If all values in a bin are equal to the quiescentState in both file1Arr and file2Arr, then the bin is quiescent
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState) 
+                                                                & (sortedArr1[:, -1] == quiescentState) 
+                                                                & (sortedArr2[:, 0] == quiescentState) 
+                                                                & (sortedArr2[:, -1] == quiescentState))] = True
 
         # Need the permuations to effective count state pairs (see rowObsS2() for theory)
         permutations1 = file1Arr.shape[1] * (file1Arr.shape[1] - 1)

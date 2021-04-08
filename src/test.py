@@ -8,7 +8,7 @@ from time import time
 from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
-from epilogosHelpers import strToBool, getNumStates
+from helpers import strToBool, getNumStates
 
 def main(stateInfo, outputDir, numProcesses, verbose):
     tTotal = time()

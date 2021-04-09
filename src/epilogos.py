@@ -156,7 +156,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                                                                             outputDirPath, fileTag, numProcesses, verbose)
-                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
                                                   saliency, numTasks, "--mem=0", ""))
         else:
             # Find matching file in other directory
@@ -173,7 +173,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
                                                                            saliency, outputDirPath, fileTag, numProcesses,
                                                                            verbose)
-                expJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
                                                   saliency, numTasks, "--mem=0", ""))
 
     if not commandLineBool:
@@ -205,7 +205,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
                                                                                    numProcesses, quiescentState, verbose)
-                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                                                     saliency, numTasks, "--mem=0",
                                                     "--dependency=afterok:{}".format(combinationJobID)))
         else:
@@ -223,7 +223,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
                                                                                  fileTag, numProcesses, quiescentState, verbose)
-                scoreJobIDArr.append(submitSlurmJob(file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
                                                     saliency, numTasks, "--mem=0",
                                                     "--dependency=afterok:{}".format(combinationJobID)))
     
@@ -404,7 +404,7 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
     Output:
     The job number
     """
-    jobName = "{}_{}_{}".format(jobPrefix, fileTag, filename)
+    jobName = "{}_{}{}".format(jobPrefix, fileTag, filename)
     jobOutPath = outputDirPath / (".out/" + jobName + ".out")
     jobErrPath = outputDirPath / (".err/" + jobName + ".err")
 

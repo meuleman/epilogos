@@ -800,75 +800,30 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     with open(filePath, 'w') as f:
         # Pick values above significance threshold and then sort
         indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
+        
         # Make sure that there are at least 1000 values if creating greatestHits.txt
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
             maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["chr", "binStart", "binEnd", "distance", "maxDiffLoc", "pval"])\
-                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
-
-        # print("premerge lenght", locations.shape[0])
-
-        # locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-        #     maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
-        #     columns=["Chromosome", "Start", "End", "distance", "maxDiffLoc", "pval"])\
-        #         .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "distance": np.float32, "maxDiffLoc": np.int32, "pval": np.float32})
-
-        # Figuring out chromosome order
-        chromosomes = locations['chr'].unique()
-        # chromosomes = locations['Chromosome'].unique()
-        rawChrNamesInts = []
-        rawChrNamesStrs = []
-        for chromosome in chromosomes:
-            try:
-                rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
-            except ValueError:
-                rawChrNamesStrs.append(chromosome.split("chr")[-1])
-        rawChrNamesInts.sort()
-        rawChrNamesStrs.sort()
-        chrOrder = rawChrNamesInts + rawChrNamesStrs
-        for i in range(len(chrOrder)):
-            chrOrder[i] = "chr" + str(chrOrder[i])
-
-
-        # Sorting the dataframes by chromosomal location
-        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
-        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-
-        # locations["chr"] = pd.Categorical(locations["Chromosome"], categories=chrOrder, ordered=True)
-        # locations.sort_values(by=["Chromosome", "Start", "End"], inplace=True)
-
-
-        # Iterate until all is merged, but only for the general case
+            columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval"])\
+                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32, "MaxDiffLoc": np.int32, 
+                         "Pval": np.float32})
+        
+        # Don't want to merge when creating significantLoci.txt
         if not onlySignificant:
-            locations = mergeAdjacent(locations)
+            locations = mergeAdjacent(pr.PyRanges(locations))
+            locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
-        # print("postmerge lenght", locations.shape[0])
-
-
-        # if not onlySignificant:
-        #     tMerge = time()
-        #     locations = pr.PyRanges(locations)
-        #     locations = mergeAdjacent(locations)
-        #     print("TIME TO MERGE:", time() - tMerge)
-
-        locations = locations.iloc[-locations.iloc[:, 3].abs().argsort()]
-
-        print("end locations shape", locations.shape)
-        print("end locations", locations.head())
-
-        # locations.sort_values(by=["distance", "chr", "binStart", "binEnd"], inplace=True, ascending=False)
+        # Sort by absolute value of score
+        locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
         stars = np.array(["***" if float(locations.iloc[i, 5]) <= significantAt01 else
             ("**" if float(locations.iloc[i, 5]) <= significantAt05 else
                 ("*" if float(locations.iloc[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
-
-        print("stars shape", stars.shape)
-
 
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt
@@ -879,46 +834,58 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         f.write(outString)
 
 
+# def mergeAdjacent(originalLocations):
+#     """
+#     Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
+
+#     Input:
+#     locationArr -- pandas dataframe containing genomic loci in the first 3 columns
+
+#     Output:
+#     dataframe with merged loci
+#     """
+#     i = 0
+#     mergedLocations = []
+#     while i < len(originalLocations) - 1:
+#         j = 1
+#         while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
+#             and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
+#             j += 1
+#         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
+#         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
+#                                + list(originalLocations.iloc[maxDistIndex, 3:]))
+#         i += j
+#     return pd.DataFrame(mergedLocations)
+
 def mergeAdjacent(originalLocations):
     """
-    Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
+    Takes a pyranges object and merges all adjacent regions maintaining the highest score
 
     Input:
-    locationArr -- pandas dataframe containing genomic loci in the first 3 columns
+    originalLocations -- Pyranges object containing loci, scores, and more (not relevant for function)
 
-    Output:
-    dataframe with merged loci
+    Ouput:
+    pandas dataframe with adjacent regions merged
     """
-    i = 0
-    mergedLocations = []
-    while i < len(originalLocations) - 1:
-        j = 1
-        while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
-            and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
-            j += 1
-        maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
-        mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
-                               + list(originalLocations.iloc[maxDistIndex, 3:]))
-        i += j
-    return pd.DataFrame(mergedLocations)
+    mergedData = originalLocations.merge()
+    joinMergedToOriginal = mergedData.join(originalLocations)
+   
+    # finalMerge is a pyranges object
+    finalMerge = joinMergedToOriginal.apply(maxScoringElement)
+    # finalMerge.df is a pandas dataframe
+    return finalMerge.df
 
-# def mergeAdjacent(originalLocations):
-#     merged_data = originalLocations.merge()
-#     join_merged_to_all = merged_data.join(originalLocations)
+def maxScoringElement(df):
+    """
+    Takes a dataframe and deletes duplicate rows, maintaining the highest score
 
-#     # res is a pyranges object
-#     res = join_merged_to_all.apply(max_scoring_element)
-#     # res.df is a pandas dataframe
-#     return res.df
-
-# def max_scoring_element(df):
-#     return df \
-#         .sort_values('distance', ascending=False) \
-#         .drop_duplicates(['Chromosome', 'Start', 'End', 'maxDiffLoc', 'pval'], keep='first') \
-#         .sort_index() \
-#         .reset_index(drop=True)
-
-
+    Input:
+    df -- pandas dataframe containing merged loci
+    
+    Output:
+    pandas dataframe with deleted duplicate rows
+    """
+    return df.iloc[(-df["Score"].abs()).argsort()].drop_duplicates(['Chromosome', 'Start', 'End'], keep='first')
 
 def findSign(x):
     """

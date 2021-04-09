@@ -6,6 +6,7 @@ import numpy as np
 from time import time
 from os import remove
 import pandas as pd
+import pyranges as pr
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
@@ -121,33 +122,14 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
             maxScoreArr[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["chr", "binStart", "binEnd", "score", "maxScoreLoc"])\
-                .astype({"chr": str, "binStart": np.int32, "binEnd": np.int32, "score": np.float32, "maxScoreLoc": np.int32})
-
-        # Figuring out chromosome order
-        chromosomes = locations['chr'].unique()
-        rawChrNamesInts = []
-        rawChrNamesStrs = []
-        for chromosome in chromosomes:
-            try:
-                rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
-            except ValueError:
-                rawChrNamesStrs.append(chromosome.split("chr")[-1])
-        rawChrNamesInts.sort()
-        rawChrNamesStrs.sort()
-        chrOrder = rawChrNamesInts + rawChrNamesStrs
-        for i in range(len(chrOrder)):
-            chrOrder[i] = "chr" + str(chrOrder[i])
-
-
-        # Sorting the dataframes by chromosomal location
-        locations["chr"] = pd.Categorical(locations["chr"], categories=chrOrder, ordered=True)
-        locations.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+            columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
+                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32, "MaxScoreLoc": np.int32})
 
         # Iterate until all is merged
-        locations = mergeAdjacent(locations)
+        locations = mergeAdjacent(pr.PyRanges(locations))
 
-        locations = locations.iloc[-locations.iloc[:, 3].abs().argsort()]
+        # Sort by absolute value of score
+        locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"

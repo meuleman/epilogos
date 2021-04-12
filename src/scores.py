@@ -143,8 +143,8 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
     sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.float32), totalRows * numStates)
 
     # Start the processes
-    with closing(Pool(numProcesses, initializer=_init, 
-                      initargs=((sharedArr, totalRows, numStates, expFreqPath, verbose), ))) as pool:
+    with closing(Pool(numProcesses, initializer=_init,
+                      initargs=((sharedArr, totalRows, numStates), expFreqPath, verbose))) as pool:
         if saliency == 1:
             pool.starmap(s1Score, zip(repeat(file1Path), repeat(Path("null")), rowList))
         elif saliency == 2:

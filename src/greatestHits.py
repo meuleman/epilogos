@@ -127,10 +127,12 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
 
         # Iterate until all is merged
         locations = mergeAdjacent(pr.PyRanges(locations))
+        if "Start_b" in locations.columns:
+            locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
         # Sort by absolute value of score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
-
+        
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],

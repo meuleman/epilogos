@@ -136,7 +136,8 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3]))) for i in range(locations.shape[0]))
+                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3]))) 
+                            for i in range(min((locations.shape[0], 100))))
         f.write(outString)
 
 

@@ -814,7 +814,8 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         # Don't want to merge when creating significantLoci.txt
         if not onlySignificant:
             locations = mergeAdjacent(pr.PyRanges(locations))
-            locations.drop(columns=["Start_b", "End_b"], inplace=True)
+            if "Start_b" in locations.columns:
+                locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
         # Sort by absolute value of score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]

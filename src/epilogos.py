@@ -199,7 +199,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
+                scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                            quiescentState, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
@@ -217,7 +218,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses, verbose)
+                scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                            quiescentState, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,

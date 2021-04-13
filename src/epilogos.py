@@ -238,7 +238,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            greatestHits.main(outputDirPath, stateInfo, storedExpPath, fileTag, False)
+            greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 

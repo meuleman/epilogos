@@ -238,7 +238,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            greatestHits.main(outputDirPath, stateInfo, fileTag, False)
+            greatestHits.main(outputDirPath, stateInfo, storedExpPath, fileTag, False)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
@@ -251,7 +251,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
             pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
-                                diagnosticBool, numTrials, samplingSize)
+                                diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
             pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,

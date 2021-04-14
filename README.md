@@ -46,7 +46,7 @@ $ pip install epilogos
 
 To compute epilogos, you will need to have the following python libraries: [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/). These can be installed with one of the following commands.
 ```bash
-$ pip install click, numpy, scipy, matplotlib, pandas
+$ pip install click numpy pandas pyranges scipy matplotlib 
 ```
 or while in the epilogos directory
 ```bash
@@ -89,7 +89,7 @@ $ epilogos -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833_sa
 
 <p>Before you can run Epilogos on your own data, you will need to complete two steps.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome
@@ -143,7 +143,7 @@ $ epilogos -l -i data/pyData/male/ -n data/state_metadata/human/Adsera_et_al_833
 
 <p>Before you can run Epilogos on your own data, you will need to complete two steps.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome
@@ -212,7 +212,7 @@ The argument to this flag is the path to the directory which contains the files 
 e.g. $ epilogos -i data/pyData/male/
 ```
 
-<p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome
@@ -385,7 +385,7 @@ $ epilogos -m paired -a data/pyData/male/ -b data/pyData/female/ -n data/state_m
 
 <p>Before you can run Epilogos on your own data, you will need to complete two steps.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome
@@ -439,7 +439,7 @@ $ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -n data/stat
 
 <p>Before you can run Epilogos on your own data, you will need to complete two steps.</p>
 
-<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>First, you will need to modify your data such that Epilogos can understand it. In order to assist with this, we have provided a bash script which takes ChromHMM files and generates Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome
@@ -485,7 +485,7 @@ Pairwise Epilogos has additional command line options beyond the options offered
 e.g. $ epilogos -a data/pyData/male/ -b data/pydata/female/
 ```
 
-<p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code>. If you would prefer not to use the script, data is to be formatted as follows:</p>
+<p>Epilogos input data must be formatted specifically for Epilogos. In order to help you create your own input data files, we have provided a script to transform chromHMM files into Epilogos input files. This can be found at <code>scripts/preprocess_data_ChromHMM.sh</code> (to get usage information run without arguments). If you would prefer not to use the script, data is to be formatted as follows:</p>
 
 ```
 Column 1: Chromosome

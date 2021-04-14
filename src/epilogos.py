@@ -128,7 +128,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     if not commandLineBool:
         # Variable for the sbatch submission in case we are using slurm
         if numProcesses == 0:
-            memory = "--mem=0"
+            memory = "--exclusive --mem=0"
         else:
             memory = "--ntasks={} --mem=16000".format(numProcesses)
 

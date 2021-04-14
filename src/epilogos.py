@@ -11,6 +11,7 @@ import scores
 import greatestHits
 import pairwiseVisual
 from helpers import getNumStates
+import warnings
 
 print("""\n
                   d8b 888                                     
@@ -128,9 +129,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     if not commandLineBool:
         # Variable for the sbatch submission in case we are using slurm
         if numProcesses == 0:
-            numTasks = "--exclusive"
+            memory = "--mem=0"
         else:
-            numTasks = "--ntasks={}".format(numProcesses)
+            memory = "--ntasks={} --mem=16000".format(numProcesses)
+            warnings.warn("{} cores were requested. Machine specs unknown, requesting 16gb of memory across all cores"
+                          .format(numProcesses))
 
         # Creating directories for slurm output and error logs
         (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
@@ -156,8 +159,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                                                                             outputDirPath, fileTag, numProcesses, verbose)
-                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
-                                                  saliency, numTasks, "--mem=0", ""))
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
+                                                  pythonCommand, saliency, memory, ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
@@ -173,8 +176,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
                                                                            saliency, outputDirPath, fileTag, numProcesses,
                                                                            verbose)
-                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath, pythonCommand,
-                                                  saliency, numTasks, "--mem=0", ""))
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
+                                                  pythonCommand, saliency, memory, ""))
 
     if not commandLineBool:
         # Create a string for slurm dependency to work and to print more nicely
@@ -189,8 +192,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
                                                        verbose)
-        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
-                                          "--mem-per-cpu=8000", "--dependency=afterok:{}".format(expJobIDStr))
+        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency,
+                                          "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID, flush=True)
 
     scoreJobIDArr = []
@@ -206,8 +209,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
                                                                                    numProcesses, quiescentState, verbose)
-                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
-                                                    saliency, numTasks, "--mem=0",
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
+                                                    pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
         else:
             # Find matching file in other directory
@@ -224,9 +227,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
-                                                                                 fileTag, numProcesses, quiescentState, verbose)
-                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath, pythonCommand,
-                                                    saliency, numTasks, "--mem=0",
+                                                                                 fileTag, numProcesses, quiescentState,
+                                                                                 verbose)
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
+                                                    pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
     
     if not commandLineBool:
@@ -243,8 +247,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
                                                               storedExpPath, verbose)
-            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1",
-                                          "--mem-per-cpu=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
+            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1 --mem=8000",
+                                          "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
@@ -259,7 +263,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                 fileTag, numProcesses, diagnosticBool,
                                                                                 numTrials, samplingSize, storedExpPath,
                                                                                 verbose)
-            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, numTasks, "--mem=0",
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, memory,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
 
@@ -388,7 +392,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     elif quiescentState >= numStates:
         raise ValueError("Quiescent state value must be a state provided in the state model")
 
-def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, numTasks, memory, dependency):
+def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, memory, dependency):
     """
     Submits a epilogos job to a SLURM cluster
 
@@ -399,7 +403,6 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
     outputDirPath -- The output directory for epilogos will be used for error and output logs
     pythonCommand -- The python command to run on the SLURM job
     saliency -- The saliency metric being used in this epilogos run
-    numTasks -- Either '--exclusive' or '--numTasks=x' where x is the number of cores to run on
     memory -- The amount of memory to be allocated to the slurm job
     dependency -- Which jobs the SLURM job must wait for before starting
 
@@ -425,14 +428,14 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, numTasks, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, numTasks, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
     elif saliency == 3:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, numTasks, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 

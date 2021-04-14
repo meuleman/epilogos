@@ -1,31 +1,55 @@
 #!/bin/bash
+set -ueo pipefail
 
-### The ${GENOME}.genome file contains chromosome sizes, and can be obtained in several ways, including:
-### wget -q -O - ftp://hgdownload.cse.ucsc.edu/goldenPath/${GENOME}/database/chromInfo.txt.gz | gunzip - | cut -f 1-2
-GENOME=$1
+if [ $# -lt 3 ]; then
+  echo
+  echo "Usage: $0 <chromsizes> <metadata> <datadir>"
+  echo "Insufficient information -- please provide:"
+  echo
+  echo "1. <datadir>: Directory with input data, one file per biosample-chromosome combination."
+  echo "   These can be obtained from ChromHMM using the '-printstatebyline' parameter."
+  echo "   Each line expected to represent a single 200bp genomic bin and its chromatin state."
+  echo "   For more information on the formatting of these files, see the ChromHMM manual at:"
+  echo "     http://compbio.mit.edu/ChromHMM/ChromHMM_manual.pdf"
+  echo "   Example files can be found in the 'data/ChromHMM' directory."
+  echo
+  echo "2. <metadata>: File containing metadata information for each input dataset/biosample."
+  echo "   This file is expected to contain a header line, and a unique biosample name in column 1,"
+  echo "   represented in the input data directory. Example file: 'data/metadata_Boix.txt'."
+  echo
+  echo "3. <chromsizes>: File containing chromosome sizes in number of basepairs."
+  echo "   This information can be obtained from UCSC, e.g. for human genome hg19, run:"
+  echo "   $ wget -q -O - ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz | \\"
+  echo "       gunzip - | cut -f 1-2 > hg19.genome"
+  echo "   Examples for hg19 and hg38 can be found in the 'scripts' directory."
+  echo
+  echo "Example run: $0 data/ChromHMM data/metadata_Boix.txt scripts/hg19.genome"
+  exit
+fi  
 
-### the METADATA file is expected to contain a header line
-METADATA=$2
+datadir=${1}
+metadata=${2}
+chromsizes=${3}
 
-### Directory where all STATEBYLINE ChromHMM output is stored, one file per biosample-chromosome combination.
-DIR="/home/meuleman/work/projects/imputation//WM20191003_curated_data_mixed/public_ChromHMM_released/observed_aux_18_hg19/CALLS/STATEBYLINE/"
-
-for CHR in $(cut -f1 ${GENOME}.genome); do
-  echo -n "Processing ${CHR}: "
-  CMD="paste"; 
-  NUMFILES=`ls -1 ${DIR}/*${CHR}_*.txt* 2>/dev/null | wc -l`
-  if [ ${NUMFILES} -gt 0 ];
-  then
-    echo "${NUMFILES} files"
-  for BIOSAMPLE in $(cut -f1 ${METADATA} | tail -n +2); do
-    NAM=`stat -t -c %n ${DIR}/*${BIOSAMPLE}*${CHR}_*.txt*`
-    CMD="$CMD <(zcat -f -- ${NAM})";
+for chr in $(cut -f1 ${chromsizes}); do
+  echo -n "Processing ${chr}: "
+  cmd="paste"; 
+  i=0;
+  for biosample in $(cut -f1 ${metadata} | tail -n +2); do
+    if compgen -G "${datadir}/*${biosample}*${chr}_*.txt*" > /dev/null; then
+      nam=`stat -t -c %n ${datadir}/*${biosample}*${chr}_*.txt*`
+      cmd="$cmd <(zcat -f -- "${nam}")";
+      i=$((i+1))
+    fi
   done
-  eval $CMD | awk 'BEGIN{OFS="\t";chr=""}
-    {if (NR==1) { chr=$2 } else { if (NR>2) print chr, (NR-3)*200, (NR-2)*200, $0}}' \
-    > matrix_${CHR}.txt
+  echo -n "${i} files found. "
+  if [ ${i} -gt 0 ]; then
+    eval $cmd | awk 'BEGIN{OFS="\t";chr=""}
+      {if (NR==1) { chr=$2 } else { if (NR>2) print chr, (NR-3)*200, (NR-2)*200, $0}}' \
+      > matrix_${chr}.txt
+    echo "Done."
   else
-    echo "no files found"
+    echo "Skipping."
   fi
 done
 

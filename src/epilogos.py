@@ -11,7 +11,6 @@ import scores
 import greatestHits
 import pairwiseVisual
 from helpers import getNumStates
-import warnings
 
 print("""\n
                   d8b 888                                     
@@ -132,8 +131,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             memory = "--mem=0"
         else:
             memory = "--ntasks={} --mem=16000".format(numProcesses)
-            warnings.warn("{} cores were requested. Machine specs unknown, requesting 16gb of memory across all cores"
-                          .format(numProcesses))
+
+            print("\nWARNING: {} cores requested.".format(numProcesses), flush=True, end=" ")
+            print("Machine specs unknown, requesting 16gb of memory across all cores")
 
         # Creating directories for slurm output and error logs
         (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)

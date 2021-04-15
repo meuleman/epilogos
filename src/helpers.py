@@ -105,7 +105,7 @@ def splitRows(dataFilePath, numProcesses):
     return rowList
 
 
-def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0), expBool=True, verbose=True):
+def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0), expBool=True, verbose=True, groupSize=-1):
     """
     Reads the states from the relevant rows of the inputed data file(s)
 
@@ -170,4 +170,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     # In the case of calculating the scores for pairwise epilogos, 
     # we need the original file 1 and file 2 arrays as well as their shuffled counterparts
     # shuffledCombinedArr is split by size of the original arrays
-    return file1Arr, file2Arr, shuffledCombinedArr[:, :file1Arr.shape[1]], shuffledCombinedArr[:, file1Arr.shape[1]:]
+    if groupSize == -1:
+        return file1Arr, file2Arr, shuffledCombinedArr[:, :file1Arr.shape[1]], shuffledCombinedArr[:, file1Arr.shape[1]:]
+    else:
+        return file1Arr, file2Arr, shuffledCombinedArr[:, :groupSize], shuffledCombinedArr[:, groupSize:2*groupSize]

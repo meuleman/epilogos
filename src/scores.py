@@ -10,7 +10,7 @@ from contextlib import closing
 from helpers import strToBool, splitRows, readStates
 import gzip
 
-def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, verbose):
+def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):
     """
     Wrapper function which prepares inputs for the score calculation
 
@@ -47,7 +47,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
             verbose)
     else:
         calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-            filename, numProcesses, quiescentState, verbose)
+            filename, numProcesses, quiescentState, groupSize, verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
@@ -83,7 +83,7 @@ def _init(sharedArr_, expFreqPath_, verbose_):
 
 
 def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, quiescenceSharedArr_, totalRows, 
-                  numStates, quiescentState_, expFreqPath_, verbose_):
+                  numStates, quiescentState_, expFreqPath_, groupSize_, verbose_):
     """
     Initializes global variables for multiprocessing in the paired epilogos case
 
@@ -106,6 +106,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     global quiescentState
     global expFreqPath
     global verbose
+    global groupSize
 
     sharedArr1 = (sharedArr1_, totalRows, numStates)
     sharedArr2 = (sharedArr2_, totalRows, numStates)
@@ -115,6 +116,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     quiescentState = quiescentState_
     expFreqPath = expFreqPath_
     verbose = verbose_
+    groupSize = groupSize_
 
 def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
     verbose):
@@ -167,7 +169,7 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
 
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-    filename, numProcesses, quiescentState, verbose):
+    filename, numProcesses, quiescentState, groupSize, verbose):
     """
     Function responsible for deploying the processes used to calculate the scores in the paired epilogos case
 
@@ -198,7 +200,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
 
     # Start the processes
     with closing(Pool(numProcesses, initializer=_initPairwise, initargs=(sharedArr1, sharedArr2, shuffledSharedArr1,
-        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentState, expFreqPath, verbose))) as pool:
+        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentState, expFreqPath, groupSize, verbose))) as pool:
         if saliency == 1:
             pool.starmap(s1Score, zip(repeat(file1Path), repeat(file2Path), rowList))
         elif saliency == 2:
@@ -262,7 +264,7 @@ def s1Score(file1Path, file2Path, rowsToCalc):
         scoreArr = sharedToNumpy(*sharedArr)
     else:
         file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
-            rowsToCalc=rowsToCalc, expBool=False, verbose=verbose)
+            rowsToCalc=rowsToCalc, expBool=False, verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr1[2]
 
@@ -337,7 +339,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
         dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
-            verbose=verbose)
+            verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr[2]
 
@@ -514,4 +516,4 @@ def klScoreND(obs, exp):
 
 if __name__ == "__main__":
     main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
-         strToBool(argv[10]))
+         int(argv[10]), strToBool(argv[11]))

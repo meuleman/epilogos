@@ -57,8 +57,9 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 @click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True, 
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." + 
                    "If set to 0, filtering is not done. [default: last state]")
+@click.option("-g", "--group-size", "groupSize", type=int, help="")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState):
+    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """
     Wrapper function that determines which epilogos functions to use and how to deploy them
     """
@@ -203,12 +204,12 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         if mode == "single":
             if commandLineBool:
                 scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-                            quiescentState, verbose)
+                            quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
-                                                                                   numProcesses, quiescentState, verbose)
+                                                                                   numProcesses, quiescentState, groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -222,13 +223,13 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
             if commandLineBool:
                 scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-                            quiescentState, verbose)
+                            quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
                                                                                  fileTag, numProcesses, quiescentState,
-                                                                                 verbose)
+                                                                                 groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -489,7 +490,7 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             and calculationStep == "score":
             print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}"\
                 .format("-" * 80, spLines[0], spLines[1]), flush=True)
-            calculationStep += "visual"
+            calculationStep = "visual"
 
         # Print out jobs when they are completed
         for line in spLines[2:]:

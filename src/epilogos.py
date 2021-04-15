@@ -437,8 +437,6 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
         slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
             .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
 
-    print(slurmCommand)
-
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):

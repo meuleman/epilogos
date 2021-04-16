@@ -139,95 +139,16 @@ def fitDistances(outputDirPath, distanceArrReal, distanceArrNull, quiescenceArr,
         paramDict['johnsonsu'] = params
         mleDict['johnsonsu'] = mle
 
-        params = st.t.fit(dataNull)
+        params = st.t.fit(dataNull, floc=0)
         mle = st.t.nnlf(params, pd.Series(dataNull))
         paramDict['t'] = params
         mleDict['t'] = mle
-
-        params = st.norminvgauss.fit(dataNull)
-        mle = st.norminvgauss.nnlf(params, pd.Series(dataNull))
-        paramDict['norminvgauss'] = params
-        mleDict['norminvgauss'] = mle
 
         params = st.cauchy.fit(dataNull)
         mle = st.cauchy.nnlf(params, pd.Series(dataNull))
         paramDict['cauchy'] = params
         mleDict['cauchy'] = mle
 
-        params = st.laplace.fit(dataNull)
-        mle = st.laplace.nnlf(params, pd.Series(dataNull))
-        paramDict['laplace'] = params
-        mleDict['laplace'] = mle
-
-        params = st.hypsecant.fit(dataNull)
-        mle = st.hypsecant.nnlf(params, pd.Series(dataNull))
-        paramDict['hypsecant'] = params
-        mleDict['hypsecant'] = mle
-
-        params = st.genlogistic.fit(dataNull)
-        mle = st.genlogistic.nnlf(params, pd.Series(dataNull))
-        paramDict['genlogistic'] = params
-        mleDict['genlogistic'] = mle
-
-        params = st.logistic.fit(dataNull)
-        mle = st.logistic.nnlf(params, pd.Series(dataNull))
-        paramDict['logistic'] = params
-        mleDict['logistic'] = mle
-
-        params = st.lognorm.fit(dataNull)
-        mle = st.lognorm.nnlf(params, pd.Series(dataNull))
-        paramDict['lognorm'] = params
-        mleDict['lognorm'] = mle
-
-        params = st.powernorm.fit(dataNull)
-        mle = st.powernorm.nnlf(params, pd.Series(dataNull))
-        paramDict['powernorm'] = params
-        mleDict['powernorm'] = mle
-
-        params = st.norm.fit(dataNull)
-        mle = st.norm.nnlf(params, pd.Series(dataNull))
-        paramDict['norm'] = params
-        mleDict['norm'] = mle
-
-        params = st.loglaplace.fit(dataNull)
-        mle = st.loglaplace.nnlf(params, pd.Series(dataNull))
-        paramDict['loglaplace'] = params
-        mleDict['loglaplace'] = mle
-
-        params = st.gumbel_l.fit(dataNull)
-        mle = st.gumbel_l.nnlf(params, pd.Series(dataNull))
-        paramDict['gumbel_l'] = params
-        mleDict['gumbel_l'] = mle
-
-        params = st.gumbel_r.fit(dataNull)
-        mle = st.gumbel_r.nnlf(params, pd.Series(dataNull))
-        paramDict['gumbel_r'] = params
-        mleDict['gumbel_r'] = mle
-
-        params = st.exponnorm.fit(dataNull)
-        mle = st.exponnorm.nnlf(params, pd.Series(dataNull))
-        paramDict['exponnorm'] = params
-        mleDict['exponnorm'] = mle
-
-        params = st.skewnorm.fit(dataNull)
-        mle = st.skewnorm.nnlf(params, pd.Series(dataNull))
-        paramDict['skewnorm'] = params
-        mleDict['skewnorm'] = mle
-
-        params = st.foldnorm.fit(dataNull)
-        mle = st.foldnorm.nnlf(params, pd.Series(dataNull))
-        paramDict['foldnorm'] = params
-        mleDict['foldnorm'] = mle
-
-        params = st.powerlognorm.fit(dataNull)
-        mle = st.powerlognorm.nnlf(params, pd.Series(dataNull))
-        paramDict['powerlognorm'] = params
-        mleDict['powerlognorm'] = mle
-
-        params = st.gausshyper.fit(dataNull)
-        mle = st.gausshyper.nnlf(params, pd.Series(dataNull))
-        paramDict['gausshyper'] = params
-        mleDict['gausshyper'] = mle
 
     with open(outputDirPath / "fits.txt", "w") as f:
         for k, v in paramDict.items():

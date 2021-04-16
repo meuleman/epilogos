@@ -57,7 +57,7 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 @click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True, 
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." + 
                    "If set to 0, filtering is not done. [default: last state]")
-@click.option("-g", "--group-size", "groupSize", type=int, help="")
+@click.option("-g", "--group-size", "groupSize", type=int, default=-1, help="")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """

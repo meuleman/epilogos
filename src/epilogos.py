@@ -207,7 +207,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
                                                                                    outputDirPath, storedExpPath, fileTag,
                                                                                    numProcesses, quiescentState, groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
@@ -226,7 +226,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
-                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
                                                                                  saliency, outputDirPath, storedExpPath,
                                                                                  fileTag, numProcesses, quiescentState,
                                                                                  groupSize, verbose)

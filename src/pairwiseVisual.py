@@ -13,7 +13,7 @@ from itertools import repeat
 from os import remove
 from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
-
+from memory_profiler import profile
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
@@ -52,44 +52,44 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
         numProcesses = cpu_count()
 
     # Read in observation files
-    if verbose: print("\nReading in observation files...", flush=True); tRead = time()
-    else: print("    Reading in files\t", end="", flush=True)
+    # if verbose: print("\nReading in observation files...", flush=True); tRead = time()
+    # else: print("    Reading in files\t", end="", flush=True)
     locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
-    if verbose: print("    Time:", time() - tRead, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tRead, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
-    if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
-    else: print("    Fitting distances\t", end="", flush=True)
+    # if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
+    # else: print("    Fitting distances\t", end="", flush=True)
     params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
         numTrials, samplingSize)
-    if verbose: print("    Time:", time() - tFit, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tFit, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
 
     # Creating Diagnostic Figures
     if diagnosticBool:
-        if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
-        else: print("    Diagnostic figures\t", end="", flush=True)
+        # if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
+        # else: print("    Diagnostic figures\t", end="", flush=True)
         createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
-        if verbose: print("    Time:", time() - tDiagnostic, flush=True)
-        else: print("\t[Done]", flush=True)
+        # if verbose: print("    Time:", time() - tDiagnostic, flush=True)
+        # else: print("\t[Done]", flush=True)
 
     # Calculating PValues
-    if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
-    else: print("    Calculating p-vals\t", end="", flush=True)
+    # if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
+    # else: print("    Calculating p-vals\t", end="", flush=True)
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    if verbose: print("    Time:", time() - tPVal, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tPVal, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
-    if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
-    else: print("    Writing metrics\t", end="", flush=True)
+    # if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
+    # else: print("    Writing metrics\t", end="", flush=True)
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tMetrics, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tMetrics, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
     genomeAutoCorrelation = 0.987
@@ -97,43 +97,43 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     significanceThreshold = .1 / nStar
 
     # Create txt file of top 1000 loci with adjacent merged
-    if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
-    else: print("    Greatest hits txt\t", end="", flush=True)
+    # if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
+    # else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
-    if verbose: print("    Time:", time() - t1000, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - t1000, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Create txt file of significant loci
-    if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
-    else: print("    Significant loci txt\t", end="", flush=True)
+    # if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
+    # else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
-    if verbose: print("    Time:", time() - tSig, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tSig, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Create Genome Manhattan Plot
-    if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
-    else: print("    Genome-wide Manhattan\t", end="", flush=True)
+    # if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
+    # else: print("    Genome-wide Manhattan\t", end="", flush=True)
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tGManhattan, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tGManhattan, flush=True)
+    # else: print("\t[Done]", flush=True)
     
     # Create Chromosome Manhattan Plot
-    if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
-    else: print("    Chromosome Manhattan\t", end="", flush=True)
+    # if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
+    # else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    if verbose: print("    Time:", time() - tCManhattan, flush=True)
-    else: print("\t[Done]", flush=True)
+    # if verbose: print("    Time:", time() - tCManhattan, flush=True)
+    # else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
     remove(Path(expFreqPath))
 
-    if verbose: print("Total Time:", time() - tTotal, flush=True)
+    # if verbose: print("Total Time:", time() - tTotal, flush=True)
 
-
+@profile
 def readInData(outputDirPath, numProcesses, numStates):
     """
     Reads all the epilogos score files in and combines them into a numpy array ordered by location
@@ -219,7 +219,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 
-
+@profile
 def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     """
     Reads in the real and null scores
@@ -241,7 +241,7 @@ def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
                                                                                     npzFileQuiescence['quiescenceArr'])
 
-
+@profile
 def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
     """
     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
@@ -287,7 +287,7 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
     medianIndex = int((numTrials-1)/2)
     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
 
-
+@profile
 def fitOnSample(distanceArrNull, samplingSize):
     """
     Fits a sample of the null distances
@@ -318,7 +318,7 @@ def fitOnSample(distanceArrNull, samplingSize):
 
     return params, nnlf
 
-
+@profile
 def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag):
     """
     Generate diagnostic plots of the gennorm fit on the null data and comparisons between the null and real data
@@ -422,7 +422,7 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-
+@profile
 def calculatePVals(distanceArrReal, beta, loc, scale):
     """
     Calculates the pvalues of the real distances based on the fit of the null distances
@@ -445,7 +445,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
     return pvals
 
-
+@profile
 def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
     significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
     """
@@ -546,7 +546,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-
+@profile
 def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, significanceThreshold_, pvalsGraph_,
     stateColorList_, manhattanDirPath_):
     """
@@ -588,7 +588,7 @@ def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_,
     stateColorList = stateColorList_
     manhattanDirPath = manhattanDirPath_
 
-
+@profile
 def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
     significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
     """
@@ -630,7 +630,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
 
-
+@profile
 def graphChromosomeManhattan(chromosome, startEnd):
     """
     Generates the manhattan plots for each chromosome based on the distances between the two groups.
@@ -717,7 +717,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-
+@profile
 def pvalAxisScaling(ylim, beta, loc, scale):
     """
     Generates list containing proper tick marks for the manhattan plots
@@ -747,7 +747,7 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             
     return (yticksFinal, ytickLabelsFinal)
     
-
+@profile
 def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
@@ -775,7 +775,7 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     metricsTxt.write(metricsStr)
     metricsTxt.close()
 
-
+@profile
 def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
@@ -857,7 +857,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 #                                + list(originalLocations.iloc[maxDistIndex, 3:]))
 #         i += j
 #     return pd.DataFrame(mergedLocations)
-
+@profile
 def mergeAdjacent(originalLocations):
     """
     Takes a pyranges object and merges all adjacent regions maintaining the highest score
@@ -875,7 +875,7 @@ def mergeAdjacent(originalLocations):
     finalMerge = joinMergedToOriginal.apply(maxScoringElement)
     # finalMerge.df is a pandas dataframe
     return finalMerge.df
-
+@profile
 def maxScoringElement(df):
     """
     Takes a dataframe and deletes duplicate rows, maintaining the highest score
@@ -887,7 +887,7 @@ def maxScoringElement(df):
     pandas dataframe with deleted duplicate rows
     """
     return df.iloc[(-df["Score"].abs()).argsort()].drop_duplicates(['Chromosome', 'Start', 'End'], keep='first')
-
+@profile
 def findSign(x):
     """
     Returns a string containing the sign of the inputted number

@@ -130,7 +130,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
-    remove(Path(expFreqPath))
+    # remove(Path(expFreqPath))
 
     # if verbose: print("Total Time:", time() - tTotal, flush=True)
 

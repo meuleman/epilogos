@@ -13,8 +13,9 @@ from itertools import repeat
 from os import remove
 from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
-from memory_profiler import profile
+# from memory_profiler import profile
 
+@profile
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
     """
@@ -133,7 +134,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
 
     # if verbose: print("Total Time:", time() - tTotal, flush=True)
 
-@profile
+# @profile
 def readInData(outputDirPath, numProcesses, numStates):
     """
     Reads all the epilogos score files in and combines them into a numpy array ordered by location
@@ -219,7 +220,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 
-@profile
+# @profile
 def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     """
     Reads in the real and null scores
@@ -241,7 +242,7 @@ def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
                                                                                     npzFileQuiescence['quiescenceArr'])
 
-@profile
+# @profile
 def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
     """
     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
@@ -287,7 +288,7 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
     medianIndex = int((numTrials-1)/2)
     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
 
-@profile
+# @profile
 def fitOnSample(distanceArrNull, samplingSize):
     """
     Fits a sample of the null distances
@@ -318,7 +319,7 @@ def fitOnSample(distanceArrNull, samplingSize):
 
     return params, nnlf
 
-@profile
+# @profile
 def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag):
     """
     Generate diagnostic plots of the gennorm fit on the null data and comparisons between the null and real data
@@ -422,7 +423,7 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-@profile
+# @profile
 def calculatePVals(distanceArrReal, beta, loc, scale):
     """
     Calculates the pvalues of the real distances based on the fit of the null distances
@@ -445,7 +446,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
     return pvals
 
-@profile
+# @profile
 def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
     significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
     """
@@ -546,7 +547,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-@profile
+# @profile
 def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, significanceThreshold_, pvalsGraph_,
     stateColorList_, manhattanDirPath_):
     """
@@ -588,7 +589,7 @@ def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_,
     stateColorList = stateColorList_
     manhattanDirPath = manhattanDirPath_
 
-@profile
+# @profile
 def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
     significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
     """
@@ -630,7 +631,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
 
-@profile
+# @profile
 def graphChromosomeManhattan(chromosome, startEnd):
     """
     Generates the manhattan plots for each chromosome based on the distances between the two groups.
@@ -717,7 +718,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     plt.close(fig)
 
-@profile
+# @profile
 def pvalAxisScaling(ylim, beta, loc, scale):
     """
     Generates list containing proper tick marks for the manhattan plots
@@ -747,7 +748,7 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             
     return (yticksFinal, ytickLabelsFinal)
     
-@profile
+# @profile
 def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
@@ -775,7 +776,7 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     metricsTxt.write(metricsStr)
     metricsTxt.close()
 
-@profile
+# @profile
 def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
@@ -857,7 +858,7 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 #                                + list(originalLocations.iloc[maxDistIndex, 3:]))
 #         i += j
 #     return pd.DataFrame(mergedLocations)
-@profile
+# @profile
 def mergeAdjacent(originalLocations):
     """
     Takes a pyranges object and merges all adjacent regions maintaining the highest score
@@ -875,7 +876,7 @@ def mergeAdjacent(originalLocations):
     finalMerge = joinMergedToOriginal.apply(maxScoringElement)
     # finalMerge.df is a pandas dataframe
     return finalMerge.df
-@profile
+# @profile
 def maxScoringElement(df):
     """
     Takes a dataframe and deletes duplicate rows, maintaining the highest score
@@ -887,7 +888,7 @@ def maxScoringElement(df):
     pandas dataframe with deleted duplicate rows
     """
     return df.iloc[(-df["Score"].abs()).argsort()].drop_duplicates(['Chromosome', 'Start', 'End'], keep='first')
-@profile
+# @profile
 def findSign(x):
     """
     Returns a string containing the sign of the inputted number

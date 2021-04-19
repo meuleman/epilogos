@@ -15,7 +15,7 @@ from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 from memory_profiler import profile
 
-@profile
+# @profile
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
     """
@@ -242,7 +242,7 @@ def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
     return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
                                                                                     npzFileQuiescence['quiescenceArr'])
 
-# @profile
+@profile
 def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
     """
     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based

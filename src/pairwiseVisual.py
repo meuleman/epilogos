@@ -218,12 +218,12 @@ def readInData(outputDirPath, numProcesses, numStates):
     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
 
-    print("locationArr Size:", locationArr.size * locationArr.itemSize * 1000)
-    print("distanceArrReal Size:", distanceArrReal.size * distanceArrReal.itemSize * 1000)
-    print("distanceArrNull Size:", distanceArrNull.size * distanceArrNull.itemSize * 1000)
-    print("maxDiffArr Size:", maxDiffArr.size * maxDiffArr.itemSize * 1000)
-    print("diffArr Size:", diffArr.size * diffArr.itemSize * 1000)
-    print("quiescenceArr Size:", quiescenceArr.size * quiescenceArr.itemSize * 1000)
+    print("locationArr Size:", locationArr.size * locationArr.itemsize * 1000)
+    print("distanceArrReal Size:", distanceArrReal.size * distanceArrReal.itemsize * 1000)
+    print("distanceArrNull Size:", distanceArrNull.size * distanceArrNull.itemsize * 1000)
+    print("maxDiffArr Size:", maxDiffArr.size * maxDiffArr.itemsize * 1000)
+    print("diffArr Size:", diffArr.size * diffArr.itemsize * 1000)
+    print("quiescenceArr Size:", quiescenceArr.size * quiescenceArr.itemsize * 1000)
 
     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 

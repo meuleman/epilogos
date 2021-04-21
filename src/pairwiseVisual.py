@@ -259,7 +259,7 @@ def readInData(outputDirPath, numProcesses, numStates):
     pool.join()
 
     # Concatenating all chunks to the real differences dataframe
-    for diffDFChunk, _, _ in results:
+    for diffDFChunk in results:
         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
 
     # Figuring out chromosome order

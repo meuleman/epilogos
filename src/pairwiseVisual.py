@@ -449,7 +449,7 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
         chrOrder[i] = "chr" + str(chrOrder[i])
 
     # Creating array of null distances ordered by chromosome based on the read in chunks
-    nullChunks = list(zip(*list(zip(*results))[1]))
+    nullChunks = list(zip(*list(zip(*results))[0]))
     index = nullChunks[0].index(chrOrder[0])
     distanceArrNull = nullChunks[1][index]
     for chrName in chrOrder[1:]:
@@ -457,7 +457,7 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
 
     # Creating quiescence array ordered by chromosome based on the read in chunks
-    quiescenceChunks = list(zip(*list(zip(*results))[2]))
+    quiescenceChunks = list(zip(*list(zip(*results))[1]))
     index = quiescenceChunks[0].index(chrOrder[0])
     quiescenceArr = quiescenceChunks[1][index]
     for chrName in chrOrder[1:]:

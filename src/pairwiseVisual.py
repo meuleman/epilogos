@@ -52,18 +52,22 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if numProcesses == 0:
         numProcesses = cpu_count()
 
+
+    params, distanceArrNull, nonQuiescentIdx = fitDistances(outputDirPath, numProcesses, numTrials, samplingSize)
+
     # Read in observation files
     # if verbose: print("\nReading in observation files...", flush=True); tRead = time()
     # else: print("    Reading in files\t", end="", flush=True)
-    locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
+    # locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
+    locationArr, distanceArrReal, maxDiffArr = readInData(outputDirPath, numProcesses, numStates)
     # if verbose: print("    Time:", time() - tRead, flush=True)
     # else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
     # if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
     # else: print("    Fitting distances\t", end="", flush=True)
-    params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
-        numTrials, samplingSize)
+    # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
+    #     numTrials, samplingSize)
     # if verbose: print("    Time:", time() - tFit, flush=True)
     # else: print("\t[Done]", flush=True)
 
@@ -74,7 +78,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if diagnosticBool:
         # if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
         # else: print("    Diagnostic figures\t", end="", flush=True)
-        createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag)
+        createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag)
         # if verbose: print("    Time:", time() - tDiagnostic, flush=True)
         # else: print("\t[Done]", flush=True)
 
@@ -135,6 +139,98 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # if verbose: print("Total Time:", time() - tTotal, flush=True)
 
 # @profile
+# def readInData(outputDirPath, numProcesses, numStates):
+#     """
+#     Reads all the epilogos score files in and combines them into a numpy array ordered by location
+
+#     Input:
+#     outputDirPath -- Path to the epilogos output directory (this contains the score files)
+#     numProcesses -- The number of cores used to read in score files
+#     numStates -- The number of states in the state model
+
+#     Output:
+#     locationArr -- Numpy array containing the genomic locations for all the scores
+#     distanceArrReal -- Numpy array containing binwise signed squared euclidean distances of the scores of the two groups
+#     distanceArrNull -- Numpy array containing binwise signed squared euclidean distances of the null scores of the two groups
+#     maxDiffArr -- Numpy array containing the state which had the absolute distance in each bin
+#     diffArr -- Numpy array containing the raw binwise differences between the two groups
+#     """
+#     # For keeping the data arrays organized correctly
+#     realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
+
+#     # Data frame to dump inputed data into
+#     diffDF = pd.DataFrame(columns=realNames)
+
+#     # Multiprocess the reading
+#     with closing(Pool(numProcesses)) as pool:
+#         results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"),
+#             outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz"), repeat(realNames)))
+#     pool.join()
+
+#     # Concatenating all chunks to the real differences dataframe
+#     for diffDFChunk, _, _ in results:
+#         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
+
+#     # Figuring out chromosome order
+#     chromosomes = diffDF['chr'].unique()
+#     rawChrNamesInts = []
+#     rawChrNamesStrs = []
+#     for chromosome in chromosomes:
+#         try:
+#             rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+#         except ValueError:
+#             rawChrNamesStrs.append(chromosome.split("chr")[-1])
+#     rawChrNamesInts.sort()
+#     rawChrNamesStrs.sort()
+#     chrOrder = rawChrNamesInts + rawChrNamesStrs
+#     for i in range(len(chrOrder)):
+#         chrOrder[i] = "chr" + str(chrOrder[i])
+
+#     # Sorting the dataframes by chromosomal location
+#     diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
+#     diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+
+#     # Convert dataframes to np arrays for easier manipulation
+#     locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
+#     diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
+
+#     # Creating array of null distances ordered by chromosome based on the read in chunks
+#     nullChunks = list(zip(*list(zip(*results))[1]))
+#     index = nullChunks[0].index(chrOrder[0])
+#     distanceArrNull = nullChunks[1][index]
+#     for chrName in chrOrder[1:]:
+#         index = nullChunks[0].index(chrName)
+#         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
+
+#     # Creating quiescence array ordered by chromosome based on the read in chunks
+#     quiescenceChunks = list(zip(*list(zip(*results))[2]))
+#     index = quiescenceChunks[0].index(chrOrder[0])
+#     quiescenceArr = quiescenceChunks[1][index]
+#     for chrName in chrOrder[1:]:
+#         index = quiescenceChunks[0].index(chrName)
+#         quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
+
+#     # # Cleaning up the temp files after we've read them
+#     # for file in outputDirPath.glob("temp_*.npz"):
+#     #     remove(file)
+
+#     # Calculate the distance array for the real data
+#     diffSign = np.sign(np.sum(diffArr, axis=1))
+#     distanceArrReal = np.sum(np.square(diffArr), axis=1) * diffSign
+
+#     # Calculate the maximum contributing state for each bin
+#     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
+#     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
+
+#     print("locationArr Size:", locationArr.size * locationArr.itemsize * 1000)
+#     print("distanceArrReal Size:", distanceArrReal.size * distanceArrReal.itemsize * 1000)
+#     print("distanceArrNull Size:", distanceArrNull.size * distanceArrNull.itemsize * 1000)
+#     print("maxDiffArr Size:", maxDiffArr.size * maxDiffArr.itemsize * 1000)
+#     print("diffArr Size:", diffArr.size * diffArr.itemsize * 1000)
+#     print("quiescenceArr Size:", quiescenceArr.size * quiescenceArr.itemsize * 1000)
+
+#     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
+
 def readInData(outputDirPath, numProcesses, numStates):
     """
     Reads all the epilogos score files in and combines them into a numpy array ordered by location
@@ -159,8 +255,7 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Multiprocess the reading
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"),
-            outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz"), repeat(realNames)))
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), repeat(realNames)))
     pool.join()
 
     # Concatenating all chunks to the real differences dataframe
@@ -190,45 +285,42 @@ def readInData(outputDirPath, numProcesses, numStates):
     locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
     diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
 
-    # Creating array of null distances ordered by chromosome based on the read in chunks
-    nullChunks = list(zip(*list(zip(*results))[1]))
-    index = nullChunks[0].index(chrOrder[0])
-    distanceArrNull = nullChunks[1][index]
-    for chrName in chrOrder[1:]:
-        index = nullChunks[0].index(chrName)
-        distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
-
-    # Creating quiescence array ordered by chromosome based on the read in chunks
-    quiescenceChunks = list(zip(*list(zip(*results))[2]))
-    index = quiescenceChunks[0].index(chrOrder[0])
-    quiescenceArr = quiescenceChunks[1][index]
-    for chrName in chrOrder[1:]:
-        index = quiescenceChunks[0].index(chrName)
-        quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
-
     # # Cleaning up the temp files after we've read them
     # for file in outputDirPath.glob("temp_*.npz"):
     #     remove(file)
 
-    # Calculate the distance array for the real data
-    diffSign = np.sign(np.sum(diffArr, axis=1))
-    distanceArrReal = np.sum(np.square(diffArr), axis=1) * diffSign
+    # Calculate the signed squared euclidean distance array for the real data
+    distanceArrReal = np.sum(np.square(diffArr), axis=1) * np.sign(np.sum(diffArr, axis=1))
 
     # Calculate the maximum contributing state for each bin
     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
 
-    print("locationArr Size:", locationArr.size * locationArr.itemsize * 1000)
-    print("distanceArrReal Size:", distanceArrReal.size * distanceArrReal.itemsize * 1000)
-    print("distanceArrNull Size:", distanceArrNull.size * distanceArrNull.itemsize * 1000)
-    print("maxDiffArr Size:", maxDiffArr.size * maxDiffArr.itemsize * 1000)
-    print("diffArr Size:", diffArr.size * diffArr.itemsize * 1000)
-    print("quiescenceArr Size:", quiescenceArr.size * quiescenceArr.itemsize * 1000)
-
-    return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
+    return locationArr, distanceArrReal, maxDiffArr
 
 # @profile
-def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
+# def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
+#     """
+#     Reads in the real and null scores
+
+#     Input:
+#     realFile -- The path to the file containing the real scores
+#     nullFile -- The path to the file containing the null scores
+#     realNames -- The names for the columns of the real dataframe
+
+#     Output:
+#     diffDFChunk -- Pandas dataframe containing the real scores
+#     (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
+#                                                          distances
+#     """
+#     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
+#     npzFileNull = np.load(Path(nullFile))
+#     npzFileQuiescence = np.load(Path(quiescenceFile))
+
+#     return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
+#                                                                                     npzFileQuiescence['quiescenceArr'])
+
+def readTableMulti(realFile, realNames):
     """
     Reads in the real and null scores
 
@@ -243,14 +335,78 @@ def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
                                                          distances
     """
     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
+
+    return diffDFChunk
+
+
+def readNull(nullFile, quiescenceFile):
+    """
+    Reads in the real and null scores
+
+    Input:
+    realFile -- The path to the file containing the real scores
+    nullFile -- The path to the file containing the null scores
+    realNames -- The names for the columns of the real dataframe
+
+    Output:
+    diffDFChunk -- Pandas dataframe containing the real scores
+    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
+                                                         distances
+    """
     npzFileNull = np.load(Path(nullFile))
     npzFileQuiescence = np.load(Path(quiescenceFile))
 
-    return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
-                                                                                    npzFileQuiescence['quiescenceArr'])
+    return (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0],
+                                                                       npzFileQuiescence['quiescenceArr'])
+
 
 # @profile
-def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
+# def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
+#     """
+#     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
+#     on the negative loglikelihood function
+
+#     Input:
+#     distanceArrReal -- Numpy array containing the distances between the real scores
+#     distanceArrNull -- Numpy array containing the distances between the null scores
+#     quiescenceArr -- Numpy array containing booleans informing us which bins to filter out
+#     diffArr -- Numpy array containing the raw differences between the real scores
+#     numStates -- The number of states in the state model
+#     numProcesses -- The number of cores to run on
+#     numTrials -- The number of fits to do
+#     samplingSize -- The amount of data to fit each time
+
+#     Output:
+#     (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]) -- Tuple with beta, loc, and scale
+#                                                                                             params of the median fit
+#     dataReal -- Pandas series containing the real distances filtered for quiescence
+#     dataNull -- Pandas series containing the null distances filtered for quiescence
+#     """
+#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
+#     idx = np.where(quiescenceArr == False)[0]
+#     dataReal = pd.Series(distanceArrReal[idx])
+#     dataNull = pd.Series(distanceArrNull[idx])
+
+#     with closing(Pool(numProcesses)) as pool:
+#         results = pool.starmap(fitOnSample, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
+#     pool.join()
+
+#     # Creating dataframe of all params and nnlf so that we can figure out median
+#     index = [i for i in range(numTrials)]
+#     columns = ["beta", "loc", "scale", "nnlf"]
+#     fitDF = pd.DataFrame(index=index, columns=columns)
+#     for i in range(len(results)):
+#         fitDF.iloc[i, 0] = results[i][0][0]
+#         fitDF.iloc[i, 1] = results[i][0][1]
+#         fitDF.iloc[i, 2] = results[i][0][2]
+#         fitDF.iloc[i, 3] = results[i][1]
+#     fitDF.sort_values(by=["nnlf"], inplace=True)
+
+#     # return params, dataReal, dataNull
+#     medianIndex = int((numTrials-1)/2)
+#     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
+
+def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     """
     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
     on the negative loglikelihood function
@@ -272,12 +428,46 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
     dataNull -- Pandas series containing the null distances filtered for quiescence
     """
     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-    idx = np.where(quiescenceArr == False)[0]
-    dataReal = pd.Series(distanceArrReal[idx])
-    dataNull = pd.Series(distanceArrNull[idx])
 
     with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(fitOnSample, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
+        results = pool.starmap(readNull, zip(outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz")))
+    pool.join()
+
+    # Figuring out chromosome order
+    chromosomes = list(zip(*list(zip(*results))[0]))[0]
+    rawChrNamesInts = []
+    rawChrNamesStrs = []
+    for chromosome in chromosomes:
+        try:
+            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+        except ValueError:
+            rawChrNamesStrs.append(chromosome.split("chr")[-1])
+    rawChrNamesInts.sort()
+    rawChrNamesStrs.sort()
+    chrOrder = rawChrNamesInts + rawChrNamesStrs
+    for i in range(len(chrOrder)):
+        chrOrder[i] = "chr" + str(chrOrder[i])
+
+    # Creating array of null distances ordered by chromosome based on the read in chunks
+    nullChunks = list(zip(*list(zip(*results))[1]))
+    index = nullChunks[0].index(chrOrder[0])
+    distanceArrNull = nullChunks[1][index]
+    for chrName in chrOrder[1:]:
+        index = nullChunks[0].index(chrName)
+        distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
+
+    # Creating quiescence array ordered by chromosome based on the read in chunks
+    quiescenceChunks = list(zip(*list(zip(*results))[2]))
+    index = quiescenceChunks[0].index(chrOrder[0])
+    quiescenceArr = quiescenceChunks[1][index]
+    for chrName in chrOrder[1:]:
+        index = quiescenceChunks[0].index(chrName)
+        quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
+
+    nonQuiescentIdx = np.where(quiescenceArr == False)[0]
+
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.starmap(fitOnSample, zip(repeat(distanceArrNull[nonQuiescentIdx], numTrials), repeat(samplingSize, numTrials)))
     pool.join()
 
     # Creating dataframe of all params and nnlf so that we can figure out median
@@ -293,7 +483,7 @@ def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numSt
 
     # return params, dataReal, dataNull
     medianIndex = int((numTrials-1)/2)
-    return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
+    return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), distanceArrNull, nonQuiescentIdx
 
 # @profile
 def fitOnSample(distanceArrNull, samplingSize):
@@ -327,7 +517,7 @@ def fitOnSample(distanceArrNull, samplingSize):
     return params, nnlf
 
 # @profile
-def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull, beta, loc, scale, outputDirPath, fileTag):
+def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag):
     """
     Generate diagnostic plots of the gennorm fit on the null data and comparisons between the null and real data
 
@@ -345,6 +535,9 @@ def createDiagnosticFigures(dataReal, dataNull, distanceArrReal, distanceArrNull
     diagnosticDirPath = outputDirPath / "diagnosticFigures_{}".format(fileTag)
     if not diagnosticDirPath.exists():
         diagnosticDirPath.mkdir(parents=True)
+
+    dataReal = pd.Series(distanceArrReal[nonQuiescentIdx])
+    dataNull = pd.Series(distanceArrNull[nonQuiescentIdx])
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
     fig = plt.figure(figsize=(16,9))

@@ -52,22 +52,26 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if numProcesses == 0:
         numProcesses = cpu_count()
 
-
+    # Fitting a gennorm distribution to the distances
+    if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
+    else: print("    Fitting distances\t", end="", flush=True)
     params, distanceArrNull, nonQuiescentIdx = fitDistances(outputDirPath, numProcesses, numTrials, samplingSize)
+    if verbose: print("    Time:", time() - tFit, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Read in observation files
-    # if verbose: print("\nReading in observation files...", flush=True); tRead = time()
-    # else: print("    Reading in files\t", end="", flush=True)
+    if verbose: print("\nReading in observation files...", flush=True); tRead = time()
+    else: print("    Reading in files\t", end="", flush=True)
     # locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
     locationArr, distanceArrReal, maxDiffArr = readInData(outputDirPath, numProcesses, numStates)
-    # if verbose: print("    Time:", time() - tRead, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - tRead, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Fitting a gennorm distribution to the distances
     # if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
     # else: print("    Fitting distances\t", end="", flush=True)
-    # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
-    #     numTrials, samplingSize)
+    # # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
+    # #     numTrials, samplingSize)
     # if verbose: print("    Time:", time() - tFit, flush=True)
     # else: print("\t[Done]", flush=True)
 
@@ -76,25 +80,25 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
 
     # Creating Diagnostic Figures
     if diagnosticBool:
-        # if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
-        # else: print("    Diagnostic figures\t", end="", flush=True)
+        if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
+        else: print("    Diagnostic figures\t", end="", flush=True)
         createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag)
-        # if verbose: print("    Time:", time() - tDiagnostic, flush=True)
-        # else: print("\t[Done]", flush=True)
+        if verbose: print("    Time:", time() - tDiagnostic, flush=True)
+        else: print("\t[Done]", flush=True)
 
     # Calculating PValues
-    # if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
-    # else: print("    Calculating p-vals\t", end="", flush=True)
+    if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
+    else: print("    Calculating p-vals\t", end="", flush=True)
     pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    # if verbose: print("    Time:", time() - tPVal, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - tPVal, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
-    # if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
-    # else: print("    Writing metrics\t", end="", flush=True)
+    if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
+    else: print("    Writing metrics\t", end="", flush=True)
     writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    # if verbose: print("    Time:", time() - tMetrics, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - tMetrics, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
     genomeAutoCorrelation = 0.987
@@ -102,41 +106,41 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     significanceThreshold = .1 / nStar
 
     # Create txt file of top 1000 loci with adjacent merged
-    # if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
-    # else: print("    Greatest hits txt\t", end="", flush=True)
+    if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
+    else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
     # if verbose: print("    Time:", time() - t1000, flush=True)
     # else: print("\t[Done]", flush=True)
 
     # Create txt file of significant loci
-    # if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
-    # else: print("    Significant loci txt\t", end="", flush=True)
+    if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
+    else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
     # if verbose: print("    Time:", time() - tSig, flush=True)
     # else: print("\t[Done]", flush=True)
 
     # Create Genome Manhattan Plot
-    # if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
-    # else: print("    Genome-wide Manhattan\t", end="", flush=True)
+    if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
+    else: print("    Genome-wide Manhattan\t", end="", flush=True)
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    # if verbose: print("    Time:", time() - tGManhattan, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - tGManhattan, flush=True)
+    else: print("\t[Done]", flush=True)
     
     # Create Chromosome Manhattan Plot
-    # if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
-    # else: print("    Chromosome Manhattan\t", end="", flush=True)
+    if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
+    else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
-    # if verbose: print("    Time:", time() - tCManhattan, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - tCManhattan, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
     # remove(Path(expFreqPath))
 
-    # if verbose: print("Total Time:", time() - tTotal, flush=True)
+    if verbose: print("Total Time:", time() - tTotal, flush=True)
 
 # @profile
 # def readInData(outputDirPath, numProcesses, numStates):

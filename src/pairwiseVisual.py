@@ -13,9 +13,10 @@ from itertools import repeat
 from os import remove
 from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
-from memory_profiler import profile
+from statsmodels.stats.multitest import multipletests
+# from memory_profiler import profile
 
-@profile
+# @profile
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
     """
@@ -101,9 +102,12 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
-    genomeAutoCorrelation = 0.987
-    nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    significanceThreshold = .1 / nStar
+    # genomeAutoCorrelation = 0.987
+    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
+    # significanceThreshold = .1 / nStar
+    nStar = 1
+    significanceThreshold = .1
+    pvals = multipletests(pvals, method="fdr_bh")[1]
 
     # Create txt file of top 1000 loci with adjacent merged
     if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
@@ -998,9 +1002,13 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     onlySignificant -- Boolean telling us whether to use significant loci or 1000 largest distance bins
     """
     
-    significantAt1 = .1 / nStar
-    significantAt05 = .05 / nStar
-    significantAt01 = .01 / nStar
+    # significantAt1 = .1 / nStar
+    # significantAt05 = .05 / nStar
+    # significantAt01 = .01 / nStar
+
+    significantAt1 = .1
+    significantAt05 = .05
+    significantAt01 = .01
 
     with open(filePath, 'w') as f:
         # Pick values above significance threshold and then sort

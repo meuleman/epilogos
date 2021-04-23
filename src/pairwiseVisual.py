@@ -15,7 +15,7 @@ from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 # from statsmodels.stats.multitest import multipletests
 # from multipy.fdr import qvalue
-from memory_profiler import profile
+# from memory_profiler import profile
 
 # @profile
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
@@ -116,31 +116,31 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
-    # if verbose: print("    Time:", time() - t1000, flush=True)
-    # else: print("\t[Done]", flush=True)
+    if verbose: print("    Time:", time() - t1000, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Create txt file of significant loci
     if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
     else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
-    # if verbose: print("    Time:", time() - tSig, flush=True)
-    # else: print("\t[Done]", flush=True)
-
-    # Create Genome Manhattan Plot
-    if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
-    else: print("    Genome-wide Manhattan\t", end="", flush=True)
-    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
-        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tGManhattan, flush=True)
+    if verbose: print("    Time:", time() - tSig, flush=True)
     else: print("\t[Done]", flush=True)
-    
+
     # Create Chromosome Manhattan Plot
     if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
     else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
         significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
+    else: print("\t[Done]", flush=True)
+    
+    # Create Genome Manhattan Plot
+    if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
+    else: print("    Genome-wide Manhattan\t", end="", flush=True)
+    createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
+        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
+    if verbose: print("    Time:", time() - tGManhattan, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
@@ -559,6 +559,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-max(abs), max(abs)))
@@ -572,6 +573,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
     # Real vs Null distance scatter plot
@@ -584,6 +586,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.title("Real Distances vs Null Distances")
     figPath = diagnosticDirPath / "real_vs_null_scatter.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
     # Fit on data (range=(min, max))
@@ -600,6 +603,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
     # Fit on data (range=(-1, 1))
@@ -615,6 +619,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_n1to1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
     # Fit on data (range=(-0.1, 0.1))
@@ -631,6 +636,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
 # @profile
@@ -656,7 +662,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
     return pvals
 
-@profile
+# @profile
 def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
     significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
     """
@@ -755,6 +761,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
 
     figPath = manhattanDirPath / "manhattan_plot_genome.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
 # @profile
@@ -926,6 +933,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
     figPath = manhattanDirPath / "manhattan_plot_chr{}.pdf".format(chromosome)
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
     plt.close(fig)
 
 # @profile

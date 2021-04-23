@@ -13,7 +13,8 @@ from itertools import repeat
 from os import remove
 from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
-from statsmodels.stats.multitest import multipletests
+# from statsmodels.stats.multitest import multipletests
+from multipy.fdr import qvalue
 # from memory_profiler import profile
 
 # @profile
@@ -107,7 +108,8 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # significanceThreshold = .1 / nStar
     nStar = 1
     significanceThreshold = .1
-    pvals = multipletests(pvals, method="fdr_bh")[1]
+    # pvals = multipletests(pvals, method="fdr_bh")[1]
+    pvals = qvalue(pvals)
 
     # Create txt file of top 1000 loci with adjacent merged
     if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()

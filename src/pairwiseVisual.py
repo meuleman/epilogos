@@ -757,9 +757,10 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".",
         edgecolors='none', rasterized=True)
     
-    minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
-    ax.axhline(minLine, linewidth=.25, linestyle="-")
-    ax.axhline(-minLine, linewidth=.25, linestyle="-")
+    if len(opaqueSigIndices) > 0:
+        minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
+        ax.axhline(minLine, linewidth=.25, linestyle="-")
+        ax.axhline(-minLine, linewidth=.25, linestyle="-")
 #     ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 #     ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 
@@ -933,9 +934,10 @@ def graphChromosomeManhattan(chromosome, startEnd):
     plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".",
         edgecolors='none', rasterized=True)
 
-    minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
-    ax.axhline(minLine, linewidth=.25, linestyle="-")
-    ax.axhline(-minLine, linewidth=.25, linestyle="-")
+    if len(opaqueSigIndices) > 0:
+        minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
+        ax.axhline(minLine, linewidth=.25, linestyle="-")
+        ax.axhline(-minLine, linewidth=.25, linestyle="-")
     # ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
     # ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 

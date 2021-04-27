@@ -103,19 +103,19 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     else: print("\t[Done]", flush=True)
 
     # Determine Significance Threshold (based on n*)
-    # genomeAutoCorrelation = 0.987
-    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    # significanceThreshold = .1 / nStar
-    nStar = 1
-    significanceThreshold = .1
-    mhPvals = multipletests(pvals, method="fdr_bh")[1]
+    genomeAutoCorrelation = 0.987
+    nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
+    significanceThreshold = .1 / nStar
+    # nStar = 1
+    # significanceThreshold = .1
+    # pvals = multipletests(pvals, method="fdr_bh")[1]
     # pvals = qvalue(pvals)
 
     # Create txt file of top 1000 loci with adjacent merged
     if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False, mhPvals)
+    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False)
     if verbose: print("    Time:", time() - t1000, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -123,7 +123,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
     else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "signficantLoci_{}.txt".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True, mhPvals)
+    createTopScoresTxt(roiPath, locationArr, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True)
     if verbose: print("    Time:", time() - tSig, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -131,7 +131,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
     else: print("    Chromosome Manhattan\t", end="", flush=True)
     createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
-        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses, mhPvals)
+        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
     
@@ -139,7 +139,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
     else: print("    Genome-wide Manhattan\t", end="", flush=True)
     createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
-        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, mhPvals)
+        significanceThreshold, pvals, stateColorList, outputDirPath, fileTag)
     if verbose: print("    Time:", time() - tGManhattan, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -664,7 +664,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
 # @profile
 def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, beta, loc, scale,
-    significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, mhPvals):
+    significanceThreshold, pvals, stateColorList, outputDirPath, fileTag):
     """
     Creates a manhattan plot based on the distances between the two groups for the entire genome
 
@@ -687,7 +687,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
-    # logSignificanceThreshold = -np.log10(significanceThreshold)
+    logSignificanceThreshold = -np.log10(significanceThreshold)
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(111)
@@ -725,28 +725,28 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
         fontsize=15)
 
     locationOnGenome = np.arange(len(distanceArrReal))
-    # pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
+    pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
-            points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > significanceThreshold))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                 s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
         elif i%2 == 0:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])
-                & (mhPvals > significanceThreshold))[0]
+                & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                 s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
         else:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])
-                & (mhPvals > significanceThreshold))[0]
+                & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                 s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
             
-    opaqueSigIndices = np.where(mhPvals <= significanceThreshold)[0]
+    opaqueSigIndices = np.where(np.abs(pvalsGraph) >= logSignificanceThreshold)[0]
 
     colorArr=stateColorList[maxDiffArr[opaqueSigIndices].astype(int) - 1]
     opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) /
@@ -756,13 +756,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
 
     plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".",
         edgecolors='none', rasterized=True)
-    
-    if len(opaqueSigIndices) > 0:
-        minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
-        ax.axhline(minLine, linewidth=.25, linestyle="-")
-        ax.axhline(-minLine, linewidth=.25, linestyle="-")
-#     ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-#     ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
+    ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
+    ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 
     figPath = manhattanDirPath / "manhattan_plot_genome.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
@@ -770,7 +765,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, 
     plt.close(fig)
 
 # @profile
-def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, significanceThreshold_, mhPvals_,
+def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, significanceThreshold_, pvalsGraph_,
     stateColorList_, manhattanDirPath_):
     """
     Initializes global variables for multiprocessing in the single epilogos case
@@ -796,7 +791,7 @@ def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_,
     global loc
     global scale
     global significanceThreshold
-    global mhPvals
+    global pvalsGraph
     global stateColorList
     global manhattanDirPath
 
@@ -807,13 +802,13 @@ def _init(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_,
     maxDiffArr = maxDiffArr_
     beta, loc, scale = params[:-2], params[-2], params[-1]
     significanceThreshold = significanceThreshold_
-    mhPvals = mhPvals_
+    pvalsGraph = pvalsGraph_
     stateColorList = stateColorList_
     manhattanDirPath = manhattanDirPath_
 
 # @profile
 def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params,
-    significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses, mhPvals):
+    significanceThreshold, pvals, stateColorList, outputDirPath, fileTag, numProcesses):
     """
     Creates a manhattan plot based on the distances between the two groups for the each chromosome
 
@@ -835,7 +830,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
-    # pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
+    pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
 
     xticks = np.where(locationArr[:, 1] == "0")[0]
     startEnd = []
@@ -849,7 +844,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, distanceArrRe
 
     # Multiprocess the reading
     with closing(Pool(numProcesses, initializer=_init, initargs=(group1Name, group2Name, locationArr, distanceArrReal,
-        maxDiffArr, params, significanceThreshold, mhPvals, stateColorList, manhattanDirPath))) as pool:
+        maxDiffArr, params, significanceThreshold, pvalsGraph, stateColorList, manhattanDirPath))) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
 
@@ -863,7 +858,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
     chromosome -- The chromosome which we are plotting
     startEnd -- The start and end indices for the chromosome on all the global numpy arrays
     """
-    # logSignificanceThreshold = -np.log10(significanceThreshold)    
+    logSignificanceThreshold = -np.log10(significanceThreshold)    
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(111)
@@ -905,25 +900,25 @@ def graphChromosomeManhattan(chromosome, startEnd):
         realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
-        points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > significanceThreshold))[0]
+        points = np.where((locationOnGenome >= startEnd[0]) & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
             s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                 alpha=0.1, edgecolors='none', rasterized=True)
 
-        opaqueSigIndices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > significanceThreshold))[0]
+        opaqueSigIndices = np.where((locationOnGenome >= startEnd[0]) & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
     else:
         realxticks = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
             & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
         points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
-            & (mhPvals > significanceThreshold))[0]
+            & (np.abs(pvalsGraph) < logSignificanceThreshold))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
             s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                 alpha=0.1, edgecolors='none', rasterized=True)
 
         opaqueSigIndices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
-            & (mhPvals > significanceThreshold))[0]
+            & (np.abs(pvalsGraph) >= logSignificanceThreshold))[0]
 
     colorArr=stateColorList[maxDiffArr[opaqueSigIndices].astype(int) - 1]
     opacityArr=np.array((np.abs(distanceArrReal[opaqueSigIndices]) /
@@ -933,13 +928,8 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
     plt.scatter(opaqueSigIndices, distanceArrReal[opaqueSigIndices], s=sizeArr, color=rgbaColorArr, marker=".",
         edgecolors='none', rasterized=True)
-
-    if len(opaqueSigIndices) > 0:
-        minLine = np.min(np.abs(distanceArrReal[opaqueSigIndices]))
-        ax.axhline(minLine, linewidth=.25, linestyle="-")
-        ax.axhline(-minLine, linewidth=.25, linestyle="-")
-    # ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
-    # ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
+    ax.axhline(st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
+    ax.axhline(-st.gennorm.isf(significanceThreshold/2, beta, loc=loc, scale=scale), linewidth=.25, linestyle="-")
 
     figPath = manhattanDirPath / "manhattan_plot_chr{}.pdf".format(chromosome)
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
@@ -1005,7 +995,7 @@ def writeMetrics(locationArr, maxDiffArr, distanceArrReal, pvals, outputDirPath,
     metricsTxt.close()
 
 # @profile
-def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant, mhPvals):
+def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
     Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start, 
@@ -1026,23 +1016,19 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
     significantAt05 = .05 / nStar
     significantAt01 = .01 / nStar
 
-    # significantAt1 = .1
-    # significantAt05 = .05
-    # significantAt01 = .01
-
     with open(filePath, 'w') as f:
         # Pick values above significance threshold and then sort
-        indices = np.where(mhPvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(mhPvals <= significantAt1)[0]])).argsort()]
+        indices = np.where(pvals <= significantAt1)[0][(-np.abs(distanceArr[np.where(pvals <= significantAt1)[0]])).argsort()]
         
         # Make sure that there are at least 1000 values if creating greatestHits.txt
         if not onlySignificant and len(indices) < 1000:
             indices = (-np.abs(distanceArr)).argsort()[:1000]
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-            maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1), mhPvals[indices].reshape(len(indices), 1)), axis=1), 
-            columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
+            maxDiffArr[indices].reshape(len(indices), 1), pvals[indices].reshape(len(indices), 1)), axis=1), 
+            columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval"])\
                 .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32, "MaxDiffLoc": np.int32, 
-                         "Pval": np.float32, "MhPval": np.float32})
+                         "Pval": np.float32})
         
         # Don't want to merge when creating significantLoci.txt
         if not onlySignificant:
@@ -1054,16 +1040,16 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
-        stars = np.array(["***" if float(locations.iloc[i, 6]) <= significantAt01 else
-            ("**" if float(locations.iloc[i, 6]) <= significantAt05 else
-                ("*" if float(locations.iloc[i, 6]) <= significantAt1 else "."))
+        stars = np.array(["***" if float(locations.iloc[i, 5]) <= significantAt01 else
+            ("**" if float(locations.iloc[i, 5]) <= significantAt05 else
+                ("*" if float(locations.iloc[i, 5]) <= significantAt1 else "."))
                     for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
 
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
+            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations.iloc[i, 5]), stars[i, 0])
                 for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
         f.write(outString)
 

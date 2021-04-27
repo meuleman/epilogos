@@ -1061,9 +1061,9 @@ def createTopScoresTxt(filePath, locationArr, distanceArr, maxDiffArr, nameArr, 
 
         # Write all the locations to the file for significantLoci.txt
         # Write only top 100 loci to file for greatestHits.txt
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5}\n"
+        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations.iloc[i, 5]), stars[i, 0])
+            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])), float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
                 for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
         f.write(outString)
 

@@ -72,18 +72,8 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     print("locationArr =", locationArr.size * locationArr.itemsize)
     print("distanceArrReal =", distanceArrReal.size * distanceArrReal.itemsize)
     print("maxDiffArr =", maxDiffArr.size * maxDiffArr.itemsize)
-    print("chrDict =", chrDict.size * chrDict.itemsize)
     print("distanceArrNull = ", distanceArrNull.size * distanceArrNull.itemsize)
     print("nonQuiescentIdx =", nonQuiescentIdx.size * nonQuiescentIdx.itemsize)
-
-
-    # Fitting a gennorm distribution to the distances
-    # if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
-    # else: print("    Fitting distances\t", end="", flush=True)
-    # # params, dataReal, dataNull = fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses,
-    # #     numTrials, samplingSize)
-    # if verbose: print("    Time:", time() - tFit, flush=True)
-    # else: print("\t[Done]", flush=True)
 
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
@@ -110,20 +100,14 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
-    # Determine Significance Threshold (based on n*)
-    # genomeAutoCorrelation = 0.987
-    # nStar = len(distanceArrReal) * ((1 - genomeAutoCorrelation) / (1 + genomeAutoCorrelation))
-    # significanceThreshold = .1 / nStar
-    nStar = 1
-    # significanceThreshold = .1
+    # Perform multiple hypothesis correction on pvals
     mhPvals = multipletests(pvals, method="fdr_bh")[1]
-    # pvals = qvalue(pvals)
 
     # Create txt file of top 1000 loci with adjacent merged
     if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, False, mhPvals)
+    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals)
     if verbose: print("    Time:", time() - t1000, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -131,7 +115,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
     else: print("    Significant loci txt\t", end="", flush=True)
     roiPath = outputDirPath / "significantLoci_{}.txt".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, nStar, True, mhPvals)
+    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals)
     if verbose: print("    Time:", time() - tSig, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -156,98 +140,6 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
 
     if verbose: print("Total Time:", time() - tTotal, flush=True)
 
-# @profile
-# def readInData(outputDirPath, numProcesses, numStates):
-#     """
-#     Reads all the epilogos score files in and combines them into a numpy array ordered by location
-
-#     Input:
-#     outputDirPath -- Path to the epilogos output directory (this contains the score files)
-#     numProcesses -- The number of cores used to read in score files
-#     numStates -- The number of states in the state model
-
-#     Output:
-#     locationArr -- Numpy array containing the genomic locations for all the scores
-#     distanceArrReal -- Numpy array containing binwise signed squared euclidean distances of the scores of the two groups
-#     distanceArrNull -- Numpy array containing binwise signed squared euclidean distances of the null scores of the two groups
-#     maxDiffArr -- Numpy array containing the state which had the absolute distance in each bin
-#     diffArr -- Numpy array containing the raw binwise differences between the two groups
-#     """
-#     # For keeping the data arrays organized correctly
-#     realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
-
-#     # Data frame to dump inputed data into
-#     diffDF = pd.DataFrame(columns=realNames)
-
-#     # Multiprocess the reading
-#     with closing(Pool(numProcesses)) as pool:
-#         results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"),
-#             outputDirPath.glob("temp_nullDistances_*.npz"), outputDirPath.glob("temp_quiescence_*.npz"), repeat(realNames)))
-#     pool.join()
-
-#     # Concatenating all chunks to the real differences dataframe
-#     for diffDFChunk, _, _ in results:
-#         diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
-
-#     # Figuring out chromosome order
-#     chromosomes = diffDF['chr'].unique()
-#     rawChrNamesInts = []
-#     rawChrNamesStrs = []
-#     for chromosome in chromosomes:
-#         try:
-#             rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
-#         except ValueError:
-#             rawChrNamesStrs.append(chromosome.split("chr")[-1])
-#     rawChrNamesInts.sort()
-#     rawChrNamesStrs.sort()
-#     chrOrder = rawChrNamesInts + rawChrNamesStrs
-#     for i in range(len(chrOrder)):
-#         chrOrder[i] = "chr" + str(chrOrder[i])
-
-#     # Sorting the dataframes by chromosomal location
-#     diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
-#     diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-
-#     # Convert dataframes to np arrays for easier manipulation
-#     locationArr     = diffDF.iloc[:,0:3].to_numpy(dtype=str)
-#     diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
-
-#     # Creating array of null distances ordered by chromosome based on the read in chunks
-#     nullChunks = list(zip(*list(zip(*results))[1]))
-#     index = nullChunks[0].index(chrOrder[0])
-#     distanceArrNull = nullChunks[1][index]
-#     for chrName in chrOrder[1:]:
-#         index = nullChunks[0].index(chrName)
-#         distanceArrNull = np.concatenate((distanceArrNull, nullChunks[1][index]))
-
-#     # Creating quiescence array ordered by chromosome based on the read in chunks
-#     quiescenceChunks = list(zip(*list(zip(*results))[2]))
-#     index = quiescenceChunks[0].index(chrOrder[0])
-#     quiescenceArr = quiescenceChunks[1][index]
-#     for chrName in chrOrder[1:]:
-#         index = quiescenceChunks[0].index(chrName)
-#         quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
-
-#     # # Cleaning up the temp files after we've read them
-#     # for file in outputDirPath.glob("temp_*.npz"):
-#     #     remove(file)
-
-#     # Calculate the distance array for the real data
-#     diffSign = np.sign(np.sum(diffArr, axis=1))
-#     distanceArrReal = np.sum(np.square(diffArr), axis=1) * diffSign
-
-#     # Calculate the maximum contributing state for each bin
-#     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
-#     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(int)
-
-#     print("locationArr Size:", locationArr.size * locationArr.itemsize * 1000)
-#     print("distanceArrReal Size:", distanceArrReal.size * distanceArrReal.itemsize * 1000)
-#     print("distanceArrNull Size:", distanceArrNull.size * distanceArrNull.itemsize * 1000)
-#     print("maxDiffArr Size:", maxDiffArr.size * maxDiffArr.itemsize * 1000)
-#     print("diffArr Size:", diffArr.size * diffArr.itemsize * 1000)
-#     print("quiescenceArr Size:", quiescenceArr.size * quiescenceArr.itemsize * 1000)
-
-#     return locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr
 
 def readInData(outputDirPath, numProcesses, numStates):
     """
@@ -321,27 +213,6 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     return locationArr, distanceArrReal, maxDiffArr, chrDict
 
-# @profile
-# def readTableMulti(realFile, nullFile, quiescenceFile, realNames):
-#     """
-#     Reads in the real and null scores
-
-#     Input:
-#     realFile -- The path to the file containing the real scores
-#     nullFile -- The path to the file containing the null scores
-#     realNames -- The names for the columns of the real dataframe
-
-#     Output:
-#     diffDFChunk -- Pandas dataframe containing the real scores
-#     (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
-#                                                          distances
-#     """
-#     diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
-#     npzFileNull = np.load(Path(nullFile))
-#     npzFileQuiescence = np.load(Path(quiescenceFile))
-
-#     return diffDFChunk, (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0], 
-#                                                                                     npzFileQuiescence['quiescenceArr'])
 
 def readTableMulti(realFile, realNames):
     """
@@ -382,52 +253,6 @@ def readNull(nullFile, quiescenceFile):
     return (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0],
                                                                        npzFileQuiescence['quiescenceArr'])
 
-
-# @profile
-# def fitDistances(distanceArrReal, distanceArrNull, quiescenceArr, diffArr, numStates, numProcesses, numTrials, samplingSize):
-#     """
-#     Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
-#     on the negative loglikelihood function
-
-#     Input:
-#     distanceArrReal -- Numpy array containing the distances between the real scores
-#     distanceArrNull -- Numpy array containing the distances between the null scores
-#     quiescenceArr -- Numpy array containing booleans informing us which bins to filter out
-#     diffArr -- Numpy array containing the raw differences between the real scores
-#     numStates -- The number of states in the state model
-#     numProcesses -- The number of cores to run on
-#     numTrials -- The number of fits to do
-#     samplingSize -- The amount of data to fit each time
-
-#     Output:
-#     (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]) -- Tuple with beta, loc, and scale
-#                                                                                             params of the median fit
-#     dataReal -- Pandas series containing the real distances filtered for quiescence
-#     dataNull -- Pandas series containing the null distances filtered for quiescence
-#     """
-#     # Filtering out quiescent values (When there are exactly zero differences between both score arrays)
-#     idx = np.where(quiescenceArr == False)[0]
-#     dataReal = pd.Series(distanceArrReal[idx])
-#     dataNull = pd.Series(distanceArrNull[idx])
-
-#     with closing(Pool(numProcesses)) as pool:
-#         results = pool.starmap(fitOnSample, zip(repeat(distanceArrNull[idx], numTrials), repeat(samplingSize, numTrials)))
-#     pool.join()
-
-#     # Creating dataframe of all params and nnlf so that we can figure out median
-#     index = [i for i in range(numTrials)]
-#     columns = ["beta", "loc", "scale", "nnlf"]
-#     fitDF = pd.DataFrame(index=index, columns=columns)
-#     for i in range(len(results)):
-#         fitDF.iloc[i, 0] = results[i][0][0]
-#         fitDF.iloc[i, 1] = results[i][0][1]
-#         fitDF.iloc[i, 2] = results[i][0][2]
-#         fitDF.iloc[i, 3] = results[i][1]
-#     fitDF.sort_values(by=["nnlf"], inplace=True)
-
-#     # return params, dataReal, dataNull
-#     medianIndex = int((numTrials-1)/2)
-#     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), dataReal, dataNull
 
 def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     """
@@ -740,7 +565,6 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
         fontsize=15)
 
     locationOnGenome = np.arange(len(distanceArrReal))
-    # pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
@@ -796,8 +620,6 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
         plt.axhspan(point1Line, ylim, facecolor='black', alpha=0.05)
         plt.axhspan(-point1Line, -ylim, facecolor='black', alpha=0.05)
         
-#     ax.axhline(point1Line, linewidth=.25, linestyle="-")
-#     ax.axhline(-point1Line, linewidth=.25, linestyle="-")
     figPath = manhattanDirPath / "manhattan_plot_genome.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     fig.clear()
@@ -866,8 +688,6 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
-
-    # pvalsGraph = -np.log10(pvals.astype(float)) * np.sign(distanceArrReal)
 
     xticks = np.where(locationArr[:, 1] == "0")[0]
     startEnd = []
@@ -1062,7 +882,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
     metricsTxt.close()
 
 # @profile
-def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, nStar, onlySignificant, mhPvals):
+def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, onlySignificant, mhPvals):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
     Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start, 
@@ -1075,17 +895,12 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     maxScoreArr -- Numpy array containing the states which had the largest difference in each bin
     nameArr -- Numpy array containing the names of all the states
     pvals -- Numpy array containing the pvalues of all the distances between the pairwise groups
-    nStar -- Number of bins scored adjusted for autocorrelation
     onlySignificant -- Boolean telling us whether to use significant loci or 1000 largest distance bins
     """
     
-    significantAt1 = .1 / nStar
-    significantAt05 = .05 / nStar
-    significantAt01 = .01 / nStar
-
-    # significantAt1 = .1
-    # significantAt05 = .05
-    # significantAt01 = .01
+    significantAt1 = .1
+    significantAt05 = .05
+    significantAt01 = .01
 
     with open(filePath, 'w') as f:
         # Pick values above significance threshold and then sort
@@ -1125,28 +940,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
         f.write(outString)
 
 
-# def mergeAdjacent(originalLocations):
-#     """
-#     Takes a pandas dataframe sorted by genomic location and merges all adjacent loci
-
-#     Input:
-#     locationArr -- pandas dataframe containing genomic loci in the first 3 columns
-
-#     Output:
-#     dataframe with merged loci
-#     """
-#     i = 0
-#     mergedLocations = []
-#     while i < len(originalLocations) - 1:
-#         j = 1
-#         while i + j < len(originalLocations) and originalLocations.iloc[i, 1] == originalLocations.iloc[i+j, 1] - 200 * j \
-#             and originalLocations.iloc[i, 0] == originalLocations.iloc[i+j, 0]:
-#             j += 1
-#         maxDistIndex = i + originalLocations.iloc[i:i+j, 3].argmax()
-#         mergedLocations.append([originalLocations.iloc[i, 0], originalLocations.iloc[i, 1], originalLocations.iloc[i+j-1, 2]] 
-#                                + list(originalLocations.iloc[maxDistIndex, 3:]))
-#         i += j
-#     return pd.DataFrame(mergedLocations)
 # @profile
 def mergeAdjacent(originalLocations):
     """

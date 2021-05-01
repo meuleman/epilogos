@@ -36,6 +36,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
                       comparisons between the null and real data
     numTrials -- The number of gennorm fits to do
     samplingSize -- The amount of null data to fit
+    expFreqPath -- The location of the stored expected frequency array
     verbose -- Boolean which if True, causes much more detailed prints
     """
     tTotal = time()
@@ -64,7 +65,6 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # Read in observation files
     if verbose: print("\nReading in observation files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
-    # locationArr, distanceArrReal, distanceArrNull, maxDiffArr, diffArr, quiescenceArr = readInData(outputDirPath, numProcesses, numStates)
     locationArr, distanceArrReal, maxDiffArr, chrDict = readInData(outputDirPath, numProcesses, numStates)
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
@@ -101,7 +101,11 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     else: print("\t[Done]", flush=True)
 
     # Perform multiple hypothesis correction on pvals
+    if verbose: print("Performing Benjamini-Hochberg procedure...", flush=True); tMH = time()
+    else: print("    Benjamini-Hochberg procedure\t", end="", flush=True)
     mhPvals = multipletests(pvals, method="fdr_bh")[1]
+    if verbose: print("    Time:", time() - tMH, flush=True)
+    else: print("\t[Done]", flush=True)
 
     # Create txt file of top 1000 loci with adjacent merged
     if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
@@ -139,119 +143,6 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # remove(Path(expFreqPath))
 
     if verbose: print("Total Time:", time() - tTotal, flush=True)
-
-
-def readInData(outputDirPath, numProcesses, numStates):
-    """
-    Reads all the epilogos score files in and combines them into a numpy array ordered by location
-
-    Input:
-    outputDirPath -- Path to the epilogos output directory (this contains the score files)
-    numProcesses -- The number of cores used to read in score files
-    numStates -- The number of states in the state model
-
-    Output:
-    locationArr -- Numpy array containing the genomic locations for all the scores
-    distanceArrReal -- Numpy array containing binwise signed squared euclidean distances of the scores of the two groups
-    distanceArrNull -- Numpy array containing binwise signed squared euclidean distances of the null scores of the two groups
-    maxDiffArr -- Numpy array containing the state which had the absolute distance in each bin
-    diffArr -- Numpy array containing the raw binwise differences between the two groups
-    """
-    # For keeping the data arrays organized correctly
-    realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
-
-    # Data frame to dump inputed data into
-    diffDF = pd.DataFrame(columns=realNames)
-
-    # Multiprocess the reading
-    with closing(Pool(numProcesses)) as pool:
-        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), repeat(realNames)))
-    pool.join()
-
-    # Concatenating all chunks to the real differences dataframe
-    for diffDFChunk in results:
-        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
-
-    # Figuring out chromosome order
-    chromosomes = diffDF['chr'].unique()
-    rawChrNamesInts = []
-    rawChrNamesStrs = []
-    for chromosome in chromosomes:
-        try:
-            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
-        except ValueError:
-            rawChrNamesStrs.append(chromosome.split("chr")[-1])
-    rawChrNamesInts.sort()
-    rawChrNamesStrs.sort()
-    chrOrder = rawChrNamesInts + rawChrNamesStrs
-    for i in range(len(chrOrder)):
-        chrOrder[i] = "chr" + str(chrOrder[i])
-
-    # Sorting the dataframes by chromosomal location
-    diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
-    diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
-
-    # Creating a dictionary to make location array take less memory
-    chrNumbers = [i for i in range(1, len(chrOrder) + 1)]
-    chrDict = dict(zip(chrOrder + chrNumbers, chrNumbers + chrOrder))
-
-
-    # Convert dataframes to np arrays for easier manipulation
-    locationArr     = diffDF.iloc[:,0:3].replace({"chr": chrDict}).to_numpy(dtype=np.int32)
-    diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
-
-    # Cleaning up the temp files after we've read them
-    for file in outputDirPath.glob("temp_*.npz"):
-        remove(file)
-
-    # Calculate the signed squared euclidean distance array for the real data
-    distanceArrReal = np.sum(np.square(diffArr), axis=1) * np.sign(np.sum(diffArr, axis=1))
-
-    # Calculate the maximum contributing state for each bin
-    # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
-    maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(np.int32)
-
-    return locationArr, distanceArrReal, maxDiffArr, chrDict
-
-
-def readTableMulti(realFile, realNames):
-    """
-    Reads in the real and null scores
-
-    Input:
-    realFile -- The path to the file containing the real scores
-    nullFile -- The path to the file containing the null scores
-    realNames -- The names for the columns of the real dataframe
-
-    Output:
-    diffDFChunk -- Pandas dataframe containing the real scores
-    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
-                                                         distances
-    """
-    diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
-
-    return diffDFChunk
-
-
-def readNull(nullFile, quiescenceFile):
-    """
-    Reads in the real and null scores
-
-    Input:
-    realFile -- The path to the file containing the real scores
-    nullFile -- The path to the file containing the null scores
-    realNames -- The names for the columns of the real dataframe
-
-    Output:
-    diffDFChunk -- Pandas dataframe containing the real scores
-    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
-                                                         distances
-    """
-    npzFileNull = np.load(Path(nullFile))
-    npzFileQuiescence = np.load(Path(quiescenceFile))
-
-    return (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0],
-                                                                       npzFileQuiescence['quiescenceArr'])
 
 
 def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
@@ -333,7 +224,28 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     medianIndex = int((numTrials-1)/2)
     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]), distanceArrNull, nonQuiescentIdx
 
-# @profile
+
+def readNull(nullFile, quiescenceFile):
+    """
+    Reads in the real and null scores
+
+    Input:
+    realFile -- The path to the file containing the real scores
+    nullFile -- The path to the file containing the null scores
+    realNames -- The names for the columns of the real dataframe
+
+    Output:
+    diffDFChunk -- Pandas dataframe containing the real scores
+    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
+                                                         distances
+    """
+    npzFileNull = np.load(Path(nullFile))
+    npzFileQuiescence = np.load(Path(quiescenceFile))
+
+    return (npzFileNull['chrName'][0], npzFileNull['nullDistances']), (npzFileQuiescence['chrName'][0],
+                                                                       npzFileQuiescence['quiescenceArr'])
+
+
 def fitOnSample(distanceArrNull, samplingSize):
     """
     Fits a sample of the null distances
@@ -364,7 +276,98 @@ def fitOnSample(distanceArrNull, samplingSize):
 
     return params, nnlf
 
-# @profile
+
+def readInData(outputDirPath, numProcesses, numStates):
+    """
+    Reads all the epilogos score files in and combines them into a numpy array ordered by location
+
+    Input:
+    outputDirPath -- Path to the epilogos output directory (this contains the score files)
+    numProcesses -- The number of cores used to read in score files
+    numStates -- The number of states in the state model
+
+    Output:
+    locationArr -- Numpy array containing the genomic locations for all the scores
+    distanceArrReal -- Numpy array containing binwise signed squared euclidean distances of the scores of the two groups
+    maxDiffArr -- Numpy array containing the state which had the absolute distance in each bin
+    chrDict -- Dictionary containing mappings between number values and chromosome names (helps locationArr use less memory)
+    """
+    # For keeping the data arrays organized correctly
+    realNames = ["chr", "binStart", "binEnd"] + ["s{}".format(i) for i in range(1, numStates + 1)]
+
+    # Data frame to dump inputed data into
+    diffDF = pd.DataFrame(columns=realNames)
+
+    # Multiprocess the reading
+    with closing(Pool(numProcesses)) as pool:
+        results = pool.starmap(readTableMulti, zip(outputDirPath.glob("pairwiseDelta_*.txt.gz"), repeat(realNames)))
+    pool.join()
+
+    # Concatenating all chunks to the real differences dataframe
+    for diffDFChunk in results:
+        diffDF = pd.concat((diffDF, diffDFChunk), axis=0, ignore_index=True)
+
+    # Figuring out chromosome order
+    chromosomes = diffDF['chr'].unique()
+    rawChrNamesInts = []
+    rawChrNamesStrs = []
+    for chromosome in chromosomes:
+        try:
+            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+        except ValueError:
+            rawChrNamesStrs.append(chromosome.split("chr")[-1])
+    rawChrNamesInts.sort()
+    rawChrNamesStrs.sort()
+    chrOrder = rawChrNamesInts + rawChrNamesStrs
+    for i in range(len(chrOrder)):
+        chrOrder[i] = "chr" + str(chrOrder[i])
+
+    # Sorting the dataframes by chromosomal location
+    diffDF["chr"] = pd.Categorical(diffDF["chr"], categories=chrOrder, ordered=True)
+    diffDF.sort_values(by=["chr", "binStart", "binEnd"], inplace=True)
+
+    # Creating a dictionary to make location array take less memory
+    chrNumbers = [i for i in range(1, len(chrOrder) + 1)]
+    chrDict = dict(zip(chrOrder + chrNumbers, chrNumbers + chrOrder))
+
+
+    # Convert dataframes to np arrays for easier manipulation
+    locationArr     = diffDF.iloc[:,0:3].replace({"chr": chrDict}).to_numpy(dtype=np.int32)
+    diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
+
+    # Cleaning up the temp files after we've read them
+    for file in outputDirPath.glob("temp_*.npz"):
+        remove(file)
+
+    # Calculate the signed squared euclidean distance array for the real data
+    distanceArrReal = np.sum(np.square(diffArr), axis=1) * np.sign(np.sum(diffArr, axis=1))
+
+    # Calculate the maximum contributing state for each bin
+    # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
+    maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(np.int32)
+
+    return locationArr, distanceArrReal, maxDiffArr, chrDict
+
+
+def readTableMulti(realFile, realNames):
+    """
+    Reads in the real and null scores
+
+    Input:
+    realFile -- The path to the file containing the real scores
+    nullFile -- The path to the file containing the null scores
+    realNames -- The names for the columns of the real dataframe
+
+    Output:
+    diffDFChunk -- Pandas dataframe containing the real scores
+    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
+                                                         distances
+    """
+    diffDFChunk = pd.read_table(Path(realFile), header=None, sep="\t", names=realNames)
+
+    return diffDFChunk
+
+
 def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag):
     """
     Generate diagnostic plots of the gennorm fit on the null data and comparisons between the null and real data
@@ -853,6 +856,7 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             
     return (yticksFinal, ytickLabelsFinal)
     
+
 # @profile
 def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag):
     """
@@ -874,8 +878,8 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
     metricsTxt = gzip.open(metricsTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
-    metricsTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3:.5e}\n"
-    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i]], maxDiffArr[i], distanceArrReal[i], pvals[i])
+    metricsTemplate = "{0[0]}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4:.5e}\n"
+    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[:,1:3], maxDiffArr[i], distanceArrReal[i], pvals[i])
         for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)

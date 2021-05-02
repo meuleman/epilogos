@@ -23,6 +23,8 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
     expFreqPath -- The path of the expected frequency array
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores to run on
+    quiescentState -- The state used to filter out quiescent bins 
+    groupSize -- Size of the outputted null array
     verbose -- Boolean which if True, causes much more detailed prints
     """
     if verbose: tTotal = time()
@@ -44,10 +46,10 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
 
     if file2 == "null":
         calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
-            verbose)
+                        verbose)
     else:
         calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-            filename, numProcesses, quiescentState, groupSize, verbose)
+                                filename, numProcesses, quiescentState, groupSize, verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
@@ -92,10 +94,12 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     sharedArr2_ -- The second shared score array
     shuffledSharedArr1_ -- The first shared null score array
     shuffledSharedArr2_ -- The second shared null score array
+    quiescenceSharedArr_ -- Shared array containing T/F values for whether a bin is quiescent
     totalRows -- The number of rows of the input files
     numStates -- The number of states in the state model
     quiescentState_ -- The state used to filter out quiescent bins 
     expFreqPath_ -- A pathlib path to the expected frequency array
+    groupSize_ -- Size of outputed null array
     verbose_ -- A boolean which tells us the amount we need to print
     """
     global sharedArr1
@@ -119,7 +123,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     groupSize = groupSize_
 
 def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
-    verbose):
+                    verbose):
     """
     Function responsible for deploying the processes used to calculate the scores in the single epilogos case
 
@@ -165,11 +169,11 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
     # Temporary scores for greatest hits (np files are faster to read in)
     tempScoresPath = outputDirPath / "temp_scores_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scoreArr=sharedToNumpy(sharedArr, totalRows, numStates),
-        locationArr=locationArr)
+                        locationArr=locationArr)
 
 
 def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, expFreqPath, fileTag,
-    filename, numProcesses, quiescentState, groupSize, verbose):
+                            filename, numProcesses, quiescentState, groupSize, verbose):
     """
     Function responsible for deploying the processes used to calculate the scores in the paired epilogos case
 
@@ -184,6 +188,8 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     filename -- The name of the file for which we are calculating the expected frequencies
     numProcesses -- The number of cores to run on
+    quiescentState -- The state used to filter out quiescent bins 
+    groupSize -- Size of the outputted null array
     verbose -- Boolean which if True, causes much more detailed prints
     """
     if verbose: print("\nNumber of Processes:", numProcesses, flush=True)
@@ -200,7 +206,9 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
 
     # Start the processes
     with closing(Pool(numProcesses, initializer=_initPairwise, initargs=(sharedArr1, sharedArr2, shuffledSharedArr1,
-        shuffledSharedArr2, quiescenceSharedArr, totalRows, numStates, quiescentState, expFreqPath, groupSize, verbose))) as pool:
+                                                                         shuffledSharedArr2, quiescenceSharedArr, totalRows,
+                                                                         numStates, quiescentState, expFreqPath, groupSize,
+                                                                         verbose))) as pool:
         if saliency == 1:
             pool.starmap(s1Score, zip(repeat(file1Path), repeat(file2Path), rowList))
         elif saliency == 2:
@@ -213,7 +221,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     if verbose: print("Calculating Raw Differences...", flush=True); tDiff = time()
     realDiffArr = sharedToNumpy(sharedArr1, totalRows, numStates) - sharedToNumpy(sharedArr2, totalRows, numStates)
     nullDiffArr = sharedToNumpy(shuffledSharedArr1, totalRows, numStates) - \
-        sharedToNumpy(shuffledSharedArr2, totalRows, numStates)
+                  sharedToNumpy(shuffledSharedArr2, totalRows, numStates)
     if verbose: print("    Time:", time() - tDiff, flush=True)
 
     # Only calculate the distances for the null data in this step
@@ -236,7 +244,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     nullOutputPath = outputDirPath / "temp_nullDistances_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(nullOutputPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
     quiescentOutputPath = outputDirPath / "temp_quiescence_{}_{}.npz".format(fileTag, filename)
-    np.savez_compressed(quiescentOutputPath, chrName=np.array([chrName]), 
+    np.savez_compressed(quiescentOutputPath, chrName=np.array([chrName]),
                         quiescenceArr=np.frombuffer(quiescenceSharedArr, dtype=np.bool_))
     if verbose: print("    Time:", time() - tWrite, flush=True)
 
@@ -257,14 +265,15 @@ def s1Score(file1Path, file2Path, rowsToCalc):
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
         dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
-            verbose=verbose)
+                             verbose=verbose)
 
         numStates = sharedArr[2]
 
         scoreArr = sharedToNumpy(*sharedArr)
     else:
         file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
-            rowsToCalc=rowsToCalc, expBool=False, verbose=verbose, groupSize=groupSize)
+                                                                            rowsToCalc=rowsToCalc, expBool=False,
+                                                                            verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr1[2]
 
@@ -339,7 +348,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
         dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
-            verbose=verbose, groupSize=groupSize)
+                             verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr[2]
 
@@ -349,7 +358,8 @@ def s2Score(file1Path, file2Path, rowsToCalc):
         permutations = dataArr.shape[1] * (dataArr.shape[1] - 1)
     else:
         file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
-            rowsToCalc=rowsToCalc, expBool=False, verbose=verbose)
+                                                                            rowsToCalc=rowsToCalc, expBool=False,
+                                                                            verbose=verbose)
 
         numStates = sharedArr1[2]
 
@@ -390,9 +400,9 @@ def s2Score(file1Path, file2Path, rowsToCalc):
             realScoreArr1[scoreRow] = klScoreND(rowObsS2(file1Arr, obsRow, permutations1, numStates), expFreqArr).sum(axis=0)
             realScoreArr2[scoreRow] = klScoreND(rowObsS2(file2Arr, obsRow, permutations2, numStates), expFreqArr).sum(axis=0)
             nullScoreArr1[scoreRow] = klScoreND(rowObsS2(shuffledFile1Arr, obsRow, permutations1, numStates),
-                expFreqArr).sum(axis=0)
+                                                expFreqArr).sum(axis=0)
             nullScoreArr2[scoreRow] = klScoreND(rowObsS2(shuffledFile2Arr, obsRow, permutations2, numStates),
-                expFreqArr).sum(axis=0)
+                                                expFreqArr).sum(axis=0)
 
     if verbose and rowsToCalc[0] == 0: print("    Time:", time() - tScore, flush=True)
 
@@ -447,7 +457,7 @@ def s3Score(file1Path, rowsToCalc):
     # scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)),
-        expFreqArr)
+                             expFreqArr)
 
     if verbose and rowsToCalc[0] == 0: print("Calculating Scores...", flush=True); tScore = time(); percentDone = 0
     printCheckmarks = [int(rowsToCalc[1] * float(i / 10)) for i in range(1, 10)]
@@ -464,7 +474,9 @@ def s3Score(file1Path, rowsToCalc):
         if dataRow < dataArr.shape[0]:
             # Pull the scores from the precalculated score array add them to the correct index in the rowScoreArr
             np.add.at(rowScoreArr, dataArr[dataRow, basePermutationArr[1]], scoreArrOnes[basePermutationArr[0],
-                basePermutationArr[1], dataArr[dataRow, basePermutationArr[0]], dataArr[dataRow, basePermutationArr[1]]])
+                                                                                    basePermutationArr[1],
+                                                                                    dataArr[dataRow, basePermutationArr[0]],
+                                                                                    dataArr[dataRow, basePermutationArr[1]]])
 
             # Store the scores in the shared score array
             scoreArr[scoreRow] = rowScoreArr
@@ -492,7 +504,7 @@ def writeScores(dataArr, outputTxtPath, locationArr):
 
     # Creating a string to write out the data (faster than np.savetxt)
     outputTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t" + "".join("{1[%d]:.5f}\t" % i for i in range(numStates - 1)) + \
-        "{1[%d]:.5f}\n" % (numStates - 1)
+                     "{1[%d]:.5f}\n" % (numStates - 1)
     outputStr = "".join(outputTemplate.format(locationArr[i], dataArr[i]) for i in range(numRows))
 
     # Write out the string

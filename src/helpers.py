@@ -115,6 +115,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     rowsToCalc -- The first and last rows to read from the files [default=(0, 0)]
     expBool -- Tells us if we are calculating the expected frequencies or the scores [default=True]
     verbose -- If True, we print out updates [default=True]
+    groupSize -- When returning null output, return 2 evenly sized groups of this size
 
     Output:
         Single Epilogos:

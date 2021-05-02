@@ -40,13 +40,13 @@ def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, ve
     rowList = splitRows(file1Path, numProcesses)
 
     calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
-        verbose)
+                      verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
 
 def calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
-    verbose):
+                      verbose):
     """
     Function responsible for deploying the processes used to calculate the expected frequencies
 
@@ -68,10 +68,10 @@ def calculateExpected(saliency, file1Path, file2Path, rowList, numStates, output
     with closing(Pool(numProcesses)) as pool:
         if saliency == 1:
             results = pool.starmap(s1Calc, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(numStates),
-                repeat(verbose)))
+                                               repeat(verbose)))
         elif saliency == 2:
             results = pool.starmap(s2Calc, zip(repeat(file1Path), repeat(file2Path), rowList, repeat(numStates),
-                repeat(verbose)))
+                                               repeat(verbose)))
         elif saliency == 3:
             results = pool.starmap(s3Calc, zip(repeat(file1Path), rowList, repeat(numStates), repeat(verbose)))
         else:

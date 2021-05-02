@@ -16,6 +16,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     outputDir -- The path of the output directory
     stateInfo -- State model tab seperated information file
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    expFreqPath -- The location of the stored expected frequency array
     verbose -- Boolean which if True, causes much more detailed prints
     """
     outputDirPath = Path(outputDir)
@@ -37,6 +38,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
 
     # Removing the expected frequency array
     remove(Path(expFreqPath))
+
 
 def readInData(outputDirPath):
     """

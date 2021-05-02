@@ -207,9 +207,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates, saliency,
-                                                                                   outputDirPath, storedExpPath, fileTag,
-                                                                                   numProcesses, quiescentState, groupSize, verbose)
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates,
+                                                                                      saliency, outputDirPath, storedExpPath,
+                                                                                      fileTag, numProcesses, quiescentState,
+                                                                                      groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -392,6 +393,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
         raise ValueError("Quiescent state value must be positive or zero (0 means do not filter)")
     elif quiescentState >= numStates:
         raise ValueError("Quiescent state value must be a state provided in the state model")
+
 
 def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, memory, dependency):
     """

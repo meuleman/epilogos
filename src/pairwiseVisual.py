@@ -68,12 +68,6 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
-    print("locationArr =", locationArr.size * locationArr.itemsize)
-    print("distanceArrReal =", distanceArrReal.size * distanceArrReal.itemsize)
-    print("maxDiffArr =", maxDiffArr.size * maxDiffArr.itemsize)
-    print("distanceArrNull = ", distanceArrNull.size * distanceArrNull.itemsize)
-    print("nonQuiescentIdx =", nonQuiescentIdx.size * nonQuiescentIdx.itemsize)
-
     # Splitting the params up
     beta, loc, scale = params[:-2], params[-2], params[-1]
 
@@ -543,46 +537,48 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     onlySignificant -- Boolean telling us whether to use significant loci or 1000 largest distance bins
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
     """
-    with open(filePath, 'w') as f:
-        # Pick values above significance threshold and then sort
-        indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
-        
-        # Make sure that there are at least 1000 values if creating greatestHits.txt
-        if not onlySignificant and len(indices) < 1000:
-            indices = (-np.abs(distanceArr)).argsort()[:1000]
+    f = gzip.open(filePath, "wt") if onlySignificant else open(filePath, 'w')
 
-        locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-                                                 maxDiffArr[indices].reshape(len(indices), 1),
-                                                 pvals[indices].reshape(len(indices), 1),
-                                                 mhPvals[indices].reshape(len(indices), 1)), axis=1), 
-                                columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
-                                .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
-                                         "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
-                                .replace({"Chromosome": chrDict})
+    # Pick values above significance threshold and then sort
+    indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
+    
+    # Make sure that there are at least 1000 values if creating greatestHits.txt
+    if not onlySignificant and len(indices) < 1000:
+        indices = (-np.abs(distanceArr)).argsort()[:1000]
 
-        # Don't want to merge when creating significantLoci.txt
-        if not onlySignificant:
-            locations = mergeAdjacent(pr.PyRanges(locations))
-            if "Start_b" in locations.columns:
-                locations.drop(columns=["Start_b", "End_b"], inplace=True)
+    locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
+                                                maxDiffArr[indices].reshape(len(indices), 1),
+                                                pvals[indices].reshape(len(indices), 1),
+                                                mhPvals[indices].reshape(len(indices), 1)), axis=1), 
+                            columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
+                            .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
+                                        "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
+                            .replace({"Chromosome": chrDict})
 
-        # Sort by absolute value of score
-        locations = locations.iloc[(-locations["Score"].abs()).argsort()]
+    # Don't want to merge when creating significantLoci.txt
+    if not onlySignificant:
+        locations = mergeAdjacent(pr.PyRanges(locations))
+        if "Start_b" in locations.columns:
+            locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
-        # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
-        stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
-            ("**" if float(locations.iloc[i, 6]) <= 0.05 else
-                ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
-                    for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+    # Sort by absolute value of score
+    locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
-        # Write all the locations to the file for significantLoci.txt
-        # Write only top 100 loci to file for greatestHits.txt
-        outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
-        outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-                                               abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
-                                               float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
-                            for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
-        f.write(outString)
+    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
+    stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
+        ("**" if float(locations.iloc[i, 6]) <= 0.05 else
+            ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
+                for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+
+    # Write all the locations to the file for significantLoci.txt
+    # Write only top 100 loci to file for greatestHits.txt
+    outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
+    outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
+                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
+                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
+                        for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
+    f.write(outString)
+    f.close()
 
 
 def mergeAdjacent(originalLocations):

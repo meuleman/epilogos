@@ -14,9 +14,8 @@ from os import remove
 from helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 from statsmodels.stats.multitest import multipletests
-from memory_profiler import profile
 
-@profile
+
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
     """

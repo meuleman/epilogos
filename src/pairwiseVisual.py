@@ -132,7 +132,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
-    # remove(Path(expFreqPath))
+    remove(Path(expFreqPath))
 
     if verbose: print("Total Time:", time() - tTotal, flush=True)
 
@@ -663,7 +663,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     plt.title("Differential epilogos between {} and {} biosamples".format(group1Name, group2Name))
     ax.set_ylabel("Distance")
     plt.xlabel("Chromosome")
-    xticks = np.where(locationArr[:, 1] == "0")[0]
+    xticks = np.where(locationArr[:, 1] == 0)[0]
     plt.xticks(ticks=xticks, labels=list(map(lambda x: x.split("chr")[-1], [chrDict[x] for x in locationArr[:, 0][xticks]])))
 
     plt.margins(x=0)
@@ -811,7 +811,7 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
-    xticks = np.where(locationArr[:, 1] == "0")[0]
+    xticks = np.where(locationArr[:, 1] == 0)[0]
     startEnd = []
     for i in range(len(xticks)):
         if not i == len(xticks) - 1:

@@ -54,14 +54,14 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
         numProcesses = cpu_count()
 
     # Fitting a gennorm distribution to the distances
-    if verbose: print("Fitting gennorm distribution to distances...", flush=True); tFit = time()
+    if verbose: print("\nFitting gennorm distribution to distances...", flush=True); tFit = time()
     else: print("    Fitting distances\t", end="", flush=True)
     params, distanceArrNull, nonQuiescentIdx = fitDistances(outputDirPath, numProcesses, numTrials, samplingSize)
     if verbose: print("    Time:", time() - tFit, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Read in observation files
-    if verbose: print("\nReading in observation files...", flush=True); tRead = time()
+    if verbose: print("Reading in observation files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
     locationArr, distanceArrReal, maxDiffArr, chrDict = readInData(outputDirPath, numProcesses, numStates)
     if verbose: print("    Time:", time() - tRead, flush=True)

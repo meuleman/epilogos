@@ -1,2 +1,4 @@
-include data/*
+include data/ChromHMM/*
+recursive-include data/state_metadata/*
+recursive-include data/pyData/*
 include scripts/*

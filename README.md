@@ -11,7 +11,7 @@
 Epilogos is an approach for analyzing, visualizing, and navigating multi-biosample functional genomic annotations, with an emphasis on chromatin state maps generated with e.g. ChromHMM or Segway.
 
 The software provided in this repository implements the methods underlying Epilogos using Python 3.7. 
-We provide a proof-of-principle dataset based on chromatin state calls from the EpiMap dataset (Boix et al., Nature 2021).
+We provide a proof-of-principle dataset based on chromatin state calls from the EpiMap dataset (<a href="https://www.nature.com/articles/s41586-020-03145-z">Boix et al., Nature 2021</a>).
 
 ---
 

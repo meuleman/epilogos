@@ -1,24 +1,7 @@
-certifi==2020.12.5
-click @ file:///home/linux1/recipes/ci/click_1610990599742/work
-cycler==0.10.0
-kiwisolver @ file:///tmp/build/80754af9/kiwisolver_1612282414123/work
-matplotlib @ file:///tmp/build/80754af9/matplotlib-suite_1613407855456/work
-mkl-fft==1.3.0
-mkl-random==1.1.1
-mkl-service==2.3.0
-natsort @ file:///tmp/build/80754af9/natsort_1611692802956/work
-ncls==0.0.53
-numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1603479632437/work
-olefile==0.46
-pandas==1.2.3
-Pillow @ file:///tmp/build/80754af9/pillow_1617386154241/work
-pyparsing @ file:///home/linux1/recipes/ci/pyparsing_1610983426697/work
-pyranges @ file:///opt/conda/conda-bld/pyranges_1618244235844/work
-pyrle==0.0.30
-python-dateutil @ file:///home/ktietz/src/ci/python-dateutil_1611928101742/work
-pytz @ file:///tmp/build/80754af9/pytz_1612215392582/work
-scipy @ file:///tmp/build/80754af9/scipy_1616700973326/work
-six @ file:///tmp/build/80754af9/six_1605205313296/work
-sorted-nearest==0.0.31
-tabulate==0.8.9
-tornado @ file:///tmp/build/80754af9/tornado_1606942283357/work
+pyranges==0.0.95
+pandas==1.2.2
+statsmodels==0.12.1
+matplotlib==3.3.4
+click==7.1.2
+numpy==1.19.2
+scipy==1.6.1

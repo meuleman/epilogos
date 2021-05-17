@@ -58,6 +58,8 @@ A version of epilogos has been created for those without access to a SLURM clust
 
 ---
 
-<div align="center">This README is incomplete. For the full README, visit [our github](https://github.com/meuleman/epilogos)</div>
+<br>
+
+This README is incomplete. For the full README, visit [our github](https://github.com/meuleman/epilogos).
 
 

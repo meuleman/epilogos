@@ -17,6 +17,7 @@ setup(
     authors=['Wouter Meuleman', 'Jacob Quon', 'Alex Reynolds', 'Eric Rynes'],
     license='GNU General Public License v3.0',
     packages=['src'],
+    include_package_data=True,
     install_requires=['click', 'numpy', 'pandas', 'pyranges', 'scipy', 'matplotlib', 'statsmodels'],
     entry_points={
         'console_scripts': [

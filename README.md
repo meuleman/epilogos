@@ -1,3 +1,5 @@
+[![Python package](https://github.com/meuleman/epilogos/actions/workflows/devel.yml/badge.svg?branch=main)](https://github.com/meuleman/epilogos/actions/workflows/devel.yml)
+
 <h1 align="center">
   <a href="https://github.com/meuleman/epilogos"><img src="https://raw.githubusercontent.com/meuleman/epilogos/main/data/logo.png" width="840"></a>
 </h1>

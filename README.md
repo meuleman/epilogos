@@ -223,7 +223,7 @@ e.g. $ epilogos -m single
 </details>
 
 <a name="command-line"></a>
-<details><summary><b> Command Line [-l, --local]</b></summary>
+<details><summary><b> Local Run [-l, --local]</b></summary>
 <p></p>
 <p>By default, Epilogos assumes access to a SLURM cluster. However, if you would like to run Epilogos locally in your terminal enable this flag.</p>
 

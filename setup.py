@@ -18,7 +18,7 @@ setup(
     license='GNU General Public License v3.0',
     packages=['src'],
     include_package_data=True,
-    install_requires=['click', 'numpy', 'pandas', 'pyranges', 'scipy', 'matplotlib', 'statsmodels'],
+    install_requires=['cython', 'click', 'numpy', 'pandas', 'pyranges', 'scipy', 'matplotlib', 'statsmodels'],
     entry_points={
         'console_scripts': [
             'epilogos = epilogos:main',

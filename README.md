@@ -15,6 +15,10 @@ Epilogos is an approach for analyzing, visualizing, and navigating multi-biosamp
 The software provided in this repository implements the methods underlying Epilogos using Python 3.7.
 We provide a proof-of-principle dataset based on chromatin state calls from the EpiMap dataset (<a href="https://www.nature.com/articles/s41586-020-03145-z">Boix et al., Nature 2021</a>).
 
+<p align="center">
+    Created by: Wouter Meuleman, Jacob Quon, Alex Reynolds, and Eric Rynes
+</p>
+
 ---
 
 <div align="center"><a name="menu"></a>

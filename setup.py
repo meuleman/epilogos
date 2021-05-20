@@ -5,23 +5,32 @@ from setuptools import setup
 HERE = pathlib.Path(__file__).parent
 
 # The text of the README file
-README = (HERE / "README_PYPI.md").read_text()
+README = (HERE / "README.txt").read_text()
 
 setup(
-    name='epilogos',
-    version='1.0.0',
+    name="Epilogos",
+    version="2a",
+    authors=["Wouter Meuleman", "Jacob Quon", "Alex Reynolds", "Eric Rynes"],
     description="Information-theoretic navigation of multi-tissue functional genomic annotations",
     long_description=README,
-    long_description_content_type="text/markdown",
     url="https://github.com/meuleman/epilogos",
-    authors=['Wouter Meuleman', 'Jacob Quon', 'Alex Reynolds', 'Eric Rynes'],
-    license='GNU General Public License v3.0',
-    packages=['epilogos'],
+    license="LICENSE.txt",
+    packages=["epilogos"],
+    scripts=["bin/preprocess_data_ChromHMM.sh"],
     include_package_data=True,
-    install_requires=['cython', 'click', 'numpy', 'pandas', 'pyranges', 'scipy', 'matplotlib', 'statsmodels'],
+    install_requires=[
+        "cython == 0.29.23",
+        "statsmodels == 0.12.0",
+        "scipy == 1.5.2",
+        "numpy == 1.19.2",
+        "matplotlib == 3.3.2",
+        "click == 7.1.2",
+        "pandas == 1.1.3",
+        "pyranges == 0.0.97",
+        ],
     entry_points={
-        'console_scripts': [
-            'epilogos = epilogos:main',
+        "console_scripts": [
+            "epilogos = epilogos.__main__:main",
         ],
     }
 )

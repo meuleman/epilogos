@@ -1,1 +1,6 @@
-__pycache__
+epilogos/__pycache__/
+.vscode/
+src/
+dist/
+build/
+Epilogos.egg-info/

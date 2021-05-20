@@ -21,9 +21,9 @@ if [ $# -lt 3 ]; then
   echo "   This information can be obtained from UCSC, e.g. for human genome hg19, run:"
   echo "   $ wget -q -O - ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz | \\"
   echo "       gunzip - | cut -f 1-2 > hg19.genome"
-  echo "   Examples for hg19 and hg38 can be found in the 'scripts' directory."
+  echo "   Examples for hg19 and hg38 can be found in the 'data' directory."
   echo
-  echo "Example run: $0 data/ChromHMM data/metadata_Boix.txt scripts/hg19.genome"
+  echo "Example run: $0 data/ChromHMM data/metadata_Boix.txt data/hg19.genome"
   exit
 fi  
 

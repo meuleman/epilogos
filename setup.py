@@ -9,7 +9,7 @@ README = (HERE / "README.txt").read_text()
 
 setup(
     name="Epilogos",
-    version="fshjfhkjfadsghjkfs",
+    version="t0.0.1",
     authors=["Wouter Meuleman", "Jacob Quon", "Alex Reynolds", "Eric Rynes"],
     description="Information-theoretic navigation of multi-tissue functional genomic annotations",
     long_description=README,

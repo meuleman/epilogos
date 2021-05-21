@@ -31,7 +31,7 @@ setup(
         ],
     entry_points={
         "console_scripts": [
-            "epilogos = epilogos:main",
+            "epilogos = epilogos.__main__:main",
         ],
     }
 )

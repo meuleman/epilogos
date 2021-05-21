@@ -17,6 +17,9 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
          888                        "Y88P"                    
 """, flush=True)
 
+if len(sys.argv) == 1:
+    print("Run 'epilogos -h' for help")
+    sys.exit()
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,

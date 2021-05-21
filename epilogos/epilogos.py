@@ -245,89 +245,89 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     """
     # Checking that all required flags are inputted
     if mode[0] == "single" and not inputDirectory:
-        print("[-i, --input-directory] required in 'single' group mode")
+        print("ERROR: [-i, --input-directory] required in 'single' group mode")
         sys.exit()
     elif mode[0] == "paired" and not inputDirectory1:
-        print("[-a, --directory-one] required in 'paired' group mode")
+        print("ERROR: [-a, --directory-one] required in 'paired' group mode")
         sys.exit()
     elif mode[0] == "paired" and not inputDirectory2:
-        print("[-b, --directory-two] required in 'paired' group mode")
+        print("ERROR: [-b, --directory-two] required in 'paired' group mode")
         sys.exit()
     elif not outputDirectory:
-        print("[-o, --output-directory] required")
+        print("ERROR: [-o, --output-directory] required")
         sys.exit()
     elif not stateInfo:
-        print("[-n, --state-info] required")
+        print("ERROR: [-n, --state-info] required")
         sys.exit()
 
     # Checking that incompatible flags are not input together
     if mode[0] == "single" and inputDirectory1:
-        print("[-m, --mode] 'single' not compatible with [-a, --directory-one] option")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-a, --directory-one] option")
         sys.exit()
     elif mode[0] == "single" and inputDirectory2:
-        print("[-m, --mode] 'single' not compatible with [-b, --directory-two] option")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-b, --directory-two] option")
         sys.exit()
     elif mode[0] == "single" and diagnosticBool:
-        print("[-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
         sys.exit()
     elif mode[0] == "single" and quiescentState:
-        print("[-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
     elif mode[0] == "single" and groupSize:
-        print("[-m, --mode] 'single' not compatible with [-g, --group-size] flag")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-g, --group-size] flag")
         sys.exit()
     elif mode[0] == "paired" and inputDirectory:
-        print("[-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
+        print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
         sys.exit()
     elif commandLineBool and exitBool:
-        print("[-l, --cli] flag not compatible with [-x, --exit] flag")
+        print("ERROR: [-l, --cli] flag not compatible with [-x, --exit] flag")
         sys.exit()
 
     # Checking if user inputs flag multiples times
     if len(mode) > 1:
-        print("Too many [-m, --mode] arguments provided")
+        print("ERROR: Too many [-m, --mode] arguments provided")
         sys.exit()
     elif len(commandLineBool) > 1:
-        print("Too many [-l, --cli] arguments provided")
+        print("ERROR: Too many [-l, --cli] arguments provided")
         sys.exit()
     elif len(inputDirectory) > 1:
-        print("Too many [-i, --input-directory] arguments provided")
+        print("ERROR: Too many [-i, --input-directory] arguments provided")
         sys.exit()
     elif len(inputDirectory1) > 1:
-        print("Too many [-a, --directory-one] arguments provided")
+        print("ERROR: Too many [-a, --directory-one] arguments provided")
         sys.exit()
     elif len(inputDirectory2) > 1:
-        print("Too many [-b, --directory-two] arguments provided")
+        print("ERROR: Too many [-b, --directory-two] arguments provided")
         sys.exit()
     elif len(outputDirectory) > 1:
-        print("Too many [-o, --output-directory] arguments provided")
+        print("ERROR: Too many [-o, --output-directory] arguments provided")
         sys.exit()
     elif len(stateInfo) > 1:
-        print("Too many [-n, --state-info] arguments provided")
+        print("ERROR: Too many [-n, --state-info] arguments provided")
         sys.exit()
     elif len(saliency) > 1:
-        print("Too many [-s, --saliency] arguments provided")
+        print("ERROR: Too many [-s, --saliency] arguments provided")
         sys.exit()
     elif len(numProcesses) > 1:
-        print("Too many [-c, --num-cores] arguments provided")
+        print("ERROR: Too many [-c, --num-cores] arguments provided")
         sys.exit()
     elif len(exitBool) > 1:
-        print("Too many [-x, --exit] arguments provided")
+        print("ERROR: Too many [-x, --exit] arguments provided")
         sys.exit()
     elif len(diagnosticBool) > 1:
-        print("Too many [-d, --diagnostic-figures] arguments provided")
+        print("ERROR: Too many [-d, --diagnostic-figures] arguments provided")
         sys.exit()
     elif len(numTrials) > 1:
-        print("Too many [-t, --num-trials] arguments provided")
+        print("ERROR: Too many [-t, --num-trials] arguments provided")
         sys.exit()
     elif len(samplingSize) > 1:
-        print("Too many [-z, --sampling-size] arguments provided")
+        print("ERROR: Too many [-z, --sampling-size] arguments provided")
         sys.exit()
     elif len(quiescentState) > 1:
-        print("Too many [-q, --quiescent-state] arguments provided")
+        print("ERROR: Too many [-q, --quiescent-state] arguments provided")
         sys.exit()
     elif len(groupSize) > 1:
-        print("Too many [-g, --group-size] arguments provided")
+        print("ERROR: Too many [-g, --group-size] arguments provided")
         sys.exit()
 
 
@@ -349,11 +349,11 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
-        print("Saliency Metric Invalid: {}".format(saliency) +
+        print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
             "Please ensure that saliency metric is either 1, 2, or 3")
         sys.exit()
     elif mode == "paired" and saliency != 1 and saliency != 2:
-        print("Saliency Metric Invalid: {}".format(saliency) +
+        print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
             "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
         sys.exit()
 
@@ -377,18 +377,18 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDirPath)))
 
     if numProcesses < 0:
-        print("Number of cores must be positive or zero (0 means use all cores)")
+        print("ERROR: Number of cores must be positive or zero (0 means use all cores)")
         sys.exit()
 
     if quiescentState < -1:
-        print("Quiescent state value must be positive or zero (0 means do not filter)")
+        print("ERROR: Quiescent state value must be positive or zero (0 means do not filter)")
         sys.exit()
     elif quiescentState >= numStates:
-        print("Quiescent state value must be a state provided in the state model")
+        print("ERROR: Quiescent state value must be a state provided in the state model")
         sys.exit()
 
     if groupSize <-1:
-        print("Group size value must be positive or -1 (-1 means use inputted group sizes)")
+        print("ERROR: Group size value must be positive or -1 (-1 means use inputted group sizes)")
         sys.exit()
 
 

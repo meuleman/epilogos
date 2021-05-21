@@ -8,7 +8,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.txt").read_text()
 
 setup(
-    name="Epilogos",
+    name="epilogos",
     version="0.0.1rc1",
     authors=["Wouter Meuleman", "Jacob Quon", "Alex Reynolds", "Eric Rynes"],
     description="Information-theoretic navigation of multi-tissue functional genomic annotations",
@@ -31,7 +31,7 @@ setup(
         ],
     entry_points={
         "console_scripts": [
-            "epilogos = epilogos.__main__:main",
+            "epilogos = epilogos:main",
         ],
     }
 )

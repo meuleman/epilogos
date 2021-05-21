@@ -56,12 +56,12 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
-    Written by Wouter Meuleman, Jacob Quon, Alex Reynolds, and Eric Rynes
+    Written by Jacob Quon and Wouter Meuleman
     """
     runEpilogos(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
 
 
 if __name__ == "__main__":
-    prog_name="Epilogos"
+    prog_name="epilogos"
     main()

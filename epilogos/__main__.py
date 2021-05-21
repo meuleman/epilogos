@@ -18,7 +18,7 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 """, flush=True)
 
 
-@click.command()
+@click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
               multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
 @click.option("-l", "--local", "commandLineBool", is_flag=True, multiple=True,
@@ -53,6 +53,11 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
               help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
+    """
+    Wrapper function that determines which epilogos functions to use and how to deploy them.
+
+    Python implementation of Epilogos written by Jacob Quon
+    """
     runEpilogos(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
 

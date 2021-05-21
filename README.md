@@ -73,7 +73,7 @@ It is worth noting that in our testing this error has not affected the results.
 
 ## Running Epilogos
 
-To be presented with basic documentation of arguments needed to run epilogos, simply run the command `epilogos --help` (More in-depth explanation is given [below](#command-line-options)).
+To be presented with basic documentation of arguments needed to run epilogos, simply run the command `epilogos --help` or `python -m epilogos --help` (More in-depth explanation is given [below](#command-line-options)).
 
 By default, Epilogos assumes access to a computational cluster managed by [SLURM](https://slurm.schedmd.com/).
 A version of epilogos has been created for those without access to a SLURM cluster and can be run by using the `-l` flag to your command (e.g. `epilogos -l`).
@@ -409,7 +409,7 @@ We provide a proof-of-principle dataset based on chromatin state calls from the 
 
 ## Running Pairwise Epilogos
 
-To be presented with minimal documentation of arguments needed to run epilogos, simply run the command `epilogos --help` (More in-depth explanation is given [below](#command-line-options-pairwise))
+To be presented with minimal documentation of arguments needed to run epilogos, simply run the command `epilogos --help` or `python -m epilogos --help` (More in-depth explanation is given [below](#command-line-options-pairwise))
 
 By default, Epilogos assumes access to a computational cluster managed by [SLURM](https://slurm.schedmd.com/).
 A version of epilogos has been created for those without access to a SLURM cluster and can be run by using the `-l` flag to your command (e.g. `epilogos -l`).

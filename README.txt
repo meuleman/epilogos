@@ -24,7 +24,7 @@ To install Epilogos simply run the following command
 
     $ pip install epilogos
 
-Alternatively, install Epilogos directly from this Git repositority using
+Alternatively, install Epilogos directly from the Git repositority using
 
 .. code-block:: bash
 
@@ -53,7 +53,7 @@ Additionally, it is recommended that python is updated to version 3.7 or later. 
 Running Epilogos
 ================
 
-To be presented with basic documentation of arguments needed to run epilogos, simply run the command ``epilogos --help`` (More in-depth explanation is given on the `github README <https://github.com/meuleman/epilogos)>`_).
+To be presented with basic documentation of arguments needed to run epilogos, simply run the command ``epilogos --help`` or ``python -m epilogos --help`` (More in-depth explanation is given on the `github README <https://github.com/meuleman/epilogos)>`_).
 
 By default, Epilogos assumes access to a computational cluster managed by `SLURM <https://slurm.schedmd.com/>`_. 
 A version of epilogos has been created for those without access to a SLURM cluster and can be run by using the ``-l`` flag to your command (e.g. ``epilogos -l``).

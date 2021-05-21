@@ -54,13 +54,14 @@ Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """
-    Wrapper function that determines which epilogos functions to use and how to deploy them.
+    Information-theoretic navigation of multi-tissue functional genomic annotations
 
-    Python implementation of Epilogos written by Jacob Quon
+    Written by Wouter Meuleman, Jacob Quon, Alex Reynolds, and Eric Rynes
     """
     runEpilogos(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
 
 
 if __name__ == "__main__":
+    prog_name="Epilogos"
     main()

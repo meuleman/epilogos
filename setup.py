@@ -16,7 +16,8 @@ setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/meuleman/epilogos",
     license="LICENSE.txt",
-    packages=find_packages("epilogos", exclude=["src"]),
+    packages=["epilogos"],
+    # find_packages("epilogos", exclude=["src"]),
     scripts=["bin/preprocess_data_ChromHMM.sh"],
     include_package_data=True,
     install_requires=[

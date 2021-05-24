@@ -1,5 +1,9 @@
-include data/ChromHMM/*
-recursive-include data/state_metadata/ *
-recursive-include data/pyData/ *
-include scripts/*
+graft data/
+global exclude *.png
+graft bin/
 include *.txt
+prune build/
+prune src/
+prune epilogos/__pycache__/
+
+

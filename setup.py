@@ -1,5 +1,5 @@
 import pathlib
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # The directory containing this file
 HERE = pathlib.Path(__file__).parent
@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/meuleman/epilogos",
     license="LICENSE.txt",
-    packages=["epilogos"],
+    packages=find_packages("epilogos", exclude=["src"]),
     scripts=["bin/preprocess_data_ChromHMM.sh"],
     include_package_data=True,
     install_requires=[

@@ -1,6 +1,15 @@
+<<<<<<< HEAD
+=======
+graft data/
+>>>>>>> edc092078db3ff1e293e5162d5e96407a4d86970
 global-exclude *.png
 graft bin/
 include *.txt
 prune data/
 prune build/
+<<<<<<< HEAD
 prune epilogos/__pycache__/
+=======
+prune src/
+prune epilogos/__pycache__/
+>>>>>>> edc092078db3ff1e293e5162d5e96407a4d86970

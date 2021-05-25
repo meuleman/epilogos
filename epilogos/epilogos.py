@@ -273,9 +273,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif mode[0] == "single" and quiescentState:
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
-    elif mode[0] == "single" and groupSize:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-g, --group-size] flag")
-        sys.exit()
     elif mode[0] == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
         sys.exit()

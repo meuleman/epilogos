@@ -1,9 +1,6 @@
-graft data/
-global exclude *.png
+global-exclude *.png
 graft bin/
 include *.txt
+prune data/
 prune build/
-prune src/
 prune epilogos/__pycache__/
-
-

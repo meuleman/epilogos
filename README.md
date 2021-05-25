@@ -728,6 +728,26 @@ This is consistent with our knowledge of these loci playing crucial roles in the
   <img src="https://raw.githubusercontent.com/meuleman/epilogos/main/data/manhattan_male_female_chrX.png" width="840">
 </h1>
 
+## Development
 
+To modify a development version of `epilogos`, first set up a virtual environment via `venv` or `conda`. After activating the environment and installing [dependencies](#prerequisites), install `epilogos` in develop or editable mode:
 
+```bash
+$ pip install -e .
+```
 
+### Big Sur
+
+If you are using Mac OS X 11 (Big Sur) or later, it may be necessary to first install OpenBLAS, before installing Python dependencies that require it (such as `scipy`). 
+
+This can be done via [Homebrew](https://brew.sh/) and setting environment variables to point to relevant library and header files:
+
+```bash
+$ brew install openblas
+$ export SYSTEM_VERSION_COMPAT=1
+$ export LAPACK=/usr/local/opt/openblas/lib
+$ export LAPACK_SRC=/usr/local/opt/openblas/include
+$ export BLAS=/usr/local/opt/openblas/lib
+```
+
+Then run `pip install -e .`, as before.

@@ -5,12 +5,13 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
-import epilogos.expected as expected
-import epilogos.expectedCombination as expectedCombination
-import epilogos.scores as scores
-import epilogos.greatestHits as greatestHits
-import epilogos.pairwiseVisual as pairwiseVisual
-from epilogos.helpers import getNumStates
+from .expected
+from epilogos import main as expected
+from .expectedCombination import main as expectedCombination
+from .scores import main as scores
+from .greatestHits import main as greatestHits
+from .pairwiseVisual import main as pairwiseVisual
+from .helpers import getNumStates
 
 
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
@@ -51,7 +52,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState, groupSize)
 
     # Informing user of their inputs
     print()
@@ -110,7 +111,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                expected.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
@@ -126,7 +127,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                expected.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
@@ -143,7 +144,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
     if commandLineBool:
-        expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
+        expectedCombination(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
@@ -158,7 +159,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                scores(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -178,7 +179,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                scores(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -199,7 +200,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
@@ -211,7 +212,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
                                 diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
@@ -272,9 +273,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif mode[0] == "single" and quiescentState:
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
-        sys.exit()
-    elif mode[0] == "single" and groupSize:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-g, --group-size] flag")
         sys.exit()
     elif mode[0] == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")

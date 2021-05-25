@@ -51,7 +51,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState, groupSize)
 
     # Informing user of their inputs
     print()
@@ -234,6 +234,13 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
         
 
+def isChangedFromDefault(name, arg):
+    defaults = {
+        "groupSize": -1,
+    }
+    return False if name not in defaults.keys() or arg != defaults[name] else True
+
+
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """
@@ -273,7 +280,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif mode[0] == "single" and quiescentState:
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
-    elif mode[0] == "single" and groupSize:
+    elif mode[0] == "single" and isChangedFromDefault('groupSize', groupSize):
         print("ERROR: [-m, --mode] 'single' not compatible with [-g, --group-size] flag")
         sys.exit()
     elif mode[0] == "paired" and inputDirectory:

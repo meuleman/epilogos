@@ -5,8 +5,7 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
-from .expected
-from epilogos import main as expected
+from .expected import main as expected
 from .expectedCombination import main as expectedCombination
 from .scores import main as scores
 from .greatestHits import main as greatestHits

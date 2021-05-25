@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import numpy as np
 from sys import argv
 from pathlib import Path

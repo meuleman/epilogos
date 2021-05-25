@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from sys import argv
 import numpy as np
 from os import remove

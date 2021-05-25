@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from sys import argv
 from .pairwiseVisual import mergeAdjacent, findSign
 from .helpers import strToBool, getStateNames

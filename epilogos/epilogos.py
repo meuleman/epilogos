@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import sys
 from pathlib import Path
 from time import sleep
@@ -7,13 +5,12 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
-from .expected import main as expected
-from .expectedCombination import main as expectedCombination
-from .scores import main as scores
-from .greatestHits import main as greatestHits
-from .pairwiseVisual import main as pairwiseVisual
-from .helpers import getNumStates
-
+from epilogos import expected
+from epilogos import expectedCombination
+from epilogos import scores
+from epilogos import greatestHits
+from epilogos import pairwiseVisual
+from epilogos.helpers import getNumStates
 
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):

@@ -1,11 +1,9 @@
-from __future__ import absolute_import
-
 from sys import argv
 import numpy as np
 from os import remove
 from pathlib import Path
 from time import time
-from .helpers import strToBool
+from epilogos.helpers import strToBool
 
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):

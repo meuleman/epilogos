@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import numpy as np
 from sys import argv
 from pathlib import Path
@@ -7,7 +5,7 @@ from time import time
 from multiprocessing import cpu_count, Pool
 from itertools import repeat, permutations
 from contextlib import closing
-from .helpers import strToBool, splitRows, readStates
+from epilogos.helpers import strToBool, splitRows, readStates
 
 
 def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):

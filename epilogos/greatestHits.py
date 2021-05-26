@@ -1,6 +1,6 @@
 from sys import argv
-from .pairwiseVisual import mergeAdjacent, findSign
-from .helpers import strToBool, getStateNames
+from epilogos.pairwiseVisual import mergeAdjacent, findSign
+from epilogos.helpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time

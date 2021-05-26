@@ -11,7 +11,7 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-from .helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
+from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 from statsmodels.stats.multitest import multipletests
 

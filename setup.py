@@ -22,7 +22,7 @@ setup(
     long_description_content_type="text/x-rst",
     url="https://github.com/meuleman/epilogos",
     license="LICENSE.txt",
-    packages=["epilogos"],
+    packages=find_packages("."),
     scripts=["bin/preprocess_data_ChromHMM.sh"],
     include_package_data=True,
     install_requires=install_requirements,

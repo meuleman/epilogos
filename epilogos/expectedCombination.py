@@ -3,7 +3,7 @@ import numpy as np
 from os import remove
 from pathlib import Path
 from time import time
-from epilogos.helpers import strToBool
+from .helpers import strToBool
 
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):

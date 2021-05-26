@@ -7,7 +7,7 @@ import numpy.ma as ma
 from multiprocessing import cpu_count, Pool, RawArray
 from itertools import repeat, permutations
 from contextlib import closing
-from epilogos.helpers import strToBool, splitRows, readStates
+from .helpers import strToBool, splitRows, readStates
 import gzip
 
 def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):

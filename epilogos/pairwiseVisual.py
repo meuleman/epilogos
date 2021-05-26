@@ -11,7 +11,8 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
+import epilogos.helpers
+# from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 from statsmodels.stats.multitest import multipletests
 
@@ -45,9 +46,9 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
     
-    numStates = getNumStates(stateInfo)
-    stateColorList = getStateColorsRGB(stateInfo)
-    stateNameList = getStateNames(stateInfo)
+    numStates = epilogos.helpers.getNumStates(stateInfo)
+    stateColorList = epilogos.helpers.getStateColorsRGB(stateInfo)
+    stateNameList = epilogos.helpers.getStateNames(stateInfo)
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
@@ -976,5 +977,5 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]),
-         argv[10], strToBool(argv[11]))
+    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
+         argv[10], epilogos.helpers.strToBool(argv[11]))

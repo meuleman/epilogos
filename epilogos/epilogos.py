@@ -5,12 +5,19 @@ from os import remove
 import subprocess
 from pathlib import PurePath
 import errno
-from .expected import main as expected
-from .expectedCombination import main as expectedCombination
-from .scores import main as scores
-from .greatestHits import main as greatestHits
-from .pairwiseVisual import main as pairwiseVisual
-from .helpers import getNumStates
+import epilogos.expected
+import epilogos.expectedCombination
+import epilogos.scores
+import epilogos.greatestHits
+import epilogos.pairwiseVisual
+import epilogos.helpers
+
+# from .expected import main as expected
+# from .expectedCombination import main as expectedCombination
+# from .scores import main as scores
+# from .greatestHits import main as greatestHits
+# from .pairwiseVisual import main as pairwiseVisual
+# from .helpers import getNumStates
 
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
@@ -27,7 +34,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0]
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
-    numStates = getNumStates(stateInfo)
+    numStates = epilogos.helpers.getNumStates(stateInfo)
     # Quiescent value is user input - 1 because states are read in to be -1 from their values
     quiescentState = quiescentState[0] - 1 if quiescentState else numStates - 1
 
@@ -109,7 +116,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                epilogos.expected.main(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
@@ -125,7 +132,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                epilogos.expected.main(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
@@ -142,7 +149,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
     if commandLineBool:
-        expectedCombination(outputDirPath, storedExpPath, fileTag, verbose)
+        epilogos.expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
@@ -157,7 +164,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                scores(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                epilogos.scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -177,7 +184,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                scores(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                epilogos.scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -198,7 +205,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+            epilogos.greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
@@ -210,7 +217,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+            epilogos.pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
                                 diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"

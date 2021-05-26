@@ -5,7 +5,8 @@ from time import time
 from multiprocessing import cpu_count, Pool
 from itertools import repeat, permutations
 from contextlib import closing
-from epilogos.helpers import strToBool, splitRows, readStates
+import epilogos.helpers
+# from epilogos.helpers import strToBool, splitRows, readStates
 
 
 def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
@@ -37,7 +38,7 @@ def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, ve
         numProcesses = cpu_count()
 
     # Determine which rows to assign to each core
-    rowList = splitRows(file1Path, numProcesses)
+    rowList = epilogos.helpers.splitRows(file1Path, numProcesses)
 
     calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
                       verbose)
@@ -98,7 +99,7 @@ def s1Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each state within the specified rows of the file
     """
-    dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
@@ -127,7 +128,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each pair of states within the specified rows of the file
     """
-    dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     multiprocessRows = dataArr.shape[0]
 
@@ -171,7 +172,7 @@ def s3Calc(file1Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each grouping of states and epigenomes within the specified rows of the file
     """
-    dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = epilogos.helpers.readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     multiprocessRows, numCols = dataArr.shape
 
@@ -216,4 +217,4 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), strToBool(argv[8]))
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))

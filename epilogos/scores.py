@@ -7,7 +7,8 @@ import numpy.ma as ma
 from multiprocessing import cpu_count, Pool, RawArray
 from itertools import repeat, permutations
 from contextlib import closing
-from epilogos.helpers import strToBool, splitRows, readStates
+import epilogos.helpers
+# from epilogos.helpers import strToBool, splitRows, readStates
 import gzip
 
 def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):
@@ -42,7 +43,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
         numProcesses = cpu_count()
 
     # Determine which rows to assign to each core
-    rowList = splitRows(file1Path, numProcesses)
+    rowList = epilogos.helpers.splitRows(file1Path, numProcesses)
 
     if file2 == "null":
         calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
@@ -264,14 +265,14 @@ def s1Score(file1Path, file2Path, rowsToCalc):
 
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
-        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
+        dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
                              verbose=verbose)
 
         numStates = sharedArr[2]
 
         scoreArr = sharedToNumpy(*sharedArr)
     else:
-        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
+        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path,
                                                                             rowsToCalc=rowsToCalc, expBool=False,
                                                                             verbose=verbose, groupSize=groupSize)
 
@@ -347,7 +348,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
 
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
-        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
+        dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
                              verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr[2]
@@ -357,7 +358,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
         # Need the permuations to effective count state pairs (see rowObsS2() for theory)
         permutations = dataArr.shape[1] * (dataArr.shape[1] - 1)
     else:
-        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
+        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path,
                                                                             rowsToCalc=rowsToCalc, expBool=False,
                                                                             verbose=verbose)
 
@@ -442,7 +443,7 @@ def s3Score(file1Path, rowsToCalc):
     file1Path -- The path of the only file to read states from
     rowsToCalc -- The rows to count expected frequencies from the files
     """
-    dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = epilogos.helpers.readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -528,4 +529,4 @@ def klScoreND(obs, exp):
 
 if __name__ == "__main__":
     main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
-         int(argv[10]), strToBool(argv[11]))
+         int(argv[10]), epilogos.helpers.strToBool(argv[11]))

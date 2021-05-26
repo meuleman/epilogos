@@ -1,6 +1,6 @@
 import sys
 import click
-from epilogos.epilogos import main as runEpilogos
+import epilogos.epilogos
 
 
 print("""\n
@@ -61,7 +61,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     Written by Jacob Quon and Wouter Meuleman
     """
-    runEpilogos(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
+    epilogos.epilogos.main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
 
 

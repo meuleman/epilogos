@@ -11,7 +11,7 @@ import epilogos.helpers
 # from epilogos.helpers import strToBool, splitRows, readStates
 import gzip
 
-def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):
+def scores(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):
     """
     Wrapper function which prepares inputs for the score calculation
 
@@ -527,5 +527,5 @@ def klScoreND(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 
 
-main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
+scores(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
      int(argv[10]), epilogos.helpers.strToBool(argv[11]))

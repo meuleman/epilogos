@@ -10,7 +10,7 @@ from os import remove
 import pandas as pd
 import pyranges as pr
 
-def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
+def greatestHits(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
 
@@ -145,4 +145,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         f.write(outString)
 
 
-main(argv[1], argv[2], argv[3], argv[4], epilogos.helpers.strToBool(argv[5]))
+greatestHits(argv[1], argv[2], argv[3], argv[4], epilogos.helpers.strToBool(argv[5]))

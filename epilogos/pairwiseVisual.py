@@ -17,7 +17,7 @@ import pyranges as pr
 from statsmodels.stats.multitest import multipletests
 
 
-def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
+def pairwiseVisual(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
          expFreqPath, verbose):
     """
     Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
@@ -976,5 +976,5 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     return (yticksFinal, ytickLabelsFinal)
     
 
-main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
+pairwiseVisual(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
      argv[10], epilogos.helpers.strToBool(argv[11]))

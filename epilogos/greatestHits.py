@@ -145,5 +145,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         f.write(outString)
 
 
-if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], epilogos.helpers.strToBool(argv[5]))
+main(argv[1], argv[2], argv[3], argv[4], epilogos.helpers.strToBool(argv[5]))

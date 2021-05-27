@@ -976,6 +976,5 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     return (yticksFinal, ytickLabelsFinal)
     
 
-if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
-         argv[10], epilogos.helpers.strToBool(argv[11]))
+main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
+     argv[10], epilogos.helpers.strToBool(argv[11]))

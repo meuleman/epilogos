@@ -44,6 +44,5 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
     print("Total Time:", time() - tTotal) if verbose else print("    [Done]")
 
 
-if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], epilogos.helpers.strToBool(argv[4]))
+main(argv[1], argv[2], argv[3], epilogos.helpers.strToBool(argv[4]))
 

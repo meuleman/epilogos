@@ -527,6 +527,5 @@ def klScoreND(obs, exp):
     return obs * ma.log2(ma.divide(obs, exp).filled(0)).filled(0)
 
 
-if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
-         int(argv[10]), epilogos.helpers.strToBool(argv[11]))
+main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
+     int(argv[10]), epilogos.helpers.strToBool(argv[11]))

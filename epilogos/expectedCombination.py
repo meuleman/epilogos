@@ -7,7 +7,7 @@ import epilogos.helpers
 # from epilogos.helpers import strToBool
 
 
-def expectedCombination(outputDirectory, storedExpInput, fileTag, verbose):
+def main(outputDirectory, storedExpInput, fileTag, verbose):
     """
     Combines all the temporary expected frequency numpy arrays into one expected frequency array
 
@@ -44,5 +44,6 @@ def expectedCombination(outputDirectory, storedExpInput, fileTag, verbose):
     print("Total Time:", time() - tTotal) if verbose else print("    [Done]")
 
 
-expectedCombination(argv[1], argv[2], argv[3], epilogos.helpers.strToBool(argv[4]))
+if __name__ == "__main__":
+    main(argv[1], argv[2], argv[3], epilogos.helpers.strToBool(argv[4]))
 

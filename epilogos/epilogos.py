@@ -202,7 +202,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
     if commandLineBool:
-        epilogos.expectedCombination.expectedCombination(outputDirPath, storedExpPath, fileTag, verbose)
+        epilogos.expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
@@ -217,7 +217,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                epilogos.scores.scores(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                epilogos.scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -237,7 +237,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                epilogos.scores.scores(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                epilogos.scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -258,7 +258,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            epilogos.greatestHits.greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+            epilogos.greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
@@ -270,7 +270,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            epilogos.pairwiseVisual.pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+            epilogos.pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
                                 diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"

@@ -9,7 +9,7 @@ import epilogos.helpers
 # from epilogos.helpers import strToBool, splitRows, readStates
 
 
-def expected(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
+def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
     """
     Wrapper function which prepares inputs for the expected frequency calculation
 
@@ -216,4 +216,5 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 
-expected(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))
+if __name__ == "__main__":
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))

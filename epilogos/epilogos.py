@@ -163,134 +163,134 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonFilesDir = (Path.cwd() / Path(__file__)).parents[1] / "epilogos/"
             print("Path generated from current working directory. May cause errors")
 
-    # # Calculate the expected frequency for each file in the input directory
-    # expJobIDArr = []
-    # print("\nSTEP 1: Per data file background frequency calculation", flush=True)
-    # for file in inputDirPath.glob("*"):
-    #     if mode == "single":
-    #         if commandLineBool:
-    #             epilogos.expected.expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
-    #         else:
-    #             computeExpectedPy = pythonFilesDir / "expected.py"
-    #             pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
-    #                                                                         outputDirPath, fileTag, numProcesses, verbose)
-    #             expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-    #                                               pythonCommand, saliency, memory, ""))
-    #     else:
-    #         # Find matching file in other directory
-    #         if not list(inputDirPath2.glob(file.name)):
-    #             raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-    #                 "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
-    #         else:
-    #             file2 = next(inputDirPath2.glob(file.name))
+    # Calculate the expected frequency for each file in the input directory
+    expJobIDArr = []
+    print("\nSTEP 1: Per data file background frequency calculation", flush=True)
+    for file in inputDirPath.glob("*"):
+        if mode == "single":
+            if commandLineBool:
+                epilogos.expected.expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+            else:
+                computeExpectedPy = pythonFilesDir / "expected.py"
+                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
+                                                                            outputDirPath, fileTag, numProcesses, verbose)
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
+                                                  pythonCommand, saliency, memory, ""))
+        else:
+            # Find matching file in other directory
+            if not list(inputDirPath2.glob(file.name)):
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
+                    "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
+            else:
+                file2 = next(inputDirPath2.glob(file.name))
 
-    #         if commandLineBool:
-    #             epilogos.expected.expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
-    #         else:
-    #             computeExpectedPy = pythonFilesDir / "expected.py"
-    #             pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
-    #                                                                        saliency, outputDirPath, fileTag, numProcesses,
-    #                                                                        verbose)
-    #             expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-    #                                               pythonCommand, saliency, memory, ""))
+            if commandLineBool:
+                epilogos.expected.expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+            else:
+                computeExpectedPy = pythonFilesDir / "expected.py"
+                pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
+                                                                           saliency, outputDirPath, fileTag, numProcesses,
+                                                                           verbose)
+                expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
+                                                  pythonCommand, saliency, memory, ""))
 
-    # if not commandLineBool:
-    #     # Create a string for slurm dependency to work and to print more nicely
-    #     expJobIDStr = str(expJobIDArr).strip('[]').replace(" ", "")
-    #     print("    JobIDs:", expJobIDStr, flush=True)
+    if not commandLineBool:
+        # Create a string for slurm dependency to work and to print more nicely
+        expJobIDStr = str(expJobIDArr).strip('[]').replace(" ", "")
+        print("    JobIDs:", expJobIDStr, flush=True)
 
-    # # Combining all the different chromosome expected frequency arrays into one
-    # print("\nSTEP 2: Background frequency combination", flush=True)
-    # if commandLineBool:
-    #     epilogos.expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
-    # else:
-    #     computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
-    #     pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
-    #                                                    verbose)
-    #     combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency,
-    #                                       "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(expJobIDStr))
-    #     print("    JobID:", combinationJobID, flush=True)
+    # Combining all the different chromosome expected frequency arrays into one
+    print("\nSTEP 2: Background frequency combination", flush=True)
+    if commandLineBool:
+        epilogos.expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
+    else:
+        computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
+                                                       verbose)
+        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency,
+                                          "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(expJobIDStr))
+        print("    JobID:", combinationJobID, flush=True)
 
-    # scoreJobIDArr = []
-    # # Calculate the observed frequencies and scores
-    # print("\nSTEP 3: Score calculation", flush=True)
-    # for file in inputDirPath.glob("*"):
-    #     if mode == "single":
-    #         if commandLineBool:
-    #             epilogos.scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-    #                         quiescentState, groupSize, verbose)
-    #         else:
-    #             computeScorePy = pythonFilesDir / "scores.py"
-    #             pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates,
-    #                                                                                   saliency, outputDirPath, storedExpPath,
-    #                                                                                   fileTag, numProcesses, quiescentState,
-    #                                                                                   groupSize, verbose)
-    #             scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-    #                                                 pythonCommand, saliency, memory,
-    #                                                 "--dependency=afterok:{}".format(combinationJobID)))
-    #     else:
-    #         # Find matching file in other directory
-    #         if not list(inputDirPath2.glob(file.name)):
-    #             raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-    #                 "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
-    #         else:
-    #             file2 = next(inputDirPath2.glob(file.name))
+    scoreJobIDArr = []
+    # Calculate the observed frequencies and scores
+    print("\nSTEP 3: Score calculation", flush=True)
+    for file in inputDirPath.glob("*"):
+        if mode == "single":
+            if commandLineBool:
+                epilogos.scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                            quiescentState, groupSize, verbose)
+            else:
+                computeScorePy = pythonFilesDir / "scores.py"
+                pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates,
+                                                                                      saliency, outputDirPath, storedExpPath,
+                                                                                      fileTag, numProcesses, quiescentState,
+                                                                                      groupSize, verbose)
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
+                                                    pythonCommand, saliency, memory,
+                                                    "--dependency=afterok:{}".format(combinationJobID)))
+        else:
+            # Find matching file in other directory
+            if not list(inputDirPath2.glob(file.name)):
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
+                    "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
+            else:
+                file2 = next(inputDirPath2.glob(file.name))
 
-    #         if commandLineBool:
-    #             epilogos.scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-    #                         quiescentState, groupSize, verbose)
-    #         else:
-    #             computeScorePy = pythonFilesDir / "scores.py"
-    #             pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
-    #                                                                              saliency, outputDirPath, storedExpPath,
-    #                                                                              fileTag, numProcesses, quiescentState,
-    #                                                                              groupSize, verbose)
-    #             scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-    #                                                 pythonCommand, saliency, memory,
-    #                                                 "--dependency=afterok:{}".format(combinationJobID)))
+            if commandLineBool:
+                epilogos.scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                            quiescentState, groupSize, verbose)
+            else:
+                computeScorePy = pythonFilesDir / "scores.py"
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
+                                                                                 saliency, outputDirPath, storedExpPath,
+                                                                                 fileTag, numProcesses, quiescentState,
+                                                                                 groupSize, verbose)
+                scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
+                                                    pythonCommand, saliency, memory,
+                                                    "--dependency=afterok:{}".format(combinationJobID)))
     
-    # if not commandLineBool:
-    #     # Create a string for slurm dependency to work
-    #     scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
-    #     print("    JobIDs:", scoreJobIDStr, flush=True)
+    if not commandLineBool:
+        # Create a string for slurm dependency to work
+        scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
+        print("    JobIDs:", scoreJobIDStr, flush=True)
 
-    # if mode == "single":
-    #     # Create a greatest hits text file
-    #     print("\nSTEP 4: Finding greatest hits", flush=True)
-    #     if commandLineBool:
-    #         epilogos.greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
-    #     else:
-    #         computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
-    #         pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
-    #                                                           storedExpPath, verbose)
-    #         summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1 --mem=8000",
-    #                                       "--dependency=afterok:{}".format(scoreJobIDStr))
-    #         print("    JobID:", summaryJobID, flush=True)
-    # else:
-    #     # Fitting, calculating p-values, and visualizing pairiwse differences
-    #     print("\nSTEP 4: Generating p-values and figures", flush=True)
-    #     if commandLineBool:
-    #         epilogos.pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
-    #                             diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
-    #     else:
-    #         computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
-    #         pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
-    #                                                                             inputDirPath2.name, stateInfo, outputDirPath,
-    #                                                                             fileTag, numProcesses, diagnosticBool,
-    #                                                                             numTrials, samplingSize, storedExpPath,
-    #                                                                             verbose)
-    #         summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, memory,
-    #                                       "--dependency=afterok:{}".format(scoreJobIDStr))
-    #         print("    JobID:", summaryJobID, flush=True)
+    if mode == "single":
+        # Create a greatest hits text file
+        print("\nSTEP 4: Finding greatest hits", flush=True)
+        if commandLineBool:
+            epilogos.greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+        else:
+            computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
+            pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
+                                                              storedExpPath, verbose)
+            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1 --mem=8000",
+                                          "--dependency=afterok:{}".format(scoreJobIDStr))
+            print("    JobID:", summaryJobID, flush=True)
+    else:
+        # Fitting, calculating p-values, and visualizing pairiwse differences
+        print("\nSTEP 4: Generating p-values and figures", flush=True)
+        if commandLineBool:
+            epilogos.pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+                                diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
+        else:
+            computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
+                                                                                inputDirPath2.name, stateInfo, outputDirPath,
+                                                                                fileTag, numProcesses, diagnosticBool,
+                                                                                numTrials, samplingSize, storedExpPath,
+                                                                                verbose)
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, memory,
+                                          "--dependency=afterok:{}".format(scoreJobIDStr))
+            print("    JobID:", summaryJobID, flush=True)
 
-    # if not commandLineBool:
-    #     allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, summaryJobID)
-    #     print("\nAll JobIDs:\n    ", allJobIDs, flush=True)
+    if not commandLineBool:
+        allJobIDs = "{},{},{},{}".format(expJobIDStr, combinationJobID, scoreJobIDStr, summaryJobID)
+        print("\nAll JobIDs:\n    ", allJobIDs, flush=True)
 
-    # # If the user wants to exit upon job completion rather than submission
-    # # If a job fails, it cancels all other jobs
-    # if not commandLineBool and not exitBool:
-    #     checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
+    # If the user wants to exit upon job completion rather than submission
+    # If a job fails, it cancels all other jobs
+    if not commandLineBool and not exitBool:
+        checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
         
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,

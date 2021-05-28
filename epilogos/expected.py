@@ -1,5 +1,5 @@
 import numpy as np
-from sys import argv
+from sys import argv, path
 from pathlib import Path
 from time import time
 from multiprocessing import cpu_count, Pool
@@ -8,6 +8,7 @@ from contextlib import closing
 import epilogos.helpers
 # from epilogos.helpers import strToBool, splitRows, readStates
 
+print(path)
 
 def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
     """

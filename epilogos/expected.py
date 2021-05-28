@@ -217,5 +217,5 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 
-if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))
+# if __name__ == "__main__":
+main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))

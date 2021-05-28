@@ -13,7 +13,7 @@ import epilogos.greatestHits
 import epilogos.pairwiseVisual
 import epilogos.helpers
 
-# from .expected import main as expected
+from epilogos.expected import main as expected
 # from .expectedCombination import main as expectedCombination
 # from .scores import main as scores
 # from .greatestHits import main as greatestHits
@@ -169,7 +169,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                epilogos.expected.expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                # epilogos.expected.expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
@@ -185,7 +186,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                epilogos.expected.expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                # epilogos.expected.expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
+                expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,

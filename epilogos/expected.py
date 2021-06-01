@@ -1,5 +1,11 @@
 import numpy as np
 from sys import argv, path
+import os
+
+print(path)
+path.append(os.getcwd()) 
+print(path)
+
 from pathlib import Path
 from time import time
 from multiprocessing import cpu_count, Pool
@@ -7,8 +13,6 @@ from itertools import repeat, permutations
 from contextlib import closing
 import epilogos.helpers
 # from epilogos.helpers import strToBool, splitRows, readStates
-
-print(path)
 
 def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
     """
@@ -217,5 +221,5 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
     np.save(expFreqPath, expFreqArr, allow_pickle=False)
 
 
-# if __name__ == "__main__":
-main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))
+if __name__ == "__main__":
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))

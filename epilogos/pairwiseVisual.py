@@ -321,10 +321,10 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Creating a dictionary to make location array take less memory
     chrNumbers = [i for i in range(1, len(chrOrder) + 1)]
-    chrDict = dict(zip(chrOrder + chrNumbers, chrNumbers + chrOrder))
+    chrDict = dict(zip(chrNumbers, chrOrder))
 
     # Convert dataframes to np arrays for easier manipulation
-    locationArr     = diffDF.iloc[:,0:3].replace({"chr": chrDict}).to_numpy(dtype=np.int32)
+    locationArr     = diffDF.iloc[:,0:3].replace({"chr": dict(zip(chrOrder, chrNumbers))}).to_numpy(dtype=np.int32)
     diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
 
     # Cleaning up the temp files after we've read them

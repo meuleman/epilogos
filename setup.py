@@ -28,8 +28,7 @@ setup(
     install_requires=install_requirements,
     entry_points={
         "console_scripts": [
-            # "epilogos = epilogos.__main__:main",
-            "epilogos = epilogos.epilogos:main",
+            "epilogos = epilogos.run:main",
         ],
     }
 )

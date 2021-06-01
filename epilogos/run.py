@@ -6,14 +6,15 @@ import subprocess
 from pathlib import PurePath
 import errno
 import click
-import epilogos.expected
-import epilogos.expectedCombination
-import epilogos.scores
-import epilogos.greatestHits
-import epilogos.pairwiseVisual
-import epilogos.helpers
+# import epilogos.expected
+#import epilogos.expectedCombination
+#import epilogos.scores
+#import epilogos.greatestHits
+#import epilogos.pairwiseVisual
+#import epilogos.helpers
 
 from epilogos.expected import main as expected
+from epilogos.helpers import getNumStates
 # from .expectedCombination import main as expectedCombination
 # from .scores import main as scores
 # from .greatestHits import main as greatestHits
@@ -87,7 +88,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0]
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
-    numStates = epilogos.helpers.getNumStates(stateInfo)
+    numStates = getNumStates(stateInfo)
     # Quiescent value is user input - 1 because states are read in to be -1 from their values
     quiescentState = quiescentState[0] - 1 if quiescentState else numStates - 1
 

@@ -348,8 +348,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
 
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
-        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False, verbose=verbose,
-                             groupSize=groupSize)
+        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False, verbose=verbose)
 
         numStates = sharedArr[2]
 
@@ -360,7 +359,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
     else:
         file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
                                                                             rowsToCalc=rowsToCalc, expBool=False,
-                                                                            verbose=verbose)
+                                                                            verbose=verbose, groupSize=groupSize)
 
         numStates = sharedArr1[2]
 
@@ -429,7 +428,7 @@ def rowObsS2(dataArr, row, permutations, numStates):
             if state1 == state2:
                 # Equates to statecounts[i] permute 2 / permutations
                 rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations
-            else: # state1 > state2 or state1 < state2
+            else:  # state1 > state2 or state1 < state2
                 rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
     return rowObsArr
 

@@ -136,7 +136,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalc[0],
-        nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+                             nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if verbose and rowsToCalc[0] == 0: print("    Time: ", time() - tRead1, flush=True)
 
     # If we are doing single group epilogos, just return the data array, otherwise, we continute to the second file
@@ -149,7 +149,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalc[0],
-        nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+                             nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if verbose and rowsToCalc[0] == 0: print("    Time: ", time() - tRead2, flush=True)
 
     # Combining the arrays for per row shuffling

@@ -150,7 +150,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
                     expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1)
-                else: # state1 > state2 or state1 < state2
+                else:  # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 
     if verbose and rowsToCalc[0] == 0: print("    Time:", time() - tExp, flush=True)
@@ -192,7 +192,7 @@ def s3Calc(file1Path, rowsToCalc, numStates, verbose):
         if not verbose and rowsToCalc[0] == 0 and row in printCheckmarks: print(".", end="", flush=True)
 
         expFreqArr[basePermutationArr[0], basePermutationArr[1], dataArr[row, basePermutationArr[0]],
-            dataArr[row, basePermutationArr[1]]] += 1
+                   dataArr[row, basePermutationArr[1]]] += 1
 
     if verbose and rowsToCalc[0] == 0: print("    Time:", time() - tExp, flush=True)
 

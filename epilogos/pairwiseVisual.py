@@ -253,7 +253,7 @@ def fitOnSample(distanceArrNull, samplingSize):
     if len(distanceArrNull) <= samplingSize:
         sampleData = distanceArrNull
     else:
-        np.random.seed() # On linux, multiprocessing inherits the master seed and doesn't generate fully random numbers
+        np.random.seed()  # On linux, multiprocessing inherits the master seed and doesn't generate fully random numbers
         sampleData = pd.Series(np.random.choice(distanceArrNull, size=samplingSize, replace=False))
 
     # ignore warnings
@@ -320,11 +320,11 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Creating a dictionary to make location array take less memory
     chrNumbers = [i for i in range(1, len(chrOrder) + 1)]
-    chrDict = dict(zip(chrNumbers, chrOrder))
+    chrDict    = dict(zip(chrNumbers, chrOrder))
 
     # Convert dataframes to np arrays for easier manipulation
-    locationArr     = diffDF.iloc[:,0:3].replace({"chr": dict(zip(chrOrder, chrNumbers))}).to_numpy(dtype=np.int32)
-    diffArr         = diffDF.iloc[:,3:].to_numpy(dtype=np.float32)
+    locationArr = diffDF.iloc[:, 0:3].replace({"chr": dict(zip(chrOrder, chrNumbers))}).to_numpy(dtype=np.int32)
+    diffArr     = diffDF.iloc[:, 3:].to_numpy(dtype=np.float32)
 
     # Cleaning up the temp files after we've read them
     for file in outputDirPath.glob("temp_*.npz"):
@@ -377,7 +377,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     dataNull = pd.Series(distanceArrNull[nonQuiescentIdx])
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
-    fig = plt.figure(figsize=(16,9))
+    fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     dataReal.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True,
                   ax=ax, rasterized=True)
@@ -390,7 +390,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.close(fig)
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-max(abs), max(abs)))
-    fig = plt.figure(figsize=(16,9))
+    fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
     dataReal.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances',
@@ -404,7 +404,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.close(fig)
 
     # Real vs Null distance scatter plot
-    fig = plt.figure(figsize=(12,12))
+    fig = plt.figure(figsize=(12, 12))
     plt.scatter(distanceArrReal, distanceArrNull, color='r', rasterized=True)
     plt.xlim(-rangeLim, rangeLim)
     plt.ylim(-rangeLim, rangeLim)
@@ -417,12 +417,11 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.close(fig)
 
     # Fit on data (range=(min, max))
-    y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
-                        rasterized=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    fig = plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True,
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
                                 rasterized=True)
     dataNull.plot(kind='hist', bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
                   alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
@@ -434,11 +433,11 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.close(fig)
 
     # Fit on data (range=(-1, 1))
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True, rasterized=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    fig = plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True,
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
                                 rasterized=True)
     dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax,
                   rasterized=True)
@@ -450,11 +449,11 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.close(fig)
 
     # Fit on data (range=(-0.1, 0.1))
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True, rasterized=True);
+    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
-    fig = plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta,loc,scale), legend=True,
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
                                 rasterized=True)
     dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax,
                   rasterized=True)
@@ -512,7 +511,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
     metricsTemplate = "{0[0]}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4:.5e}\n"
-    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i,1:3], maxDiffArr[i],
+    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3], maxDiffArr[i],
                                                 distanceArrReal[i], pvals[i]) for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
@@ -546,13 +545,13 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
         indices = (-np.abs(distanceArr)).argsort()[:1000]
 
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
-                                                maxDiffArr[indices].reshape(len(indices), 1),
-                                                pvals[indices].reshape(len(indices), 1),
-                                                mhPvals[indices].reshape(len(indices), 1)), axis=1),
-                            columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
-                            .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
-                                        "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
-                            .replace({"Chromosome": chrDict})
+                                             maxDiffArr[indices].reshape(len(indices), 1),
+                                             pvals[indices].reshape(len(indices), 1),
+                                             mhPvals[indices].reshape(len(indices), 1)), axis=1),
+                             columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
+                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
+                           "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
+                  .replace({"Chromosome": chrDict})
 
     # Don't want to merge when creating significantLoci.txt
     if not onlySignificant:
@@ -565,16 +564,16 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
 
     # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
-        ("**" if float(locations.iloc[i, 6]) <= 0.05 else
-            ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
-                for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+                      ("**" if float(locations.iloc[i, 6]) <= 0.05 else
+                      ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
+                      for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
 
     # Write all the locations to the file for significantLoci.txt
     # Write only top 100 loci to file for greatestHits.txt
     outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
     outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
-                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
+                                           abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
+                                           float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
                         for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
     f.write(outString)
     f.close()
@@ -652,7 +651,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     if not manhattanDirPath.exists():
         manhattanDirPath.mkdir(parents=True)
 
-    fig = plt.figure(figsize=(16,9))
+    fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     ax.set_facecolor("#FFFFFF")
     ax.set_axisbelow(True)
@@ -695,7 +694,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
-        elif i%2 == 0:
+        elif i % 2 == 0:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])
                               & (mhPvals > 0.1))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
@@ -712,9 +711,9 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     point05Indices = np.where(mhPvals <= 0.05)[0]
     point01Indices = np.where(mhPvals <= 0.01)[0]
 
-    colorArr=stateColorList[maxDiffArr[point1Indices].astype(int) - 1]
-    opacityArr=np.array((np.abs(distanceArrReal[point1Indices]) /
-        np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[point1Indices]), 1)
+    colorArr = stateColorList[maxDiffArr[point1Indices].astype(int) - 1]
+    opacityArr = np.array((np.abs(distanceArrReal[point1Indices]) /
+                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[point1Indices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[point1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
 
@@ -841,7 +840,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
     Also see global variables from _initChromosomeManhattan above
     """
-    fig = plt.figure(figsize=(16,9))
+    fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     ax.set_facecolor("#FFFFFF")
     ax.set_axisbelow(True)
@@ -878,7 +877,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
     locationOnGenome = np.arange(len(distanceArrReal))
 
     if startEnd[1] == -1:
-        realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
+        realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
         points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0]
@@ -892,7 +891,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
     else:
         realxticks = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
-                              & (locationArr[:, 1].astype(int)%10000000 == 0))[0]
+                              & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
         points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))

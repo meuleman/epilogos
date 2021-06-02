@@ -68,7 +68,7 @@ if len(sys.argv) == 1:
 @click.option("-g", "--group-size", "groupSize", type=int, default=[-1], show_default=True, multiple=True,
               help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
+         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -77,7 +77,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-        numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
 
     # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize = \
@@ -172,14 +172,15 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
-                                                                            outputDirPath, fileTag, numProcesses, verbose)
+                                                                             outputDirPath, fileTag, numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
                                                   pythonCommand, saliency, memory, ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
                 raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-                    "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
+                                        "Please ensure corresponding files within input directories directories 1 and 2 have" +
+                                        " the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
@@ -218,7 +219,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         if mode == "single":
             if commandLineBool:
                 scores(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-                            quiescentState, groupSize, verbose)
+                       quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates,
@@ -232,19 +233,20 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
                 raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-                    "Please ensure corresponding files within input directories directories 1 and 2 have the same name")
+                                        "Please ensure corresponding files within input directories directories 1 and 2 have" +
+                                        " the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
                 scores(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
-                            quiescentState, groupSize, verbose)
+                       quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
-                                                                                 saliency, outputDirPath, storedExpPath,
-                                                                                 fileTag, numProcesses, quiescentState,
-                                                                                 groupSize, verbose)
+                                                                                    saliency, outputDirPath, storedExpPath,
+                                                                                    fileTag, numProcesses, quiescentState,
+                                                                                    groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
@@ -271,7 +273,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
             pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
-                                diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
+                           diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
             pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
@@ -294,7 +296,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-    numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -406,11 +408,11 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
         print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
-            "Please ensure that saliency metric is either 1, 2, or 3")
+              "Please ensure that saliency metric is either 1, 2, or 3")
         sys.exit()
     elif mode == "paired" and saliency != 1 and saliency != 2:
         print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
-            "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
+              "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
         sys.exit()
 
     # Check validity of directories
@@ -443,7 +445,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
         print("ERROR: Quiescent state value must be a state provided in the state model")
         sys.exit()
 
-    if groupSize <-1:
+    if groupSize < -1:
         print("ERROR: Group size value must be positive or -1 (-1 means use inputted group sizes)")
         sys.exit()
 
@@ -527,24 +529,24 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
 
         # Printing separate step headers
         if len(completedJobs) == 0 and calculationStep == "":
-            print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}"\
-                .format("-" * 80, spLines[0], spLines[1]), flush=True)
+            print("\n Step 1: Per data file background frequency calculation\n{}\n{}\n{}"
+                  .format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "exp_calc"
         elif len(completedJobs) >= len(expJobIDArr) and calculationStep == "exp_calc":
-            print("\n Step 2: Background frequency combination\n{}\n{}\n{}"\
-                .format("-" * 80, spLines[0], spLines[1]), flush=True)
+            print("\n Step 2: Background frequency combination\n{}\n{}\n{}"
+                  .format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "exp_comb"
         elif len(completedJobs) >= (len(expJobIDArr) + 1) and calculationStep == "exp_comb":
             print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "score"
         elif mode == "single" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
-            and calculationStep == "score":
+                              and calculationStep == "score":
             print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "hits"
         elif mode == "paired" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
-            and calculationStep == "score":
-            print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}"\
-                .format("-" * 80, spLines[0], spLines[1]), flush=True)
+                              and calculationStep == "score":
+            print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}"
+                  .format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "visual"
 
         # Print out jobs when they are completed

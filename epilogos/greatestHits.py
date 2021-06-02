@@ -124,9 +124,10 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         indices = (-np.abs(scoreArr)).argsort()[:1000]
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
-            maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
-            columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
-                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32, "MaxScoreLoc": np.int32})
+                                                 maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
+                                 columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
+                      .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32,
+                               "MaxScoreLoc": np.int32})
 
         # Iterate until all is merged
         locations = mergeAdjacent(pr.PyRanges(locations))

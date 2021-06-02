@@ -110,7 +110,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # Create txt file of significant loci
     if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
     else: print("    Significant loci txt\t", end="", flush=True)
-    roiPath = outputDirPath / "significantLoci_{}.txt".format(fileTag)
+    roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals)
     if verbose: print("    Time:", time() - tSig, flush=True)
     else: print("\t[Done]", flush=True)
@@ -377,6 +377,8 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     dataNull = pd.Series(distanceArrNull[nonQuiescentIdx])
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
+    tGen = time()
+    tFig = time()
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     dataReal.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True,
@@ -384,12 +386,21 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     dataNull.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True,
                   ax=ax, rasterized=True)
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
+    print("Figure 1 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 1 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 1 close Time:", time() - tClose, flush=True)
+    print("Figure 1 total time:", time() - tFig, flush=True)
+
 
     # Real Data Histogram vs. Null Data Histogram (Range=(-max(abs), max(abs)))
+    tGen = time()
+    tFig = time()
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
@@ -398,12 +409,21 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     dataNull.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances',
                   legend=True, ax=ax, rasterized=True)
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
+    print("Figure 2 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 2 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 2 close Time:", time() - tClose, flush=True)
+    print("Figure 2 total time:", time() - tFig, flush=True)
+
 
     # Real vs Null distance scatter plot
+    tGen = time()
+    tFig = time()
     fig = plt.figure(figsize=(12, 12))
     plt.scatter(distanceArrReal, distanceArrNull, color='r', rasterized=True)
     plt.xlim(-rangeLim, rangeLim)
@@ -412,11 +432,20 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.ylabel("Null Distances")
     plt.title("Real Distances vs Null Distances")
     figPath = diagnosticDirPath / "real_vs_null_scatter.pdf"
+    print("Figure 3 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 3 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 3 close Time:", time() - tClose, flush=True)
+    print("Figure 3 total time:", time() - tFig, flush=True)
+
 
     # Fit on data (range=(min, max))
+    tGen = time()
+    tFig = time()
     y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
@@ -427,12 +456,20 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
                   alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
     plt.title("Gennorm on data (range=(min,max))")
     plt.xlabel("Signed Squared Euclidean Distance")
+    print("Figure 4 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     figPath = diagnosticDirPath / "gennorm_on_data_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 4 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 4 close Time:", time() - tClose, flush=True)
+    print("Figure 4 total time:", time() - tFig, flush=True)
 
     # Fit on data (range=(-1, 1))
+    tGen = time()
+    tFig = time()
     y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
@@ -443,12 +480,20 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
                   rasterized=True)
     plt.title("Gennorm on data (range=(-1,1))")
     plt.xlabel("Signed Squared Euclidean Distance")
+    print("Figure 5 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     figPath = diagnosticDirPath / "gennorm_on_data_n1to1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 5 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 5 close Time:", time() - tClose, flush=True)
+    print("Figure 5 total time:", time() - tFig, flush=True)
 
     # Fit on data (range=(-0.1, 0.1))
+    tGen = time()
+    tFig = time()
     y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
@@ -460,10 +505,16 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     plt.title("Gennorm on data (range=(-0.1,0.1))")
     plt.xlim(-.1, .1)
     plt.xlabel("Signed Squared Euclidean Distance")
+    print("Figure 6 Gen Time:", time() - tGen, flush=True)
+    tSave = time()
     figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    print("Figure 6 Save Time:", time() - tSave, flush=True)
+    tClose = time()
     fig.clear()
     plt.close(fig)
+    print("Figure 6 close Time:", time() - tClose, flush=True)
+    print("Figure 6 total time:", time() - tFig, flush=True)
 
 
 def calculatePVals(distanceArrReal, beta, loc, scale):

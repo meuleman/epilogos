@@ -3,8 +3,7 @@ import numpy as np
 from os import remove
 from pathlib import Path
 from time import time
-import epilogos.helpers
-# from epilogos.helpers import strToBool
+from epilogos.helpers import strToBool
 
 
 def main(outputDirectory, storedExpInput, fileTag, verbose):
@@ -45,5 +44,4 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], epilogos.helpers.strToBool(argv[4]))
-
+    main(argv[1], argv[2], argv[3], strToBool(argv[4]))

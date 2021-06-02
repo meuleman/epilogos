@@ -20,7 +20,7 @@ def getStateNames(stateFile):
     """
     Input:
     stateFile -- tsv containing information on all the states in the state model
-    
+
     Output:
     Shorthand names for all the states
     """
@@ -31,7 +31,7 @@ def getStateColorsRGB(stateFile):
     """
     Input:
     stateFile -- tsv containing information on all the states in the state model
-    
+
     Output:
     n x 3 numpy array of rgb values of all the states
     """
@@ -157,7 +157,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     combinedArr = np.concatenate((file1Arr, file2Arr), axis=1)
     if verbose and rowsToCalc[0] == 0: print("    Time:", time() - tCombine, flush=True)
 
-    # If we are calculating the expected frequencies for pairwise epilogos, 
+    # If we are calculating the expected frequencies for pairwise epilogos,
     # we can just return the combined array of file 1 and file 2
     if expBool:
         return combinedArr
@@ -167,8 +167,8 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     randomIndices = np.argsort(np.random.rand(*combinedArr.shape), axis=1)
     shuffledCombinedArr = np.take_along_axis(combinedArr, randomIndices, axis=1)
     if verbose and rowsToCalc[0] == 0: print("    Time:", time() - tShuffle, flush=True)
-    
-    # In the case of calculating the scores for pairwise epilogos, 
+
+    # In the case of calculating the scores for pairwise epilogos,
     # we need the original file 1 and file 2 arrays as well as their shuffled counterparts
     # shuffledCombinedArr is split by size of the original arrays
     if groupSize == -1:

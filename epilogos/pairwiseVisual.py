@@ -11,10 +11,9 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-import epilogos.helpers
-# from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 import pyranges as pr
 from statsmodels.stats.multitest import multipletests
+from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
@@ -22,7 +21,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     """
     Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
     distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are written out,
-    used to generate txt file of most interesting loci, and used to create manhattan plots of the genome. 
+    used to generate txt file of most interesting loci, and used to create manhattan plots of the genome.
 
     Input:
     group1Name -- String of the name of the first epilogos group
@@ -31,7 +30,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     outputDir -- The output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores which to run on
-    diagnosticBool -- Boolean which if True tells us to generate diagnostic plots of the gennorm fit on the null data and 
+    diagnosticBool -- Boolean which if True tells us to generate diagnostic plots of the gennorm fit on the null data and
                       comparisons between the null and real data
     numTrials -- The number of gennorm fits to do
     samplingSize -- The amount of null data to fit
@@ -45,10 +44,10 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000
-    
-    numStates = epilogos.helpers.getNumStates(stateInfo)
-    stateColorList = epilogos.helpers.getStateColorsRGB(stateInfo)
-    stateNameList = epilogos.helpers.getStateNames(stateInfo)
+
+    numStates = getNumStates(stateInfo)
+    stateColorList = getStateColorsRGB(stateInfo)
+    stateNameList = getStateNames(stateInfo)
 
     # If user doesn't want to choose number of cores use as many as available
     if numProcesses == 0:
@@ -123,7 +122,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
                               stateColorList, outputDirPath, fileTag, numProcesses, mhPvals)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
-    
+
     # Create Genome Manhattan Plot
     if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
     else: print("    Genome-wide Manhattan\t", end="", flush=True)
@@ -227,7 +226,7 @@ def readNull(nullFile, quiescenceFile):
     quiescenceFile -- The path to the file containing T/F regarding quiescence for each bin
 
     Output:
-    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean 
+    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean
                                                          distances
     (npzFileQuiescence['chrName'][0], npzFileQuiescence['quiescenceArr']) -- Tuple with chromosome name and the T/F value of
                                                                              quiescence for each bin
@@ -523,7 +522,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
 def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, onlySignificant, mhPvals):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
-    Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start, 
+    Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start,
     bin end, state name, absolute value of distance, sign of score, pvalue of distance, stars repersenting significance)
 
     Input:
@@ -541,7 +540,7 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
 
     # Pick values above significance threshold and then sort
     indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
-    
+
     # Make sure that there are at least 1000 values if creating greatestHits.txt
     if not onlySignificant and len(indices) < 1000:
         indices = (-np.abs(distanceArr)).argsort()[:1000]
@@ -549,7 +548,7 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
                                                 maxDiffArr[indices].reshape(len(indices), 1),
                                                 pvals[indices].reshape(len(indices), 1),
-                                                mhPvals[indices].reshape(len(indices), 1)), axis=1), 
+                                                mhPvals[indices].reshape(len(indices), 1)), axis=1),
                             columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
                             .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
                                         "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
@@ -593,7 +592,7 @@ def mergeAdjacent(originalLocations):
     """
     mergedData = originalLocations.merge()
     joinMergedToOriginal = mergedData.join(originalLocations)
-   
+
     # finalMerge is a pyranges object
     finalMerge = joinMergedToOriginal.apply(maxScoringElement)
     # finalMerge.df is a pandas dataframe
@@ -606,7 +605,7 @@ def maxScoringElement(df):
 
     Input:
     df -- pandas dataframe containing merged loci
-    
+
     Output:
     pandas dataframe with deleted duplicate rows
     """
@@ -708,7 +707,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
-            
+
     point1Indices  = np.where(mhPvals <= 0.1)[0]
     point05Indices = np.where(mhPvals <= 0.05)[0]
     point01Indices = np.where(mhPvals <= 0.01)[0]
@@ -721,7 +720,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
 
     plt.scatter(point1Indices, distanceArrReal[point1Indices], s=sizeArr, color=rgbaColorArr, marker=".",
                 edgecolors='none', rasterized=True)
-    
+
     if len(point01Indices) > 0:
         point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
         point05Line = np.min(np.abs(distanceArrReal[point05Indices]))
@@ -743,7 +742,7 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
         point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
         plt.axhspan(point1Line, ylim, facecolor='black', alpha=0.05)
         plt.axhspan(-point1Line, -ylim, facecolor='black', alpha=0.05)
-        
+
     figPath = manhattanDirPath / "manhattan_plot_genome.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     fig.clear()
@@ -972,10 +971,10 @@ def pvalAxisScaling(ylim, beta, loc, scale):
         if yticks[i] >= -ylim and yticks[i] <= ylim:
             yticksFinal.append(float(yticks[i]))
             ytickLabelsFinal.append(ytickLabels[i])
-            
+
     return (yticksFinal, ytickLabelsFinal)
-    
+
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), epilogos.helpers.strToBool(argv[7]), int(argv[8]), int(argv[9]),
-         argv[10], epilogos.helpers.strToBool(argv[11]))
+    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), int(argv[8]), int(argv[9]), argv[10],
+         strToBool(argv[11]))

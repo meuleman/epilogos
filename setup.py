@@ -23,7 +23,7 @@ setup(
     url="https://github.com/meuleman/epilogos",
     license="LICENSE.txt",
     packages=find_packages("."),
-    scripts=["bin/preprocess_data_ChromHMM.sh"],
+    scripts=["bin/preprocess_data_ChromHMM.sh", "bin/download_example_data.sh"],
     include_package_data=True,
     install_requires=install_requirements,
     entry_points={

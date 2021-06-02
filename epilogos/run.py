@@ -6,37 +6,33 @@ import subprocess
 from pathlib import PurePath
 import errno
 import click
-# import epilogos.expected
-#import epilogos.expectedCombination
-#import epilogos.scores
-#import epilogos.greatestHits
-#import epilogos.pairwiseVisual
-#import epilogos.helpers
 
 from epilogos.expected import main as expected
+from epilogos.expectedCombination import main as expectedCombination
+from epilogos.scores import main as scores
+from epilogos.greatestHits import main as greatestHits
+from epilogos.pairwiseVisual import main as pairwiseVisual
 from epilogos.helpers import getNumStates
-# from .expectedCombination import main as expectedCombination
-# from .scores import main as scores
-# from .greatestHits import main as greatestHits
-# from .pairwiseVisual import main as pairwiseVisual
-# from .helpers import getNumStates
+
+
 print("""\n
-                  d8b 888                                     
-                  Y8P 888                                     
-                      888                                     
- .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b  
-d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K      
-88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b. 
-Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88 
- "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P' 
-         888                            888                   
-         888                       Y8b d88P                   
-         888                        "Y88P"                    
+                  d8b 888
+                  Y8P 888
+                      888
+ .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
+d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
+88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
+Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
+ "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
+         888                            888
+         888                       Y8b d88P
+         888                        "Y88P"
 """, flush=True)
 
 if len(sys.argv) == 1:
     print("Run 'epilogos -h' for help")
     sys.exit()
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
@@ -66,8 +62,8 @@ if len(sys.argv) == 1:
               help="The number of times subsamples of the scores are fit")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
               help="The size of the subsamples on which the scores are fit")
-@click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True, 
-              help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." + 
+@click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True,
+              help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." +
                    "If set to 0, filtering is not done. [default: last state]")
 @click.option("-g", "--group-size", "groupSize", type=int, default=[-1], show_default=True, multiple=True,
               help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
@@ -82,7 +78,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
-    
+
     # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize = \
         mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0]
@@ -111,7 +107,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState, groupSize)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,
+                   groupSize)
 
     # Informing user of their inputs
     print()
@@ -205,7 +202,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Combining all the different chromosome expected frequency arrays into one
     print("\nSTEP 2: Background frequency combination", flush=True)
     if commandLineBool:
-        epilogos.expectedCombination.main(outputDirPath, storedExpPath, fileTag, verbose)
+        expectedCombination(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
@@ -220,7 +217,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                epilogos.scores.main(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                scores(file, "null", numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -240,7 +237,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                epilogos.scores.main(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
+                scores(file, file2, numStates, saliency, outputDirPath, storedExpPath, fileTag, numProcesses,
                             quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
@@ -251,7 +248,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
-    
+
     if not commandLineBool:
         # Create a string for slurm dependency to work
         scoreJobIDStr = str(scoreJobIDArr).strip('[]').replace(" ", "")
@@ -261,10 +258,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            epilogos.greatestHits.main(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
-            pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag, 
+            pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1 --mem=8000",
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
@@ -273,7 +270,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            epilogos.pairwiseVisual.main(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
                                 diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
@@ -294,7 +291,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # If a job fails, it cancels all other jobs
     if not commandLineBool and not exitBool:
         checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
-        
+
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
     numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
@@ -500,7 +497,7 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
 
     if not sp.stdout.startswith("Submitted batch"):
         raise ChildProcessError("SlurmError: sbatch not submitted correctly")
-    
+
     return int(sp.stdout.split()[-1])
 
 
@@ -568,7 +565,7 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             break
 
         # If final job is done, exit the program
-        # Checks are if the 3rd line is not empty, if there are no more running or pending values, 
+        # Checks are if the 3rd line is not empty, if there are no more running or pending values,
         # and if an "allocation" job is not in the output
         if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
             print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))

@@ -7,9 +7,9 @@ import numpy.ma as ma
 from multiprocessing import cpu_count, Pool, RawArray
 from itertools import repeat, permutations
 from contextlib import closing
-import epilogos.helpers
-# from epilogos.helpers import strToBool, splitRows, readStates
+from epilogos.helpers import strToBool, splitRows, readStates
 import gzip
+
 
 def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, numProcesses, quiescentState, groupSize, verbose):
     """
@@ -24,7 +24,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
     expFreqPath -- The path of the expected frequency array
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores to run on
-    quiescentState -- The state used to filter out quiescent bins 
+    quiescentState -- The state used to filter out quiescent bins
     groupSize -- Size of the outputted null array
     verbose -- Boolean which if True, causes much more detailed prints
     """
@@ -43,7 +43,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
         numProcesses = cpu_count()
 
     # Determine which rows to assign to each core
-    rowList = epilogos.helpers.splitRows(file1Path, numProcesses)
+    rowList = splitRows(file1Path, numProcesses)
 
     if file2 == "null":
         calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
@@ -85,7 +85,7 @@ def _init(sharedArr_, expFreqPath_, verbose_):
     verbose = verbose_
 
 
-def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, quiescenceSharedArr_, totalRows, 
+def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedArr2_, quiescenceSharedArr_, totalRows,
                   numStates, quiescentState_, expFreqPath_, groupSize_, verbose_):
     """
     Initializes global variables for multiprocessing in the paired epilogos case
@@ -98,7 +98,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     quiescenceSharedArr_ -- Shared array containing T/F values for whether a bin is quiescent
     totalRows -- The number of rows of the input files
     numStates -- The number of states in the state model
-    quiescentState_ -- The state used to filter out quiescent bins 
+    quiescentState_ -- The state used to filter out quiescent bins
     expFreqPath_ -- A pathlib path to the expected frequency array
     groupSize_ -- Size of outputed null array
     verbose_ -- A boolean which tells us the amount we need to print
@@ -122,6 +122,7 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     expFreqPath = expFreqPath_
     verbose = verbose_
     groupSize = groupSize_
+
 
 def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
                     verbose):
@@ -189,7 +190,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     filename -- The name of the file for which we are calculating the expected frequencies
     numProcesses -- The number of cores to run on
-    quiescentState -- The state used to filter out quiescent bins 
+    quiescentState -- The state used to filter out quiescent bins
     groupSize -- Size of the outputted null array
     verbose -- Boolean which if True, causes much more detailed prints
     """
@@ -233,7 +234,7 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     if verbose: print("    Time:", time() - tDistance, flush=True)
 
     # If it's the real data, we will just write the delta and calculate metrics in computeEpilogosPairwiseVisual
-    # If it's the null data, we will just save the signed squared euclidean distances as a temporary npz file as we don't 
+    # If it's the null data, we will just save the signed squared euclidean distances as a temporary npz file as we don't
     # care about saving the data
     # We also want to write the locations of any quiescent bins (where all states are in the quiescent state). This ensures
     # that our eventual fit on the null data is more accurate.
@@ -265,14 +266,13 @@ def s1Score(file1Path, file2Path, rowsToCalc):
 
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
-        dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
-                             verbose=verbose)
+        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False, verbose=verbose)
 
         numStates = sharedArr[2]
 
         scoreArr = sharedToNumpy(*sharedArr)
     else:
-        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path,
+        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
                                                                             rowsToCalc=rowsToCalc, expBool=False,
                                                                             verbose=verbose, groupSize=groupSize)
 
@@ -289,9 +289,9 @@ def s1Score(file1Path, file2Path, rowsToCalc):
             sortedArr1 = np.sort(file1Arr, axis=1)
             sortedArr2 = np.sort(file2Arr, axis=1)
             # If all values in a bin are equal to the quiescentState in both file1Arr and file2Arr, then the bin is quiescent
-            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState) 
-                                                                & (sortedArr1[:, -1] == quiescentState) 
-                                                                & (sortedArr2[:, 0] == quiescentState) 
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState)
+                                                                & (sortedArr1[:, -1] == quiescentState)
+                                                                & (sortedArr2[:, 0] == quiescentState)
                                                                 & (sortedArr2[:, -1] == quiescentState))] = True
 
     if verbose and rowsToCalc[0] == 0: print("Calculating Scores...", flush=True); tScore = time(); percentDone = 0
@@ -348,8 +348,8 @@ def s2Score(file1Path, file2Path, rowsToCalc):
 
     # Loading the data and creating the shared arrays for the scores
     if str(file2Path) == "null":
-        dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False,
-                             verbose=verbose, groupSize=groupSize)
+        dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, expBool=False, verbose=verbose,
+                             groupSize=groupSize)
 
         numStates = sharedArr[2]
 
@@ -358,7 +358,7 @@ def s2Score(file1Path, file2Path, rowsToCalc):
         # Need the permuations to effective count state pairs (see rowObsS2() for theory)
         permutations = dataArr.shape[1] * (dataArr.shape[1] - 1)
     else:
-        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path,
+        file1Arr, file2Arr, shuffledFile1Arr, shuffledFile2Arr = readStates(file1Path=file1Path, file2Path=file2Path,
                                                                             rowsToCalc=rowsToCalc, expBool=False,
                                                                             verbose=verbose)
 
@@ -375,9 +375,9 @@ def s2Score(file1Path, file2Path, rowsToCalc):
             sortedArr1 = np.sort(file1Arr, axis=1)
             sortedArr2 = np.sort(file2Arr, axis=1)
             # If all values in a bin are equal to the quiescentState in both file1Arr and file2Arr, then the bin is quiescent
-            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState) 
-                                                                & (sortedArr1[:, -1] == quiescentState) 
-                                                                & (sortedArr2[:, 0] == quiescentState) 
+            quiescenceArr[rowsToCalc[0]:rowsToCalc[1]][np.where((sortedArr1[:, 0] == quiescentState)
+                                                                & (sortedArr1[:, -1] == quiescentState)
+                                                                & (sortedArr2[:, 0] == quiescentState)
                                                                 & (sortedArr2[:, -1] == quiescentState))] = True
 
         # Need the permuations to effective count state pairs (see rowObsS2() for theory)
@@ -420,7 +420,7 @@ def rowObsS2(dataArr, row, permutations, numStates):
     """
     # (Within a row, how many ways can you choose x and y to be together) / (how many ordered ways can you choose 2 states)
     #  = Prob of choosing x and y
-    # Can choose x and y to be together x*y ways if different and n(n-1) ways if same 
+    # Can choose x and y to be together x*y ways if different and n(n-1) ways if same
     # (where n is the number of times that x/y shows up)
     rowObsArr = np.zeros((numStates, numStates))
     uniqueStates, stateCounts = np.unique(dataArr[row], return_counts=True)
@@ -428,7 +428,7 @@ def rowObsS2(dataArr, row, permutations, numStates):
         for j, state2 in enumerate(uniqueStates):
             if state1 == state2:
                 # Equates to statecounts[i] permute 2 / permutations
-                rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations 
+                rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations
             else: # state1 > state2 or state1 < state2
                 rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
     return rowObsArr
@@ -443,7 +443,7 @@ def s3Score(file1Path, rowsToCalc):
     file1Path -- The path of the only file to read states from
     rowsToCalc -- The rows to count expected frequencies from the files
     """
-    dataArr = epilogos.helpers.readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     # Loading the expected frequency array
     expFreqArr = np.load(expFreqPath, allow_pickle=False)
@@ -454,7 +454,7 @@ def s3Score(file1Path, rowsToCalc):
     # Gives us everyway to combine the column numbers in numpy indexing form
     basePermutationArr = np.array(list(permutations(range(numCols), 2)), dtype=np.int16).T
 
-    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the 
+    # Because each epigenome, epigenome, state, state combination only occurs once per row, we can precalculate all the
     # scores assuming a frequency of 1/(numCols*(numCols-1))
     # This saves a lot of time in the loop as we are just looking up references and not calculating
     scoreArrOnes = klScoreND(np.ones((numCols, numCols, numStates, numStates), dtype=np.float32) / (numCols * (numCols - 1)),
@@ -528,5 +528,5 @@ def klScoreND(obs, exp):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), 
-         int(argv[10]), epilogos.helpers.strToBool(argv[11]))
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], argv[7], int(argv[8]), int(argv[9]), int(argv[10]),
+         strToBool(argv[11]))

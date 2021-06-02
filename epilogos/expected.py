@@ -1,18 +1,12 @@
 import numpy as np
-from sys import argv, path
-import os
-
-print(path)
-path.append(os.getcwd()) 
-print(path)
-
+from sys import argv
 from pathlib import Path
 from time import time
 from multiprocessing import cpu_count, Pool
 from itertools import repeat, permutations
 from contextlib import closing
-import epilogos.helpers
-# from epilogos.helpers import strToBool, splitRows, readStates
+from epilogos.helpers import strToBool, splitRows, readStates
+
 
 def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, verbose):
     """
@@ -43,7 +37,7 @@ def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, ve
         numProcesses = cpu_count()
 
     # Determine which rows to assign to each core
-    rowList = epilogos.helpers.splitRows(file1Path, numProcesses)
+    rowList = splitRows(file1Path, numProcesses)
 
     calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
                       verbose)
@@ -104,12 +98,12 @@ def s1Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each state within the specified rows of the file
     """
-    dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     expFreqArr = np.zeros(numStates, dtype=np.int32)
 
     if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time()
-    
+
     # Simply count all states across out our subset of data
     uniqueStates, stateCounts = np.unique(dataArr, return_counts=True)
     for i, state in enumerate(uniqueStates):
@@ -133,7 +127,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each pair of states within the specified rows of the file
     """
-    dataArr = epilogos.helpers.readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     multiprocessRows = dataArr.shape[0]
 
@@ -143,7 +137,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
 
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
-    # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m 
+    # Can choose x and y to be together n*m ways if n != m and n(n-1) ways if n == m
     # (where n and m are the number of times that x and y show up respectively)
     for row in range(multiprocessRows):
 
@@ -177,7 +171,7 @@ def s3Calc(file1Path, rowsToCalc, numStates, verbose):
     Output:
     A numpy array containing the counts of each grouping of states and epigenomes within the specified rows of the file
     """
-    dataArr = epilogos.helpers.readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
+    dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
     multiprocessRows, numCols = dataArr.shape
 
@@ -185,11 +179,11 @@ def s3Calc(file1Path, rowsToCalc, numStates, verbose):
     basePermutationArr = np.array(list(permutations(range(numCols), 2))).T
 
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
-    
+
     if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
     printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
 
-    # We tally a one for all the state/column combinations we observe 
+    # We tally a one for all the state/column combinations we observe
     # (e.g. for state 18 in column 2 and state 15 in column 6 we would add one to index [5, 1, 17, 14])
     for row in range(multiprocessRows):
 
@@ -222,4 +216,4 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), epilogos.helpers.strToBool(argv[8]))
+    main(argv[1], argv[2], int(argv[3]), int(argv[4]), argv[5], argv[6], int(argv[7]), strToBool(argv[8]))

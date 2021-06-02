@@ -85,7 +85,7 @@ A version of epilogos has been created for those without access to a SLURM clust
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>data/pyData/male/</code>.
+<p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The file, <code>epilogos_matrix_chrX.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
@@ -148,7 +148,7 @@ Additionally, you will find a <code>greatestHits_*.txt</code> file which follows
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>data/pyData/male/</code>.
+<p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The file, <code>epilogos_matrix_chrX.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
@@ -421,7 +421,7 @@ A version of epilogos has been created for those without access to a SLURM clust
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>.
+<p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The files, both named <code>epilogos_matrix_chrX.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
@@ -485,7 +485,7 @@ Each of the wildcards will be replaced by a string containing the name of input 
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
 
-<p>Example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>.
+<p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The files, both named <code>epilogos_matrix_chrX.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
@@ -617,7 +617,7 @@ Column 8: Stars indicating multiple hypothesis adjusted p-value of distance ('**
 <p>The output directory will contain one <code>greatestHits_*.txt</code> file.
 This file contains the all significant loci with adjacent regions merged.
 If there are less than 1000 significant loci, it takes the top 1000 highest distance regions and merges those.
-Each row is formatted as below.</p> 
+Each row is formatted as below.</p>
 
 ```
 Column 1: Chromosome
@@ -738,7 +738,7 @@ $ pip install -e .
 
 ### Big Sur
 
-If you are using Mac OS X 11 (Big Sur) or later, it may be necessary to first install OpenBLAS, before installing Python dependencies that require it (such as `scipy`). 
+If you are using Mac OS X 11 (Big Sur) or later, it may be necessary to first install OpenBLAS, before installing Python dependencies that require it (such as `scipy`).
 
 This can be done via [Homebrew](https://brew.sh/) and setting environment variables to point to relevant library and header files:
 

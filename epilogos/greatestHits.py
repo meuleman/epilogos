@@ -1,14 +1,13 @@
 from sys import argv
-import epilogos.pairwiseVisual
-import epilogos.helpers
-# from epilogos.pairwiseVisual import mergeAdjacent, findSign
-# from epilogos.helpers import strToBool, getStateNames
 from pathlib import Path
 import numpy as np
 from time import time
 from os import remove
 import pandas as pd
 import pyranges as pr
+from epilogos.pairwiseVisual import mergeAdjacent, findSign
+from epilogos.helpers import strToBool, getStateNames
+
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
@@ -23,7 +22,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
     outputDirPath = Path(outputDir)
 
-    stateNameList = epilogos.helpers.getStateNames(stateInfo)
+    stateNameList = getStateNames(stateInfo)
 
     if verbose: print("\nReading in score files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
@@ -125,25 +124,25 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
         indices = (-np.abs(scoreArr)).argsort()[:1000]
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
-            maxScoreArr[indices].reshape(len(indices), 1)), axis=1), 
+            maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
             columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
                 .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32, "MaxScoreLoc": np.int32})
 
         # Iterate until all is merged
-        locations = epilogos.pairwiseVisual.mergeAdjacent(pr.PyRanges(locations))
+        locations = mergeAdjacent(pr.PyRanges(locations))
         if "Start_b" in locations.columns:
             locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
         # Sort by absolute value of score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
-        
-        # Write all the locations to the file   
+
+        # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-                            abs(float(locations.iloc[i, 3])), epilogos.pairwiseVisual.findSign(float(locations.iloc[i, 3]))) 
+                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])))
                             for i in range(min((locations.shape[0], 100))))
         f.write(outString)
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], epilogos.helpers.strToBool(argv[5]))
+    main(argv[1], argv[2], argv[3], argv[4], strToBool(argv[5]))

@@ -379,14 +379,14 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     # Fit on data (range=(min, max))
     tGen = time()
     tFig = time()
-    y, x = np.histogram(dataNull, bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True)
+    bins = np.histogram_bin_edges(dataNull, bins="auto", range=(np.amin(distanceArrNull), np.amax(distanceArrNull)))
+    y, x = np.histogram(dataNull, bins=400, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
-                                rasterized=True)
-    dataNull.plot(kind='hist', bins=20000, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
-                  alpha=0.5, label='Data', legend=True, ax=ax, rasterized=True)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
+    dataNull.plot(kind='hist', bins=400, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
+                  alpha=0.5, label='Data', legend=True, ax=ax)
     plt.title("Gennorm on data (range=(min,max))")
     plt.xlabel("Signed Squared Euclidean Distance")
     print("Figure 4 Gen Time:", time() - tGen, flush=True)
@@ -403,14 +403,13 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     # Fit on data (range=(-1, 1))
     tGen = time()
     tFig = time()
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
+    bins = np.histogram_bin_edges(dataNull, bins="auto", range=(-1, 1))
+    y, x = np.histogram(dataNull, bins=400, range=(-1, 1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
-                                rasterized=True)
-    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax,
-                  rasterized=True)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
+    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
     plt.title("Gennorm on data (range=(-1,1))")
     plt.xlabel("Signed Squared Euclidean Distance")
     print("Figure 5 Gen Time:", time() - tGen, flush=True)
@@ -427,14 +426,13 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     # Fit on data (range=(-0.1, 0.1))
     tGen = time()
     tFig = time()
-    y, x = np.histogram(dataNull, bins=20000, range=(-1, 1), density=True)
+    bins = np.histogram_bin_edges(dataNull, bins="auto", range=(-.1,.1))
+    y, x = np.histogram(dataNull, bins=400, range=(-.1, .1), density=True)
     x = (x + np.roll(x, -1))[:-1] / 2.0
     fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True,
-                                rasterized=True)
-    dataNull.plot(kind='hist', bins=20000, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax,
-                  rasterized=True)
+    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
+    dataNull.plot(kind='hist', bins=400, range=(-.1, .1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
     plt.title("Gennorm on data (range=(-0.1,0.1))")
     plt.xlim(-.1, .1)
     plt.xlabel("Signed Squared Euclidean Distance")
@@ -455,10 +453,12 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     tFig = time()
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
-    dataReal.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True,
-                  ax=ax, rasterized=True)
-    dataNull.plot(kind='hist', bins=200, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True,
-                  ax=ax, rasterized=True)
+    realBins = np.histogram_bin_edges(dataReal, bins="auto", range=(-1, 1))
+    nullBins = np.histogram_bin_edges(dataNull, bins="auto", range=(-1, 1))
+    dataReal.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True,
+                  ax=ax)
+    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True,
+                  ax=ax)
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
     print("Figure 1 Gen Time:", time() - tGen, flush=True)
     tSave = time()
@@ -478,10 +478,12 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
-    dataReal.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances',
-                  legend=True, ax=ax, rasterized=True)
-    dataNull.plot(kind='hist', bins=200, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances',
-                  legend=True, ax=ax, rasterized=True)
+    realBins = np.histogram_bin_edges(dataReal, bins="auto", range=(-rangeLim, rangeLim))
+    nullBins = np.histogram_bin_edges(dataNull, bins="auto", range=(-rangeLim, rangeLim))
+    dataReal.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances',
+                  legend=True, ax=ax)
+    dataNull.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances',
+                  legend=True, ax=ax)
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
     print("Figure 2 Gen Time:", time() - tGen, flush=True)
     tSave = time()

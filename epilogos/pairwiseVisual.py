@@ -384,7 +384,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
     dataNull.plot(kind='hist', bins=400, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
                   alpha=0.5, label='Data', legend=True, ax=ax)
-    plt.title("Gennorm on data (range=(min,max))")
+    plt.title("Gennorm on null data (range=(min,max))")
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
@@ -398,24 +398,9 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
     dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
-    plt.title("Gennorm on data (range=(-1,1))")
+    plt.title("Gennorm on null data (range=(-1,1))")
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_n1to1.pdf"
-    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
-    fig.clear()
-    plt.close(fig)
-
-    # Fit on data (range=(-0.1, 0.1))
-    y, x = np.histogram(dataNull, bins=400, range=(-.1, .1), density=True)
-    x = (x + np.roll(x, -1))[:-1] / 2.0
-    fig = plt.figure(figsize=(12, 8))
-    pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
-    ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
-    dataNull.plot(kind='hist', bins=400, range=(-.1, .1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
-    plt.title("Gennorm on data (range=(-0.1,0.1))")
-    plt.xlim(-.1, .1)
-    plt.xlabel("Signed Squared Euclidean Distance")
-    figPath = diagnosticDirPath / "gennorm_on_data_0p1to0p1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     fig.clear()
     plt.close(fig)
@@ -423,9 +408,9 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
-    dataReal.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Non-Random Distances', legend=True,
+    dataReal.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Real Data', legend=True,
                   ax=ax)
-    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Random Distances', legend=True,
+    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Null Data', legend=True,
                   ax=ax)
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.pdf"
@@ -437,9 +422,9 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
-    dataReal.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Non-Random Distances',
+    dataReal.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Distances in Real Data',
                   legend=True, ax=ax)
-    dataNull.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Random Distances',
+    dataNull.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Distances in Null Data',
                   legend=True, ax=ax)
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.pdf"

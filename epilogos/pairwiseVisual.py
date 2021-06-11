@@ -383,7 +383,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
     dataNull.plot(kind='hist', bins=400, range=(np.amin(distanceArrNull), np.amax(distanceArrNull)), density=True,
-                  alpha=0.5, label='Data', legend=True, ax=ax)
+                  alpha=0.5, label='Null Data', legend=True, ax=ax)
     plt.title("Gennorm on null data (range=(min,max))")
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_minToMax.pdf"
@@ -397,7 +397,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     fig = plt.figure(figsize=(12, 8))
     pdf = st.gennorm.pdf(x, beta, loc=loc, scale=scale)
     ax = pd.Series(pdf, x).plot(label='gennorm(beta={}, loc={}, scale={})'.format(beta, loc, scale), legend=True)
-    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Data', legend=True, ax=ax)
+    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Null Data', legend=True, ax=ax)
     plt.title("Gennorm on null data (range=(-1,1))")
     plt.xlabel("Signed Squared Euclidean Distance")
     figPath = diagnosticDirPath / "gennorm_on_data_n1to1.pdf"

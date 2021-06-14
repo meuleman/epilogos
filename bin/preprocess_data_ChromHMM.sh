@@ -3,7 +3,7 @@ set -ueo pipefail
 
 if [ $# -lt 3 ]; then
   echo
-  echo "Usage: $0 <chromsizes> <metadata> <datadir>"
+  echo "Usage: $0 <datadir> <metadata> <chromsizes>"
   echo "Insufficient information -- please provide:"
   echo
   echo "1. <datadir>: Directory with input data, one file per biosample-chromosome combination."

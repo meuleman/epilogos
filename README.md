@@ -41,12 +41,24 @@ We provide a proof-of-principle dataset based on chromatin state calls from the 
 
 ## Installation
 
+Although not required, it is good practice to create a virtual environment in which 
+specific versions of Python and its libraries are installed.
+This can be done using `conda`, for instance as such:
+```bash
+$ conda init bash  ## only needed upon first use of conda. Restart shell after this.
+$ conda create -n epilogos python=3.8
+$ conda activate epilogos
+```
+
+[comment]: <> ($ conda install -c anaconda libopenblas)
+
+
 To install Epilogos simply run the following command
 ```bash
 $ pip install epilogos
 ```
 
-Alternatively, install Epilogos directly from this Git repositoriy using
+Alternatively, install Epilogos directly from this Git repository using
 ```bash
 $ pip install git+https://github.com/meuleman/epilogos
 ```
@@ -56,7 +68,7 @@ $ pip install git+https://github.com/meuleman/epilogos
 ## Prerequisites
 
 To compute epilogos, you will need to have the following python libraries installed: [cython](https://cython.org/), [pyranges](https://github.com/biocore-ntnu/pyranges), [statsmodels](https://www.statsmodels.org/stable/index.html), [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/).
-These can be installed with one of the following commands.
+In case the abovementioned commands not automatically and correctly take care of this, the libraries can be installed with one of the following commands.
 ```bash
 $ pip install cython; pip install click numpy pandas pyranges scipy matplotlib statsmodels
 ```
@@ -731,7 +743,8 @@ This is consistent with our knowledge of these loci playing crucial roles in the
 
 ## Development
 
-To modify a development version of `epilogos`, first set up a virtual environment via `venv` or `conda`. After activating the environment and installing [dependencies](#prerequisites), install `epilogos` in develop or editable mode:
+To modify a development version of `epilogos`, first set up a virtual environment via e.g. [`conda`](#installation). 
+After activating the environment and installing [dependencies](#prerequisites), install `epilogos` in editable mode:
 
 ```bash
 $ pip install -e .

@@ -65,14 +65,14 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                     d8b 888
                     Y8P 888
                         888
-    .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
-    d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
-    88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
-    Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
-    "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
-            888                            888
-            888                       Y8b d88P
-            888                        "Y88P"
+   .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
+  d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
+  88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
+  Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
+   "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
+           888                            888
+           888                       Y8b d88P
+           888                        "Y88P"
     """, flush=True)
 
     if len(sys.argv) == 1:
@@ -220,7 +220,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
                                                        verbose)
-        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency,
+        combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, partition,
                                           "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID, flush=True)
 

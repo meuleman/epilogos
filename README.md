@@ -41,7 +41,7 @@ We provide a proof-of-principle dataset based on chromatin state calls from the 
 
 ## Installation
 
-Although not required, it is good practice to create a virtual environment in which 
+Although not required, it is good practice to create a virtual environment in which
 specific versions of Python and its libraries are installed.
 This can be done using `conda`, for instance as such:
 ```bash
@@ -78,7 +78,7 @@ $ cat requirements.txt | xargs -n 1 -L 1 pip install
 ```
 
 Additionally, it is recommended that python is updated to version 3.7 or later.
-In earlier python versions, `src/scores.py` may raise an OSError 16.
+In earlier python versions, `epilogos/scores.py` may raise an OSError 16.
 It is worth noting that in our testing this error has not affected the results.
 
 <a name="running-epilogos"></a>
@@ -378,13 +378,37 @@ e.g. $ epilogos -c 4
 <a name="exit"></a>
 <details><summary><b> Exit [-x, --exit]</b></summary>
 <p></p>
-<p>By default <code>src/computeEpilogosSlurm.py</code> prints progress updates to the console and only exits after it has completed all slurm jobs.
+<p>By default <code>epilogos/run.py</code> prints progress updates to the console and only exits after it has completed all slurm jobs.
 If you would like the program to instead exit when all jobs are submitted (allowing use of the terminal while the jobs are running), enable this flag.</p>
 
 ```bash
 e.g. $ epilogos -x
 ```
 </details>
+
+<a name="version"></a>
+<details><summary><b> Version [-v, --version]</b></summary>
+<p></p>
+<p>If this flag is enabled epilogos will print the installed version number and exit</p>
+
+```bash
+e.g. $ epilogos -v
+```
+</details>
+
+<a name="partition"></a>
+<details><summary><b> Partition [-p, --partition]</b></summary>
+<p></p>
+<p>By default <code>epilogos/run.py</code>, uses the default partition designated by the system administrator to submit SLURM jobs.
+Use this flag if you would like to specify the partition for SLURM resource allocation.</p>
+
+<p>The argument to the flag is the name of the partition you would like the SLURM jobs to run on</p>
+
+```bash
+e.g. $ epilogos -p queue1
+```
+</details>
+
 
 <br>
 <br>
@@ -654,7 +678,7 @@ This directory will contain figures showing the quality of the fit the null data
 Note that this <strong>CANNOT</strong> be the same as the input directory.</p>
 
 ```bash
-e.g. $ epilogos -o epilgosOutput/
+e.g. $ epilogos -o epilogosOutput/
 ```
 </details>
 
@@ -743,7 +767,7 @@ This is consistent with our knowledge of these loci playing crucial roles in the
 
 ## Development
 
-To modify a development version of `epilogos`, first set up a virtual environment via e.g. [`conda`](#installation). 
+To modify a development version of `epilogos`, first set up a virtual environment via e.g. [`conda`](#installation).
 After activating the environment and installing [dependencies](#prerequisites), install `epilogos` in editable mode:
 
 ```bash

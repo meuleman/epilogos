@@ -48,17 +48,45 @@ from epilogos.helpers import getNumStates
                    "If set to 0, filtering is not done. [default: last state]")
 @click.option("-g", "--group-size", "groupSize", type=int, default=[-1], show_default=True, multiple=True,
               help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
+@click.option("-v", "--version", "version", is_flag=True, multiple=True,
+              help="If flag is enabled epilogos will print the installed version number and exit")
+@click.option("-p", "--partition", "partition", type=str, multiple=True,
+              help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
+                   "partition as designated by the system administrator")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
+         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
     Written by Jacob Quon and Wouter Meuleman
     """
 
+    print("""\n
+                    d8b 888
+                    Y8P 888
+                        888
+    .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
+    d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
+    88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
+    Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
+    "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
+            888                            888
+            888                       Y8b d88P
+            888                        "Y88P"
+    """, flush=True)
+
+    if len(sys.argv) == 1:
+        print("Run 'epilogos -h' for help")
+        sys.exit()
+
+    if version:
+        from epilogos import __version__
+        print("Version:", __version__)
+        sys.exit()
+
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize)
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition)
 
     # Pull info out of the flags
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize = \
@@ -129,6 +157,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             print("\nWARNING: {} cores requested.".format(numProcesses), flush=True, end=" ")
             print("Machine specs unknown, requesting 16gb of memory across all cores")
 
+        if partition:
+            partition = "--partition=" + partition[0]
+
         # Creating directories for slurm output and error logs
         (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)
         (outputDirPath / ".err/").mkdir(parents=True, exist_ok=True)
@@ -155,7 +186,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                                                                              outputDirPath, fileTag, numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-                                                  pythonCommand, saliency, memory, ""))
+                                                  pythonCommand, saliency, partition, memory, ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
@@ -174,7 +205,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                            saliency, outputDirPath, fileTag, numProcesses,
                                                                            verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-                                                  pythonCommand, saliency, memory, ""))
+                                                  pythonCommand, saliency, partition, memory, ""))
 
     if not commandLineBool:
         # Create a string for slurm dependency to work and to print more nicely
@@ -208,7 +239,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                       fileTag, numProcesses, quiescentState,
                                                                                       groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-                                                    pythonCommand, saliency, memory,
+                                                    pythonCommand, saliency, partition, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
         else:
             # Find matching file in other directory
@@ -229,7 +260,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                     fileTag, numProcesses, quiescentState,
                                                                                     groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-                                                    pythonCommand, saliency, memory,
+                                                    pythonCommand, saliency, partition, memory,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
 
     if not commandLineBool:
@@ -246,8 +277,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, verbose)
-            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, "--ntasks=1 --mem=8000",
-                                          "--dependency=afterok:{}".format(scoreJobIDStr))
+            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
+                                          "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
@@ -262,7 +293,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                 fileTag, numProcesses, diagnosticBool,
                                                                                 numTrials, samplingSize, storedExpPath,
                                                                                 verbose)
-            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, memory,
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, memory,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
 
@@ -277,7 +308,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize):
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -321,6 +352,8 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif commandLineBool and exitBool:
         print("ERROR: [-l, --cli] flag not compatible with [-x, --exit] flag")
         sys.exit()
+    elif commandLineBool and partition:
+        print("Error: [-l, --cli] flag not compatible with [-p, --partition] option")
 
     # Checking if user inputs flag multiples times
     if len(mode) > 1:
@@ -367,6 +400,9 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif len(groupSize) > 1:
         print("ERROR: Too many [-g, --group-size] arguments provided")
+        sys.exit()
+    elif len(partition) > 1:
+        print("ERROR: Too many [-p, --partition] arguments provided")
         sys.exit()
 
 
@@ -431,7 +467,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
         sys.exit()
 
 
-def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, memory, dependency):
+def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, saliency, partition, memory, dependency):
     """
     Submits a epilogos job to a SLURM cluster
 
@@ -467,14 +503,14 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
 
     # Create a string for the slurm command
     if saliency == 1:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
     elif saliency == 2:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
     elif saliency == 3:
-        slurmCommand = "sbatch {} --job-name={}.job --output={} --partition=queue1 --error={} {} --wrap='{}'"\
-            .format(dependency, jobName, jobOutPath, jobErrPath, memory, pythonCommand)
+        slurmCommand = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'"\
+            .format(dependency, jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
 
     sp = subprocess.run(slurmCommand, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
@@ -564,21 +600,4 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
 
 
 if __name__ == "__main__":
-    print("""\n
-                    d8b 888
-                    Y8P 888
-                        888
-    .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
-    d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
-    88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
-    Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
-    "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
-            888                            888
-            888                       Y8b d88P
-            888                        "Y88P"
-    """, flush=True)
-
-    if len(sys.argv) == 1:
-        print("Run 'epilogos -h' for help")
-        sys.exit()
     main()

@@ -463,7 +463,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
         patch.set_facecolor(color)
 
     plt.title("Box Plots of Null and Real Data vs Fit")
-    figPath = diagnosticDirPath / "null_vs_fit_vs_real_boxplots.pdf"
+    rigPath = diagnosticDirPath / "null_vs_fit_vs_real_boxplots.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
     fig.clear()
     plt.close(fig)

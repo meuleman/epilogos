@@ -16,9 +16,10 @@ state_metadata
 |
 +-- human
 |
-|  +-- Adsera_et_al_833_sample
+|  +-- Boix_et_al_833_sample
 |    +-- hg19
 |      +-- 18
+|      +-- 15
 |    +-- hg38
 |      +-- 18
 |

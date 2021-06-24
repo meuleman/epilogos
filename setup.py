@@ -1,5 +1,6 @@
 import pathlib
 from setuptools import setup, find_packages
+from epilogos.__init__ import __version__
 
 # The directory containing this file
 HERE = pathlib.Path(__file__).parent
@@ -13,7 +14,7 @@ install_requirements = REQUIREMENTS.splitlines()
 
 setup(
     name="epilogos",
-    version="0.0.1rc1",
+    version=__version__,
     author="Wouter Meuleman, Jacob Quon, Alex Reynolds, Eric Rynes",
     author_email="wouter@meuleman.org",
     description="Information-theoretic navigation of multi-tissue functional genomic annotations",

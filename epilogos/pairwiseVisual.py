@@ -445,6 +445,28 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     fig.clear()
     plt.close(fig)
 
+    # Box Plots Showcasing fit accuracy
+    dist = st.gennorm.rvs(beta, loc=loc, scale=scale, size=dataNull.size)
+    data = [dist, dataNull, dataReal]
+    medianprops = dict(linewidth=3, color='black')
+    boxprops = dict(linewidth=3, color='black')
+    whiskerprops = dict(linewidth=3, color='black')
+    capprops = dict(linewidth=3, color='black')
+    fig = plt.figure(figsize=(12,8))
+    bplot = plt.boxplot(data, patch_artist=True, medianprops=medianprops, boxprops=boxprops, whiskerprops=whiskerprops, capprops=capprops)
+    plt.xticks([1, 2, 3], ['Fit', 'Null', 'Real'])
+    plt.xlabel("Data")
+
+    colors = ['#ff7f0e', '#bcbd22', '#d62728']
+    for patch, color in zip(bplot['boxes'], colors):
+        patch.set_facecolor(color)
+
+    plt.title("Box Plots of Null and Real Data vs Fit")
+    figPath = diagnosticDirPath / "fit_vs_null_vs_real_boxplots.pdf"
+    fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
+    fig.clear()
+    plt.close(fig)
+
 
 def calculatePVals(distanceArrReal, beta, loc, scale):
     """

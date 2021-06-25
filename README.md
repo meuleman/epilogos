@@ -70,7 +70,7 @@ $ pip install git+https://github.com/meuleman/epilogos
 To compute epilogos, you will need to have the following python libraries installed: [cython](https://cython.org/), [pyranges](https://github.com/biocore-ntnu/pyranges), [statsmodels](https://www.statsmodels.org/stable/index.html), [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/).
 In case the abovementioned commands not automatically and correctly take care of this, the libraries can be installed with one of the following commands.
 ```bash
-$ pip install cython; pip install click numpy pandas pyranges scipy matplotlib statsmodels
+$ pip install 'cython>=0.29.23,<1.0.0'; pip install 'click>=7.1.2,<8.0.0' 'numpy>=1.19.2,<2.0.0' 'pandas>=1.1.3,<2.0.0' 'pyranges>=0.0.97,<1.0.0' 'scipy>=1.5.2,<2.0.0' 'matplotlib>=3.3.2,<4.0.0' 'statsmodels>=0.12.0,<1.0.0'
 ```
 or while in the epilogos directory (we use cat and xargs to ensure installation order as pyranges is dependent on cython)
 ```bash

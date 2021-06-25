@@ -278,7 +278,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
-                                          "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          "--ntasks=1 --mem=16000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
@@ -354,6 +354,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif commandLineBool and partition:
         print("Error: [-l, --cli] flag not compatible with [-p, --partition] option")
+        sys.exit()
 
     # Checking if user inputs flag multiples times
     if len(mode) > 1:

@@ -159,6 +159,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
         if partition:
             partition = "--partition=" + partition[0]
+        else:
+            partition = ""
 
         # Creating directories for slurm output and error logs
         (outputDirPath / ".out/").mkdir(parents=True, exist_ok=True)

@@ -1,1 +1,2 @@
-v0.1.0, June 25 2021 -- Initial release.
+v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
+v0.1.0, June 25 2021 -- Initial release. 

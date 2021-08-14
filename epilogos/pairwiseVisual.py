@@ -85,18 +85,18 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("    Time:", time() - tPVal, flush=True)
     else: print("\t[Done]", flush=True)
 
-    # Create an output file which summarizes the results
-    if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
-    else: print("    Writing metrics\t", end="", flush=True)
-    writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag)
-    if verbose: print("    Time:", time() - tMetrics, flush=True)
-    else: print("\t[Done]", flush=True)
-
     # Perform multiple hypothesis correction on pvals
     if verbose: print("Performing Benjamini-Hochberg procedure...", flush=True); tMH = time()
     else: print("    Benjamini-Hochberg procedure\t", end="", flush=True)
     mhPvals = multipletests(pvals, method="fdr_bh")[1]
     if verbose: print("    Time:", time() - tMH, flush=True)
+    else: print("\t[Done]", flush=True)
+
+    # Create an output file which summarizes the results
+    if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
+    else: print("    Writing metrics\t", end="", flush=True)
+    writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag)
+    if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create txt file of top 1000 loci with adjacent merged
@@ -492,7 +492,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
     return pvals
 
 
-def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outputDirPath, fileTag):
+def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
     chromosome, bin start, bin end, state with highest difference, signed squared euclidean distance, pvalue of distance
@@ -503,6 +503,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
     maxDiffArr -- Numpy array containing the states which had the largest difference between the two groups in each bin
     distanceArrReal -- Numpy array containing the real distances
     pvals -- Numpy array containing the pvalues of all the distances
+    mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
     outputDirPath -- The path of the output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     """
@@ -513,9 +514,10 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, outpu
     metricsTxt = gzip.open(metricsTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
-    metricsTemplate = "{0[0]}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4:.5e}\n"
+    metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\t{5:.5e}\t{6:.5e}\n"
     metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3], maxDiffArr[i],
-                                                distanceArrReal[i], pvals[i]) for i in range(len(distanceArrReal)))
+                                                abs(distanceArrReal[i]), findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
+                                                for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
     metricsTxt.close()

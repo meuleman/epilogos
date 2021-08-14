@@ -294,8 +294,8 @@ Column 1: Chromosome
 Column 2: Start coordinate
 Column 3: End coordinate
 Column 4: Name of the largest scoring state
-Column 5: Kullback-Leibler score
-Column 6: Sign of the Kullback-Leibler score
+Column 5: Sum of the Kullback-Leibler scores
+Column 6: Sign of the sum of Kullback-Leibler scores
 ```
 
 <p>The argument to this flag is the path to the directory to which you would like to output.
@@ -631,8 +631,10 @@ Column 1: Chromosome
 Column 2: Start coordinate
 Column 3: End coordinate
 Column 4: Name of the largest difference state
-Column 5: Signed squared euclidean distance between the scores (sign determined by the higher signal between groups 1 and 2)
-Column 6: P-Value of the distance
+Column 5: Squared euclidean distance between the scores
+Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
+Column 7: P-Value of the distance
+Column 8: Benjamini–Hochberg adjusted P-Value of the distance
 ```
 
 <p>The output directory will contain one <code>significantLoci_*.txt</code> file.
@@ -647,7 +649,8 @@ Column 4: Name of the largest difference state
 Column 5: Squared euclidean distance between the scores
 Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
 Column 7: P-Value of the distance
-Column 8: Stars indicating multiple hypothesis adjusted p-value of distance ('***' at .01, '**' at .05, and '*' at .1)
+Column 8: Benjamini–Hochberg adjusted P-Value of the distance
+Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' at .01, '**' at .05, and '*' at .1)
 ```
 
 <p>The output directory will contain one <code>greatestHits_*.txt</code> file.
@@ -663,7 +666,8 @@ Column 4: Name of the largest difference state
 Column 5: Squared euclidean distance between the scores
 Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
 Column 7: P-Value of the distance
-Column 8: Stars indicating multiple hypothesis adjusted p-value of distance ('***' stars at .01, '**' at .05, '*' at .1, '.' if not significant)
+Column 8: Benjamini–Hochberg adjusted P-Value of the distance
+Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' stars at .01, '**' at .05, '*' at .1, '.' if not significant)
 ```
 
 <p>The output directory will contain one <code>manhattanPlots_*</code> directory.

@@ -1,4 +1,6 @@
 v0.1.2, August 13, 2021 -- Output files are more consistent in formatting
                            Fixed bug causing chromosomes to not print correctly in "pairwiseMetrics" file
+                           Fixed bug causing state numbers to be printed rather than names in "pairwiseMetrics" file
+                           Greatest hits now only shows significant loci
 v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
 v0.1.0, June 25 2021 -- Initial release

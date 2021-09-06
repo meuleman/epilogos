@@ -287,7 +287,7 @@ The output of Epilogos will vary depending on the number of input files present 
 All resulting score files are gzipped .txt files named <code>scores_*.txt.gz</code>, where 'scores_' is followed by the input directory name, the saliency metric (e.g. S1), and the corresponding input file name (extensions removed).</p>
 
 <p>Additionally, you will find a <code>greatestHits_*.txt</code> file which follows the same naming convention minus the input file name.
-This file contains the top 1000 highest scoring regions (after merging directly adjacent high-scoring regions), with each row formatted as follows.</p>
+This file contains the top 100 or fewer significant regions (after merging directly adjacent high-scoring regions). If there are fewer than 1000 significant loci, it takes the top 1000 highest distance regions and merges those. Each row is formatted as follows.</p>
 
 ```
 Column 1: Chromosome
@@ -654,8 +654,8 @@ Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('**
 ```
 
 <p>The output directory will contain one <code>greatestHits_*.txt</code> file.
-This file contains the all significant loci with adjacent regions merged.
-If there are less than 1000 significant loci, it takes the top 1000 highest distance regions and merges those.
+This file contains the top 100 or fewer significant regions after merging all adjacent significant loci.
+If there are fewer than 1000 significant loci, it takes the top 1000 highest distance regions and merges those.
 Each row is formatted as below.</p>
 
 ```

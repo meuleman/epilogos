@@ -95,7 +95,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     # Create an output file which summarizes the results
     if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
     else: print("    Writing metrics\t", end="", flush=True)
-    writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag)
+    writeMetrics(locationArr, chrDict, maxDiffArr, stateNameList, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag)
     if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -492,7 +492,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
     return pvals
 
 
-def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag):
+def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
     chromosome, bin start, bin end, state with highest difference, signed squared euclidean distance, pvalue of distance
@@ -501,6 +501,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPva
     locationArr -- Numpy array containing the genomic locations of all the bins
     chrDict -- Dictionary containing mappings between number values and chromosome names (helps locationArr use less memory)
     maxDiffArr -- Numpy array containing the states which had the largest difference between the two groups in each bin
+    nameArr -- Numpy array containing the names of all the states
     distanceArrReal -- Numpy array containing the real distances
     pvals -- Numpy array containing the pvalues of all the distances
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
@@ -515,8 +516,9 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, distanceArrReal, pvals, mhPva
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
     metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\t{5:.5e}\t{6:.5e}\n"
-    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3], maxDiffArr[i],
-                                                abs(distanceArrReal[i]), findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
+    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
+                                                nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
+                                                findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
                                                 for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
@@ -579,7 +581,7 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
-                        for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
+                        for i in range(locations.shape[0] if onlySignificant else min((np.where(stars == ".")[0][0], 100))))
     f.write(outString)
     f.close()
 

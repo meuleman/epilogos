@@ -99,12 +99,12 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
-    # Create txt file of top 1000 loci with adjacent merged
-    if verbose: print("Creating .txt file of top loci...", flush=True); t1000 = time()
+    # Create txt file of significant loci with adjacent merged
+    if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
     createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals)
-    if verbose: print("    Time:", time() - t1000, flush=True)
+    if verbose: print("    Time:", time() - tGreat, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create txt file of significant loci
@@ -547,10 +547,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     # Pick values above significance threshold and then sort
     indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
 
-    # Make sure that there are at least 1000 values if creating greatestHits.txt
-    if not onlySignificant and len(indices) < 1000:
-        indices = (-np.abs(distanceArr)).argsort()[:1000]
-
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
                                              maxDiffArr[indices].reshape(len(indices), 1),
                                              pvals[indices].reshape(len(indices), 1),
@@ -581,7 +577,7 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i, 0])
-                        for i in range(locations.shape[0] if onlySignificant else min((np.where(stars == ".")[0][0], 100))))
+                        for i in range(locations.shape[0] if onlySignificant else min((locations.shape[0], 100))))
     f.write(outString)
     f.close()
 

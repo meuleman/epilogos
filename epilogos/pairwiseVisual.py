@@ -547,6 +547,10 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     # Pick values above significance threshold and then sort
     indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
 
+    if len(indices) == 0:
+        f.close()
+        return
+
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
                                              maxDiffArr[indices].reshape(len(indices), 1),
                                              pvals[indices].reshape(len(indices), 1),
@@ -694,8 +698,9 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     for i in range(len(xticks)):
         if i == len(xticks)-1:
             points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0]
+            color = "gray" if i % 2 == 0 else "black"
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
-                        s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
+                        s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color=color,
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         elif i % 2 == 0:
             points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])

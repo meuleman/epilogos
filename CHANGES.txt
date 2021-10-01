@@ -4,5 +4,6 @@ v0.1.2, September 12, 2021 -- Output files are more consistent in formatting
                               Greatest hits now only shows significant loci
                               Greatest hits merging no longer uses 1000 loci when there are < 1000 significant loci
                               Fixed a bug where epilogos would throw an error if there were no significant loci
+                              Fixed a bug where one diagnostic figure was not showing
 v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
 v0.1.0, June 25 2021 -- Initial release

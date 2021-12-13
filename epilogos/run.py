@@ -53,7 +53,7 @@ from epilogos.helpers import getNumStates
 @click.option("-p", "--partition", "partition", type=str, multiple=True,
               help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
                    "partition as designated by the system administrator")
-@click.option("-n", "--null-distribution", "pvalBool", is_flag=True, mutliple=True,
+@click.option("-n", "--null-distribution", "pvalBool", is_flag=True, multiple=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,

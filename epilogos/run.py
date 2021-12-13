@@ -28,7 +28,7 @@ from epilogos.helpers import getNumStates
               help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str, multiple=True,
               help="Output Directory (CANNOT be the same as input directory)\n")
-@click.option("-n", "--state-info", "stateInfo", type=str, multiple=True, help="State model info file")
+@click.option("-j", "--state-info", "stateInfo", type=str, multiple=True, help="State model info file")
 @click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True,
               help="Desired saliency level (1, 2, or 3)")
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True,
@@ -53,8 +53,11 @@ from epilogos.helpers import getNumStates
 @click.option("-p", "--partition", "partition", type=str, multiple=True,
               help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
                    "partition as designated by the system administrator")
+@click.option("-n", "--null-distribution", "pvalBool", is_flag=True, mutliple=True,
+              help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition):
+         numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
+         pvalBool):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -86,13 +89,14 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition)
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool)
 
-    # Pull info out of the flags
+    # Pull info out of the flags (This is to deal with multiple user inputs for a flag)
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize = \
         mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0]
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
+    pvalBool = True if pvalBool else False
     numStates = getNumStates(stateInfo)
     # Quiescent value is user input - 1 because states are read in to be -1 from their values
     quiescentState = quiescentState[0] - 1 if quiescentState else numStates - 1
@@ -286,15 +290,15 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
-            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, pvalBool,
                            diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
             pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
                                                                                 inputDirPath2.name, stateInfo, outputDirPath,
-                                                                                fileTag, numProcesses, diagnosticBool,
-                                                                                numTrials, samplingSize, storedExpPath,
-                                                                                verbose)
+                                                                                fileTag, numProcesses, pvalBool,
+                                                                                diagnosticBool, numTrials, samplingSize,
+                                                                                storedExpPath, verbose)
             summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, memory,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
@@ -310,7 +314,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition):
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition,
+               pvalBool):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -348,6 +353,9 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif mode[0] == "single" and quiescentState:
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
+    elif mode[0] == "single" and pvalBool:
+        print("ERROR: [-m, --mode] 'single' not compatible with [-w, --p-value] flag")
+        sys.exit()
     elif mode[0] == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
         sys.exit()
@@ -363,7 +371,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         print("ERROR: Too many [-m, --mode] arguments provided")
         sys.exit()
     elif len(commandLineBool) > 1:
-        print("ERROR: Too many [-l, --cli] arguments provided")
+        print("ERROR: Too many [-l, --local] flags provided")
         sys.exit()
     elif len(inputDirectory) > 1:
         print("ERROR: Too many [-i, --input-directory] arguments provided")
@@ -387,10 +395,10 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         print("ERROR: Too many [-c, --num-cores] arguments provided")
         sys.exit()
     elif len(exitBool) > 1:
-        print("ERROR: Too many [-x, --exit] arguments provided")
+        print("ERROR: Too many [-x, --exit] flags provided")
         sys.exit()
     elif len(diagnosticBool) > 1:
-        print("ERROR: Too many [-d, --diagnostic-figures] arguments provided")
+        print("ERROR: Too many [-d, --diagnostic-figures] flags provided")
         sys.exit()
     elif len(numTrials) > 1:
         print("ERROR: Too many [-t, --num-trials] arguments provided")
@@ -407,6 +415,8 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif len(partition) > 1:
         print("ERROR: Too many [-p, --partition] arguments provided")
         sys.exit()
+    elif len(pvalBool) > 1:
+        print("ERROR: Too many [-w, --p-value] flags provided")
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,

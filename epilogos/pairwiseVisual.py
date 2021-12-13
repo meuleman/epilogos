@@ -7,6 +7,7 @@ import scipy.stats as st
 import warnings
 from time import time
 import gzip
+import heapq
 from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
@@ -16,8 +17,8 @@ from statsmodels.stats.multitest import multipletests
 from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 
 
-def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, diagnosticBool, numTrials, samplingSize,
-         expFreqPath, verbose):
+def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pvalBool, diagnosticBool, numTrials,
+         samplingSize, expFreqPath, verbose):
     """
     Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
     distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are written out,
@@ -30,6 +31,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     outputDir -- The output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores which to run on
+    pvalBool -- Boolean which if True tells epilogos to generate pvalues for pairwise scores
     diagnosticBool -- Boolean which if True tells us to generate diagnostic plots of the gennorm fit on the null data and
                       comparisons between the null and real data
     numTrials -- The number of gennorm fits to do
@@ -53,12 +55,13 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if numProcesses == 0:
         numProcesses = cpu_count()
 
-    # Fitting a gennorm distribution to the distances
-    if verbose: print("\nFitting gennorm distribution to distances...", flush=True); tFit = time()
-    else: print("    Fitting distances\t", end="", flush=True)
-    params, distanceArrNull, nonQuiescentIdx = fitDistances(outputDirPath, numProcesses, numTrials, samplingSize)
-    if verbose: print("    Time:", time() - tFit, flush=True)
-    else: print("\t[Done]", flush=True)
+    if pvalBool:
+        # Fitting a gennorm distribution to the distances
+        if verbose: print("\nFitting gennorm distribution to distances...", flush=True); tFit = time()
+        else: print("    Fitting distances\t", end="", flush=True)
+        params, distanceArrNull, nonQuiescentIdx = fitDistances(outputDirPath, numProcesses, numTrials, samplingSize)
+        if verbose: print("    Time:", time() - tFit, flush=True)
+        else: print("\t[Done]", flush=True)
 
     # Read in observation files
     if verbose: print("Reading in observation files...", flush=True); tRead = time()
@@ -67,67 +70,96 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, di
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
-    # Splitting the params up
-    beta, loc, scale = params[:-2], params[-2], params[-1]
+    if pvalBool:
+        # Splitting the params up
+        beta, loc, scale = params[:-2], params[-2], params[-1]
 
-    # Creating Diagnostic Figures
-    if diagnosticBool:
-        if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
-        else: print("    Diagnostic figures\t", end="", flush=True)
-        createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag)
-        if verbose: print("    Time:", time() - tDiagnostic, flush=True)
+        # Creating Diagnostic Figures
+        if diagnosticBool:
+            if verbose: print("Creating diagnostic figures...", flush=True); tDiagnostic = time()
+            else: print("    Diagnostic figures\t", end="", flush=True)
+            createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag)
+            if verbose: print("    Time:", time() - tDiagnostic, flush=True)
+            else: print("\t[Done]", flush=True)
+
+        # Calculating PValues
+        if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
+        else: print("    Calculating p-vals\t", end="", flush=True)
+        pvals = calculatePVals(distanceArrReal, beta, loc, scale)
+        if verbose: print("    Time:", time() - tPVal, flush=True)
         else: print("\t[Done]", flush=True)
 
-    # Calculating PValues
-    if verbose: print("Calculating P-Values...", flush=True); tPVal = time()
-    else: print("    Calculating p-vals\t", end="", flush=True)
-    pvals = calculatePVals(distanceArrReal, beta, loc, scale)
-    if verbose: print("    Time:", time() - tPVal, flush=True)
-    else: print("\t[Done]", flush=True)
+        # Perform multiple hypothesis correction on pvals
+        if verbose: print("Performing Benjamini-Hochberg procedure...", flush=True); tMH = time()
+        else: print("    Benjamini-Hochberg procedure\t", end="", flush=True)
+        mhPvals = multipletests(pvals, method="fdr_bh")[1]
+        if verbose: print("    Time:", time() - tMH, flush=True)
+        else: print("\t[Done]", flush=True)
 
-    # Perform multiple hypothesis correction on pvals
-    if verbose: print("Performing Benjamini-Hochberg procedure...", flush=True); tMH = time()
-    else: print("    Benjamini-Hochberg procedure\t", end="", flush=True)
-    mhPvals = multipletests(pvals, method="fdr_bh")[1]
-    if verbose: print("    Time:", time() - tMH, flush=True)
-    else: print("\t[Done]", flush=True)
+    else:
+        # Calculate the absolute value of zcores for creating the manhattan plots
+        if verbose: print("Calculating Z-Scores...", flush=True); tZS = time()
+        else: print("    Z-Scores\t", end="", flush=True)
+        zScores = np.abs(st.zscore(distanceArrReal))
+        if verbose:print("    Time:", time() - tZS, flush=True)
+        else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
     if verbose: print("Writing metrics file...", flush=True); tMetrics = time()
     else: print("    Writing metrics\t", end="", flush=True)
-    writeMetrics(locationArr, chrDict, maxDiffArr, stateNameList, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag)
+    if pvalBool:
+        writeMetrics(locationArr, chrDict, maxDiffArr, stateNameList, distanceArrReal, outputDirPath, fileTag, pvalBool,
+                     pvals=pvals, mhPvals=mhPvals)
+    else:
+        writeMetrics(locationArr, chrDict, maxDiffArr, stateNameList, distanceArrReal, outputDirPath, fileTag, pvalBool)
     if verbose: print("    Time:", time() - tMetrics, flush=True)
     else: print("\t[Done]", flush=True)
 
-    # Create txt file of significant loci with adjacent merged
-    if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
-    else: print("    Greatest hits txt\t", end="", flush=True)
-    roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals)
-    if verbose: print("    Time:", time() - tGreat, flush=True)
-    else: print("\t[Done]", flush=True)
+    if pvalBool:
+        # Create txt file of significant loci with adjacent merged
+        if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
+        else: print("    Greatest hits txt\t", end="", flush=True)
+        roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
+        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals, 10)
+        if verbose: print("    Time:", time() - tGreat, flush=True)
+        else: print("\t[Done]", flush=True)
 
-    # Create txt file of significant loci
-    if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
-    else: print("    Significant loci txt\t", end="", flush=True)
-    roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
-    createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals)
-    if verbose: print("    Time:", time() - tSig, flush=True)
-    else: print("\t[Done]", flush=True)
+        # Create txt file of significant loci
+        if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
+        else: print("    Significant loci txt\t", end="", flush=True)
+        roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
+        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals, 10)
+        if verbose: print("    Time:", time() - tSig, flush=True)
+        else: print("\t[Done]", flush=True)
+    else:
+        if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
+        else: print("    Greatest hits txt\t", end="", flush=True)
+        roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
+        greatestHitsNoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, 10)
+        if verbose: print("    Time:", time() - tGreat, flush=True)
+        else: print("\t[Done]", flush=True)
 
     # Create Chromosome Manhattan Plot
     if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
     else: print("    Chromosome Manhattan\t", end="", flush=True)
-    createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
-                              stateColorList, outputDirPath, fileTag, numProcesses, mhPvals)
+    if pvalBool:
+        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
+                                  stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, mhPvals=mhPvals)
+    else:
+        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
+                                  stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, zScores=zScores)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Create Genome Manhattan Plot
     if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
     else: print("    Genome-wide Manhattan\t", end="", flush=True)
-    createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
-                          stateColorList, outputDirPath, fileTag, mhPvals)
+    if pvalBool:
+        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
+                              stateColorList, outputDirPath, fileTag, pvalBool, mhPvals=mhPvals)
+    else:
+        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
+                              stateColorList, outputDirPath, fileTag, pvalBool, zScores=zScores)
     if verbose: print("    Time:", time() - tGManhattan, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -492,7 +524,8 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
     return pvals
 
 
-def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, pvals, mhPvals, outputDirPath, fileTag):
+def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, outputDirPath, fileTag, pvalBool,
+                 pvals = [], mhPvals = []):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
     chromosome, bin start, bin end, state with highest difference, signed squared euclidean distance, pvalue of distance
@@ -507,6 +540,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, pva
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
     outputDirPath -- The path of the output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    pvalBool -- Boolean which if True tells epilogos to generate pvalues for pairwise scores
     """
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
@@ -515,17 +549,24 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, pva
     metricsTxt = gzip.open(metricsTxtPath, "wt")
 
     # Creating a string to write out the raw differences (faster than np.savetxt)
-    metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\t{5:.5e}\t{6:.5e}\n"
-    metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
-                                                nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
-                                                findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
-                                                for i in range(len(distanceArrReal)))
+    if pvalBool:
+        metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\t{5:.5e}\t{6:.5e}\n"
+        metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
+                                                    nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
+                                                    findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
+                                                    for i in range(len(distanceArrReal)))
+    else:
+        metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\n"
+        metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
+                                                    nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
+                                                    findSign(distanceArrReal[i]))
+                                                    for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
     metricsTxt.close()
 
 
-def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, onlySignificant, mhPvals):
+def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, onlySignificant, mhPvals, width):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
     Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start,
@@ -541,11 +582,19 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     pvals -- Numpy array containing the pvalues of all the distances between the pairwise groups
     onlySignificant -- Boolean telling us whether to use significant loci or 1000 largest distance bins
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
+    width -- the width (in number of bins) in each direction to expand the bins
     """
     f = gzip.open(filePath, "wt") if onlySignificant else open(filePath, 'w')
 
     # Pick values above significance threshold and then sort
-    indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
+    # indices = np.where(mhPvals <= 0.1)[0][(-np.abs(distanceArr[np.where(mhPvals <= 0.1)[0]])).argsort()]
+
+    indices = np.where(mhPvals <= 0.1)[0]
+    if not onlySignificant:
+        # in the case of creating greatest hits indices should be a intersection of all significantLoci and regions generated by priorityqueue
+        indices = np.intersect1d(indices, priorityQueueMerge(distanceArr, 100, width), assume_unique=True)
+    # Indices should be in order of score
+    indices = indices[(-np.abs(distanceArr[indices])).argsort()]
 
     if len(indices) == 0:
         f.close()
@@ -562,12 +611,16 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
 
     # Don't want to merge when creating significantLoci.txt
     if not onlySignificant:
-        locations = mergeAdjacent(pr.PyRanges(locations))
-        if "Start_b" in locations.columns:
-            locations.drop(columns=["Start_b", "End_b"], inplace=True)
+        # locations = mergeAdjacent(pr.PyRanges(locations))
+        # if "Start_b" in locations.columns:
+        #     locations.drop(columns=["Start_b", "End_b"], inplace=True)
+        # Pad the bins
+        for i in range(locations.shape[0]):
+            locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
+            locations.iloc[i, 2] = locations.iloc[i, 2] - 200 * width
 
-    # Sort by absolute value of score
-    locations = locations.iloc[(-locations["Score"].abs()).argsort()]
+    # # Sort by absolute value of score
+    # locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
     # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
@@ -586,36 +639,36 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     f.close()
 
 
-def mergeAdjacent(originalLocations):
-    """
-    Takes a pyranges object and merges all adjacent regions maintaining the highest score
+# def mergeAdjacent(originalLocations):
+#     """
+#     Takes a pyranges object and merges all adjacent regions maintaining the highest score
 
-    Input:
-    originalLocations -- Pyranges object containing loci, scores, and more (not relevant for function)
+#     Input:
+#     originalLocations -- Pyranges object containing loci, scores, and more (not relevant for function)
 
-    Ouput:
-    pandas dataframe with adjacent regions merged
-    """
-    mergedData = originalLocations.merge()
-    joinMergedToOriginal = mergedData.join(originalLocations)
+#     Ouput:
+#     pandas dataframe with adjacent regions merged
+#     """
+#     mergedData = originalLocations.merge()
+#     joinMergedToOriginal = mergedData.join(originalLocations)
 
-    # finalMerge is a pyranges object
-    finalMerge = joinMergedToOriginal.apply(maxScoringElement)
-    # finalMerge.df is a pandas dataframe
-    return finalMerge.df
+#     # finalMerge is a pyranges object
+#     finalMerge = joinMergedToOriginal.apply(maxScoringElement)
+#     # finalMerge.df is a pandas dataframe
+#     return finalMerge.df
 
 
-def maxScoringElement(df):
-    """
-    Takes a dataframe and deletes duplicate rows, maintaining the highest score
+# def maxScoringElement(df):
+#     """
+#     Takes a dataframe and deletes duplicate rows, maintaining the highest score
 
-    Input:
-    df -- pandas dataframe containing merged loci
+#     Input:
+#     df -- pandas dataframe containing merged loci
 
-    Output:
-    pandas dataframe with deleted duplicate rows
-    """
-    return df.iloc[(-df["Score"].abs()).argsort()].drop_duplicates(['Chromosome', 'Start', 'End'], keep='first')
+#     Output:
+#     pandas dataframe with deleted duplicate rows
+#     """
+#     return df.iloc[(-df["Score"].abs()).argsort()].drop_duplicates(['Chromosome', 'Start', 'End'], keep='first')
 
 
 def findSign(x):
@@ -634,8 +687,95 @@ def findSign(x):
         return "-"
 
 
+def priorityQueueMerge(distanceArr, k, w):
+    """
+    Takes the scores of all the bins in the genome and takes the top k regions of width w.
+    If a region is within a higher scoring region it is removed from the list and a new region is added
+
+    Input:
+    distanceArr -- Numpy array containing the distance between the pairwise groups
+    k -- the number of regions we want to end up with
+    w -- the width (in number of bins) to search in each direction
+    """
+    # Generate the table used to
+    n = len(distanceArr)
+    hits = np.zeros(n, dtype=np.bool)
+    priorityQueue = []
+
+    # Have to make scores negative so they pop off in correct order
+    for i, v in enumerate(np.abs(distanceArr)):
+        heapq.heappush(priorityQueue, (-v, i))
+
+    indices = []
+    while k > 0:
+        try:
+            (v, i) = heapq.heappop(priorityQueue)
+            start = (i - w) if (i - w) > 0 else 0
+            stop = (i + w + 1) if (i + w + 1) <= n else n
+            if not np.any(hits[start:stop]):
+                hits[i] = True
+                indices.append(i)
+                k -= 1
+        except IndexError:
+            k = 0
+
+    indices.sort()
+    return indices
+
+
+def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, zScores, width):
+    """
+    Writes only the locations out to file which are specified by priorityQueueMerging. Used to write the results of
+    priority queue merging
+
+    Input:
+    filePath -- The path of the file to write to
+    locationArr -- Numpy array containing the genomic locations of all the bins
+    chrDict -- Dictionary containing mappings between number values and chromosome names (helps locationArr use less memory)
+    distanceArr -- Numpy array containing the distance between the pairwise groups
+    maxDiffArr -- Numpy array containing the states which had the largest difference in each bin
+    nameArr -- Numpy array containing the names of all the states
+    zScores -- Absolute value of the ZScores of the distances
+    width -- the width (in number of bins) in each direction to expand the bins
+    """
+    f = open(filePath, 'w')
+
+    indices = priorityQueueMerge(distanceArr, 100, width)
+
+    locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[indices].reshape(len(indices), 1),
+                                             maxDiffArr[indices].reshape(len(indices), 1),
+                                             zScores[indices].reshape(len(indices), 1)), axis=1),
+                             columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "ZScores"])\
+                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
+                           "MaxDiffLoc": np.int32, "ZScores": np.float32})\
+                  .replace({"Chromosome": chrDict})
+
+    # Sort by absolute value of score
+    locations = locations.iloc[(-locations["Score"].abs()).argsort()]
+
+    # Pad the bins
+    for i in range(locations.shape[0]):
+        locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
+        locations.iloc[i, 2] = locations.iloc[i, 2] - 200 * width
+
+    # Locations get 3 stars if they are 3 sd away, 2 at 2 sd, 1 at 1 sd, and a period if withing 1 sd
+    stars = np.array(["***" if float(locations.iloc[i, 5]) >= 3 else
+                      ("**" if float(locations.iloc[i, 5]) >= 2 else
+                      ("*" if float(locations.iloc[i, 5]) >= 1 else "."))
+                      for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+
+    # Write all the locations to the file for significantLoci.txt
+    # Write only top 100 loci to file for greatestHits.txt
+    outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5f}\n"
+    outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
+                                           abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
+                                           float(locations.iloc[i, 5]), stars[i])
+                        for i in range(len(indices)))
+    f.write(outString)
+    f.close()
+
 def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
-                          stateColorList, outputDirPath, fileTag, mhPvals):
+                          stateColorList, outputDirPath, fileTag, pvalBool, mhPvals=[], zScores=[]):
     """
     Creates a manhattan plot based on the distances between the two groups for the entire genome
 
@@ -652,7 +792,9 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     stateColorList -- Numpy array containing the colors of each of the states in the state model
     outputDirPath -- The path of the output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    pvalBool -- A boolean telling us whether we are using pvals or not
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
+    zScores -- Absolute value of the Z-Scores of the scores in the case that we are not using pvals
     """
     manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
@@ -675,13 +817,13 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     plt.margins(x=0)
     ylim = np.amax(np.abs(distanceArrReal)) * 1.1
     ax.set_ylim(-ylim, ylim)
-    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
+    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale) if pvalBool else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
 
     ax.set_yticks(yticks)
     ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
     axR = ax.twinx()
-    axR.set_ylabel("P-Value")
+    axR.set_ylabel("P-Value" if pvalBool else "Z-Score")
     axR.spines["top"].set_visible(False)
     axR.spines["left"].set_visible(False)
     axR.spines["bottom"].set_visible(False)
@@ -697,56 +839,54 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
-            points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (zScores < 1))[0]
             color = "gray" if i % 2 == 0 else "black"
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color=color,
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         elif i % 2 == 0:
-            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])
-                              & (mhPvals > 0.1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 1))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         else:
-            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1])
-                              & (mhPvals > 0.1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 1))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
 
-    point1Indices  = np.where(mhPvals <= 0.1)[0]
-    point05Indices = np.where(mhPvals <= 0.05)[0]
-    point01Indices = np.where(mhPvals <= 0.01)[0]
+    line1Indices  = np.where(mhPvals <= 0.1)[0] if pvalBool else np.where(zScores >= 1)
+    line2Indices = np.where(mhPvals <= 0.05)[0] if pvalBool else np.where(zScores >= 2)
+    line3Indices = np.where(mhPvals <= 0.01)[0] if pvalBool else np.where(zScores >= 3)
 
-    colorArr = stateColorList[maxDiffArr[point1Indices].astype(int) - 1]
-    opacityArr = np.array((np.abs(distanceArrReal[point1Indices]) /
-                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[point1Indices]), 1)
+    colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
+    opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /
+                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
-    sizeArr = np.abs(distanceArrReal[point1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
+    sizeArr = np.abs(distanceArrReal[line1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
 
-    plt.scatter(point1Indices, distanceArrReal[point1Indices], s=sizeArr, color=rgbaColorArr, marker=".",
+    plt.scatter(line1Indices, distanceArrReal[line1Indices], s=sizeArr, color=rgbaColorArr, marker=".",
                 edgecolors='none', rasterized=True)
 
-    if len(point01Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
-        point05Line = np.min(np.abs(distanceArrReal[point05Indices]))
-        point01Line = np.min(np.abs(distanceArrReal[point01Indices]))
+    if len(line3Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
+        point05Line = np.min(np.abs(distanceArrReal[line2Indices]))
+        point01Line = np.min(np.abs(distanceArrReal[line3Indices]))
         plt.axhspan(point1Line, point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(point05Line, point01Line, facecolor='black', alpha=0.10)
         plt.axhspan(point01Line, ylim, facecolor='black', alpha=0.15)
         plt.axhspan(-point1Line, -point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(-point05Line, -point01Line, facecolor='black', alpha=0.10)
         plt.axhspan(-point01Line, -ylim, facecolor='black', alpha=0.15)
-    elif len(point05Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
-        point05Line = np.min(np.abs(distanceArrReal[point05Indices]))
+    elif len(line2Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
+        point05Line = np.min(np.abs(distanceArrReal[line2Indices]))
         plt.axhspan(point1Line, point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(point05Line, ylim, facecolor='black', alpha=0.10)
         plt.axhspan(-point1Line, -point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(-point05Line, -ylim, facecolor='black', alpha=0.10)
-    elif len(point1Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
+    elif len(line1Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
         plt.axhspan(point1Line, ylim, facecolor='black', alpha=0.05)
         plt.axhspan(-point1Line, -ylim, facecolor='black', alpha=0.05)
 
@@ -756,8 +896,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     plt.close(fig)
 
 
-def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, mhPvals_,
-                             stateColorList_, manhattanDirPath_):
+def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, mhPvals_, zScores_,
+                             stateColorList_, manhattanDirPath_, pvalBool_):
     """
     Initializes global variables for multiprocessing in the single epilogos case
 
@@ -769,8 +909,10 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
     maxDiffArr_ -- Numpy array containing the states which had the largest difference between the two groups in each bin
     params -- gennorm fit parameters
     mhPvals_ -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
+    zScores_ -- Absolute values of the z-scores of the distances
     stateColorList_ -- Numpy array containing the colors of each of the states in the state model
     manhattanDirPath_ -- The path to directory to put manhattan plots
+    pvalBool_ -- A boolean to tell us whether we will use pvals or zscores
     """
     global group1Name
     global group2Name
@@ -781,8 +923,10 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
     global loc
     global scale
     global mhPvals
+    global zScores
     global stateColorList
     global manhattanDirPath
+    global pvalBool
 
     group1Name = group1Name_
     group2Name = group2Name_
@@ -791,12 +935,14 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
     maxDiffArr = maxDiffArr_
     beta, loc, scale = params[:-2], params[-2], params[-1]
     mhPvals = mhPvals_
+    zScores = zScores_
     stateColorList = stateColorList_
     manhattanDirPath = manhattanDirPath_
+    pvalBool = pvalBool_
 
 
 def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
-                              stateColorList, outputDirPath, fileTag, numProcesses, mhPvals):
+                              stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, mhPvals=[], zScores=[]):
     """
     Creates a manhattan plot based on the distances between the two groups for the each chromosome
 
@@ -812,7 +958,9 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     outputDirPath -- The path of the output directory for epilogos
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores to run on
+    pvalBool -- A boolean value to tell us whether we are going to use pvals or not
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
+    zScores -- Absolute values of the Z-Scores of the distances
     """
     manhattanDirPath = outputDirPath / "manhattanPlots_{}".format(fileTag)
     if not manhattanDirPath.exists():
@@ -831,8 +979,8 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     # Multiprocess the reading
     with closing(Pool(numProcesses, initializer=_initChromosomeManhattan, initargs=(group1Name, group2Name, locationArr,
                                                                                     distanceArrReal, maxDiffArr, params,
-                                                                                    mhPvals, stateColorList,
-                                                                                    manhattanDirPath))) as pool:
+                                                                                    mhPvals, zScores, stateColorList,
+                                                                                    manhattanDirPath, pvalBool))) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
 
@@ -864,13 +1012,13 @@ def graphChromosomeManhattan(chromosome, startEnd):
     plt.margins(x=0)
     ylim = np.amax(np.abs(distanceArrReal)) * 1.1
     ax.set_ylim(-ylim, ylim)
-    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale)
+    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale) if pvalBool else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
 
     ax.set_yticks(yticks)
     ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
 
     axR = ax.twinx()
-    axR.set_ylabel("P-Value")
+    axR.set_ylabel("P-Value" if pvalBool else "Z-Score")
     axR.spines["top"].set_visible(False)
     axR.spines["left"].set_visible(False)
     axR.spines["bottom"].set_visible(False)
@@ -888,61 +1036,57 @@ def graphChromosomeManhattan(chromosome, startEnd):
         realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
-        points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0]
+        points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores < 1))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
 
-        point1Indices  = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.1))[0]
-        point05Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.05))[0]
-        point01Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.01))[0]
+        line1Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 1))[0]
+        line2Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.05))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 2))[0]
+        line3Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.01))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 3))[0]
 
     else:
         realxticks = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
                               & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
-        points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
-                          & (mhPvals > 0.1))[0]
+        points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (mhPvals > 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (zScores < 1))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
 
-        point1Indices  = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1]))
-                                  & (mhPvals <= 0.1))[0]
-        point05Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1]))
-                                  & (mhPvals <= 0.05))[0]
-        point01Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1]))
-                                  & (mhPvals <= 0.01))[0]
+        line1Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 1))[0]
+        line2Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.05))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 2))[0]
+        line3Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.01))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 3))[0]
 
-    colorArr = stateColorList[maxDiffArr[point1Indices].astype(int) - 1]
-    opacityArr = np.array((np.abs(distanceArrReal[point1Indices]) /
-                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[point1Indices]), 1)
+    colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
+    opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /
+                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
-    sizeArr = np.abs(distanceArrReal[point1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
+    sizeArr = np.abs(distanceArrReal[line1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
 
-    plt.scatter(point1Indices, distanceArrReal[point1Indices], s=sizeArr, color=rgbaColorArr, marker=".",
+    plt.scatter(line1Indices, distanceArrReal[line1Indices], s=sizeArr, color=rgbaColorArr, marker=".",
                 edgecolors='none', rasterized=True)
 
-    if len(point01Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
-        point05Line = np.min(np.abs(distanceArrReal[point05Indices]))
-        point01Line = np.min(np.abs(distanceArrReal[point01Indices]))
+    if len(line3Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
+        point05Line = np.min(np.abs(distanceArrReal[line2Indices]))
+        point01Line = np.min(np.abs(distanceArrReal[line3Indices]))
         plt.axhspan(point1Line, point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(point05Line, point01Line, facecolor='black', alpha=0.10)
         plt.axhspan(point01Line, ylim, facecolor='black', alpha=0.15)
         plt.axhspan(-point1Line, -point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(-point05Line, -point01Line, facecolor='black', alpha=0.10)
         plt.axhspan(-point01Line, -ylim, facecolor='black', alpha=0.15)
-    elif len(point05Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
-        point05Line = np.min(np.abs(distanceArrReal[point05Indices]))
+    elif len(line2Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
+        point05Line = np.min(np.abs(distanceArrReal[line2Indices]))
         plt.axhspan(point1Line, point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(point05Line, ylim, facecolor='black', alpha=0.10)
         plt.axhspan(-point1Line, -point05Line, facecolor='black', alpha=0.05)
         plt.axhspan(-point05Line, -ylim, facecolor='black', alpha=0.10)
-    elif len(point1Indices) > 0:
-        point1Line = np.min(np.abs(distanceArrReal[point1Indices]))
+    elif len(line1Indices) > 0:
+        point1Line = np.min(np.abs(distanceArrReal[line1Indices]))
         plt.axhspan(point1Line, ylim, facecolor='black', alpha=0.05)
         plt.axhspan(-point1Line, -ylim, facecolor='black', alpha=0.05)
 
@@ -970,6 +1114,32 @@ def pvalAxisScaling(ylim, beta, loc, scale):
         yticks.append(st.gennorm.isf(10**i/2, beta, loc=loc, scale=scale))
     yticks.append(0)
     yticks.sort()
+
+    yticksFinal = []
+    ytickLabelsFinal = []
+
+    for i in range(len(yticks)):
+        if yticks[i] >= -ylim and yticks[i] <= ylim:
+            yticksFinal.append(float(yticks[i]))
+            ytickLabelsFinal.append(ytickLabels[i])
+
+    return (yticksFinal, ytickLabelsFinal)
+
+def zScoreAxisScaling(ylim, mean, stanDev):
+    """
+    Generates list containing proper tick marks for the manhattan plots according to z-score
+
+    Input:
+    ylim -- The y limit of the manhattan plot
+    mean -- the mean of the scores
+    stanDev -- the standard deviation of the scores
+    """
+
+    yticks = []
+    ytickLabels = ["{}".format(i) for i in range(-5, 5.5, 0.5)]
+
+    for i in range(-5, 5.5, 0.5):
+        yticks.append(i * stanDev + mean)
 
     yticksFinal = []
     ytickLabelsFinal = []

@@ -8,9 +8,6 @@ import pyranges as pr
 from epilogos.pairwiseVisual import priorityQueueMerge, findSign
 from epilogos.helpers import strToBool, getStateNames
 
-from pairwiseVisual import priorityQueueMerge
-
-
 def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file

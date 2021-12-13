@@ -5,8 +5,10 @@ from time import time
 from os import remove
 import pandas as pd
 import pyranges as pr
-from epilogos.pairwiseVisual import mergeAdjacent, findSign
+from epilogos.pairwiseVisual import priorityQueueMerge, findSign
 from epilogos.helpers import strToBool, getStateNames
+
+from pairwiseVisual import priorityQueueMerge
 
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
@@ -33,7 +35,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList)
+    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, 10)
     if verbose: print("    Time:", time() - tHits, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -107,7 +109,7 @@ def unpackNPZ(file):
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
-def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
+def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, width):
     """
     Finds the top 1000 scoring bins and merges adjacent bins, then outputs a txt containing these top scoring regions and
     some information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
@@ -118,10 +120,12 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
     scoreArr -- Numpy array containing the sum of the scores within each bin
     maxScoreArr -- Numpy array containing the states which had the highest score in each bin
     nameArr -- Numpy array containing the names of all the states
+    width -- The number of bins to add on each side of highest scoring bins to generate exemplar regions
     """
     with open(filePath, 'w') as f:
         # Sort the values
-        indices = (-np.abs(scoreArr)).argsort()[:1000]
+        # indices = (-np.abs(scoreArr)).argsort()[:1000]
+        indices = priorityQueueMerge(scoreArr, 100, width)
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
                                                  maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
@@ -129,13 +133,18 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
                       .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32,
                                "MaxScoreLoc": np.int32})
 
-        # Iterate until all is merged
-        locations = mergeAdjacent(pr.PyRanges(locations))
-        if "Start_b" in locations.columns:
-            locations.drop(columns=["Start_b", "End_b"], inplace=True)
+        # # Iterate until all is merged
+        # locations = mergeAdjacent(pr.PyRanges(locations))
+        # if "Start_b" in locations.columns:
+        #     locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
         # Sort by absolute value of score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
+
+        # Pad the bins
+        for i in range(locations.shape[0]):
+            locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
+            locations.iloc[i, 2] = locations.iloc[i, 2] - 200 * width
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
@@ -143,6 +152,9 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr):
                             abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])))
                             for i in range(min((locations.shape[0], 100))))
         f.write(outString)
+
+
+        f = open(filePath, 'w')
 
 
 if __name__ == "__main__":

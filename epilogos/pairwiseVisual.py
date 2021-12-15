@@ -143,10 +143,11 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     if verbose: print("Creating Individual Chromosome Manhattan Plots", flush=True); tCManhattan = time()
     else: print("    Chromosome Manhattan\t", end="", flush=True)
     if pvalBool:
-        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
-                                  stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, mhPvals=mhPvals)
+        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr,
+                                  stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, params=params,
+                                  mhPvals=mhPvals)
     else:
-        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
+        createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr,
                                   stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, zScores=zScores)
     if verbose: print("    Time:", time() - tCManhattan, flush=True)
     else: print("\t[Done]", flush=True)
@@ -155,10 +156,11 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     if verbose: print("Creating Genome-Wide Manhattan Plot", flush=True); tGManhattan = time()
     else: print("    Genome-wide Manhattan\t", end="", flush=True)
     if pvalBool:
-        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
-                              stateColorList, outputDirPath, fileTag, pvalBool, mhPvals=mhPvals)
+        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr,
+                              stateColorList, outputDirPath, fileTag, pvalBool, beta=beta, loc=loc, scale=scale,
+                              mhPvals=mhPvals)
     else:
-        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
+        createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr,
                               stateColorList, outputDirPath, fileTag, pvalBool, zScores=zScores)
     if verbose: print("    Time:", time() - tGManhattan, flush=True)
     else: print("\t[Done]", flush=True)
@@ -774,8 +776,8 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
     f.write(outString)
     f.close()
 
-def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, beta, loc, scale,
-                          stateColorList, outputDirPath, fileTag, pvalBool, mhPvals=[], zScores=[]):
+def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, stateColorList,
+                          outputDirPath, fileTag, pvalBool, beta=0, loc=0, scale=0, mhPvals=[], zScores=[]):
     """
     Creates a manhattan plot based on the distances between the two groups for the entire genome
 
@@ -941,8 +943,8 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
     pvalBool = pvalBool_
 
 
-def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, params,
-                              stateColorList, outputDirPath, fileTag, numProcesses, pvalBool, mhPvals=[], zScores=[]):
+def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, stateColorList,
+                              outputDirPath, fileTag, numProcesses, pvalBool, params=[0,0,0], mhPvals=[], zScores=[]):
     """
     Creates a manhattan plot based on the distances between the two groups for the each chromosome
 

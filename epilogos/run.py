@@ -294,7 +294,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                            diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
                                                                                 inputDirPath2.name, stateInfo, outputDirPath,
                                                                                 fileTag, numProcesses, pvalBool,
                                                                                 diagnosticBool, numTrials, samplingSize,

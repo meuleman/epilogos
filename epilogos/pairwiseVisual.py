@@ -1140,7 +1140,7 @@ def zScoreAxisScaling(ylim, mean, stanDev):
     yticks = []
     ytickLabels = ["{0:.1f}".format(i) for i in np.linspace(-5, 5, 21)]
 
-    for i in range(-5, 5.5, 0.5):
+    for i in np.linspace(-5, 5, 21):
         yticks.append(i * stanDev + mean)
 
     yticksFinal = []

@@ -758,17 +758,17 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
     # Pad the bins
     for i in range(locations.shape[0]):
         locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
-        locations.iloc[i, 2] = locations.iloc[i, 2] - 200 * width
+        locations.iloc[i, 2] = locations.iloc[i, 2] + 200 * width
 
     # Locations get 3 stars if they are 3 sd away, 2 at 2 sd, 1 at 1 sd, and a period if withing 1 sd
     stars = np.array(["***" if float(locations.iloc[i, 5]) >= 3 else
                       ("**" if float(locations.iloc[i, 5]) >= 2 else
                       ("*" if float(locations.iloc[i, 5]) >= 1 else "."))
-                      for i in range(locations.shape[0])]).reshape(locations.shape[0], 1)
+                      for i in range(locations.shape[0])])
 
     # Write all the locations to the file for significantLoci.txt
     # Write only top 100 loci to file for greatestHits.txt
-    outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5f}\n"
+    outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5f}\t{5}\n"
     outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
                                            float(locations.iloc[i, 5]), stars[i])
@@ -857,9 +857,9 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
 
-    line1Indices  = np.where(mhPvals <= 0.1)[0] if pvalBool else np.where(zScores >= 1)
-    line2Indices = np.where(mhPvals <= 0.05)[0] if pvalBool else np.where(zScores >= 2)
-    line3Indices = np.where(mhPvals <= 0.01)[0] if pvalBool else np.where(zScores >= 3)
+    line1Indices  = np.where(mhPvals <= 0.1)[0] if pvalBool else np.where(zScores >= 10)
+    line2Indices = np.where(mhPvals <= 0.05)[0] if pvalBool else np.where(zScores >= 20)
+    line3Indices = np.where(mhPvals <= 0.01)[0] if pvalBool else np.where(zScores >= 30)
 
     colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
     opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /
@@ -1043,9 +1043,9 @@ def graphChromosomeManhattan(chromosome, startEnd):
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
 
-        line1Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 1))[0]
-        line2Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.05))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 2))[0]
-        line3Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.01))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 3))[0]
+        line1Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 10))[0]
+        line2Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.05))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 20))[0]
+        line3Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.01))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 30))[0]
 
     else:
         realxticks = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
@@ -1057,9 +1057,9 @@ def graphChromosomeManhattan(chromosome, startEnd):
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
 
-        line1Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 1))[0]
-        line2Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.05))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 2))[0]
-        line3Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.01))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 3))[0]
+        line1Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 10))[0]
+        line2Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.05))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 20))[0]
+        line3Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (mhPvals <= 0.01))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1])) & (zScores >= 30))[0]
 
     colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
     opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /

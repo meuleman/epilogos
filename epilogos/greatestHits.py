@@ -5,7 +5,7 @@ from time import time
 from os import remove
 import pandas as pd
 import pyranges as pr
-from epilogos.pairwiseVisual import priorityQueueMerge, findSign
+from epilogos.pairwiseVisual import meanAndMax, findSign
 from epilogos.helpers import strToBool, getStateNames
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
@@ -122,7 +122,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
     with open(filePath, 'w') as f:
         # Sort the values
         # indices = (-np.abs(scoreArr)).argsort()[:1000]
-        indices = priorityQueueMerge(scoreArr, 100, width)
+        indices = meanAndMax(scoreArr, 100, width)
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
                                                  maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
@@ -135,13 +135,17 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
         # if "Start_b" in locations.columns:
         #     locations.drop(columns=["Start_b", "End_b"], inplace=True)
 
-        # Sort by absolute value of score
+        # set scores to max score in range and sort by score
+        maxScores = []
+        for i in indices:
+            maxScores.append(np.max(scoreArr[i - width: i + width]))
+        locations["Score"] = maxScores
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Pad the bins
         for i in range(locations.shape[0]):
             locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
-            locations.iloc[i, 2] = locations.iloc[i, 2] - 200 * width
+            locations.iloc[i, 2] = locations.iloc[i, 2] + 200 * width
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"

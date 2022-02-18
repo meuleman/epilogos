@@ -612,7 +612,7 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     # set scores to max score in range and sort by score
     maxScores = []
     for i in indices:
-        maxScores.append(np.max(distanceArr[i - width: i + width]))
+        maxScores.append(np.max(np.abs(distanceArr[i - width: i + width + 1])))
     locations["Score"] = maxScores
     locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
@@ -704,7 +704,7 @@ def findBestIndex(scoreArr, i, width):
     farthestRight = i + width
     means = []
     for j in range(farthestLeft, farthestRight + 1):
-        means.append(-np.mean(scoreArr[j - width:j + width]))
+        means.append(-np.mean(scoreArr[j - width:j + width + 1]))
     return np.arange(farthestLeft, farthestRight + 1)[np.argsort(means)]
 
 
@@ -738,7 +738,7 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
     # set scores to max score in range and sort by score
     maxScores = []
     for i in indices:
-        maxScores.append(np.max(distanceArr[i - width: i + width]))
+        maxScores.append(np.max(np.abs(distanceArr[i - width: i + width + 1])))
     locations["Score"] = maxScores
     locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 

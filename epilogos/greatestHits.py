@@ -120,38 +120,26 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
     width -- The number of bins to add on each side of highest scoring bins to generate exemplar regions
     """
     with open(filePath, 'w') as f:
-        # Sort the values
-        # indices = (-np.abs(scoreArr)).argsort()[:1000]
-        indices = meanAndMax(scoreArr, 100, width)
+        indices, maxIndices = meanAndMax(scoreArr, 100, width)
 
-        locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[indices].reshape(len(indices), 1),
-                                                 maxScoreArr[indices].reshape(len(indices), 1)), axis=1),
+        locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[maxIndices].reshape(len(maxIndices), 1),
+                                                 maxScoreArr[maxIndices].reshape(len(maxIndices), 1)), axis=1),
                                  columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
                       .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32,
                                "MaxScoreLoc": np.int32})
 
-        # # Iterate until all is merged
-        # locations = mergeAdjacent(pr.PyRanges(locations))
-        # if "Start_b" in locations.columns:
-        #     locations.drop(columns=["Start_b", "End_b"], inplace=True)
-
-        # set scores to max score in range and sort by score
-        maxScores = []
-        for i in indices:
-            maxScores.append(np.max(scoreArr[i - width: i + width]))
-        locations["Score"] = maxScores
+        # sort by score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Pad the bins
-        for i in range(locations.shape[0]):
-            locations.iloc[i, 1] = locations.iloc[i, 1] - 200 * width
-            locations.iloc[i, 2] = locations.iloc[i, 2] + 200 * width
+        locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * width
+        locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * width
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
                             abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])))
-                            for i in range(min((locations.shape[0], 100))))
+                            for i in range(locations.shape[0], 100))
         f.write(outString)
 
 

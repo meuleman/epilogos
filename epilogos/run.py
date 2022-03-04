@@ -55,9 +55,11 @@ from epilogos.helpers import getNumStates
                    "partition as designated by the system administrator")
 @click.option("-n", "--null-distribution", "pvalBool", is_flag=True, multiple=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
+@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, multiple=True,
+              help="The number of bins on each side of the exemplar region (total exemplar regions is w*2+1 bins)")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
-         pvalBool):
+         pvalBool, exemplarWidth):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -89,11 +91,13 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool)
+               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool,
+               exemplarWidth)
 
     # Pull info out of the flags (This is to deal with multiple user inputs for a flag)
-    mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize = \
-        mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0]
+    mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize, exemplarWidth = \
+        mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0], \
+        exemplarWidth[0]
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
     pvalBool = True if pvalBool else False
@@ -121,7 +125,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     # Make sure argments are valid
     checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,
-                   groupSize)
+                   groupSize, exemplarWidth)
 
     # Informing user of their inputs
     print()
@@ -291,14 +295,14 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("\nSTEP 4: Generating p-values and figures", flush=True)
         if commandLineBool:
             pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, pvalBool,
-                           diagnosticBool, numTrials, samplingSize, storedExpPath, verbose)
+                           diagnosticBool, numTrials, samplingSize, storedExpPath, exemplarWidth, verbose)
         else:
             computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
                                                                                 inputDirPath2.name, stateInfo, outputDirPath,
                                                                                 fileTag, numProcesses, pvalBool,
                                                                                 diagnosticBool, numTrials, samplingSize,
-                                                                                storedExpPath, verbose)
+                                                                                storedExpPath, exemplarWidth, verbose)
             summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, memory,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
@@ -315,7 +319,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
                numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition,
-               pvalBool):
+               pvalBool, exemplarWidth):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -386,7 +390,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         print("ERROR: Too many [-o, --output-directory] arguments provided")
         sys.exit()
     elif len(stateInfo) > 1:
-        print("ERROR: Too many [-n, --state-info] arguments provided")
+        print("ERROR: Too many [-j, --state-info] arguments provided")
         sys.exit()
     elif len(saliency) > 1:
         print("ERROR: Too many [-s, --saliency] arguments provided")
@@ -416,11 +420,13 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         print("ERROR: Too many [-p, --partition] arguments provided")
         sys.exit()
     elif len(pvalBool) > 1:
-        print("ERROR: Too many [-w, --p-value] flags provided")
+        print("ERROR: Too many [-n, --null-distribution] flags provided")
+    elif len(exemplarWidth) > 1:
+        print("ERROR: Too many [-w, --exemplar-width] arguments provided")
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,
-                   groupSize):
+                   groupSize, exemplarWidth):
     """
     Checks whether user submitted arguments have valid values
 
@@ -477,6 +483,10 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
 
     if groupSize < -1:
         print("ERROR: Group size value must be positive or -1 (-1 means use inputted group sizes)")
+        sys.exit()
+
+    if exemplarWidth < 0:
+        print("ERROR: Group size value must be greater than or equal to 0")
         sys.exit()
 
 

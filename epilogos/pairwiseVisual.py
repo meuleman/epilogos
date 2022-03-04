@@ -18,7 +18,7 @@ from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNum
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pvalBool, diagnosticBool, numTrials,
-         samplingSize, expFreqPath, verbose):
+         samplingSize, expFreqPath, exemplarWidth, verbose):
     """
     Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
     distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are written out,
@@ -37,6 +37,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     numTrials -- The number of gennorm fits to do
     samplingSize -- The amount of null data to fit
     expFreqPath -- The location of the stored expected frequency array
+    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     verbose -- Boolean which if True, causes much more detailed prints
     """
     tTotal = time()
@@ -120,7 +121,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Greatest hits txt\t", end="", flush=True)
         roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals, 10)
+        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals, exemplarWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -128,14 +129,14 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
         else: print("    Significant loci txt\t", end="", flush=True)
         roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
-        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals, 10)
+        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals, exemplarWidth)
         if verbose: print("    Time:", time() - tSig, flush=True)
         else: print("\t[Done]", flush=True)
     else:
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Greatest hits txt\t", end="", flush=True)
         roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-        greatestHitsNoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, 10)
+        greatestHitsNoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, exemplarWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -1125,4 +1126,4 @@ def zScoreAxisScaling(ylim, mean, stanDev):
 
 if __name__ == "__main__":
     main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), strToBool(argv[8]), int(argv[9]),
-         int(argv[10]), argv[11], strToBool(argv[12]))
+         int(argv[10]), argv[11], int(argv[12]), strToBool(argv[13]))

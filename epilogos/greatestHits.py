@@ -4,11 +4,10 @@ import numpy as np
 from time import time
 from os import remove
 import pandas as pd
-import pyranges as pr
 from epilogos.pairwiseVisual import meanAndMax, findSign
 from epilogos.helpers import strToBool, getStateNames
 
-def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
+def main(outputDir, stateInfo, fileTag, expFreqPath, width, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
 
@@ -32,7 +31,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, verbose):
     if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, 10)
+    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, width)
     if verbose: print("    Time:", time() - tHits, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -147,4 +146,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], strToBool(argv[5]))
+    main(argv[1], argv[2], argv[3], argv[4], argv[5], strToBool(argv[6]))

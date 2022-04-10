@@ -40,9 +40,9 @@ from epilogos.helpers import getNumStates
               help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
                    "comparisons between the null and real data")
 @click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True,
-              help="The number of times subsamples of the scores are fit")
+              help="The number of times subsamples of the scores are fit when using a null distribution")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
-              help="The size of the subsamples on which the scores are fit")
+              help="The size of the subsamples on which the scores are fit when using a null distribution")
 @click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True,
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." +
                    "If set to 0, filtering is not done. [default: last state]")
@@ -55,8 +55,9 @@ from epilogos.helpers import getNumStates
                    "partition as designated by the system administrator")
 @click.option("-n", "--null-distribution", "pvalBool", is_flag=True, multiple=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
-@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, multiple=True,
-              help="The number of bins on each side of the exemplar region (total exemplar regions is w*2+1 bins)")
+@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=[62], multiple=True,
+              help="The number of bins on each side of the exemplar region (total exemplar regions is w*2+1 bins) Default is" +
+                   "62 which results in a 25kb window")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
          pvalBool, exemplarWidth):
@@ -98,6 +99,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize, exemplarWidth = \
         mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0], \
         exemplarWidth[0]
+    # This is because flags are read in in a list format to deal with multiple of the same flags
     diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
     pvalBool = True if pvalBool else False
@@ -124,8 +126,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         outputDirPath = Path.cwd() / outputDirPath
 
     # Make sure argments are valid
-    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,
-                   groupSize, exemplarWidth)
+    checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, numTrials,
+                   samplingSize, quiescentState, groupSize, exemplarWidth)
 
     # Informing user of their inputs
     print()
@@ -207,7 +209,6 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 file2 = next(inputDirPath2.glob(file.name))
 
             if commandLineBool:
-                # epilogos.expected.expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
                 expected(file, file2, numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
@@ -282,11 +283,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Create a greatest hits text file
         print("\nSTEP 4: Finding greatest hits", flush=True)
         if commandLineBool:
-            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, verbose)
+            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, exemplarWidth, verbose)
         else:
             computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
-            pythonCommand = "python {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
-                                                              storedExpPath, verbose)
+            pythonCommand = "python {} {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
+                                                              storedExpPath, exemplarWidth, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
                                           "--ntasks=1 --mem=16000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
@@ -358,7 +359,13 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
     elif mode[0] == "single" and pvalBool:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-w, --p-value] flag")
+        print("ERROR: [-m, --mode] 'single' not compatible with [-n, --null-distribution] flag")
+        sys.exit()
+    elif mode[0] == "single" and samplingSize:
+        print("ERROR: [-m, --mode] 'single' not compatible with [-z, --sampling-size] option")
+        sys.exit()
+    elif mode[0] == "single" and numTrials:
+        print("ERROR: [-m, --mode] 'single' not compatible with [-t, --num-trials] option")
         sys.exit()
     elif mode[0] == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
@@ -421,12 +428,14 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif len(pvalBool) > 1:
         print("ERROR: Too many [-n, --null-distribution] flags provided")
+        sys.exit()
     elif len(exemplarWidth) > 1:
         print("ERROR: Too many [-w, --exemplar-width] arguments provided")
+        sys.exit()
 
 
-def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, quiescentState,
-                   groupSize, exemplarWidth):
+def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, numTrials,
+                   samplingSize,quiescentState, groupSize, exemplarWidth):
     """
     Checks whether user submitted arguments have valid values
 
@@ -472,6 +481,14 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
 
     if numProcesses < 0:
         print("ERROR: Number of cores must be positive or zero (0 means use all cores)")
+        sys.exit()
+
+    if numTrials <= 0:
+        print("ERROR: Number of trials must be greater than zero")
+        sys.exit()
+
+    if samplingSize <= 0:
+        print("ERROR: Sampling size must be greater than zero")
         sys.exit()
 
     if quiescentState < -1:

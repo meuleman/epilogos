@@ -12,7 +12,6 @@ from multiprocessing import cpu_count, Pool
 from contextlib import closing
 from itertools import repeat
 from os import remove
-import pyranges as pr
 from statsmodels.stats.multitest import multipletests
 from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
 
@@ -43,7 +42,6 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     tTotal = time()
 
     outputDirPath = Path(outputDir)
-    np.random.seed(7032016)
 
     # Plotting setting
     plt.rcParams['agg.path.chunksize'] = 10000

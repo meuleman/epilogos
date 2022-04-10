@@ -146,4 +146,4 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], argv[5], strToBool(argv[6]))
+    main(argv[1], argv[2], argv[3], argv[4], int(argv[5]), strToBool(argv[6]))

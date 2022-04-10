@@ -361,12 +361,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     elif mode[0] == "single" and pvalBool:
         print("ERROR: [-m, --mode] 'single' not compatible with [-n, --null-distribution] flag")
         sys.exit()
-    elif mode[0] == "single" and samplingSize:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-z, --sampling-size] option")
-        sys.exit()
-    elif mode[0] == "single" and numTrials:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-t, --num-trials] option")
-        sys.exit()
     elif mode[0] == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
         sys.exit()

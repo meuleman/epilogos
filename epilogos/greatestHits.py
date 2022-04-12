@@ -7,7 +7,7 @@ import pandas as pd
 from epilogos.pairwiseVisual import meanAndMax, findSign
 from epilogos.helpers import strToBool, getStateNames
 
-def main(outputDir, stateInfo, fileTag, expFreqPath, width, verbose):
+def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
 
@@ -16,6 +16,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, width, verbose):
     stateInfo -- State model tab seperated information file
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     expFreqPath -- The location of the stored expected frequency array
+    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     verbose -- Boolean which if True, causes much more detailed prints
     """
     outputDirPath = Path(outputDir)
@@ -31,7 +32,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, width, verbose):
     if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, width)
+    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, exemplarWidth)
     if verbose: print("    Time:", time() - tHits, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -105,7 +106,7 @@ def unpackNPZ(file):
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
-def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, width):
+def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, exemplarWidth):
     """
     Finds the top 1000 scoring bins and merges adjacent bins, then outputs a txt containing these top scoring regions and
     some information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
@@ -116,10 +117,10 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
     scoreArr -- Numpy array containing the sum of the scores within each bin
     maxScoreArr -- Numpy array containing the states which had the highest score in each bin
     nameArr -- Numpy array containing the names of all the states
-    width -- The number of bins to add on each side of highest scoring bins to generate exemplar regions
+    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     """
     with open(filePath, 'w') as f:
-        indices, maxIndices = meanAndMax(scoreArr, 100, width)
+        indices, maxIndices = meanAndMax(scoreArr, 100, exemplarWidth)
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[maxIndices].reshape(len(maxIndices), 1),
                                                  maxScoreArr[maxIndices].reshape(len(maxIndices), 1)), axis=1),
@@ -131,8 +132,8 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, wi
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 
         # Pad the bins
-        locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * width
-        locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * width
+        locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
+        locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"

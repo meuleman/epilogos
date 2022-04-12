@@ -429,7 +429,7 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, numTrials,
-                   samplingSize,quiescentState, groupSize, exemplarWidth):
+                   samplingSize, quiescentState, groupSize, exemplarWidth):
     """
     Checks whether user submitted arguments have valid values
 
@@ -441,8 +441,11 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     outputDirPath -- The path to the output directory for epilogos
     numProcesses -- The number of cores the user would like to use
     numStates -- The number of states in the state model
+    numTrials -- The number of gennorm fits to do in pairwise mode
+    samplingSize -- The amount of null data to fit in pairwise mode
     quiescentState -- The state used to filter out quiescent bins
     groupSize -- The size of the null (shuffled) score arrays, -1 means inputed sizes
+    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
@@ -512,6 +515,7 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
     outputDirPath -- The output directory for epilogos will be used for error and output logs
     pythonCommand -- The python command to run on the SLURM job
     saliency -- The saliency metric being used in this epilogos run
+    paritition -- The slurm paritition to use if user elected to choose a specific one
     memory -- The amount of memory to be allocated to the slurm job
     dependency -- Which jobs the SLURM job must wait for before starting
 

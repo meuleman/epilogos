@@ -139,8 +139,6 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, ex
         print("locations df")
         print(locations.head())
 
-        print("locations==locations sorted by score", np.all(locations == locations.iloc[(-locations["Score"].abs()).argsort()]))
-
         # sort by score
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
 

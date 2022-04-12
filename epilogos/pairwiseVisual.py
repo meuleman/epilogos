@@ -620,8 +620,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     print("locations df")
     print(locations.head())
 
-    print("locations==locations sorted by score", np.all(locations == locations.iloc[(-locations["Score"].abs()).argsort()]))
-
     # Don't want to merge when creating significantLoci.txt
     if not onlySignificant:
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]

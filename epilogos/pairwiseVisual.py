@@ -823,18 +823,18 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
 
     for i in range(len(xticks)):
         if i == len(xticks)-1:
-            points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (zScores < 1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (zScores < 10))[0]
             color = "gray" if i % 2 == 0 else "black"
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color=color,
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         elif i % 2 == 0:
-            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 10))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         else:
-            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 1))[0]
+            points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 10))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
@@ -1020,7 +1020,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
         realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
-        points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores < 1))[0]
+        points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0] if pvalBool else np.where((locationOnGenome >= startEnd[0]) & (zScores < 10))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
@@ -1034,7 +1034,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
                               & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
         plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
 
-        points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (mhPvals > 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (zScores < 1))[0]
+        points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (mhPvals > 0.1))[0] if pvalBool else np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (zScores < 10))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
                     s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
                     alpha=0.1, edgecolors='none', rasterized=True)
@@ -1120,9 +1120,9 @@ def zScoreAxisScaling(ylim, mean, stanDev):
     """
 
     yticks = []
-    ytickLabels = ["{0:.1f}".format(i) for i in np.linspace(-5, 5, 21)]
+    ytickLabels = ["{0:.1f}".format(i) for i in np.linspace(-ylim, ylim, 11)]
 
-    for i in np.linspace(-5, 5, 21):
+    for i in np.linspace(-ylim, ylim, 11):
         yticks.append(i * stanDev + mean)
 
     yticksFinal = []

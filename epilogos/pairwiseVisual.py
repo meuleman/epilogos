@@ -587,10 +587,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     """
     f = gzip.open(filePath, "wt") if onlySignificant else open(filePath, 'w')
 
-    print("distanceArr check:")
-    print(distanceArr[:10])
-    print("exemplarWidth: ", exemplarWidth)
-
     # Pick values above significance threshold
     if onlySignificant:
         indices = maxIndices = np.where(mhPvals <= 0.1)[0]
@@ -599,9 +595,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
         indices, maxIndices = meanAndMax(distanceArr, 100, exemplarWidth)
         maxIndices, _, comm2 = np.intersect1d(np.where(mhPvals <= 0.1)[0], maxIndices, assume_unique=True, return_indices=True)
         indices = np.array(indices)[comm2]
-
-    print("indices check")
-    print(len(indices), len(maxIndices))
 
     if len(indices) == 0:
         f.close()
@@ -616,19 +609,12 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
                            "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
                   .replace({"Chromosome": chrDict})
 
-
-    print("locations df")
-    print(locations.head())
-
     # Don't want to merge when creating significantLoci.txt
     if not onlySignificant:
         locations = locations.iloc[(-locations["Score"].abs()).argsort()]
         # Pad the bins
         locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
         locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
-
-    print("locations df post pad")
-    print(locations.head())
 
     # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
@@ -643,9 +629,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i])
                         for i in range(locations.shape[0]))
-
-    print("outstring")
-    print(outString[:500])
 
     f.write(outString)
     f.close()
@@ -744,14 +727,7 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
     exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions    """
     f = open(filePath, 'w')
 
-    print("distance array check:")
-    print(distanceArr[:10])
-    print("exemplarWidth: ", exemplarWidth)
-
     indices, maxIndices = meanAndMax(distanceArr, 100, exemplarWidth)
-
-    print("indices check")
-    print(len(indices), len(maxIndices))
 
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[maxIndices].reshape(len(maxIndices), 1),
                                              maxDiffArr[maxIndices].reshape(len(maxIndices), 1),
@@ -761,15 +737,9 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
                            "MaxDiffLoc": np.int32, "ZScores": np.float32})\
                   .replace({"Chromosome": chrDict})
 
-    print("locations df")
-    print(locations.head())
-
     # Pad the bins
     locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
     locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
-
-    print("locations df post pad")
-    print(locations.head())
 
     # Locations get 3 stars if they are 3 sd away, 2 at 2 sd, 1 at 1 sd, and a period if withing 1 sd
     stars = np.array(["***" if float(locations.iloc[i, 5]) >= 3 else
@@ -784,9 +754,6 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
                                            abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
                                            float(locations.iloc[i, 5]), stars[i])
                         for i in range(len(indices)))
-
-    print("outstring")
-    print(outString[:500])
 
     f.write(outString)
     f.close()

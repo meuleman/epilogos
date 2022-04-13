@@ -121,14 +121,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, ex
     """
     with open(filePath, 'w') as f:
 
-        print("Score array check:")
-        print(scoreArr[:10])
-        print("exemplarWidth: ", exemplarWidth)
-
         indices, maxIndices = meanAndMax(scoreArr, 100, exemplarWidth)
-
-        print("indices check")
-        print(len(indices), len(maxIndices))
 
         locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[maxIndices].reshape(len(maxIndices), 1),
                                                  maxScoreArr[maxIndices].reshape(len(maxIndices), 1)), axis=1),
@@ -136,30 +129,15 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, ex
                       .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32,
                                "MaxScoreLoc": np.int32})
 
-        print("locations df")
-        print(locations.head())
-
-        # sort by score
-        locations = locations.iloc[(-locations["Score"].abs()).argsort()]
-
-        print("locations df post sort")
-        print(locations.head())
-
         # Pad the bins
         locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
         locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
-
-        print("locations df post pad")
-        print(locations.head())
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
         outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
                             abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])))
                             for i in range(locations.shape[0]))
-
-        print("outstring")
-        print(outString[:500])
 
         f.write(outString)
 

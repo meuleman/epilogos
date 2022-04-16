@@ -1119,21 +1119,15 @@ def zScoreAxisScaling(ylim, mean, stanDev):
     stanDev -- the standard deviation of the scores
     """
 
+    maxZScore = (ylim - mean) / stanDev
+
     yticks = []
-    ytickLabels = ["{0:.1f}".format(i) for i in np.linspace(-ylim, ylim, 11)]
+    ytickLabels = ["{0:.1f}".format(i) for i in np.linspace(-maxZScore, maxZScore, 11)]
 
-    for i in np.linspace(-ylim, ylim, 11):
-        yticks.append(i * stanDev + mean)
+    for i in np.linspace(-maxZScore, maxZScore, 11):
+        yticks.append(round(i, 1) * stanDev + mean)
 
-    yticksFinal = []
-    ytickLabelsFinal = []
-
-    for i in range(len(yticks)):
-        if yticks[i] >= -ylim and yticks[i] <= ylim:
-            yticksFinal.append(float(yticks[i]))
-            ytickLabelsFinal.append(ytickLabels[i])
-
-    return (yticksFinal, ytickLabelsFinal)
+    return (yticks, ytickLabels)
 
 
 if __name__ == "__main__":

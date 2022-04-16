@@ -46,7 +46,7 @@ specific versions of Python and its libraries are installed.
 This can be done using `conda`, for instance as such:
 ```bash
 $ conda init bash  ## only needed upon first use of conda. Restart shell after this.
-$ conda create -n epilogos python=3.8
+$ conda create -n epilogos python=3.7
 $ conda activate epilogos
 ```
 
@@ -67,14 +67,14 @@ $ pip install git+https://github.com/meuleman/epilogos
 
 ## Prerequisites
 
-To compute epilogos, you will need to have the following python libraries installed: [cython](https://cython.org/), [pyranges](https://github.com/biocore-ntnu/pyranges), [statsmodels](https://www.statsmodels.org/stable/index.html), [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/).
+To compute epilogos, you will need to have the following python libraries installed: [statsmodels](https://www.statsmodels.org/stable/index.html), [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/).
 In case the abovementioned commands not automatically and correctly take care of this, the libraries can be installed with one of the following commands.
 ```bash
-$ pip install 'cython>=0.29.23,<1.0.0'; pip install 'click>=7.1.2,<8.0.0' 'numpy>=1.19.2,<2.0.0' 'pandas>=1.1.3,<2.0.0' 'pyranges>=0.0.97,<1.0.0' 'scipy>=1.5.2,<2.0.0' 'matplotlib>=3.3.2,<4.0.0' 'statsmodels>=0.12.0,<1.0.0'
+$ pip install 'click>=7.1.2,<8.0.0' 'numpy>=1.19.2,<2.0.0' 'pandas>=1.1.3,<2.0.0' 'scipy>=1.5.2,<2.0.0' 'matplotlib>=3.3.2,<4.0.0' 'statsmodels>=0.12.0,<1.0.0'
 ```
-or while in the epilogos directory (we use cat and xargs to ensure installation order as pyranges is dependent on cython)
+or while in the epilogos directory
 ```bash
-$ cat requirements.txt | xargs -n 1 -L 1 pip install
+$ cat requirements.txt
 ```
 
 Additionally, it is recommended that python is updated to version 3.7 or later.
@@ -98,16 +98,16 @@ A version of epilogos has been created for those without access to a SLURM clust
 <p></p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
-The file, <code>epilogos_matrix_chrX.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -i data/pyData/male/ -n data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -i data/pyData/male/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>scores_male_s1_epilogos_matrix_chrX.txt.gz</code> and <code>greatestHits_male_s1.txt</code> in <code>OUTPUTDIR</code></p>
+<p>Upon completion of the run, you should see the files <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> and <code>greatestHits_male_s1.txt</code> in <code>OUTPUTDIR</code></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options">Command Line Options</a> of the <code>README</code></p>
 
@@ -135,12 +135,12 @@ Column n: State data for epigenome n-3
 <p>Second, you will need to create a state info file.
 This is a tab separated file containing various information about each of the states in the chromatin state model.
 We have provided some files already for common models in the <code>data/state_metadata/</code> directory.
-For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
+For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-j, --state-info]</a></p>
 
 <p>Once you have completed these two steps, you can run epilogos with the following command:</p>
 
 ```bash
-$ epilogos -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+$ epilogos -i PATH_TO_INPUT_DIR -j PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
 ```
 
 <p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUTDIR</code>.
@@ -161,16 +161,16 @@ Additionally, you will find a <code>greatestHits_*.txt</code> file which follows
 <p></p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
-The file, <code>epilogos_matrix_chrX.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+The file, <code>epilogos_matrix_chr1.txt.gz</code>, contains chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> under the <code>Sex</code> column.</p>
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -l -i data/pyData/male/ -n data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -l -i data/pyData/male/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the file <code>scores_male_s1_epilogos_matrix_chrX.txt.gz</code> and <code>greatestHits_male_s1.txt</code> in <code>OUTPUTDIR</code></p>
+<p>Upon completion of the run, you should see the file <code>scores_male_s1_epilogos_matrix_chr1.txt.gz</code> and <code>greatestHits_male_s1.txt</code> in <code>OUTPUTDIR</code></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options">Command Line Options</a> of the <code>README</code></p>
 
@@ -199,12 +199,12 @@ Column n: State data for epigenome n-3
 <p>Second, you will need to create a state info file.
 This is a tab separated file containing various information about each of the states in the chromatin state model.
 We have provided some files already for common models in the <code>data/state_metadata/</code> directory.
-For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
+For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-j, --state-info]</a></p>
 
 <p>Once you have completed these two steps, you can run epilogos with the following command:</p>
 
 ```bash
-$ epilogos -l -i PATH_TO_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+$ epilogos -l -i PATH_TO_INPUT_DIR -j PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
 ```
 
 <p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUTDIR</code>.
@@ -287,7 +287,7 @@ The output of Epilogos will vary depending on the number of input files present 
 All resulting score files are gzipped .txt files named <code>scores_*.txt.gz</code>, where 'scores_' is followed by the input directory name, the saliency metric (e.g. S1), and the corresponding input file name (extensions removed).</p>
 
 <p>Additionally, you will find a <code>greatestHits_*.txt</code> file which follows the same naming convention minus the input file name.
-This file contains the top 100 or fewer significant regions (after merging directly adjacent high-scoring regions). Each row is formatted as follows.</p>
+This file contains the top 100 exemplar regions. Each row is formatted as follows.</p>
 
 ```
 Column 1: Chromosome
@@ -308,7 +308,7 @@ e.g. $ epilogos -o epilogosOutput/
 </details>
 
 <a name="state-info"></a>
-<details><summary><b> State Info [-n, --state-info]</b></summary>
+<details><summary><b> State Info [-j, --state-info]</b></summary>
 <p></p>
 <p>The argument to this flag is a tab separated file specifying information about the state model being used.
 This file must contain a header row with the exact names as shown below, and values should be formatting as shown below as well.
@@ -321,7 +321,7 @@ This file must contain a header row with the exact names as shown below, and val
 <p>For more detail see <code>epilogos/data/state_metadata/README.md</code> or <code>epilogos/data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv</code></p>
 
 ```bash
-e.g. $ epilogos -n data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv
+e.g. $ epilogos -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv
 ```
 
 </details>
@@ -409,6 +409,17 @@ e.g. $ epilogos -p queue1
 ```
 </details>
 
+<a name="exemplar-width"></a>
+<details><summary><b> Exemplar Width [-w, --exemplar-width]</b></summary>
+<p></p>
+<p>This flag controls the size of the exemplars in <code>greatestHits_*.txt</code>. The input specifies the size of the buffer on either size of the middle exemplar bin. That is, the total width of the exemplar region is <code>2 * EXEMPLAR_WIDTH + 1</code> (where EXEMPLAR_WIDTH is the input to the flag).</p>
+
+<p>The argument to this flag is size of the buffer (in number of bins) on either size of the middle exemplar bin. Epilogos defaults to 62 (results in 25kb exemplars with standard 200bp bins).</P>
+
+```bash
+e.g. $ epilogos -w 10
+```
+</details>
 
 <br>
 <br>
@@ -458,16 +469,16 @@ A version of epilogos has been created for those without access to a SLURM clust
 <p></p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
-The files, both named <code>epilogos_matrix_chrX.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -m paired -a data/pyData/male/ -b data/pyData/female/ -n data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -m paired -a data/pyData/male/ -b data/pyData/female/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chrX.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>greatestHits_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>greatestHits_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>.
 For further explanation of the contents of these outputs see <a href="#output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
@@ -496,12 +507,12 @@ Column n: State data for epigenome n-3
 <p>Second, you will need to create a state info file.
 This is a tab separated file containing various information about each of the states in the chromatin state model.
 We have provided some files already for common models in the <code>data/state_metadata/</code> directory.
-For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
+For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-j, --state-info]</a></p>
 
 <p>Once you have completed these two steps, you can run epilogos with the following command:</p>
 
 ```bash
-$ epilogos -m paired -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+$ epilogos -m paired -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -j PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
 ```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_*.txt.gz</code>, <code>pairwiseMetrics_*.txt.gz</code>, <code>significantLoci_*.txt</code>, and <code>greatestHits_*.txt</code> as well as the directory <code>manhattanPlots_*</code> in <code>OUTPUTDIR</code>.
@@ -522,16 +533,16 @@ Each of the wildcards will be replaced by a string containing the name of input 
 <p></p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/pyData/male/</code> and <code>data/pyData/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
-The files, both named <code>epilogos_matrix_chrX.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
 <p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -n data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chrX.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>greatestHits_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>greatestHits_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>.
 For further explanation of the contents of these outputs see <a href="#output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
@@ -560,12 +571,12 @@ Column n: State data for epigenome n-3
 <p>Second, you will need to create a state info file.
 This is a tab separated file containing various information about each of the states in the chromatin state model.
 We have provided some files already for common models in the <code>data/state_metadata/</code> directory.
-For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-n, --state-info]</a></p>
+For more information on the structure of these files see <code>data/state_metadata/README.txt</code> or <a href="#state-info">State Info [-j, --state-info]</a></p>
 
 <p>Once you have completed these two steps, you can run epilogos with the following command:</p>
 
 ```bash
-$ epilogos -m paired -l -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -n PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
+$ epilogos -m paired -l -a PATH_TO_FIRST_INPUT_DIR -b PATH_TO_SECOND_INPUT_DIR -j PATH_TO_STATE_INFO_TSV -o PATH_TO_OUTPUT_DIR
 ```
 
 <p>Upon completion of the run, you should see the files <code>pairwiseDelta_*.txt.gz</code>, <code>pairwiseMetrics_*.txt.gz</code>, <code>significantLoci_*.txt</code>, and <code>greatestHits_*.txt</code> as well as the directory <code>manhattanPlots_*</code> in <code>OUTPUTDIR</code>.
@@ -633,11 +644,75 @@ Column 3: End coordinate
 Column 4: Name of the largest difference state
 Column 5: Squared euclidean distance between the scores
 Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
+```
+
+<p>The output directory will contain one <code>greatestHits_*.txt</code> file.
+This file contains the top 100 exemplar regions.
+Each row is formatted as below.</p>
+
+```
+Column 1: Chromosome
+Column 2: Start coordinate
+Column 3: End coordinate
+Column 4: Name of the largest difference state
+Column 5: Squared euclidean distance between the scores
+Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
+Column 7: Z-score of the distance
+Column 8: Stars indicating Z-score of distance ('***' stars at >=3, '**' at >=2, '*' at >=1, '.' if <1)
+```
+
+<p>The output directory will contain one <code>manhattanPlots_*</code> directory.
+This directory will contain all the manhattan plots generated by pairwise epilogos.
+These plots show the signed squared euclidean distances between groups 1 and 2 as well as the z-scores of these distances.
+There is one genome-wide plot generated and another plot generated for each chromosome.</p>
+
+<p>The argument to this flag is the path to the directory to which you would like to output.
+Note that this <strong>CANNOT</strong> be the same as the input directory.</p>
+
+```bash
+e.g. $ epilogos -o epilogosOutput/
+```
+
+<p>All summary files will have format changes if the <a href="#null-distribution">[-n, --null-distribution]</a> flag is used. Go to the <a href="#null-distribution">[-n, --null-distribution]</a> section to view these changes<p>
+
+</details>
+
+<a name="diagnostic-figures"></a>
+<details><summary><b> Diagnostic Figures [-d, --diagnostic-figures]</b></summary>
+<p></p>
+<p>If this flag is enabled, Pairwise Epilogos will output diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data.
+These can be found in a sub-directory of the output directory named <code>diagnosticFigures_*</code> directory where 'diagnosticFigures_' is followed by the names of input directory one, input directory two, and the saliency metric.</p>
+
+<p>NOTE: This flag only caused output in conjunction with <a href="#null-distribution">[-n, --null-distribution]</a></p>
+
+```bash
+e.g. $ epilogos -d
+```
+</details>
+
+<a name="null-distribution"></a>
+<details><summary><b> Null Distribution [-n, --null-distribution]</b></summary>
+<p></p>
+<p>If you would like the Epilogos scores to be given p-values and multiple hypothesis corrected p-values enable this flag. These p-values will be output in <code>pairwiseMetrics_*.txt</code> and will be used for <code>greatestHits_*.txt</code> and <code>significantLoci_*.txt</code> generation. They will also be used for manhattan plot coloring.</p>
+
+```bash
+e.g. $ epilogos -n
+```
+
+<p>Using [-n, --null-distribution] will change the files in the <a href="#output-directory-pairwise">output directory</a>. The <code>pairwiseMetrics_*.txt.gz</code> file which contains scores for all inputted data will contain p-values (details below).</p>
+
+```
+Column 1: Chromosome
+Column 2: Start coordinate
+Column 3: End coordinate
+Column 4: Name of the largest difference state
+Column 5: Squared euclidean distance between the scores
+Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
 Column 7: P-Value of the distance
 Column 8: Benjamini–Hochberg adjusted P-Value of the distance
 ```
 
-<p>The output directory will contain one <code>significantLoci_*.txt</code> file.
+<p>The output directory will now additionally contain one <code>significantLoci_*.txt</code> file.
 This file contains the all loci deemed to be significant below a threshold of 10% FDR after applying the Benjamini-Hochberg Procedure.
 Each row is formatted as below.</p>
 
@@ -653,8 +728,7 @@ Column 8: Benjamini–Hochberg adjusted P-Value of the distance
 Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' at .01, '**' at .05, and '*' at .1)
 ```
 
-<p>The output directory will contain one <code>greatestHits_*.txt</code> file.
-This file contains the top 100 or fewer significant regions after merging all adjacent significant loci.
+<p>The <code>greatestHits_*.txt</code> file will now contain the top 100 or fewer significant regions.
 Each row is formatted as below.</p>
 
 ```
@@ -669,37 +743,16 @@ Column 8: Benjamini–Hochberg adjusted P-Value of the distance
 Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' stars at .01, '**' at .05, '*' at .1, '.' if not significant)
 ```
 
-<p>The output directory will contain one <code>manhattanPlots_*</code> directory.
-This directory will contain all the manhattan plots generated by pairwise epilogos.
-These plots show the signed squared euclidean distances between groups 1 and 2 as well as the p-values of these distances.
-There is one genome-wide plot generated and another plot generated for each chromosome.</p>
+<p>The manhattan plots in the <code>manhattanPlots_*</code> sub-directory will now display p-values rather than z-scores on the second y-axis.</p>
 
 <p>Depending on the <a href="#diagnostic-figures">[-d, --diagnostic-figures]</a> flag the output directory may contain one <code>diagnosticFigures_*</code> directory.
 This directory will contain figures showing the quality of the fit the null data and comparisons between the null and real data.</p>
-
-<p>The argument to this flag is the path to the directory to which you would like to output.
-Note that this <strong>CANNOT</strong> be the same as the input directory.</p>
-
-```bash
-e.g. $ epilogos -o epilogosOutput/
-```
-</details>
-
-<a name="diagnostic-figures"></a>
-<details><summary><b> Diagnostic Figures [-d, --diagnostic-figures]</b></summary>
-<p></p>
-<p>If this flag is enabled, Pairwise Epilogos will output diagnostic figures of the gennorm fit on the null data and comparisons between the null and real data.
-These can be found in a sub-directory of the output directory named <code>diagnosticFigures_*</code> directory where 'diagnosticFigures_' is followed by the names of input directory one, input directory two, and the saliency metric.</p>
-
-```bash
-e.g. $ epilogos -d
-```
 </details>
 
 <a name="num-trials"></a>
 <details><summary><b> Number of Trials [-t, --num-trials]</b></summary>
 <p></p>
-<p>In order to save time when fitting in paired group Epilogos, random samplings of the null data are fit -t times with the median fit being used.</p>
+<p>Only to be used in conjunction with <a href="#null-distribution">[-n, --null-distribution]</a>. In order to save time when fitting the null distribution in paired group Epilogos, random samplings of the null data are fit -t times with the median fit being used.</p>
 
 <p>The argument to this flag is the number of random samplings fit. Epilogos defaults to 101</P>
 
@@ -711,12 +764,12 @@ e.g. $ epilogos -t 1001
 <a name="sampling-size"></a>
 <details><summary><b> Sampling Size [-z, --sampling-size]</b></summary>
 <p></p>
-<p>In order to save time when fitting in paired group Epilogos, random samplings of the null data are fit -t times with the median fit being used.</p>
+<p>Only to be used in conjunction with <a href="#null-distribution">[-n, --null-distribution]</a>. In order to save time when fitting the null distribution in paired group Epilogos, random samplings of the null data are fit -t times with the median fit being used.</p>
 
 <p>The argument to this flag is the size  of random samplings fit. Epilogos defaults to 100,000</P>
 
 ```bash
-e.g. $ epilogos -t 10000
+e.g. $ epilogos -z 10000
 ```
 </details>
 
@@ -739,16 +792,30 @@ e.g. $ epilogos -q 0
 ```
 </details>
 
+<a name="group-size"></a>
+<details><summary><b> Group Size [-g, --group-size]</b></summary>
+<p></p>
+<p>In Pairwise Epilogos, all inputted data is considered when generating scores. If you would only like a certain amount of the epigenomes considered, you can do so with this flag. The epigenomes considered are chosen at random for each bin (that is the epigenomes chosen in bin 1 could be different than those chosen in bin 2). This flag equalizes the size of the two groups to the inputted value.</p>
+
+<p>The argument to this flag is the number of epigenomes per group you would like considered in calculations. Epilogos defaults to all (equivalent to <code>-g -1</code>)</P>
+
+```bash
+e.g. $ epilogos -g 30
+```
+</details>
+
 <a name="visual-output"></a>
 
 ## Visual Output
 
 Unlike single group Epilogos, pairwise Epilogos has a visual component in the form of Manhattan-like plots.
 Located in the <code>manhattanPlots_*</code> output directory, these plots offer users a way to visually locate differences between two groups of epigenomes.
-Points are colored in case they are found to be significantly different between groups, exceeding a threshold of 10% FDR.
+Points are colored in case their scores have a z-score greater than ______. When using <a href="#null-distribution">[-n, --null-distribution]</a> points are colored in case they are found to be significantly different between groups, exceeding a threshold of 10% FDR.
 The colors are as specified in the [state info tsv](#state-info) provided by the user.
 Additionally, points have varying opacity determined by the ratio of their distance to the most extreme distance.
-The background color represents the level of significance.
+The background color represents the z-score.
+White means less than _____ and the shades of gray mean greater than ____, _____, and _____ (with darker being a higher z-score).
+When using <a href="#null-distribution">[-n, --null-distribution]</a>, the background color represents level of signficicance.
 White means insignificant and the shades of gray mean significant at 10%, 5%, and 1% FDR (with darker being more significant).
 
 The example plot below shows a genome-wide Manhattan plot generated by a pairwise Epilogos run of material from male donors versus female donors in the [EpiMap dataset](https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486).

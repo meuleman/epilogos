@@ -43,7 +43,7 @@ from epilogos.helpers import getNumStates
               help="The number of times subsamples of the scores are fit when using a null distribution")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=100000, show_default=True,
               help="The size of the subsamples on which the scores are fit when using a null distribution")
-@click.option("-q", "--quiescent-state", "quiescentState", type=int,
+@click.option("-q", "--quiescent-state", "quiescentState", type=int, default=-1,
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." +
                    "If set to 0, filtering is not done. [default: last state]")
 @click.option("-g", "--group-size", "groupSize", type=int, default=-1, show_default=True,
@@ -344,9 +344,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif mode == "single" and diagnosticBool:
         print("ERROR: [-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
-        sys.exit()
-    elif mode == "single" and quiescentState:
-        print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
     elif mode == "single" and pvalBool:
         print("ERROR: [-m, --mode] 'single' not compatible with [-n, --null-distribution] flag")

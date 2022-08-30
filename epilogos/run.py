@@ -16,46 +16,46 @@ from epilogos.helpers import getNumStates
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default=["single"], show_default=True,
-              multiple=True, help="single for single group epilogos and paired for 2 group epilogos")
-@click.option("-l", "--local", "commandLineBool", is_flag=True, multiple=True,
+@click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default="single", show_default=True,
+              help="single for single group epilogos and paired for 2 group epilogos")
+@click.option("-l", "--local", "commandLineBool", is_flag=True,
               help="If enabled, Epilogos will run locally in your terminal rather than on a SLURM cluster")
-@click.option("-i", "--input-directory", "inputDirectory", type=str, multiple=True,
+@click.option("-i", "--input-directory", "inputDirectory", type=str,
               help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-a", "--directory-one", "inputDirectory1", type=str, multiple=True,
+@click.option("-a", "--directory-one", "inputDirectory1", type=str,
               help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-b", "--directory-two", "inputDirectory2", type=str, multiple=True,
+@click.option("-b", "--directory-two", "inputDirectory2", type=str,
               help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
-@click.option("-o", "--output-directory", "outputDirectory", type=str, multiple=True,
+@click.option("-o", "--output-directory", "outputDirectory", type=str,
               help="Output Directory (CANNOT be the same as input directory)\n")
-@click.option("-j", "--state-info", "stateInfo", type=str, multiple=True, help="State model info file")
-@click.option("-s", "--saliency", "saliency", type=int, default=[1], show_default=True, multiple=True,
+@click.option("-j", "--state-info", "stateInfo", type=str, help="State model info file")
+@click.option("-s", "--saliency", "saliency", type=int, default=1, show_default=True,
               help="Desired saliency level (1, 2, or 3)")
-@click.option("-c", "--num-cores", "numProcesses", type=int, default=[0], multiple=True,
+@click.option("-c", "--num-cores", "numProcesses", type=int, default=0,
               help="The number of cores to run on [default: 0 = Uses all cores]")
-@click.option("-x", "--exit", "exitBool", is_flag=True, multiple=True,
+@click.option("-x", "--exit", "exitBool", is_flag=True,
               help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of " +
                    "all processes")
-@click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True, multiple=True,
+@click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True,
               help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
                    "comparisons between the null and real data")
-@click.option("-t", "--num-trials", "numTrials", type=int, default=[101], show_default=True, multiple=True,
+@click.option("-t", "--num-trials", "numTrials", type=int, default=101, show_default=True,
               help="The number of times subsamples of the scores are fit when using a null distribution")
-@click.option("-z", "--sampling-size", "samplingSize", type=int, default=[100000], show_default=True, multiple=True,
+@click.option("-z", "--sampling-size", "samplingSize", type=int, default=100000, show_default=True,
               help="The size of the subsamples on which the scores are fit when using a null distribution")
-@click.option("-q", "--quiescent-state", "quiescentState", type=int, multiple=True,
+@click.option("-q", "--quiescent-state", "quiescentState", type=int,
               help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." +
                    "If set to 0, filtering is not done. [default: last state]")
-@click.option("-g", "--group-size", "groupSize", type=int, default=[-1], show_default=True, multiple=True,
+@click.option("-g", "--group-size", "groupSize", type=int, default=-1, show_default=True,
               help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
-@click.option("-v", "--version", "version", is_flag=True, multiple=True,
+@click.option("-v", "--version", "version", is_flag=True,
               help="If flag is enabled epilogos will print the installed version number and exit")
-@click.option("-p", "--partition", "partition", type=str, multiple=True,
+@click.option("-p", "--partition", "partition", type=str,
               help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
                    "partition as designated by the system administrator")
-@click.option("-n", "--null-distribution", "pvalBool", is_flag=True, multiple=True,
+@click.option("-n", "--null-distribution", "pvalBool", is_flag=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
-@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=[62], multiple=True,
+@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=62,
               help="The number of bins on each side of the exemplar region (total exemplar regions is w*2+1 bins) Default is" +
                    "62 which results in a 25kb window")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
@@ -95,27 +95,17 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool,
                exemplarWidth)
 
-    # Pull info out of the flags (This is to deal with multiple user inputs for a flag)
-    mode, outputDirectory, stateInfo, saliency, numProcesses, numTrials, samplingSize, groupSize, exemplarWidth = \
-        mode[0], outputDirectory[0], stateInfo[0], saliency[0], numProcesses[0], numTrials[0], samplingSize[0], groupSize[0], \
-        exemplarWidth[0]
-    # This is because flags are read in in a list format to deal with multiple of the same flags
-    diagnosticBool = True if diagnosticBool else False
     verbose = False if commandLineBool else True
-    pvalBool = True if pvalBool else False
     numStates = getNumStates(stateInfo)
     # Quiescent value is user input - 1 because states are read in to be -1 from their values
-    quiescentState = quiescentState[0] - 1 if quiescentState else numStates - 1
+    quiescentState = numStates - 1 if quiescentState == -1 else quiescentState - 1
 
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":
-        inputDirectory = inputDirectory[0]
         inputDirPath = Path(inputDirectory)
         inputDirPath2 = ""
     else:
-        inputDirectory = inputDirectory1[0]
-        inputDirectory2 = inputDirectory2[0]
-        inputDirPath = Path(inputDirectory)
+        inputDirPath = Path(inputDirectory1)
         inputDirPath2 = Path(inputDirectory2)
         if not PurePath(inputDirPath2).is_absolute():
             inputDirPath2 = Path.cwd() / inputDirPath2
@@ -143,7 +133,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("Number of Cores = All available", flush=True)
     else:
         print("Number of Cores =", numProcesses, flush=True)
-    if mode == "paired" and quiescentState == -1:
+    if mode == "paired" and quiescentState == -1: # If quiescentState was user input as 0 it is now -1
         print("Quiescent State = No quiescent filtering")
     elif mode == "paired":
         print("Quiescent State =", quiescentState + 1)
@@ -168,7 +158,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             print("Machine specs unknown, requesting 16gb of memory across all cores")
 
         if partition:
-            partition = "--partition=" + partition[0]
+            partition = "--partition=" + partition
         else:
             partition = ""
 
@@ -329,13 +319,13 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
     See click options at top of script
     """
     # Checking that all required flags are inputted
-    if mode[0] == "single" and not inputDirectory:
+    if mode == "single" and not inputDirectory:
         print("ERROR: [-i, --input-directory] required in 'single' group mode")
         sys.exit()
-    elif mode[0] == "paired" and not inputDirectory1:
+    elif mode == "paired" and not inputDirectory1:
         print("ERROR: [-a, --directory-one] required in 'paired' group mode")
         sys.exit()
-    elif mode[0] == "paired" and not inputDirectory2:
+    elif mode == "paired" and not inputDirectory2:
         print("ERROR: [-b, --directory-two] required in 'paired' group mode")
         sys.exit()
     elif not outputDirectory:
@@ -346,22 +336,22 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
 
     # Checking that incompatible flags are not input together
-    if mode[0] == "single" and inputDirectory1:
+    if mode == "single" and inputDirectory1:
         print("ERROR: [-m, --mode] 'single' not compatible with [-a, --directory-one] option")
         sys.exit()
-    elif mode[0] == "single" and inputDirectory2:
+    elif mode == "single" and inputDirectory2:
         print("ERROR: [-m, --mode] 'single' not compatible with [-b, --directory-two] option")
         sys.exit()
-    elif mode[0] == "single" and diagnosticBool:
+    elif mode == "single" and diagnosticBool:
         print("ERROR: [-m, --mode] 'single' not compatible with [-d, --diagnostic-figures] flag")
         sys.exit()
-    elif mode[0] == "single" and quiescentState:
+    elif mode == "single" and quiescentState:
         print("ERROR: [-m, --mode] 'single' not compatible with [-q, --quiescent-state] flag")
         sys.exit()
-    elif mode[0] == "single" and pvalBool:
+    elif mode == "single" and pvalBool:
         print("ERROR: [-m, --mode] 'single' not compatible with [-n, --null-distribution] flag")
         sys.exit()
-    elif mode[0] == "paired" and inputDirectory:
+    elif mode == "paired" and inputDirectory:
         print("ERROR: [-m, --mode] 'paired' not compatible with [-i, --input-directory] option")
         sys.exit()
     elif commandLineBool and exitBool:
@@ -369,62 +359,6 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
         sys.exit()
     elif commandLineBool and partition:
         print("Error: [-l, --cli] flag not compatible with [-p, --partition] option")
-        sys.exit()
-
-    # Checking if user inputs flag multiples times
-    if len(mode) > 1:
-        print("ERROR: Too many [-m, --mode] arguments provided")
-        sys.exit()
-    elif len(commandLineBool) > 1:
-        print("ERROR: Too many [-l, --local] flags provided")
-        sys.exit()
-    elif len(inputDirectory) > 1:
-        print("ERROR: Too many [-i, --input-directory] arguments provided")
-        sys.exit()
-    elif len(inputDirectory1) > 1:
-        print("ERROR: Too many [-a, --directory-one] arguments provided")
-        sys.exit()
-    elif len(inputDirectory2) > 1:
-        print("ERROR: Too many [-b, --directory-two] arguments provided")
-        sys.exit()
-    elif len(outputDirectory) > 1:
-        print("ERROR: Too many [-o, --output-directory] arguments provided")
-        sys.exit()
-    elif len(stateInfo) > 1:
-        print("ERROR: Too many [-j, --state-info] arguments provided")
-        sys.exit()
-    elif len(saliency) > 1:
-        print("ERROR: Too many [-s, --saliency] arguments provided")
-        sys.exit()
-    elif len(numProcesses) > 1:
-        print("ERROR: Too many [-c, --num-cores] arguments provided")
-        sys.exit()
-    elif len(exitBool) > 1:
-        print("ERROR: Too many [-x, --exit] flags provided")
-        sys.exit()
-    elif len(diagnosticBool) > 1:
-        print("ERROR: Too many [-d, --diagnostic-figures] flags provided")
-        sys.exit()
-    elif len(numTrials) > 1:
-        print("ERROR: Too many [-t, --num-trials] arguments provided")
-        sys.exit()
-    elif len(samplingSize) > 1:
-        print("ERROR: Too many [-z, --sampling-size] arguments provided")
-        sys.exit()
-    elif len(quiescentState) > 1:
-        print("ERROR: Too many [-q, --quiescent-state] arguments provided")
-        sys.exit()
-    elif len(groupSize) > 1:
-        print("ERROR: Too many [-g, --group-size] arguments provided")
-        sys.exit()
-    elif len(partition) > 1:
-        print("ERROR: Too many [-p, --partition] arguments provided")
-        sys.exit()
-    elif len(pvalBool) > 1:
-        print("ERROR: Too many [-n, --null-distribution] flags provided")
-        sys.exit()
-    elif len(exemplarWidth) > 1:
-        print("ERROR: Too many [-w, --exemplar-width] arguments provided")
         sys.exit()
 
 

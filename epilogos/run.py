@@ -380,13 +380,11 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
-        print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
               "Please ensure that saliency metric is either 1, 2, or 3")
-        sys.exit()
     elif mode == "paired" and saliency != 1 and saliency != 2:
-        print("ERROR: Saliency Metric Invalid: {}".format(saliency) +
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
               "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
-        sys.exit()
 
     # Check validity of directories
     if not inputDirPath.exists():
@@ -394,14 +392,14 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     if not inputDirPath.is_dir():
         raise NotADirectoryError("Given path is not a directory: {}".format(str(inputDirPath)))
     if not list(inputDirPath.glob("*")):
-        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(inputDirPath))
+        raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty", str(inputDirPath))
     if mode == "paired":
         if not inputDirPath2.exists():
             raise FileNotFoundError("Given path does not exist: {}".format(str(inputDirPath2)))
         if not inputDirPath2.is_dir():
             raise NotADirectoryError("Given path is not a directory: {}".format(str(inputDirPath2)))
         if not list(inputDirPath2.glob("*")):
-            raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty:", str(inputDirPath2))
+            raise OSError(errno.ENOTEMPTY, "Ensure given directory is not empty", str(inputDirPath2))
     if not outputDirPath.exists():
         outputDirPath.mkdir(parents=True)
     if not outputDirPath.is_dir():

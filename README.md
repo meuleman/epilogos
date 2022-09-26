@@ -30,7 +30,7 @@ We provide a proof-of-principle dataset based on chromatin state calls from the 
     <a href="#non-slurm-examples">Non-SLURM Examples</a> •
     <a href="#command-line-options">Command Line Options</a> •
     <a href="#pairwise-epilogos">Pairwise Epilogos</a> •
-    <a href="#similarity-search">Pairwise Epilogos</a>
+    <a href="#similarity-search">Similarity Search</a>
   </h3>
 </div>
 
@@ -851,9 +851,9 @@ Epilogos similarity search is a method to enhance the browsing experience of gen
 
 <div align="center"><a name="menu"></a>
   <h3>
-    <a href="#running-similarity-search">Running Pairwise Epilogos</a> •
-    <a href="#similarity-search-example">SLURM Examples</a> •
-    <a href="#command-line-options-similarity-search">Command Line Options</a> •
+    <a href="#running-similarity-search">Running Similarity Search</a> •
+    <a href="#similarity-search-example">Examples</a> •
+    <a href="#command-line-options-similarity-search">Command Line Options</a>
   </h3>
 </div>
 
@@ -888,7 +888,7 @@ $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUTDI
 ```
 
 <p>Upon completion of the run, you should see the files <code>epilogos_cube.npz</code>, <code>epilogos_knn.npz</code>, <code>recommendations.bed.gz</code>, and <code>recommendations.bed.gz.tbi</code> in <code>OUTPUTDIR</code>.
-For further explanation of the contents of these outputs see <a href="#output-directory-similarity-search">Output Directory [-o, --output-directory]</a></p>
+For further explanation of the contents of these outputs see <a href="#output-similarity-search">Output Directory [-o, --output-directory]</a></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options-similarity-search">Command Line Options</a> of the <code>README</code></p>
 
@@ -933,12 +933,14 @@ For further explanation of the contents of these outputs see <a href="#output-di
 <p>Similarity Search takes as input a single epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Similarity Search can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
 
 <p>Genomic</p>
+
 ```bash
 $ prefix="PATH_TO_EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y </code> or <code>`seq 1 22` X Y</code> for humans)
 
 <p>Lexicographic (requires bedops)</p>
+
 ```bash
 $ zcat PATH_TO_EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt; gzip PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt
 ```
@@ -955,25 +957,25 @@ e.g. $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz
 <p></p>
 <p>Similarity Search will always output 4 files: <code>epilogos_cube.npz</code>, <code>epilogos_knn.npz</code>, <code>recommendations.bed.gz</code>, and <code>recommendations.bed.gz.tbi</code></p>
 
-<p><code>epilogos_cube.npz</code> is a zipped archive of 2 numpy arrays: <code>scores</code> and <code>coords</code></p>. <code>scores</code> contains the epilogos scores across each region present in the similarity search output (regions are chosen by the mean-max algorithm as outlined in the [filter-regions](https://github.com/alexpreynolds/filter-regions) package). Scores are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. <code>coords</code> contains the coordinates for each region, and is sorted in the same order as <code>scores</code>.</p>
+<p><code>epilogos_cube.npz</code> is a zipped archive of 2 numpy arrays: <code>scores</code> and <code>coords</code>. <code>scores</code> contains the epilogos scores across each region present in the similarity search output (regions are chosen by the mean-max algorithm as outlined in the <a href="https://github.com/alexpreynolds/filter-regions">filter-regions package</a>). Scores are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. <code>coords</code> contains the coordinates for each region, and is sorted in the same order as <code>scores</code>.</p>
 
 <p><code>epilogos_knn.npz</code> is a zipped archive of 3 numpy arrays: <code>arr</code>, <code>idx</code>, and <code>dist</code>. <code>arr</code> contains the coordinates of each region followed by its top 100 recommendations. <code>idx</code> contains the index of each region in the same order as <code>arr</code> followed by the the indices of its top 100 recommendations. <code>dist</code> contains the distance of each region to itself (0) followed by the distances to each of its top 100 recommendations.</p>
 
 <p><code>recommendations.bed.gz</code> is a gzipped bed file containing the coordinates of each region followed by the coordinates of its top 100 recommendations.</p>
 
-<p><code>recommendations.bed.gz.tbi</code> is a [tabix](http://www.htslib.org/doc/tabix.html) equivalent of <code>recommendations.bed.gz</code>.
+<p><code>recommendations.bed.gz.tbi</code> is a <a href="http://www.htslib.org/doc/tabix.html">tabix</a> equivalent of <code>recommendations.bed.gz</code>.
 
 <p>The argument to this flag is the path to the directory to which you would like to output.</p>
 
 ```bash
-e.g. $ simsearch -o simsearchOutput/
+e.g. $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o simsearchOutput/
 ```
 </details>
 
 <a name="window-similarity-search"></a>
 <details><summary><b> Window Size [-w, --window-KB]</b></summary>
 <p></p>
-<p>Similarity Search uses the mean-max algorithm outlined in the [filter-regions](https://github.com/alexpreynolds/filter-regions) package to divide the genome into non-overlapping regions of a user-specified size (prioritizing regions based on information content). Scores within these regions are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. </p>
+<p>Similarity Search uses the mean-max algorithm outlined in the <a href="https://github.com/alexpreynolds/filter-regions">filter-regions package</a> to divide the genome into non-overlapping regions of a user-specified size (prioritizing regions based on information content). Scores within these regions are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. </p>
 
 <p>Only a set number of window size options are available for Similarity Search: 5kb, 10kb, 25kb, 50kb, 75kb, and 100kb</p>
 
@@ -987,7 +989,7 @@ e.g. $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUT
 <a name="jobs-similarity-search"></a>
 <details><summary><b> Number of Jobs [-j, --num-jobs]</b></summary>
 <p></p>
-<p>Similarity Search uses [sklearn's nearest neighbors function](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html) to determine the best recommendations for each region. This flag specifies the number of parallel jobs to run for this nearest neighbors search.</p>
+<p>Similarity Search uses <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html">sklearn's nearest neighbors function</a> to determine the best recommendations for each region. This flag specifies the number of parallel jobs to run for this nearest neighbors search.</p>
 
 <p>The argument to this flag is the number of parallel jobs to run for the nearest neighbors search (default=8).</p>
 
@@ -999,7 +1001,7 @@ e.g. $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUT
 <a name="num-neighbors-similarity-search"></a>
 <details><summary><b> Number of Recommendations [-r, --num-recommendations]</b></summary>
 <p></p>
-<p>Similarity Search uses [sklearn's nearest neighbors function](https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html) to determine the best recommendations for each region. This flag specifies the number of desired neighbors (i.e. recommendations) for this nearest neighbors search. NOTE that by definition of sklearn, the first neighbor is always the query region (i.e. if you want 100 recommendations, the argument must be 101).</p>
+<p>Similarity Search uses <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html">sklearn's nearest neighbors function</a> to determine the best recommendations for each region. This flag specifies the number of desired neighbors (i.e. recommendations) for this nearest neighbors search. NOTE that by definition of sklearn, the first neighbor is always the query region (i.e. if you want 100 recommendations, the argument must be 101).</p>
 
 <p>The argument to this flag is the number desired recommendations for each region (note the query region itself is counted as a recommendation) (default=101).</p>
 

@@ -951,7 +951,7 @@ $ zcat PATH_TO_EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH_TO_E
 
 <br>
 
-<p>The argument to this flag is the patht to the file you would like to read data from.</p>
+<p>The argument to this flag is the path to the file you would like to read data from.</p>
 
 ```bash
 e.g. $ simsearch -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz

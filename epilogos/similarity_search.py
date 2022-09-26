@@ -22,8 +22,8 @@ import click
 @click.option("-s", "--scores-path", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used in similarity search")
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
 @click.option("-w", "--window-KB", "windowKB", type=int, default=25, show_default=True, help="Window size (in KB) on which to perform similarity search")
-@click.option("-j", "--number-of-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
-@click.option("-n", "--number-of-neighbors", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
+@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
+@click.option("-r", "--num-recommendations", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
 def main(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     outputDir = Path(outputDir)
 

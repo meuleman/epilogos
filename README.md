@@ -899,13 +899,13 @@ For further explanation of the contents of these outputs see <a href="#output-si
 
 <p>Before you can run Similarity Search on your own data, you will first need an epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Similarity Search can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
 
-<p>Genomic</p>
+<h>Genomic:</h>
 ```bash
 $ prefix="PATH_TO_EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y </code> or <code>`seq 1 22` X Y</code> for humans)
 
-<p>Lexicographic (requires bedops)</p>
+<h>Lexicographic (requires bedops):</h>
 ```bash
 $ zcat PATH_TO_EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt; gzip PATH_TO_EPILOGOS_OUTPUT_DIR/scores.txt
 ```

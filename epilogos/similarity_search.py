@@ -17,25 +17,35 @@ import json
 import csv
 import pysam
 import click
+import re
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.option("-s", "--scores-path", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used in similarity search")
+@click.option("-q", "--query", "query", type=str, help="Query region formatted as chr:start-end or path to bed file containing query regions")
+@click.option("-r", "--recommendations-file", "recommendationPath", type=str, help="Path to previously built recommendations.bed.gz file to be queried for recommendations")
+@click.option("-b", "--build", "buildBool", is_flag=True, help="If true builds the similarity search files needed to query regions")
+@click.option("-s", "--scores", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used in similarity search")
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
 @click.option("-w", "--window-KB", "windowKB", type=int, default=25, show_default=True, help="Window size (in KB) on which to perform similarity search")
 @click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
-@click.option("-r", "--num-recommendations", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
-def main(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
+@click.option("-n", "--num-neighbors", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
+def main(query, recommendationPath, buildBool, epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     outputDir = Path(outputDir)
-
-    # Bins are assumed to be 200bp, thus there are 5 bins per KB
-    windowBins = windowKB * 5
-
-    blockSize = determineBlockSize(windowKB)
-
     try:
         os.makedirs(outputDir)
     except OSError:
         print("Directory exists, or cannot be created")
+
+    if buildBool:
+        build(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors)
+    else:
+        query(query, recommendationPath, outputDir)
+
+
+def build(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
+    # Bins are assumed to be 200bp, thus there are 5 bins per KB
+    windowBins = windowKB * 5
+
+    blockSize = determineBlockSize(windowKB)
 
     cubeTime = time()
 
@@ -62,12 +72,62 @@ def main(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     # Save the cube
     np.savez_compressed(file=outputDir / 'epilogos_cube', scores=cube, coords=coords.values)
 
-    print("Cube Time:", format(time() - cubeTime,'.0f'), "seconds\n")
+    print("Cube Time:", format(time() - cubeTime,'.0f'), "seconds\n", flush=True)
 
     # for each region find the 101 nearest neighbors to be used as recommendations
     knnTime = time()
     knn(outputDir, cube, pd.DataFrame(coords.values), nJobs, nDesiredNeighbors)
-    print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n")
+    print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
+
+
+def query(query, recommendationPath, outputDir):
+    # Parse query to generate array
+    queryArr = generateQueryList(query)
+
+    # Read in recommendations file
+    recommendationDF = pd.read_table(Path(recommendationPath), sep="\t", header=None)
+
+    # For each query output top 100 recommendations to a bed file
+    for chr, start, end in queryArr:
+        index = np.where((recommendationDF.iloc[:, 0] == chr) & (recommendationDF.iloc[:, 1] >= start) & (recommendationDF.iloc[:, 2] <= end))[0]
+        if index.size > 0:
+            index = index[0]
+
+            # Find source coords for recommendations
+            regionChr, regionStart, regionEnd = recommendationDF.iloc[index, :3]
+
+            # write to bed file
+            outfile = outputDir / "similarity_search_region_{}_{}_{}_recs.bed".format(regionChr, regionStart, regionEnd)
+            with open(outfile, "w+") as f:
+                recommendationStr = ""
+
+                recs = recommendationDF.iloc[index,3][2:-2] # trim off brackets
+                recs = recs.split('", "')[1:] # split recommendations
+                for i in range(len(recs)):
+                    # Append bed formatted coords to file
+                    recommendationStr += "{0[0]}\t{0[1]}\t{0[2]}\n".format(recs[i].split(":"))
+
+                f.write(recommendationStr)
+
+            # Print out information to user
+            print("Found region {}:{}-{} within query {}:{}-{}".format(regionChr, regionStart, regionEnd, chr, start, end))
+            print("\tSee {} for recommendations".format(outfile), flush=True)
+        else:
+            raise ValueError("ERROR: Could not find region in given range")
+
+
+def generateQueryList(query):
+    # if its a single query build a one coord array
+    if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
+        chr = query.split(":")[0]
+        start = query.split(":")[1].split("-")[0]
+        end = query.split(":")[1].split("-")[1]
+        return np.array([[chr, start, end]], dtype=object)
+    # if it is a path to a file, build a numpy array with all coords
+    elif Path(query).is_file():
+        return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
+    else:
+        return ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
 
 
 def determineBlockSize(windowKB):

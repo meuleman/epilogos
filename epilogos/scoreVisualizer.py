@@ -33,7 +33,7 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir):
         regionScoresSorted, regionColorsSorted = processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors)
 
         # Draw the query region
-        drawEpilogosScores(chr, start, end, regionScoresSorted, regionColorsSorted, stateNames, stateColors, outputDir / "epilogos_region_{}_{}_{}.pdf".format(chr, start, end))
+        drawEpilogosScores(chr, start, end, regionScoresSorted, regionColorsSorted, stateNames, stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.pdf".format(chr, start, end))
 
 
 # Takes in a region, genome wide epilogos scores, and state colors and outputs a numpy array containing scores for the region

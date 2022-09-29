@@ -36,12 +36,12 @@ def main(query, recommendationPath, buildBool, epilogosScoresPath, outputDir, wi
         print("Directory exists, or cannot be created")
 
     if buildBool:
-        build(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors)
+        buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors)
     else:
-        query(query, recommendationPath, outputDir)
+        queryRecommendations(query, recommendationPath, outputDir)
 
 
-def build(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
+def buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     # Bins are assumed to be 200bp, thus there are 5 bins per KB
     windowBins = windowKB * 5
 
@@ -80,7 +80,7 @@ def build(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
 
-def query(query, recommendationPath, outputDir):
+def queryRecommendations(query, recommendationPath, outputDir):
     # Parse query to generate array
     queryArr = generateQueryList(query)
 

@@ -30,10 +30,10 @@ import re
 @click.option("-n", "--num-neighbors", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
 def main(query, recommendationPath, buildBool, epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
     outputDir = Path(outputDir)
-    try:
-        os.makedirs(outputDir)
-    except OSError:
-        print("Directory exists, or cannot be created")
+    if not outputDir.exists():
+        outputDir.mkdir(parents=True)
+    if not outputDir.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
         buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors)
@@ -82,7 +82,7 @@ def buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesire
 
 def queryRecommendations(query, recommendationPath, outputDir):
     # Parse query to generate array
-    queryArr = generateQueryList(query)
+    queryArr = generateQueryArr(query)
 
     # Read in recommendations file
     recommendationDF = pd.read_table(Path(recommendationPath), sep="\t", header=None)
@@ -110,13 +110,13 @@ def queryRecommendations(query, recommendationPath, outputDir):
                 f.write(recommendationStr)
 
             # Print out information to user
-            print("Found region {}:{}-{} within query {}:{}-{}".format(regionChr, regionStart, regionEnd, chr, start, end))
-            print("\tSee {} for recommendations".format(outfile), flush=True)
+            print("Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd, chr, start, end))
+            print("\tSee {} for recommendations\n".format(outfile), flush=True)
         else:
             raise ValueError("ERROR: Could not find region in given range")
 
 
-def generateQueryList(query):
+def generateQueryArr(query):
     # if its a single query build a one coord array
     if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
         chr = query.split(":")[0]

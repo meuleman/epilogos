@@ -127,7 +127,7 @@ def generateQueryList(query):
     elif Path(query).is_file():
         return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
     else:
-        return ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
+        raise ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
 
 
 def determineBlockSize(windowKB):

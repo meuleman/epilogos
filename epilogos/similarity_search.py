@@ -122,7 +122,7 @@ def generateQueryList(query):
         chr = query.split(":")[0]
         start = query.split(":")[1].split("-")[0]
         end = query.split(":")[1].split("-")[1]
-        return np.array([[chr, start, end]], dtype=object)
+        return np.array([[chr, int(start), int(end)]], dtype=object)
     # if it is a path to a file, build a numpy array with all coords
     elif Path(query).is_file():
         return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)

@@ -4,8 +4,10 @@ import numpy as np
 from time import time
 from os import remove
 import pandas as pd
-from epilogos.pairwiseVisual import meanAndMax, findSign
+from regex import F
+from epilogos.pairwiseVisual import findSign
 from epilogos.helpers import strToBool, getStateNames
+import filter_regions as fr
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
     """
@@ -25,14 +27,14 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
 
     if verbose: print("\nReading in score files...", flush=True); tRead = time()
     else: print("    Reading in files\t", end="", flush=True)
-    locationArr, scoreArr, maxScoreArr = readInData(outputDirPath)
+    locationArr, scoreArr = readInData(outputDirPath)
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
     if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
     else: print("    Greatest hits txt\t", end="", flush=True)
     greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, maxScoreArr, stateNameList, exemplarWidth)
+    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, stateNameList, exemplarWidth)
     if verbose: print("    Time:", time() - tHits, flush=True)
     else: print("\t[Done]", flush=True)
 
@@ -85,9 +87,7 @@ def readInData(outputDirPath):
     for file in outputDirPath.glob("temp_scores_*.npz"):
         remove(file)
 
-    maxScoreArr = np.abs(np.argmax(np.abs(np.flip(scoreArr, axis=1)), axis=1) - scoreArr.shape[1]).astype(int)
-
-    return locationArr, scoreArr.sum(axis=1), maxScoreArr
+    return locationArr, scoreArr.sum(axis=1)
 
 
 def unpackNPZ(file):
@@ -106,7 +106,7 @@ def unpackNPZ(file):
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
-def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, exemplarWidth):
+def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
     """
     Finds the top 1000 scoring bins and merges adjacent bins, then outputs a txt containing these top scoring regions and
     some information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
@@ -115,23 +115,32 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, ex
     filePath -- The path of the file to write to
     locationArr -- Numpy array containing the genomic locations of all the bins
     scoreArr -- Numpy array containing the sum of the scores within each bin
-    maxScoreArr -- Numpy array containing the states which had the highest score in each bin
     nameArr -- Numpy array containing the names of all the states
     exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     """
-    with open(filePath, 'w') as f:
+    with open(filePath, 'w') as outFile:
+        # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
+        filterArr = np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1)
+        f = fr.Filter(method='maxmean', input=filterArr, input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
+        f.read()
+        f.filter()
+        exemplars = f.output_df
 
-        indices, maxIndices = meanAndMax(scoreArr, 100, exemplarWidth)
+        exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
 
-        locations = pd.DataFrame(np.concatenate((locationArr[indices], scoreArr[maxIndices].reshape(len(maxIndices), 1),
-                                                 maxScoreArr[maxIndices].reshape(len(maxIndices), 1)), axis=1),
-                                 columns=["Chromosome", "Start", "End", "Score", "MaxScoreLoc"])\
-                      .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32,
-                               "MaxScoreLoc": np.int32})
+        indices = exemplars["OriginalIdx"].to_numpy()
 
-        # Pad the bins
-        locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
-        locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
+        # Calculate the maximum contributing state in each region
+        # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
+        maxStates = np.zeros((len(indices), 1))
+        for i, idx in enumerate(indices):
+            # Flip makes it so tie leads to the higher number state
+            # Calculate the maximum value for each state in and then from there the argmax for the max state
+            # Subtract from the shape of the array to reverse the effect of flip and get the state number
+            maxStates[i, 0] = scoreArr.shape[1] - np.argmax(np.max(np.flip(scoreArr[idx - exemplarWidth:idx + exemplarWidth + 1], axis=1), axis=0))
+
+        locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End", "Score"]]).astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})
+        locations["MaxScoreState"] = maxStates.astype(np.int32)
 
         # Write all the locations to the file
         outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\n"
@@ -139,7 +148,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, maxScoreArr, nameArr, ex
                             abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])))
                             for i in range(locations.shape[0]))
 
-        f.write(outString)
+        outFile.write(outString)
 
 
 if __name__ == "__main__":

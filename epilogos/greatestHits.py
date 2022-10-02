@@ -4,7 +4,6 @@ import numpy as np
 from time import time
 from os import remove
 import pandas as pd
-from regex import F
 from epilogos.pairwiseVisual import findSign
 from epilogos.helpers import strToBool, getStateNames
 import filter_regions as fr

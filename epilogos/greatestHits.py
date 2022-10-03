@@ -119,8 +119,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
     """
     with open(filePath, 'w') as outFile:
         # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
-        filterArr = np.concatenate((locationArr, scoreArr.reshape(len(scoreArr), 1)), axis=1)
-        f = fr.Filter(method='maxmean', input=filterArr, input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
+        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
         f.read()
         f.filter()
         exemplars = f.output_df

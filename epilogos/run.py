@@ -279,7 +279,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonCommand = "python {} {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, exemplarWidth, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
-                                          "--ntasks=1 --mem=16000", "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          "--ntasks=1 --mem=64000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences

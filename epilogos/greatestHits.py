@@ -86,7 +86,7 @@ def readInData(outputDirPath):
     for file in outputDirPath.glob("temp_scores_*.npz"):
         remove(file)
 
-    return locationArr, scoreArr.sum(axis=1)
+    return locationArr, scoreArr
 
 
 def unpackNPZ(file):
@@ -113,13 +113,13 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
     Input:
     filePath -- The path of the file to write to
     locationArr -- Numpy array containing the genomic locations of all the bins
-    scoreArr -- Numpy array containing the sum of the scores within each bin
+    scoreArr -- Numpy array containing the scores within each bin
     nameArr -- Numpy array containing the names of all the states
     exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     """
     with open(filePath, 'w') as outFile:
         # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
-        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
+        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
         f.read()
         f.filter()
         exemplars = f.output_df

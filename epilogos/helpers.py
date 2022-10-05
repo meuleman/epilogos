@@ -3,6 +3,7 @@ from time import time
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import re
 
 
 def getNumStates(stateFile):
@@ -175,3 +176,17 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
         return file1Arr, file2Arr, shuffledCombinedArr[:, :file1Arr.shape[1]], shuffledCombinedArr[:, file1Arr.shape[1]:]
     else:
         return file1Arr, file2Arr, shuffledCombinedArr[:, :groupSize], shuffledCombinedArr[:, groupSize:2*groupSize]
+
+
+def generateRegionArr(query):
+    # if its a single query build a one coord array
+    if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
+        chr = query.split(":")[0]
+        start = query.split(":")[1].split("-")[0]
+        end = query.split(":")[1].split("-")[1]
+        return np.array([[chr, int(start), int(end)]], dtype=object)
+    # if it is a path to a file, build a numpy array with all coords
+    elif Path(query).is_file():
+        return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
+    else:
+        raise ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")

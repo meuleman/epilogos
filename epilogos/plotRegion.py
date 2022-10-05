@@ -6,17 +6,18 @@ from pathlib import Path
 import numpy.lib.recfunctions as nlr
 import click
 from epilogos.helpers import getStateNames, getStateColorsRGB
-from epilogos.similarity_search import generateQueryArr
-import re
+from epilogos.helpers import generateRegionArr
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option("-r", "--regions", "regions", type=str, help="Region formatted as chr:start-end or path to bed file containing regions to visualize")
 @click.option("-s", "--scores-file", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used for region visualization")
 @click.option("-j", "--state-info", "metadataPath", type=str, help="Path to state metadata file to be used for region coloring")
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired output directory")
-def main(regions, epilogosScoresPath, metadataPath, outputDir):
+@click.option("-y", "--individual-ylims", "individualYlims", is_flag=True, help="If true each region is plotted on its own y-axis")
+def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims):
     # Read in regions
-    regionArr = generateQueryArr(regions)
+    regionArr = generateRegionArr(regions)
 
     # Read in epilogos scores
     epilogosScores = pd.read_table(Path(epilogosScoresPath), sep="\t", header=None)
@@ -27,13 +28,20 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir):
     # Determine state colors
     stateColors = getStateColorsRGB(metadataPath)
 
-    # Draw each of the desired regions
+    # Process query scores for graphing
+    processedScoresList = []
+    processedColorsList = []
     for chr, start, end in regionArr:
-        # Process query scores for graphing
-        regionScoresSorted, regionColorsSorted = processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors)
+        processedRegion = processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors)
+        processedScoresList.append(processedRegion[0])
+        processedColorsList.append(processedRegion[1])
 
-        # Draw the query region
-        drawEpilogosScores(chr, start, end, regionScoresSorted, regionColorsSorted, stateNames, stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.pdf".format(chr, start, end))
+    # Precalculate ylims for drawing if using same axes
+    ymin, ymax = ylim(processedScoresList) if individualYlims else (np.nan, np.nan)
+
+    # Draw the query regions
+    for i, (chr, start, end) in enumerate(regionArr):
+        drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames, stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.pdf".format(chr, start, end))
 
 
 # Takes in a region, genome wide epilogos scores, and state colors and outputs a numpy array containing scores for the region
@@ -57,12 +65,13 @@ def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors
 
 # Takes in a region, epilogos scores for that region (each bin is sorted by scores),
 #  state colors for the region (sorted same order as scores), and ylims and draws the epilogos graph for the region
-def drawEpilogosScores(chr, start, end, scores, colors, stateNames, stateColors, file):
+def drawEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, stateColors, file):
     # create the bar chart
     fig, axs = plt.subplots(1, 1, figsize=(24,5))
 
-    # Determine ylim
-    ymax, ymin = ylim(scores)
+    # Calculate individual ylims if generic ylims haven't been calculated
+    if np.nan(ymin) and np.nan(ymax):
+        ymin, ymax = ylim([scores])
 
     # Formatting the graph
     axs.set_ylim(ymin=(ymin * 1.1), ymax=(ymax * 1.1))
@@ -116,17 +125,24 @@ def drawEpilogosScores(chr, start, end, scores, colors, stateNames, stateColors,
 
 
 # Determines what the bounds should be for all the graphs so that they are all graphed on the same scale
-def ylim(regionScores):
-    # Have to treat positive and negative scores separately because of the way they stack in opposite directions
-    positiveScores = regionScores.copy()
-    positiveScores[positiveScores < 0] = 0
-    max_score = max(np.sum(positiveScores, axis=0))
+def ylim(regionScoresList):
+    minScore = np.finfo(np.float32).max
+    maxScore = np.finfo(np.float32).min
 
-    negativeScores = regionScores.copy()
-    negativeScores[negativeScores > 0] = 0
-    min_score = min(np.sum(negativeScores, axis=0))
+    # Compare the max/min ylims needed for each region
+    # Evaluate negative and positive scores separately due to drawing stracks in opposite directions
+    for regionScores in regionScoresList:
+        negativeScores = regionScores.copy()
+        negativeScores[negativeScores > 0] = 0
+        minCandidate = min(np.sum(negativeScores, axis=0))
+        minScore = minCandidate if minCandidate < minScore else minScore
 
-    return max_score, min_score
+        positiveScores = regionScores.copy()
+        positiveScores[positiveScores < 0] = 0
+        maxCandidate = max(np.sum(positiveScores, axis=0))
+        maxScore = maxCandidate if maxCandidate > maxScore else maxScore
 
+    return minScore, maxScore
 
-
+if __name__ == "__main__":
+    main()

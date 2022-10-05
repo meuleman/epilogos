@@ -17,18 +17,48 @@ import json
 import csv
 import pysam
 import click
-import re
+from epilogos.helpers import generateRegionArr
 
-@click.command(context_settings=dict(help_option_names=['-h', '--help']))
+# Custom help format for click to separate the build and query commands
+class CustomClickHelpFormat(click.Command):
+    def format_help(self, ctx, formatter):
+        click.echo("Usage: simsearch [OPTIONS]\
+\
+Options:\
+To Build Similarity Search Data:\
+  -b, --build                     If true builds the similarity search files\
+                                  needed to query regions\
+  -s, --scores TEXT               Path to scores file to be used in\
+                                  similarity search\
+  -o, --output-directory TEXT     Path to desired similarity search output\
+                                  directory\
+  -w, --window-KB INTEGER         Window size (in KB) on which to perform\
+                                  similarity search  [default: 25]\
+  -j, --num-jobs INTEGER          Number of jobs to be used in nearest\
+                                  neighbor algorithm  [default: 8]\
+  -n, --num-neighbors INTEGER     Number of neighbors to be found by nearest\
+                                  neighbor algorithm (note that first neighbor\
+                                  is always the query region)  [default: 101]\
+\
+\
+To Query Similarity Search Data:\
+  -q, --query TEXT                Query region formatted as chr:start-end or\
+                                  path to bed file containing query regions\
+  -r, --recommendations-file TEXT\
+                                  Path to previously built\
+                                  recommendations.bed.gz file to be queried\
+                                  for recommendations")
+
+@click.command(context_settings=dict(help_option_names=['-h', '--help']), cls=CustomClickHelpFormat)
+@click.option("-b", "--build", "buildBool", is_flag=True, help="If true builds the similarity search files needed to query regions")
+@click.option("-s", "--scores", "scoresPath", type=str, help="Path to scores file to be used in similarity search")
+@click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
+@click.option("-w", "--window-bp", "windowBP", type=int, default=25000, show_default=True, help="Window size (in BP) on which to perform similarity search")
+@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
+@click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of matches to be found by nearest neighbor algorithm (note that first match is always the query region)")
 @click.option("-q", "--query", "query", type=str, help="Query region formatted as chr:start-end or path to bed file containing query regions")
 @click.option("-r", "--recommendations-file", "recommendationPath", type=str, help="Path to previously built recommendations.bed.gz file to be queried for recommendations")
-@click.option("-b", "--build", "buildBool", is_flag=True, help="If true builds the similarity search files needed to query regions")
-@click.option("-s", "--scores", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used in similarity search")
-@click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
-@click.option("-w", "--window-KB", "windowKB", type=int, default=25, show_default=True, help="Window size (in KB) on which to perform similarity search")
-@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
-@click.option("-n", "--num-neighbors", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of neighbors to be found by nearest neighbor algorithm (note that first neighbor is always the query region)")
-def main(query, recommendationPath, buildBool, epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
+def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, query, recommendationPath):
     outputDir = Path(outputDir)
     if not outputDir.exists():
         outputDir.mkdir(parents=True)
@@ -36,24 +66,29 @@ def main(query, recommendationPath, buildBool, epilogosScoresPath, outputDir, wi
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
-        buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors)
+        buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors)
     else:
         queryRecommendations(query, recommendationPath, outputDir)
 
 
-def buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesiredNeighbors):
-    # Bins are assumed to be 200bp, thus there are 5 bins per KB
-    windowBins = windowKB * 5
-
-    blockSize = determineBlockSize(windowKB)
+def buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
+    # Bins are assumed to be 200bp or 20bp
+    if determineBinSize(scoresPath) == 200:
+        windowBins = windowBP / 200
+        blockSize = determineBlockSize200(windowBP)
+    elif determineBinSize(scoresPath) == 20:
+        windowBins = windowBP / 20
+        blockSize = determineBlockSize20(windowBP)
+    else:
+        raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
 
     cubeTime = time()
 
-    epilogosScores, inputArr = readScores(epilogosScoresPath)
+    scores, inputArr = readScores(scoresPath)
 
     # The maximum number of regions chosen should depend on the window size
     # We want to allow for full coverage of the genome if possible (maxRegions is chosen accordingly)
-    maxRegions = epilogosScores.shape[0] // windowBins
+    maxRegions = scores.shape[0] // windowBins
 
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
     f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=windowBins, max_elements=maxRegions, preserve_cols=True, quiet=False)
@@ -61,16 +96,16 @@ def buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesire
     f.filter()
     exemplars = f.output_df
 
-    # Build cube which represents reduced epilogos scores for the top X regions
+    # Build cube which represents reduced scores for the top X regions
     exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
     # Seperates just the coordinates
     coords = exemplars.iloc[:,:3]
     # Generate slices of reduced data for the cube
-    cube = exemplars["OriginalIdx"].apply(lambda x: makeSlice(epilogosScores, x, windowBins, blockSize))
+    cube = exemplars["OriginalIdx"].apply(lambda x: makeSlice(scores, x, windowBins, blockSize))
     cube = np.stack(cube.to_numpy())
 
     # Save the cube
-    np.savez_compressed(file=outputDir / 'epilogos_cube', scores=cube, coords=coords.values)
+    np.savez_compressed(file=outputDir / 'simsearch_cube', scores=cube, coords=coords.values)
 
     print("Cube Time:", format(time() - cubeTime,'.0f'), "seconds\n", flush=True)
 
@@ -80,9 +115,14 @@ def buildRecommendations(epilogosScoresPath, outputDir, windowKB, nJobs, nDesire
     print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
 
+def determineBinSize(scoresPath):
+    row1 = pd.read_table(scoresPath, sep="\t", header=None, usecols=[0,1,2], nrows=1)
+    return int(row1.iloc[0, 2] - row1.iloc[0, 1])
+
+
 def queryRecommendations(query, recommendationPath, outputDir):
     # Parse query to generate array
-    queryArr = generateQueryArr(query)
+    queryArr = generateRegionArr(query)
 
     # Read in recommendations file
     recommendationDF = pd.read_table(Path(recommendationPath), sep="\t", header=None)
@@ -111,32 +151,18 @@ def queryRecommendations(query, recommendationPath, outputDir):
 
             # Print out information to user
             print("Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd, chr, start, end))
-            print("\tSee {} for recommendations\n".format(outfile), flush=True)
+            print("\tSee {} for matches\n".format(outfile), flush=True)
         else:
             raise ValueError("ERROR: Could not find region in given range")
 
 
-def generateQueryArr(query):
-    # if its a single query build a one coord array
-    if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
-        chr = query.split(":")[0]
-        start = query.split(":")[1].split("-")[0]
-        end = query.split(":")[1].split("-")[1]
-        return np.array([[chr, int(start), int(end)]], dtype=object)
-    # if it is a path to a file, build a numpy array with all coords
-    elif Path(query).is_file():
-        return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
-    else:
-        raise ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
-
-
-def determineBlockSize(windowKB):
+def determineBlockSize20(windowBP):
     """
-    The similarity search reduces epilogos scores over search windows to mimic what the human eye might focus on.
+    The similarity search reduces scores over search windows to mimic what the human eye might focus on.
     This is meant to provide regions which contain similar characteristics/trends
 
     Input:
-    windowKB - The size of the search window in KB
+    windowBP - The size of the search window in BP
 
     Output:
     blockSize - The reduction factor for the similarity search
@@ -144,64 +170,96 @@ def determineBlockSize(windowKB):
 
     # We only support some set window sizes, these each have a reduction factor to
     # create an overall data size of 25 points per window
-    if windowKB == 5:
+    if windowBP == 500:
         blockSize = 1
-    elif windowKB == 10:
+    elif windowBP == 1000:
         blockSize = 2
-    elif windowKB == 25:
+    elif windowBP == 2500:
         blockSize = 5
-    elif windowKB == 50:
+    elif windowBP == 5000:
         blockSize = 10
-    elif windowKB == 75:
+    elif windowBP == 7500:
         blockSize = 15
-    elif windowKB == 100:
+    elif windowBP == 10000:
         blockSize = 20
     else:
-        raise ValueError("Error: window size must be either 5, 10, 25, 50, 75, or 100 (in kb)")
+        raise ValueError("Error: window size must be either 500, 1000, 2500, 5000, 7500, or 10000 (in bp)")
 
     return blockSize
 
 
-def readScores(epilogosScoresPath):
+def determineBlockSize200(windowBP):
     """
-    Reads in the epilogos scores file provided by the user
+    The similarity search reduces scores over search windows to mimic what the human eye might focus on.
+    This is meant to provide regions which contain similar characteristics/trends
 
     Input:
-    epilogosScoresPath - The path to the epilogos scores file provided by the user
+    windowBP - The size of the search window in BP
 
     Output:
-    epilogosScores - Just the scores from the epilogos scores file
+    blockSize - The reduction factor for the similarity search
+    """
+
+    # We only support some set window sizes, these each have a reduction factor to
+    # create an overall data size of 25 points per window
+    if windowBP == 5000:
+        blockSize = 1
+    elif windowBP == 10000:
+        blockSize = 2
+    elif windowBP == 25000:
+        blockSize = 5
+    elif windowBP == 50000:
+        blockSize = 10
+    elif windowBP == 75000:
+        blockSize = 15
+    elif windowBP == 100000:
+        blockSize = 20
+    else:
+        raise ValueError("Error: window size must be either 5000, 10000, 25000, 50000, 75000, or 100000 (in bp)")
+
+    return blockSize
+
+
+def readScores(scoresPath):
+    """
+    Reads in the scores file provided by the user
+
+    Input:
+    scoresPath - The path to the scores file provided by the user
+
+    Output:
+    scores - Just the scores from the scores file
     inputArr - A numpy array to be read in by the filter-regions package (contains coords and summed scores)
     """
 
     # Read in the scores file for exemplar generation
-    epilogosScores = pd.read_table(epilogosScoresPath, sep="\t", header=None)
+    scores = pd.read_table(scoresPath, sep="\t", header=None)
 
     # Sum up the scores for all states for maxMean algorithm
-    inputDF = epilogosScores.iloc[:, :3]
-    inputDF[3] = epilogosScores.iloc[:,3:].sum(axis=1)
+    inputDF = scores.iloc[:, :3]
+    inputDF[3] = scores.iloc[:,3:].sum(axis=1)
     inputDF.columns = ["Chromosome", "Start", "End", "Score"]
     inputArr = inputDF.to_numpy()
 
     # Pull out just the scores for later window reduction
-    epilogosScores = epilogosScores.iloc[:,3:]
+    scores = scores.iloc[:,3:]
 
-    return epilogosScores, inputArr
+    return scores, inputArr
 
 
 def makeSlice(genome, idx, windowBins, blockSize):
     """
-    Creates a slice of a reduced epilogos track used for construction of the epilogos "cube"
+    Creates a slice of a reduced scores track used for construction of the scores "cube"
     This will take a location and use it as a center point for each "slice" (region) of the cube
 
     Input:
-    genome - The epilogos scores across the whole genome
+    genome - The scores across the whole genome
     idx - The centerpoint of a similarity search window
     windowBins - The number of bins to have in each window
     blockSize - The reduction factor for the similiarty search
 
     Output:
-    genomeWindow.loc[reducedIndices[0].values].to_numpy() - A numpy array representing the reduced epilogos scores of a window
+    genomeWindow.loc[reducedIndices[0].values].to_numpy() - A numpy array representing the reduced scores of a window
     """
     genomeWindow = genome.iloc[idx - windowBins // 2:idx + windowBins // 2 + 1] if windowBins % 2 else genome.iloc[idx - windowBins // 2:idx + windowBins // 2]
     sumsOverWindow = genomeWindow.sum(axis=1).to_frame()
@@ -215,13 +273,13 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
 
     Input:
     outputDir - The output directory for the results
-    cube - The reduced epilogos scores over the mean max generated windows
+    cube - The reduced scores over the mean max generated windows
     locs - Pandas Dataframe of the coordinates for the mean max generated windows
     nJobs - The number of jobs to use for the kNearestNeighbors algorithm
     nDesiredNeighbors - Number of neighbors to be found by kNearestNeighbors (note the 1st neighbor is the query region itself)
 
     Output:
-    epilogos_knn.npz -- for each of regions, the top nDesiredNeighbors nearest neighbor regions
+    simsearch_knn.npz -- for each of regions, the top nDesiredNeighbors nearest neighbor regions
     recommendations.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors nearest neighbors for each of regions
     """
     np.set_printoptions(threshold=sys.maxsize)
@@ -246,7 +304,7 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
     res = res.reshape(nRegions, nNearestNeighbors, 3)
 
     # saved in order: Highest scoring -> Lowest scoring
-    np.savez_compressed(outputDir / "epilogos_knn.npz", arr=res, idx=idx, dist=dist)
+    np.savez_compressed(outputDir / "simsearch_knn.npz", arr=res, idx=idx, dist=dist)
 
     i = 0
     final = ['' for i in range(nRegions)]

@@ -17,7 +17,7 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
     stateInfo -- State model tab seperated information file
     fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
     expFreqPath -- The location of the stored expected frequency array
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
+    exemplarWidth -- Size of exemplar regions in bins
     verbose -- Boolean which if True, causes much more detailed prints
     """
     outputDirPath = Path(outputDir)
@@ -115,11 +115,11 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
     locationArr -- Numpy array containing the genomic locations of all the bins
     scoreArr -- Numpy array containing the scores within each bin
     nameArr -- Numpy array containing the names of all the states
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
+    exemplarWidth -- size of exemplar regions in bins
     """
     with open(filePath, 'w') as outFile:
         # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
-        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=2 * exemplarWidth + 1, max_elements=100, preserve_cols=True, quiet=False)
+        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
         f.read()
         f.filter()
         exemplars = f.output_df
@@ -128,15 +128,24 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
 
         indices = exemplars["OriginalIdx"].to_numpy()
 
+        # Generating array of all indices for vectorized calculations
+        upperLower = []
+        for idx in indices:
+            # If the exemplar region is an odd number of bins we have to add 1 to the upper index
+            lowerIdx = idx - exemplarWidth // 2
+            upperIdx = idx + exemplarWidth // 2
+            if exemplarWidth % 2: upperIdx += 1
+            upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
+        upperLower = np.array(upperLower, dtype=np.int32)
+
         # Calculate the maximum contributing state in each region
         # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
-        maxStates = np.zeros((len(indices), 1))
-        for i, idx in enumerate(indices):
-            # Flip makes it so tie leads to the higher number state
-            # Calculate the maximum value for each state in and then from there the argmax for the max state
-            # Subtract from the shape of the array to reverse the effect of flip and get the state number
-            maxStates[i, 0] = scoreArr.shape[1] - np.argmax(np.max(np.flip(scoreArr[idx - exemplarWidth:idx + exemplarWidth + 1], axis=1), axis=0))
+        # Flip makes it so tie leads to the higher number state
+        # Calculate the maximum value for each state in and then from there the argmax for the max state
+        # Subtract from the shape of the array to reverse the effect of flip and get the state number
+        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(np.abs(scoreArr)[upperLower], axis=2), axis=1), axis=1)
 
+        # Build pandas dataframe for writing
         locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End", "Score"]]).astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})
         locations["MaxScoreState"] = maxStates.astype(np.int32)
 

@@ -55,9 +55,9 @@ from epilogos.helpers import getNumStates
                    "partition as designated by the system administrator")
 @click.option("-n", "--null-distribution", "pvalBool", is_flag=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
-@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=62,
-              help="The number of bins on each side of the exemplar region (total exemplar regions is w*2+1 bins) Default is" +
-                   "62 which results in a 25kb window")
+@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=125,
+              help="The number of bins in the exemplar region Default is" +
+                   "125 which results in a 25kb window")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
          pvalBool, exemplarWidth):
@@ -279,7 +279,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonCommand = "python {} {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, exemplarWidth, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
-                                          "--ntasks=1 --mem=64000", "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          "--ntasks=1 --mem=20000", "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
@@ -376,7 +376,7 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     samplingSize -- The amount of null data to fit in pairwise mode
     quiescentState -- The state used to filter out quiescent bins
     groupSize -- The size of the null (shuffled) score arrays, -1 means inputed sizes
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
+    exemplarWidth -- size of exemplar regions in bins
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:

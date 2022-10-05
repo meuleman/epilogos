@@ -14,6 +14,7 @@ from itertools import repeat
 from os import remove
 from statsmodels.stats.multitest import multipletests
 from epilogos.helpers import strToBool, getStateNames, getStateColorsRGB, getNumStates
+import filter_regions as fr
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pvalBool, diagnosticBool, numTrials,
@@ -36,7 +37,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     numTrials -- The number of gennorm fits to do
     samplingSize -- The amount of null data to fit
     expFreqPath -- The location of the stored expected frequency array
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
+    exemplarWidth -- size of exemplar regions in bins
     verbose -- Boolean which if True, causes much more detailed prints
     """
     tTotal = time()
@@ -119,7 +120,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Greatest hits txt\t", end="", flush=True)
         roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, False, mhPvals, exemplarWidth)
+        createGreatestHitsTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, mhPvals, exemplarWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -127,14 +128,14 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
         else: print("    Significant loci txt\t", end="", flush=True)
         roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
-        createTopScoresTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, True, mhPvals, exemplarWidth)
+        createSignificantLociTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, mhPvals)
         if verbose: print("    Time:", time() - tSig, flush=True)
         else: print("\t[Done]", flush=True)
     else:
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Greatest hits txt\t", end="", flush=True)
         roiPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-        greatestHitsNoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, exemplarWidth)
+        createGreatestHitsNoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, exemplarWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -368,6 +369,9 @@ def readInData(outputDirPath, numProcesses, numStates):
 
     # Calculate the maximum contributing state for each bin
     # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
+    # Flip makes it so tie leads to the higher number state
+    # Calculate the maximum value for each state in and then from there the argmax for the max state
+    # Subtract from the shape of the array to reverse the effect of flip and get the state number
     maxDiffArr = np.abs(np.argmax(np.abs(np.flip(diffArr, axis=1)), axis=1) - diffArr.shape[1]).astype(np.int32)
 
     return locationArr, distanceArrReal, maxDiffArr, chrDict
@@ -566,8 +570,7 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, out
     metricsTxt.write(metricsStr)
     metricsTxt.close()
 
-
-def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, onlySignificant, mhPvals, exemplarWidth):
+def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, mhPvals):
     """
     Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
     Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start,
@@ -581,23 +584,15 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
     maxDiffArr -- Numpy array containing the states which had the largest difference in each bin
     nameArr -- Numpy array containing the names of all the states
     pvals -- Numpy array containing the pvalues of all the distances between the pairwise groups
-    onlySignificant -- Boolean telling us whether to use significant loci or 1000 largest distance bins
     mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
     """
-    f = gzip.open(filePath, "wt") if onlySignificant else open(filePath, 'w')
+    outfile = gzip.open(filePath, "wt")
 
     # Pick values above significance threshold
-    if onlySignificant:
-        indices = maxIndices = np.where(mhPvals <= 0.1)[0]
-    else:
-        # in the case of creating greatest hits indices should be a intersection of all significantLoci and regions generated by priorityqueue
-        indices, maxIndices = meanAndMax(distanceArr, 100, exemplarWidth)
-        maxIndices, _, comm2 = np.intersect1d(np.where(mhPvals <= 0.1)[0], maxIndices, assume_unique=True, return_indices=True)
-        indices = np.array(indices)[comm2]
+    indices = maxIndices = np.where(mhPvals <= 0.1)[0]
 
     if len(indices) == 0:
-        f.close()
+        outfile.close()
         return
 
     locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[maxIndices].reshape(len(maxIndices), 1),
@@ -608,13 +603,6 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
                   .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
                            "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
                   .replace({"Chromosome": chrDict})
-
-    # Don't want to merge when creating significantLoci.txt
-    if not onlySignificant:
-        locations = locations.iloc[(-locations["Score"].abs()).argsort()]
-        # Pad the bins
-        locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
-        locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
 
     # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
@@ -630,8 +618,85 @@ def createTopScoresTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, 
                                            float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i])
                         for i in range(locations.shape[0]))
 
-    f.write(outString)
-    f.close()
+    outfile.write(outString)
+    outfile.close()
+
+
+def createGreatestHitsTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, mhPvals, exemplarWidth):
+    """
+    Finds the either the 1000 largest distance bins and merges adjacent bins or finds all significant loci and does not merge.
+    Then it outputs a txt containing these highest distances regions and some information about each (chromosome, bin start,
+    bin end, state name, absolute value of distance, sign of score, pvalue of distance, stars repersenting significance)
+
+    Input:
+    filePath -- The path of the file to write to
+    locationArr -- Numpy array containing the genomic locations of all the bins
+    chrDict -- Dictionary containing mappings between number values and chromosome names (helps locationArr use less memory)
+    distanceArr -- Numpy array containing the distance between the pairwise groups
+    maxDiffArr -- Numpy array containing the states which had the largest difference in each bin
+    nameArr -- Numpy array containing the names of all the states
+    pvals -- Numpy array containing the pvalues of all the distances between the pairwise groups
+    mhPvals -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
+    exemplarWidth -- size of exemplar regions in bins
+    """
+    outfile =  open(filePath, 'w')
+
+    # Using the filter-regions package for the meanmax algorithm to choose regions
+    f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, np.abs(distanceArr).reshape(len(distanceArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
+    f.read()
+    f.filter()
+    exemplars = f.output_df
+    exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
+    indices = exemplars["OriginalIdx"].to_numpy()
+
+    # Generating array of all indices for vectorized calculations
+    upperLower = []
+    for idx in indices:
+        # If the exemplar region is an odd number of bins we have to add 1 to the upper index
+        lowerIdx = idx - exemplarWidth // 2
+        upperIdx = idx + exemplarWidth // 2
+        if exemplarWidth % 2: upperIdx += 1
+        upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
+    upperLower = np.array(upperLower, dtype=np.int32)
+
+    # Find the index of the maximally differential bin in the region
+    maxIndices = np.argmax(np.abs(distanceArr)[upperLower], axis=1) + upperLower[:, 0]
+
+    # in the case of creating greatest hits indices should be a intersection of all significantLoci and regions generated by maxmean
+    # because indices will be sorted by the max, we can cut off loci on the first instance where the max isn't significant
+    firstNonSigIdx = np.where(mhPvals[maxIndices] > 0.1)[0]
+    if len(firstNonSigIdx) > 0:
+        firstNonSigIdx = np.min(firstNonSigIdx)
+        maxIndices = maxIndices[:firstNonSigIdx]
+        exemplars = exemplars[:firstNonSigIdx]
+
+    if len(maxIndices) == 0:
+        outfile.close()
+        return
+
+    # Build the actual dataframe
+    locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End"]]).astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32}).replace({"Chromosome": chrDict})
+    locations["Score"] = distanceArr[maxIndices].astype(np.float32)
+    locations["maxDiffLoc"] = maxDiffArr[maxIndices].astype(np.int32)
+    locations["Pval"] = pvals[maxIndices].astype(np.float32)
+    locations["MhPval"] = mhPvals[maxIndices].astype(np.float32)
+
+    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
+    stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
+                    ("**" if float(locations.iloc[i, 6]) <= 0.05 else
+                    ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
+                    for i in range(locations.shape[0])])
+
+    # Write all the locations to the file for significantLoci.txt
+    # Write only top 100 loci to file for greatestHits.txt
+    outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
+    outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
+                                        abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
+                                        float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i])
+                        for i in range(locations.shape[0]))
+
+    outfile.write(outString)
+    outfile.close()
 
 
 def findSign(x):
@@ -650,68 +715,7 @@ def findSign(x):
         return "-"
 
 
-def meanAndMax(scoreArr, k, w):
-    """
-    Takes the scores of all the bins in the genome and takes the top k regions of width w.
-    If a region is within a higher scoring region it is removed from the list and a new region is added
-
-    Input:
-    scoreArr -- Numpy array containing the distance between the pairwise groups
-    k -- the number of regions we want to end up with
-    w -- the width (in number of bins) to search in each direction
-    """
-    # Generate the table used to
-    n = len(scoreArr)
-    hits = np.zeros(n, dtype=np.bool)
-    priorityQueue = []
-
-    # Have to make scores negative so they pop off in correct order
-    for i, v in enumerate(np.abs(scoreArr)):
-        heapq.heappush(priorityQueue, (-v, i))
-
-    indices = []
-    maxIndices = []
-    while k > 0:
-        try:
-            (v, i) = heapq.heappop(priorityQueue)
-            for j in findBestIndex(scoreArr, i, w):
-                start = (j - w) if (j - w) > 0 else 0
-                stop = (j + w + 1) if (j + w + 1) <= n else n
-                if not np.any(hits[start:stop]):
-                    hits[start:stop] = True
-                    indices.append(j)
-                    maxIndices.append(i)
-                    k -= 1
-                    break
-        except IndexError:
-            k = 0
-
-    return indices, maxIndices
-
-
-def findBestIndex(scoreArr, i, exemplarWidth):
-    """
-    Within a given range [i - exemplarWidth, i + exemplarWidth], find the index, j, in the score array with the highest mean
-    score of the range [j - exemplarWidth, j + exemplarWidth + 1].
-    ie. we want to find the index, j, which contains the highest mean score in its range while also containing i in said range.
-
-    Input:
-    scoreArr -- 1D numpy array containing the scores of each bin
-    i -- The index in the score array around which we will find the optimal index
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions
-
-    Output:
-    Array of indices sorted in descending order of mean score
-    """
-    farthestLeft = i - exemplarWidth
-    farthestRight = i + exemplarWidth
-    means = []
-    for j in range(farthestLeft, farthestRight + 1):
-        means.append(-np.mean(np.abs(scoreArr[j - exemplarWidth:j + exemplarWidth + 1])))
-    return np.arange(farthestLeft, farthestRight + 1)[np.argsort(means)]
-
-
-def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, zScores, exemplarWidth):
+def createGreatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, zScores, exemplarWidth):
     """
     Writes only the locations out to file which are specified by priorityQueueMerging. Used to write the results of
     priority queue merging
@@ -724,22 +728,36 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
     maxDiffArr -- Numpy array containing the states which had the largest difference in each bin
     nameArr -- Numpy array containing the names of all the states
     zScores -- Absolute value of the ZScores of the distances
-    exemplarWidth -- 2*exemplarWidth+1 = size of exemplar regions    """
-    f = open(filePath, 'w')
+    exemplarWidth -- size of exemplar regions in bins
+    """
+    outfile = open(filePath, 'w')
 
-    indices, maxIndices = meanAndMax(distanceArr, 100, exemplarWidth)
+    # Using the filter-regions package for the meanmax algorithm to choose regions
+    f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, np.abs(distanceArr).reshape(len(distanceArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
+    f.read()
+    f.filter()
+    exemplars = f.output_df
+    exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
+    indices = exemplars["OriginalIdx"].to_numpy()
 
-    locations = pd.DataFrame(np.concatenate((locationArr[indices], distanceArr[maxIndices].reshape(len(maxIndices), 1),
-                                             maxDiffArr[maxIndices].reshape(len(maxIndices), 1),
-                                             zScores[maxIndices].reshape(len(maxIndices), 1)), axis=1),
-                             columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "ZScores"])\
-                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
-                           "MaxDiffLoc": np.int32, "ZScores": np.float32})\
-                  .replace({"Chromosome": chrDict})
+    # Generating array of all indices for vectorized calculations
+    upperLower = []
+    for idx in indices:
+        # If the exemplar region is an odd number of bins we have to add 1 to the upper index
+        lowerIdx = idx - exemplarWidth // 2
+        upperIdx = idx + exemplarWidth // 2
+        if exemplarWidth % 2: upperIdx += 1
+        upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
+    upperLower = np.array(upperLower, dtype=np.int32)
 
-    # Pad the bins
-    locations["Start"] = locations["Start"].to_numpy(dtype=np.int32) - 200 * exemplarWidth
-    locations["End"]   = locations["End"].to_numpy(dtype=np.int32) + 200 * exemplarWidth
+    # Find the index of the maximally differential bin in the region
+    maxIndices = np.argmax(np.abs(distanceArr)[upperLower], axis=1) + upperLower[:, 0]
+
+    # Build the actual dataframe
+    locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End"]]).astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32}).replace({"Chromosome": chrDict})
+    locations["Score"] = distanceArr[maxIndices].astype(np.float32)
+    locations["maxDiffLoc"] = maxDiffArr[maxIndices].astype(np.int32)
+    locations["ZScores"] = zScores[maxIndices].astype(np.float32)
 
     # Locations get 3 stars if they are 3 sd away, 2 at 2 sd, 1 at 1 sd, and a period if withing 1 sd
     stars = np.array(["***" if float(locations.iloc[i, 5]) >= 3 else
@@ -755,8 +773,8 @@ def greatestHitsNoSignificance(filePath, locationArr, chrDict, distanceArr, maxD
                                            float(locations.iloc[i, 5]), stars[i])
                         for i in range(len(indices)))
 
-    f.write(outString)
-    f.close()
+    outfile.write(outString)
+    outfile.close()
 
 def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, stateColorList,
                           outputDirPath, fileTag, pvalBool, beta=0, loc=0, scale=0, mhPvals=[], zScores=[]):

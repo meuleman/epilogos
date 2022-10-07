@@ -22,31 +22,31 @@ from epilogos.helpers import generateRegionArr
 # Custom help format for click to separate the build and query commands
 class CustomClickHelpFormat(click.Command):
     def format_help(self, ctx, formatter):
-        click.echo("Usage: simsearch [OPTIONS]\
-\
-Options:\
-To Build Similarity Search Data:\
-  -b, --build                     If true builds the similarity search files\
-                                  needed to query regions\
-  -s, --scores TEXT               Path to scores file to be used in\
-                                  similarity search\
-  -o, --output-directory TEXT     Path to desired similarity search output\
-                                  directory\
-  -w, --window-KB INTEGER         Window size (in KB) on which to perform\
-                                  similarity search  [default: 25]\
-  -j, --num-jobs INTEGER          Number of jobs to be used in nearest\
-                                  neighbor algorithm  [default: 8]\
-  -n, --num-neighbors INTEGER     Number of neighbors to be found by nearest\
-                                  neighbor algorithm (note that first neighbor\
-                                  is always the query region)  [default: 101]\
-\
-\
-To Query Similarity Search Data:\
-  -q, --query TEXT                Query region formatted as chr:start-end or\
-                                  path to bed file containing query regions\
-  -r, --recommendations-file TEXT\
-                                  Path to previously built\
-                                  recommendations.bed.gz file to be queried\
+        click.echo("Usage: simsearch [OPTIONS]\n\
+\n\
+Options:\n\
+To Build Similarity Search Data:\n\
+  -b, --build                     If true builds the similarity search files\n\
+                                  needed to query regions\n\
+  -s, --scores TEXT               Path to scores file to be used in\n\
+                                  similarity search\n\
+  -o, --output-directory TEXT     Path to desired similarity search output\n\
+                                  directory\n\
+  -w, --window-KB INTEGER         Window size (in KB) on which to perform\n\
+                                  similarity search  [default: 25]\n\
+  -j, --num-jobs INTEGER          Number of jobs to be used in nearest\n\
+                                  neighbor algorithm  [default: 8]\n\
+  -n, --num-neighbors INTEGER     Number of neighbors to be found by nearest\n\
+                                  neighbor algorithm (note that first neighbor\n\
+                                  is always the query region)  [default: 101]\n\
+\n\
+\n\
+To Query Similarity Search Data:\n\
+  -q, --query TEXT                Query region formatted as chr:start-end or\n\
+                                  path to bed file containing query regions\n\
+  -r, --recommendations-file TEXT\n\
+                                  Path to previously built\n\
+                                  recommendations.bed.gz file to be queried\n\
                                   for recommendations")
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']), cls=CustomClickHelpFormat)

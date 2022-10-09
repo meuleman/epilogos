@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import re
+import filter_regions as fr
 
 
 def getNumStates(stateFile):
@@ -190,3 +191,43 @@ def generateRegionArr(query):
         return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
     else:
         raise ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
+
+
+def orderChromosomes(chromosomes):
+    # Orders chromosomes so numbers count up, followed by alphabetical
+    rawChrNamesInts = []
+    rawChrNamesStrs = []
+    for chromosome in chromosomes:
+        try:
+            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
+        except ValueError:
+            rawChrNamesStrs.append(chromosome.split("chr")[-1])
+    rawChrNamesInts.sort()
+    rawChrNamesStrs.sort()
+    chrOrder = rawChrNamesInts + rawChrNamesStrs
+    for i in range(len(chrOrder)):
+        chrOrder[i] = "chr" + str(chrOrder[i])
+
+    return chrOrder
+
+
+def maxMean(inputArr, exemplarWidth):
+    f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
+    f.read()
+    f.filter()
+    exemplars = f.output_df
+    exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
+    indices = exemplars["OriginalIdx"].to_numpy()
+
+    return exemplars, indices
+
+
+def generateExemplarIndicesArr(indices, exemplarWidth):
+    upperLower = []
+    for idx in indices:
+        # If the exemplar region is an odd number of bins we have to add 1 to the upper index
+        lowerIdx = idx - exemplarWidth // 2
+        upperIdx = idx + exemplarWidth // 2
+        if exemplarWidth % 2: upperIdx += 1
+        upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
+    return np.array(upperLower, dtype=np.int32)

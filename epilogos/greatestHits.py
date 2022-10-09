@@ -5,8 +5,7 @@ from time import time
 from os import remove
 import pandas as pd
 from epilogos.pairwiseVisual import findSign
-from epilogos.helpers import strToBool, getStateNames
-import filter_regions as fr
+from epilogos.helpers import maxMean, generateExemplarIndicesArr, orderChromosomes, strToBool, getStateNames
 
 def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
     """
@@ -59,18 +58,7 @@ def readInData(outputDirPath):
     dataChunks = list(zip(*results))
 
     # Figuring out chromosome order
-    rawChrNamesInts = []
-    rawChrNamesStrs = []
-    for chromosome in dataChunks[0]:
-        try:
-            rawChrNamesInts.append(int(chromosome.split("chr")[-1]))
-        except ValueError:
-            rawChrNamesStrs.append(chromosome.split("chr")[-1])
-    rawChrNamesInts.sort()
-    rawChrNamesStrs.sort()
-    chrOrder = rawChrNamesInts + rawChrNamesStrs
-    for i in range(len(chrOrder)):
-        chrOrder[i] = "chr" + str(chrOrder[i])
+    chrOrder = orderChromosomes(dataChunks[0])
 
     # Sorting the dataframes by chromosomal location
     # Creating array of scores and locations ordered by chromosome based on the read in chunks
@@ -119,31 +107,17 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
     """
     with open(filePath, 'w') as outFile:
         # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
-        f = fr.Filter(method='maxmean', input=np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
-        f.read()
-        f.filter()
-        exemplars = f.output_df
-
-        exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
-
-        indices = exemplars["OriginalIdx"].to_numpy()
+        exemplars, indices = maxMean(np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), exemplarWidth)
 
         # Generating array of all indices for vectorized calculations
-        upperLower = []
-        for idx in indices:
-            # If the exemplar region is an odd number of bins we have to add 1 to the upper index
-            lowerIdx = idx - exemplarWidth // 2
-            upperIdx = idx + exemplarWidth // 2
-            if exemplarWidth % 2: upperIdx += 1
-            upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
-        upperLower = np.array(upperLower, dtype=np.int32)
+        exemplarIndicesArr = generateExemplarIndicesArr(indices, exemplarWidth)
 
         # Calculate the maximum contributing state in each region
         # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
         # Flip makes it so tie leads to the higher number state
         # Calculate the maximum value for each state in and then from there the argmax for the max state
         # Subtract from the shape of the array to reverse the effect of flip and get the state number
-        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(np.abs(scoreArr)[upperLower], axis=2), axis=1), axis=1)
+        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(np.abs(scoreArr)[exemplarIndicesArr], axis=2), axis=1), axis=1)
 
         # Build pandas dataframe for writing
         locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End", "Score"]]).astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})

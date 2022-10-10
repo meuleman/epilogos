@@ -31,8 +31,8 @@ from epilogos.helpers import getNumStates
 @click.option("-j", "--state-info", "stateInfo", type=str, help="State model info file")
 @click.option("-s", "--saliency", "saliency", type=int, default=1, show_default=True,
               help="Desired saliency level (1, 2, or 3)")
-@click.option("-c", "--num-cores", "numProcesses", type=int, default=0,
-              help="The number of cores to run on [default: 0 = Uses all cores]")
+@click.option("-c", "--num-cores", "numProcesses", type=int, default=1,
+              help="The number of cores to run on (0=Uses all cores) [default: 1]")
 @click.option("-x", "--exit", "exitBool", is_flag=True,
               help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of " +
                    "all processes")
@@ -58,9 +58,17 @@ from epilogos.helpers import getNumStates
 @click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=125,
               help="The number of bins in the exemplar region Default is" +
                    "125 which results in a 25kb window")
+@click.option("--exp-freq-memory", "expFreqMem", type=str, default="16000",
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
+@click.option("--exp-comb-memory", "expCombMem", type=str, default="8000",
+              help="Memory (in MB) for the expected frequency combination job [default: 8000MB]")
+@click.option("--score-memory", "scoreMem", type=str, default="16000",
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
+@click.option("--roi-memory", "roiMem", type=str, default="-1",
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB (single) / 100000MB (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
-         pvalBool, exemplarWidth):
+         pvalBool, exemplarWidth, expFreqMem, expCombMem, scoreMem, roiMem):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -149,13 +157,15 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     if not commandLineBool:
         # Variable for the sbatch submission in case we are using slurm
-        if numProcesses == 0:
-            memory = "--exclusive --mem=0"
-        else:
-            memory = "--ntasks={} --mem=16000".format(numProcesses)
+        expFreqMem, expCombMem, scoreMem, roiMem = determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem, mode)
 
-            print("\nWARNING: {} cores requested.".format(numProcesses), flush=True, end=" ")
-            print("Machine specs unknown, requesting 16gb of memory across all cores")
+        # if numProcesses == 0:
+        #     memory = "--exclusive --mem=0"
+        # else:
+        #     memory = "--ntasks={} --mem=16000".format(numProcesses)
+
+        #     print("\nWARNING: {} cores requested.".format(numProcesses), flush=True, end=" ")
+        #     print("Machine specs unknown, requesting 16gb of memory across all cores")
 
         if partition:
             partition = "--partition=" + partition
@@ -188,7 +198,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                 pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
                                                                              outputDirPath, fileTag, numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-                                                  pythonCommand, saliency, partition, memory, ""))
+                                                  pythonCommand, saliency, partition, expFreqMem, ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
@@ -206,7 +216,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                            saliency, outputDirPath, fileTag, numProcesses,
                                                                            verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
-                                                  pythonCommand, saliency, partition, memory, ""))
+                                                  pythonCommand, saliency, partition, expFreqMem, ""))
 
     if not commandLineBool:
         # Create a string for slurm dependency to work and to print more nicely
@@ -222,7 +232,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
                                                        verbose)
         combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, partition,
-                                          "--ntasks=1 --mem=8000", "--dependency=afterok:{}".format(expJobIDStr))
+                                          expCombMem, "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID, flush=True)
 
     scoreJobIDArr = []
@@ -240,7 +250,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                       fileTag, numProcesses, quiescentState,
                                                                                       groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-                                                    pythonCommand, saliency, partition, memory,
+                                                    pythonCommand, saliency, partition, scoreMem,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
         else:
             # Find matching file in other directory
@@ -261,7 +271,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                     fileTag, numProcesses, quiescentState,
                                                                                     groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
-                                                    pythonCommand, saliency, partition, memory,
+                                                    pythonCommand, saliency, partition, scoreMem,
                                                     "--dependency=afterok:{}".format(combinationJobID)))
 
     if not commandLineBool:
@@ -279,7 +289,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             pythonCommand = "python {} {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
                                                               storedExpPath, exemplarWidth, verbose)
             summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
-                                          "--ntasks=1 --mem=20000", "--dependency=afterok:{}".format(scoreJobIDStr))
+                                          roiMem, "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
@@ -294,7 +304,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                                                                                 fileTag, numProcesses, pvalBool,
                                                                                 diagnosticBool, numTrials, samplingSize,
                                                                                 storedExpPath, exemplarWidth, verbose)
-            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, memory,
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, roiMem,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
 
@@ -564,6 +574,26 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             sleep(2)
         else:
             sleep(10)
+
+
+def determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem, mode):
+    if numProcesses == 0:
+        expFreqMem, expCombMem, scoreMem, roiMem = "--exclusive --mem=0"
+    else:
+        expFreqMem = "--ntasks={} --mem={}".format(numProcesses, expFreqMem)
+        expCombMem = "--ntasks={} --mem={}".format(numProcesses, expCombMem)
+        scoreMem   = "--ntasks={} --mem={}".format(numProcesses, scoreMem)
+
+        # Default roi memory is different for single/paired mode
+        if roiMem == "-1":
+            if mode == "single":
+                roiMem = "--ntasks={} --mem=20000".format(numProcesses)
+            else:
+                roiMem = "--ntasks={} --mem=100000".format(numProcesses)
+        else:
+            roiMem = "--ntasks={} --mem={}".format(numProcesses, roiMem)
+
+    return expFreqMem, expCombMem, scoreMem, roiMem
 
 
 if __name__ == "__main__":

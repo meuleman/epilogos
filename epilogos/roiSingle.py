@@ -4,20 +4,19 @@ import numpy as np
 from time import time
 from os import remove
 import pandas as pd
-from epilogos.pairwiseVisual import findSign
-from epilogos.helpers import maxMean, generateExemplarIndicesArr, orderChromosomes, strToBool, getStateNames
+from epilogos.helpers import maxMean, generateROIIndicesArr, orderChromosomes, strToBool, getStateNames, findSign
 
-def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
+def main(outputDir, stateInfo, fileTag, expFreqPath, roiWidth, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
 
     Input:
-    outputDir -- The path of the output directory
-    stateInfo -- State model tab seperated information file
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    outputDir   -- The path of the output directory
+    stateInfo   -- State model tab seperated information file
+    fileTag     -- A string which helps ensure outputed files are named similarly within an epilogos run
     expFreqPath -- The location of the stored expected frequency array
-    exemplarWidth -- Size of exemplar regions in bins
-    verbose -- Boolean which if True, causes much more detailed prints
+    roiWidth    -- Size of regions of interest in bins
+    verbose     -- Boolean which if True, causes much more detailed prints
     """
     outputDirPath = Path(outputDir)
 
@@ -29,11 +28,11 @@ def main(outputDir, stateInfo, fileTag, expFreqPath, exemplarWidth, verbose):
     if verbose: print("    Time:", time() - tRead, flush=True)
     else: print("\t[Done]", flush=True)
 
-    if verbose: print("\nFinding greatest hits...", flush=True); tHits = time()
-    else: print("    Greatest hits txt\t", end="", flush=True)
-    greatestHitsPath = outputDirPath / "greatestHits_{}.txt".format(fileTag)
-    createTopScoresTxt(greatestHitsPath, locationArr, scoreArr, stateNameList, exemplarWidth)
-    if verbose: print("    Time:", time() - tHits, flush=True)
+    if verbose: print("\nFinding regions of interest...", flush=True); tRoi = time()
+    else: print("    Regions of interest txt\t", end="", flush=True)
+    roiPath = outputDirPath / "regionsOfInterest_{}.txt".format(fileTag)
+    createTopScoresTxt(roiPath, locationArr, scoreArr, stateNameList, roiWidth)
+    if verbose: print("    Time:", time() - tRoi, flush=True)
     else: print("\t[Done]", flush=True)
 
     # Removing the expected frequency array
@@ -49,8 +48,7 @@ def readInData(outputDirPath):
 
     Output:
     locationArr -- Numpy array containing the genomic locations for all the scores
-    scoreArr.sum(axis=1) -- Numpy array containing sums of the KL-Scores for each genomic bin
-    maxScoreArr -- Numpy array containing the state which had the highest KL-score in each bin
+    scoreArr    -- Numpy array containing the KL-Scores for each genomic bin
     """
     results = map(unpackNPZ, outputDirPath.glob("temp_scores_*.npz"))
 
@@ -85,42 +83,54 @@ def unpackNPZ(file):
     file -- The .npz file to unpack
 
     Output:
-    npzFile['chrName'][0] -- The name of the chromosome which the scores are of
-    npzFile['scoreArr'] -- Numpy array containing the kullback leibler scores
+    npzFile['chrName'][0]  -- The name of the chromosome which the scores are of
+    npzFile['scoreArr']    -- Numpy array containing the kullback leibler scores
     npzFile['locationArr'] -- Numpy array containing the genomic locations for all the scores
     """
     npzFile = np.load(Path(file))
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 
-def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, exemplarWidth):
+def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, roiWidth):
     """
-    Finds the top 1000 scoring bins and merges adjacent bins, then outputs a txt containing these top scoring regions and
-    some information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
+    Finds the top 100 regions of interest using filter-region's maxmean algorithm then outputs them in a txt with some
+    information about each (chromosome, bin start, bin end, state name, absolute value of score, sign of score)
 
     Input:
-    filePath -- The path of the file to write to
+    filePath    -- The path of the file to write to
     locationArr -- Numpy array containing the genomic locations of all the bins
-    scoreArr -- Numpy array containing the scores within each bin
-    nameArr -- Numpy array containing the names of all the states
-    exemplarWidth -- size of exemplar regions in bins
+    scoreArr    -- Numpy array containing the scores within each bin
+    nameArr     -- Numpy array containing the names of all the states
+    roiWidth    -- size of regions of interest in bins
+
+    Output:
+    regionsOfInterest*.txt of top 100 regions of interest formatted as follows:
+        Column 1: Chromosome
+        Column 2: Start coordinate
+        Column 3: End coordinate
+        Column 4: Name of the largest scoring state
+        Column 5: Sum of the Kullback-Leibler scores
+        Column 6: Sign of the sum of Kullback-Leibler scores
     """
     with open(filePath, 'w') as outFile:
         # Concatenate the location and score arrays so that filter regions outputs the region coords as well as scores
-        exemplars, indices = maxMean(np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1), exemplarWidth)
+        rois, indices = maxMean(np.concatenate((locationArr, scoreArr.sum(axis=1).reshape(len(scoreArr), 1)), axis=1),
+                                roiWidth, 100)
 
         # Generating array of all indices for vectorized calculations
-        exemplarIndicesArr = generateExemplarIndicesArr(indices, exemplarWidth)
+        roiIndicesArr = generateROIIndicesArr(indices, roiWidth)
 
         # Calculate the maximum contributing state in each region
         # In the case of a tie, the higher number state wins (e.g. last state wins if all states are 0)
         # Flip makes it so tie leads to the higher number state
         # Calculate the maximum value for each state in and then from there the argmax for the max state
         # Subtract from the shape of the array to reverse the effect of flip and get the state number
-        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(np.abs(scoreArr)[exemplarIndicesArr], axis=2), axis=1), axis=1)
+        maxStates = scoreArr.shape[1] - \
+                    np.argmax(np.max(np.flip(np.abs(scoreArr)[roiIndicesArr], axis=2), axis=1), axis=1)
 
         # Build pandas dataframe for writing
-        locations = pd.DataFrame(exemplars.loc[:, ["Chromosome", "Start", "End", "Score"]]).astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})
+        locations = pd.DataFrame(rois.loc[:, ["Chromosome", "Start", "End", "Score"]])\
+                                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})
         locations["MaxScoreState"] = maxStates.astype(np.int32)
 
         # Write all the locations to the file

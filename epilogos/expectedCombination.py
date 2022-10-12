@@ -12,9 +12,12 @@ def main(outputDirectory, storedExpInput, fileTag, verbose):
 
     Input:
     outputDirectory -- The output directory for epilogos
-    storedExpInput -- The path of the expected frequency array which is being created
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    verbose -- Boolean which if True, causes much more detailed prints
+    storedExpInput  -- The path of the expected frequency array which is being created
+    fileTag         -- A string which helps ensure outputed files are named similarly within an epilogos run
+    verbose         -- Boolean which if True, causes much more detailed prints
+
+    Output:
+    A .npy file containing an array of the expected frequencies across all input files
     """
     if verbose: tTotal = time()
 

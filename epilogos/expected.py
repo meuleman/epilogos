@@ -13,14 +13,14 @@ def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, ve
     Wrapper function which prepares inputs for the expected frequency calculation
 
     Input:
-    file1 -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2 -- The path of the second file to read states from (paired epilogos)
-    numStates -- The number of states in the state model
-    saliency -- The saliency metric being used in the epilogos run
-    outputDir -- The path of the output directory
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
+    file1        -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2        -- The path of the second file to read states from (paired epilogos)
+    numStates    -- The number of states in the state model
+    saliency     -- The saliency metric being used in the epilogos run
+    outputDir    -- The path of the output directory
+    fileTag      -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses -- The number of cores to run on
-    verbose -- Boolean which if True, causes much more detailed prints
+    verbose      -- Boolean which if True, causes much more detailed prints
     """
     if verbose: tTotal = time()
 
@@ -51,16 +51,19 @@ def calculateExpected(saliency, file1Path, file2Path, rowList, numStates, output
     Function responsible for deploying the processes used to calculate the expected frequencies
 
     Input:
-    saliency -- The saliency metric being used in the epilogos run
-    file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2Path -- The path of the second file to read states from (paired epilogos)
-    rowList -- A list of tuples which contain the first and last rows for each core to use
-    numStates -- The number of states in the state model
+    saliency      -- The saliency metric being used in the epilogos run
+    file1Path     -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2Path     -- The path of the second file to read states from (paired epilogos)
+    rowList       -- A list of tuples which contain the first and last rows for each core to use
+    numStates     -- The number of states in the state model
     outputDirPath -- The path of the output directory
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    filename -- The name of the file for which we are calculating the expected frequencies
-    numProcesses -- The number of cores to run on
-    verbose -- Boolean which if True, causes much more detailed prints
+    fileTag       -- A string which helps ensure outputed files are named similarly within an epilogos run
+    filename      -- The name of the file for which we are calculating the expected frequencies
+    numProcesses  -- The number of cores to run on
+    verbose       -- Boolean which if True, causes much more detailed prints
+
+    Output:
+    A .npy array containing the expected frequencies of the input file
     """
     if verbose: print("\nNumber of Processes:", numProcesses, flush=True)
 
@@ -89,11 +92,11 @@ def s1Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Function responsible for expected frequency calculation over a set of rows for a saliency metric of 1
 
     Input:
-    file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2Path -- The path of the second file to read states from (paired epilogos)
+    file1Path  -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2Path  -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
-    numStates -- The number of states in the state model
-    verbose -- Boolean which if True, causes much more detailed prints
+    numStates  -- The number of states in the state model
+    verbose    -- Boolean which if True, causes much more detailed prints
 
     Output:
     A numpy array containing the counts of each state within the specified rows of the file
@@ -118,11 +121,11 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     Function responsible for expected frequency calculation over a set of rows for a saliency metric of 2
 
     Input:
-    file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2Path -- The path of the second file to read states from (paired epilogos)
+    file1Path  -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2Path  -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
-    numStates -- The number of states in the state model
-    verbose -- Boolean which if True, causes much more detailed prints
+    numStates  -- The number of states in the state model
+    verbose    -- Boolean which if True, causes much more detailed prints
 
     Output:
     A numpy array containing the counts of each pair of states within the specified rows of the file
@@ -160,13 +163,13 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
 
 def s3Calc(file1Path, rowsToCalc, numStates, verbose):
     """
-    Function responsible for expected frequency calculation over a set of rows for a saliency metric of 2
+    Function responsible for expected frequency calculation over a set of rows for a saliency metric of 3
 
     Input:
-    file1Path -- The path of the only file to read states from
+    file1Path  -- The path of the only file to read states from
     rowsToCalc -- The first and last rows to count expected frequencies from the file
-    numStates -- The number of states in the state model
-    verbose -- Boolean which if True, causes much more detailed prints
+    numStates  -- The number of states in the state model
+    verbose    -- Boolean which if True, causes much more detailed prints
 
     Output:
     A numpy array containing the counts of each grouping of states and epigenomes within the specified rows of the file
@@ -204,10 +207,13 @@ def storeExpArray(expFreqArr, outputDirPath, fileTag, filename):
     Stores the expected frequency array of the file as a temporary .npy file
 
     Input:
-    expFreqArr -- Numpy array of the expected frequencies
+    expFreqArr    -- Numpy array of the expected frequencies
     outputDirPath -- The output directory for epilogos
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    filename -- The name of the file for which we calculated the expected frequencies
+    fileTag       -- A string which helps ensure outputed files are named similarly within an epilogos run
+    filename      -- The name of the file for which we calculated the expected frequencies
+
+    Output:
+    A .npy array containing the expected frequencies of the input file
     """
     expFreqFilename = "temp_exp_freq_{}_{}.npy".format(fileTag, filename)
     expFreqPath = outputDirPath / expFreqFilename

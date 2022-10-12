@@ -5,17 +5,22 @@ from matplotlib.lines import Line2D
 from pathlib import Path
 import numpy.lib.recfunctions as nlr
 import click
-from epilogos.helpers import getStateNames, getStateColorsRGB
-from epilogos.helpers import generateRegionArr
+from epilogos.helpers import getStateNames, getStateColorsRGB, generateRegionArr
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.option("-r", "--regions", "regions", type=str, help="Region formatted as chr:start-end or path to bed file containing regions to visualize")
-@click.option("-s", "--scores-file", "epilogosScoresPath", type=str, help="Path to epilogos scores file to be used for region visualization")
-@click.option("-j", "--state-info", "metadataPath", type=str, help="Path to state metadata file to be used for region coloring")
+@click.option("-r", "--regions", "regions", type=str,
+              help="Region formatted as chr:start-end or path to bed file containing regions to visualize")
+@click.option("-s", "--scores-file", "epilogosScoresPath", type=str,
+              help="Path to epilogos scores file to be used for region visualization")
+@click.option("-j", "--state-info", "metadataPath", type=str,
+              help="Path to state metadata file to be used for region coloring")
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired output directory")
-@click.option("-y", "--individual-ylims", "individualYlims", is_flag=True, help="If true each region is plotted on its own y-axis")
-def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims):
+@click.option("-y", "--individual-ylims", "individualYlims", is_flag=True,
+              help="If true each region is plotted on its own y-axis")
+@click.optino("-f", "--file-format", "fileFormat", type=str, default="pdf",
+              help="File format for the output images [default: pdf]")
+def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, fileFormat):
     # Read in regions
     regionArr = generateRegionArr(regions)
 
@@ -39,33 +44,69 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims):
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = ylim(processedScoresList) if individualYlims else (np.nan, np.nan)
 
+    # Strip period off file format
+    if fileFormat.startswith('.'): fileFormat = fileFormat[1:]
+
     # Draw the query regions
     for i, (chr, start, end) in enumerate(regionArr):
-        drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames, stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.pdf".format(chr, start, end))
+        drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,\
+                           stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
 
 
-# Takes in a region, genome wide epilogos scores, and state colors and outputs a numpy array containing scores for the region
-# with each bin independently sorted by its scores. It also generates a corresponding state color array for the score array
 def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors):
+    """
+    Takes in a region, genome wide epilogos scores, and state colors and outputs a numpy array containing scores for the
+    region with each bin independently sorted by its scores.
+    It also generates a corresponding state color array for the score array
+
+    Input:
+    chr            -- The region's chromosome
+    start          -- The region's start position on the chromosome (in bp)
+    end            -- The region's end position on the chromosome (in bp)
+    epilogosScores -- Numpy array containing epilogos scores across the whole genome
+    stateColors    -- Numpy array containing the rgba colors for each state
+
+    Output:
+    regionScoresSorted -- Numpy array containing scores across the region with each bin individually sorted by scores
+    regionColorsSorted -- Numpy array containing state colors across the region with each bin individually sorted by scores
+    """
     # Find the epilogos scores for the region
     scoresStartIndex = np.where((epilogosScores.iloc[:,0] == chr) & (epilogosScores.iloc[:,1] == start))[0][0]
     scoresEndIndex = np.where((epilogosScores.iloc[:,0] == chr) & (epilogosScores.iloc[:,1] == end))[0][0]
     regionScores = epilogosScores.iloc[scoresStartIndex:scoresEndIndex, 3:].to_numpy(dtype=np.float64).T
 
     # Generate state color array for the region
-    state_colors_2d = nlr.unstructured_to_structured(np.swapaxes(np.array([stateColors for i in range(regionScores.shape[1])]), 0, 1)).astype('O')
+    state_colors_2d = nlr.unstructured_to_structured(\
+                          np.swapaxes(np.array([stateColors for i in range(regionScores.shape[1])]), 0, 1)).astype('O')
 
     # Sort each bin by the scores
     sortedScoresIndices = np.argsort(regionScores, axis=0)
-    regionScoresSorted = np.take_along_axis(regionScores, sortedScoresIndices, axis=0)
-    regionColorsSorted = np.take_along_axis(state_colors_2d, sortedScoresIndices, axis=0)
+    regionScoresSorted  = np.take_along_axis(regionScores, sortedScoresIndices, axis=0)
+    regionColorsSorted  = np.take_along_axis(state_colors_2d, sortedScoresIndices, axis=0)
 
     return regionScoresSorted, regionColorsSorted
 
 
-# Takes in a region, epilogos scores for that region (each bin is sorted by scores),
-#  state colors for the region (sorted same order as scores), and ylims and draws the epilogos graph for the region
 def drawEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, stateColors, file):
+    """
+    Draws the epilogos scores for a region. State scores are drawn with lowest scores at the bottom and highest at the top.
+    This sorting is done individually for each bin
+
+    Input:
+    chr         -- The region's chromosome
+    start       -- The region's start position on the chromosome (in bp)
+    end         -- The region's end position on the chromosome (in bp)
+    scores      -- Numpy array containing scores across the region with each bin individually sorted by scores
+    colors      -- Numpy array containing state colors across the region with each bin individually sorted by scores
+    ymin        -- The minimum lower bound for the y-axis
+    ymax        -- The minimum upper bound for the y-axis
+    stateNames  -- Numpy array containing names of states
+    stateColors -- Numpy array containg colors of states
+    file        -- Name for the output file
+
+    Output:
+    A image containing the epilogos scores drawn
+    """
     # create the bar chart
     fig, axs = plt.subplots(1, 1, figsize=(24,5))
 
@@ -124,8 +165,18 @@ def drawEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, 
     fig.savefig(file, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
 
 
-# Determines what the bounds should be for all the graphs so that they are all graphed on the same scale
 def ylim(regionScoresList):
+    """
+    Determines what the bounds should be for all the graphs so that they are all graphed on the same scale
+
+    Input:
+    regionScoresList -- List of Numpy arrays containg epilogos scores over queried regions
+
+    Output:
+    minScore -- The minimum lower bound for the y axis
+    maxScore -- The minimum upper bound for the y axis
+    """
+
     minScore = np.finfo(np.float32).max
     maxScore = np.finfo(np.float32).min
 

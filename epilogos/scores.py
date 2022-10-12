@@ -16,17 +16,17 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
     Wrapper function which prepares inputs for the score calculation
 
     Input:
-    file1 -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2 -- The path of the second file to read states from (paired epilogos)
-    numStates -- The number of states in the state model
-    saliency -- The saliency metric being used in the epilogos run
-    outputDir -- The path of the output directory
-    expFreqPath -- The path of the expected frequency array
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    numProcesses -- The number of cores to run on
+    file1          -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2          -- The path of the second file to read states from (paired epilogos)
+    numStates      -- The number of states in the state model
+    saliency       -- The saliency metric being used in the epilogos run
+    outputDir      -- The path of the output directory
+    expFreqPath    -- The path of the expected frequency array
+    fileTag        -- A string which helps ensure outputed files are named similarly within an epilogos run
+    numProcesses   -- The number of cores to run on
     quiescentState -- The state used to filter out quiescent bins
-    groupSize -- Size of the outputted null array
-    verbose -- Boolean which if True, causes much more detailed prints
+    groupSize      -- Size of the outputted null array
+    verbose        -- Boolean which if True, causes much more detailed prints
     """
     if verbose: tTotal = time()
 
@@ -61,8 +61,11 @@ def sharedToNumpy(sharedArr, numRows, numStates):
 
     Input:
     sharedArr -- The shared array to shape
-    numRows -- The number of rows for the numpy array
+    numRows   -- The number of rows for the numpy array
     numStates -- The number of columns for the numpy array
+
+    Output:
+    numpy array generated from a buffered shared array
     """
     return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
 
@@ -72,9 +75,9 @@ def _init(sharedArr_, expFreqPath_, verbose_):
     Initializes global variables for multiprocessing in the single epilogos case
 
     Input:
-    sharedArr_ -- A tuple containing relevant information about the shared score array
+    sharedArr_   -- A tuple containing relevant information about the shared score array
     expFreqPath_ -- A pathlib path to the expected frequency array
-    verbose_ -- A boolean which tells us the amount we need to print
+    verbose_     -- A boolean which tells us the amount we need to print
     """
     global sharedArr
     global expFreqPath
@@ -91,17 +94,17 @@ def _initPairwise(sharedArr1_, sharedArr2_, shuffledSharedArr1_, shuffledSharedA
     Initializes global variables for multiprocessing in the paired epilogos case
 
     Input:
-    sharedArr1_ -- The first shared score array
-    sharedArr2_ -- The second shared score array
-    shuffledSharedArr1_ -- The first shared null score array
-    shuffledSharedArr2_ -- The second shared null score array
+    sharedArr1_          -- The first shared score array
+    sharedArr2_          -- The second shared score array
+    shuffledSharedArr1_  -- The first shared null score array
+    shuffledSharedArr2_  -- The second shared null score array
     quiescenceSharedArr_ -- Shared array containing T/F values for whether a bin is quiescent
-    totalRows -- The number of rows of the input files
-    numStates -- The number of states in the state model
-    quiescentState_ -- The state used to filter out quiescent bins
-    expFreqPath_ -- A pathlib path to the expected frequency array
-    groupSize_ -- Size of outputed null array
-    verbose_ -- A boolean which tells us the amount we need to print
+    totalRows            -- The number of rows of the input files
+    numStates            -- The number of states in the state model
+    quiescentState_      -- The state used to filter out quiescent bins
+    expFreqPath_         -- A pathlib path to the expected frequency array
+    groupSize_           -- Size of outputed null array
+    verbose_             -- A boolean which tells us the amount we need to print
     """
     global sharedArr1
     global sharedArr2
@@ -130,16 +133,20 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
     Function responsible for deploying the processes used to calculate the scores in the single epilogos case
 
     Input:
-    saliency -- The saliency metric being used in the epilogos run
-    file1Path -- The path of the only file to read states from
-    rowList -- A list of tuples which contain the first and last rows for each core to use
-    numStates -- The number of states in the state model
+    saliency      -- The saliency metric being used in the epilogos run
+    file1Path     -- The path of the only file to read states from
+    rowList       -- A list of tuples which contain the first and last rows for each core to use
+    numStates     -- The number of states in the state model
     outputDirPath -- The path of the output directory
-    expFreqPath -- The path to the expected frequency array
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    filename -- The name of the file for which we are calculating the expected frequencies
-    numProcesses -- The number of cores to run on
-    verbose -- Boolean which if True, causes much more detailed prints
+    expFreqPath   -- The path to the expected frequency array
+    fileTag       -- A string which helps ensure outputed files are named similarly within an epilogos run
+    filename      -- The name of the file for which we are calculating the expected frequencies
+    numProcesses  -- The number of cores to run on
+    verbose       -- Boolean which if True, causes much more detailed prints
+
+    Output:
+    scores*.txt.gz file containing the scores for the input file
+    temp_scores*.npz file containing the scores as a npz file for fast reading later
     """
 
     if verbose: print("\nNumber of Processes:", numProcesses, flush=True)
@@ -168,7 +175,7 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
 
     outputTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
     writeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputTxtPath, locationArr)
-    # Temporary scores for greatest hits (np files are faster to read in)
+    # Temporary scores for regions of interest (np files are faster to read in)
     tempScoresPath = outputDirPath / "temp_scores_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scoreArr=sharedToNumpy(sharedArr, totalRows, numStates),
                         locationArr=locationArr)
@@ -180,19 +187,24 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     Function responsible for deploying the processes used to calculate the scores in the paired epilogos case
 
     Input:
-    saliency -- The saliency metric being used in the epilogos run
-    file1Path -- The path of the first file to read states from
-    file2Path -- The path of the second file to read states from
-    rowList -- A list of tuples which contain the first and last rows for each core to use
-    numStates -- The number of states in the state model
-    outputDirPath -- The path of the output directory
-    expFreqPath -- The path to the expected frequency array
-    fileTag -- A string which helps ensure outputed files are named similarly within an epilogos run
-    filename -- The name of the file for which we are calculating the expected frequencies
-    numProcesses -- The number of cores to run on
+    saliency       -- The saliency metric being used in the epilogos run
+    file1Path      -- The path of the first file to read states from
+    file2Path      -- The path of the second file to read states from
+    rowList        -- A list of tuples which contain the first and last rows for each core to use
+    numStates      -- The number of states in the state model
+    outputDirPath  -- The path of the output directory
+    expFreqPath    -- The path to the expected frequency array
+    fileTag        -- A string which helps ensure outputed files are named similarly within an epilogos run
+    filename       -- The name of the file for which we are calculating the expected frequencies
+    numProcesses   -- The number of cores to run on
     quiescentState -- The state used to filter out quiescent bins
-    groupSize -- Size of the outputted null array
-    verbose -- Boolean which if True, causes much more detailed prints
+    groupSize      -- Size of the outputted null array
+    verbose        -- Boolean which if True, causes much more detailed prints
+
+    Output:
+    pairwiseDelta*.txt.gz file containing the differences between the scores of input files
+    temp_nullDistances*.npz file containing the null distances as a npz file for fast reading later
+    temp_quiescence*.npz file containing booleans identifying bins which are completely quiescent
     """
     if verbose: print("\nNumber of Processes:", numProcesses, flush=True)
 
@@ -257,8 +269,8 @@ def s1Score(file1Path, file2Path, rowsToCalc):
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
 
     Input:
-    file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2Path -- The path of the second file to read states from (paired epilogos)
+    file1Path  -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2Path  -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
     """
     # Loading the expected frequency array
@@ -321,9 +333,12 @@ def rowObsS1(dataArr, row, numStates):
     Calculates the observed counts for each state for a saliency metric of 1
 
     Input:
-    dataArr -- The numpy array which contains the states to count
-    row -- The row from which to calculate the observed counts
+    dataArr   -- The numpy array which contains the states to count
+    row       -- The row from which to calculate the observed counts
     numStates -- The number of states in the state model
+
+    Output:
+    rowObsArr -- Observed counts for each state in a row for a saliency metric of 1
     """
     rowObsArr = np.zeros(numStates)
     # Count number of each state in row and return array
@@ -339,8 +354,8 @@ def s2Score(file1Path, file2Path, rowsToCalc):
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
 
     Input:
-    file1Path -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
-    file2Path -- The path of the second file to read states from (paired epilogos)
+    file1Path  -- The path of the only (single epilogos) or first (paired epilogos) file to read states from
+    file2Path  -- The path of the second file to read states from (paired epilogos)
     rowsToCalc -- The rows to count expected frequencies from the files
     """
     # Loading the expected frequency array
@@ -412,10 +427,13 @@ def rowObsS2(dataArr, row, permutations, numStates):
     Calculates the observed counts for each pair of states for a saliency metric of 2
 
     Input:
-    dataArr -- The numpy array which contains the states to count
-    row -- The row from which to calculate the observed counts
+    dataArr      -- The numpy array which contains the states to count
+    row          -- The row from which to calculate the observed counts
     permutations -- The number of permutations of epigenomes possible within the row of the dataArr
-    numStates -- The number of states in the state model
+    numStates    -- The number of states in the state model
+
+    Output:
+    rowObsArr -- Observed counts for each pair of states within a bin for a saliency metric of 2
     """
     # (Within a row, how many ways can you choose x and y to be together) / (how many ordered ways can you choose 2 states)
     #  = Prob of choosing x and y
@@ -439,7 +457,7 @@ def s3Score(file1Path, rowsToCalc):
     variables used for the shared score array(s). There is no output as scores are put directly into the shared score array(s)
 
     Input:
-    file1Path -- The path of the only file to read states from
+    file1Path  -- The path of the only file to read states from
     rowsToCalc -- The rows to count expected frequencies from the files
     """
     dataArr = readStates(file1Path=file1Path, rowsToCalc=rowsToCalc, verbose=verbose)
@@ -495,6 +513,11 @@ def writeScores(dataArr, outputTxtPath, locationArr):
     dataArr -- Numpy array containing the scores to write
     outputTextPath -- The path of the file to write to
     locationArr -- Numpy array containing the genomic locations of the scores
+
+    Output:
+    scores*.txt.gz file containing the scores for the input file
+    OR
+    pairwiseDelta*.txt.gz file containing the differences between the scores of input files
     """
     outputTxt = gzip.open(outputTxtPath, "wt")
 

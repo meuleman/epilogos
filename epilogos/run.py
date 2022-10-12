@@ -10,8 +10,8 @@ import click
 from epilogos.expected import main as expected
 from epilogos.expectedCombination import main as expectedCombination
 from epilogos.scores import main as scores
-from epilogos.greatestHits import main as greatestHits
-from epilogos.pairwiseVisual import main as pairwiseVisual
+from epilogos.roiSingle import main as roiSingle
+from epilogos.roiAndVisualPairwise import main as roiPairwise
 from epilogos.helpers import getNumStates
 
 
@@ -55,9 +55,8 @@ from epilogos.helpers import getNumStates
                    "partition as designated by the system administrator")
 @click.option("-n", "--null-distribution", "pvalBool", is_flag=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
-@click.option("-w", "--exemplar-width", "exemplarWidth", type=int, default=125,
-              help="The number of bins in the exemplar region Default is" +
-                   "125 which results in a 25kb window")
+@click.option("-w", "--roi-width", "roiWidth", type=int, default=0,
+              help="The number of bins in a region of interest [default: 50(single)/125(paired)]")
 @click.option("--exp-freq-memory", "expFreqMem", type=str, default="16000",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
 @click.option("--exp-comb-memory", "expCombMem", type=str, default="8000",
@@ -68,7 +67,7 @@ from epilogos.helpers import getNumStates
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB (single) / 100000MB (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
-         pvalBool, exemplarWidth, expFreqMem, expCombMem, scoreMem, roiMem):
+         pvalBool, roiWidth, expFreqMem, expCombMem, scoreMem, roiMem):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -101,12 +100,16 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     # Make sure all flags are submitted as expected
     checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
                numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool,
-               exemplarWidth)
+               roiWidth)
 
     verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
     # Quiescent value is user input - 1 because states are read in to be -1 from their values
     quiescentState = numStates - 1 if quiescentState == -1 else quiescentState - 1
+
+    # setting roiWidth from default of 0
+    if roiWidth == 0:
+        roiWidth = 50 if mode == "single" else 125
 
     # Get paths from arguments and turn them into absolute paths
     if mode == "single":
@@ -125,7 +128,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     # Make sure argments are valid
     checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, numTrials,
-                   samplingSize, quiescentState, groupSize, exemplarWidth)
+                   samplingSize, quiescentState, groupSize, roiWidth)
 
     # Informing user of their inputs
     print()
@@ -157,15 +160,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     if not commandLineBool:
         # Variable for the sbatch submission in case we are using slurm
-        expFreqMem, expCombMem, scoreMem, roiMem = determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem, mode)
-
-        # if numProcesses == 0:
-        #     memory = "--exclusive --mem=0"
-        # else:
-        #     memory = "--ntasks={} --mem=16000".format(numProcesses)
-
-        #     print("\nWARNING: {} cores requested.".format(numProcesses), flush=True, end=" ")
-        #     print("Machine specs unknown, requesting 16gb of memory across all cores")
+        expFreqMem, expCombMem, scoreMem, roiMem = determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem,
+                                                                     mode)
 
         if partition:
             partition = "--partition=" + partition
@@ -280,30 +276,31 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("    JobIDs:", scoreJobIDStr, flush=True)
 
     if mode == "single":
-        # Create a greatest hits text file
-        print("\nSTEP 4: Finding greatest hits", flush=True)
+        # Create a regions of interest text file
+        print("\nSTEP 4: Finding regions of interest", flush=True)
         if commandLineBool:
-            greatestHits(outputDirPath, stateInfo, fileTag, storedExpPath, exemplarWidth, verbose)
+            roiSingle(outputDirPath, stateInfo, fileTag, storedExpPath, roiWidth, verbose)
         else:
-            computeGreatestHitsPy = pythonFilesDir / "greatestHits.py"
-            pythonCommand = "python {} {} {} {} {} {} {}".format(computeGreatestHitsPy, outputDirPath, stateInfo, fileTag,
-                                                              storedExpPath, exemplarWidth, verbose)
-            summaryJobID = submitSlurmJob("", "hits", fileTag, outputDirPath, pythonCommand, saliency, partition,
+            computeROISinglePy = pythonFilesDir / "roiSingle.py"
+            pythonCommand = "python {} {} {} {} {} {} {}".format(computeROISinglePy, outputDirPath, stateInfo, fileTag,
+                                                                 storedExpPath, roiWidth, verbose)
+            summaryJobID = submitSlurmJob("", "roi", fileTag, outputDirPath, pythonCommand, saliency, partition,
                                           roiMem, "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
     else:
         # Fitting, calculating p-values, and visualizing pairiwse differences
-        print("\nSTEP 4: Generating p-values and figures", flush=True)
+        print("\nSTEP 4: Generating p-values, rois, & figures", flush=True)
         if commandLineBool:
-            pairwiseVisual(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, pvalBool,
-                           diagnosticBool, numTrials, samplingSize, storedExpPath, exemplarWidth, verbose)
+            roiPairwise(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, pvalBool,
+                           diagnosticBool, numTrials, samplingSize, storedExpPath, roiWidth, verbose)
         else:
-            computeVisualPy = pythonFilesDir / "pairwiseVisual.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeVisualPy, inputDirPath.name,
-                                                                                inputDirPath2.name, stateInfo, outputDirPath,
-                                                                                fileTag, numProcesses, pvalBool,
-                                                                                diagnosticBool, numTrials, samplingSize,
-                                                                                storedExpPath, exemplarWidth, verbose)
+            computeROIPairwisePy = pythonFilesDir / "roiAndVisualPairwise.py"
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeROIPairwisePy, inputDirPath.name,
+                                                                                      inputDirPath2.name, stateInfo,
+                                                                                      outputDirPath, fileTag, numProcesses,
+                                                                                      pvalBool, diagnosticBool, numTrials,
+                                                                                      samplingSize, storedExpPath, roiWidth,
+                                                                                      verbose)
             summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, roiMem,
                                           "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
@@ -320,7 +317,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
 def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
                numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition,
-               pvalBool, exemplarWidth):
+               pvalBool, roiWidth):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together
@@ -370,23 +367,23 @@ def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDire
 
 
 def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, numProcesses, numStates, numTrials,
-                   samplingSize, quiescentState, groupSize, exemplarWidth):
+                   samplingSize, quiescentState, groupSize, roiWidth):
     """
     Checks whether user submitted arguments have valid values
 
     Input:
-    mode -- 'single' or 'paired'; tells us which version of epilogos we are running
-    saliency -- The saliency metric input by the user
-    inputDirPath -- The path to the only input directory in single epilogos and the first input directory in paired epilogos
-    inputDirPath2 -- The path to the second input directory in the paired epilogos case
-    outputDirPath -- The path to the output directory for epilogos
-    numProcesses -- The number of cores the user would like to use
-    numStates -- The number of states in the state model
-    numTrials -- The number of gennorm fits to do in pairwise mode
-    samplingSize -- The amount of null data to fit in pairwise mode
+    mode           -- 'single' or 'paired'; tells us which version of epilogos we are running
+    saliency       -- The saliency metric input by the user
+    inputDirPath   -- The path to the only input directory in single epilogos and the first input directory in paired epilogos
+    inputDirPath2  -- The path to the second input directory in the paired epilogos case
+    outputDirPath  -- The path to the output directory for epilogos
+    numProcesses   -- The number of cores the user would like to use
+    numStates      -- The number of states in the state model
+    numTrials      -- The number of gennorm fits to do in pairwise mode
+    samplingSize   -- The amount of null data to fit in pairwise mode
     quiescentState -- The state used to filter out quiescent bins
-    groupSize -- The size of the null (shuffled) score arrays, -1 means inputed sizes
-    exemplarWidth -- size of exemplar regions in bins
+    groupSize      -- The size of the null (shuffled) score arrays, -1 means inputed sizes
+    roiWidth       -- size of regions of interest in bins
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
@@ -438,8 +435,8 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
         print("ERROR: Group size value must be positive or -1 (-1 means use inputted group sizes)")
         sys.exit()
 
-    if exemplarWidth < 0:
-        print("ERROR: Group size value must be greater than or equal to 0")
+    if roiWidth < 0:
+        print("ERROR: Group size value must be greater than 0")
         sys.exit()
 
 
@@ -448,15 +445,15 @@ def submitSlurmJob(filename, jobPrefix, fileTag, outputDirPath, pythonCommand, s
     Submits a epilogos job to a SLURM cluster
 
     Input:
-    filename -- The name of the file epilogos is using
-    jobPrefix -- The step of epilogos we are on ('exp_calc', 'exp_comb', 'score', 'visual', 'hits')
-    fileTag -- String that helps us ensure jobs are named consistenly across one epilogos run
+    filename      -- The name of the file epilogos is using
+    jobPrefix     -- The step of epilogos we are on ('exp_calc', 'exp_comb', 'score', 'visual', 'roi')
+    fileTag       -- String that helps us ensure jobs are named consistenly across one epilogos run
     outputDirPath -- The output directory for epilogos will be used for error and output logs
     pythonCommand -- The python command to run on the SLURM job
-    saliency -- The saliency metric being used in this epilogos run
-    paritition -- The slurm paritition to use if user elected to choose a specific one
-    memory -- The amount of memory to be allocated to the slurm job
-    dependency -- Which jobs the SLURM job must wait for before starting
+    saliency      -- The saliency metric being used in this epilogos run
+    paritition    -- The slurm paritition to use if user elected to choose a specific one
+    memory        -- The amount of memory to be allocated to the slurm job
+    dependency    -- Which jobs the SLURM job must wait for before starting
 
     Output:
     The job number
@@ -502,12 +499,12 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
     Prevents exiting of the main script until there is an error in one of the SLURM jobs or all SLURM jobs have finished
 
     Input:
-    mode -- 'single' or 'paired' depending on which version of epilogos we are running
-    allJobIDs -- String of all the SLURM job IDs
-    expJobIDArr -- List of the SLURM job IDs for the expected frequency step
+    mode          -- 'single' or 'paired' depending on which version of epilogos we are running
+    allJobIDs     -- String of all the SLURM job IDs
+    expJobIDArr   -- List of the SLURM job IDs for the expected frequency step
     scoreJobIDArr -- List of the SLURM job IDs for the score calculation step
     outputDirPath -- Epilogos' output directory
-    saliency -- The saliency metric epilogos is using
+    saliency      -- The saliency metric epilogos is using
     """
 
     jobCheckStr = "sacct --format=JobID%18,JobName%50,State%10 --jobs {}".format(allJobIDs)
@@ -535,8 +532,8 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             calculationStep = "score"
         elif mode == "single" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
                               and calculationStep == "score":
-            print("\n Step 4: Finding greatest hits\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
-            calculationStep = "hits"
+            print("\n Step 4: Finding regions of interest\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
+            calculationStep = "roi"
         elif mode == "paired" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
                               and calculationStep == "score":
             print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}"
@@ -577,6 +574,25 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
 
 
 def determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem, mode):
+    """
+    Generates memory strings for slurm commands
+
+    Input:
+    numProcesses -- The number of cores the user would like to use
+    expFreqMem   -- The memory (in MB) to be used for the expected frequency calculations
+    expCombMem   -- The memory (in MB) to be used for the expected frequency calculations
+    scoreMem     -- The memory (in MB) to be used for the expected frequency calculations
+    roiMem       -- The memory (in MB) to be used for the expected frequency calculations
+    mode         -- 'single' or 'paired'; tells us which version of epilogos we are running
+
+    Output:
+    expFreqMem -- A string for slurm commands containing information on ntasks and memory (for exp freq calculation)
+    expCombMem -- A string for slurm commands containing information on ntasks and memory (for exp comb calculation)
+    scoreMem   -- A string for slurm commands containing information on ntasks and memory (for score calculation)
+    roiMem     -- A string for slurm commands containing information on ntasks and memory (for roi calculation)
+    """
+
+    # 0 cores is defined to take all resources on node
     if numProcesses == 0:
         expFreqMem, expCombMem, scoreMem, roiMem = "--exclusive --mem=0"
     else:

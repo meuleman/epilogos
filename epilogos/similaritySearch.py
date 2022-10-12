@@ -10,14 +10,13 @@ import sys
 from time import time
 from pathlib import Path
 import os
-import filter_regions as fr
 from sklearn.neighbors import NearestNeighbors
 import tempfile
 import json
 import csv
 import pysam
 import click
-from epilogos.helpers import generateRegionArr
+from epilogos.helpers import generateRegionArr, maxMean
 
 # Custom help format for click to separate the build and query commands
 class CustomClickHelpFormat(click.Command):
@@ -36,7 +35,7 @@ To Build Similarity Search Data:\n\
                                   similarity search  [default: 25]\n\
   -j, --num-jobs INTEGER          Number of jobs to be used in nearest\n\
                                   neighbor algorithm  [default: 8]\n\
-  -n, --num-neighbors INTEGER     Number of neighbors to be found by nearest\n\
+  -n, --num-matches INTEGER       Number of neighbors to be found by nearest\n\
                                   neighbor algorithm (note that first neighbor\n\
                                   is always the query region)  [default: 101]\n\
 \n\
@@ -44,21 +43,28 @@ To Build Similarity Search Data:\n\
 To Query Similarity Search Data:\n\
   -q, --query TEXT                Query region formatted as chr:start-end or\n\
                                   path to bed file containing query regions\n\
-  -r, --recommendations-file TEXT\n\
+  -m, --matches-file TEXT\n\
                                   Path to previously built\n\
-                                  recommendations.bed.gz file to be queried\n\
-                                  for recommendations")
+                                  simsearch.bed.gz file to be queried\n\
+                                  for matches")
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']), cls=CustomClickHelpFormat)
-@click.option("-b", "--build", "buildBool", is_flag=True, help="If true builds the similarity search files needed to query regions")
+@click.option("-b", "--build", "buildBool", is_flag=True,
+              help="If true builds the similarity search files needed to query regions")
 @click.option("-s", "--scores", "scoresPath", type=str, help="Path to scores file to be used in similarity search")
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
-@click.option("-w", "--window-bp", "windowBP", type=int, default=25000, show_default=True, help="Window size (in BP) on which to perform similarity search")
-@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True, help="Number of jobs to be used in nearest neighbor algorithm")
-@click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True, help="Number of matches to be found by nearest neighbor algorithm (note that first match is always the query region)")
-@click.option("-q", "--query", "query", type=str, help="Query region formatted as chr:start-end or path to bed file containing query regions")
-@click.option("-r", "--recommendations-file", "recommendationPath", type=str, help="Path to previously built recommendations.bed.gz file to be queried for recommendations")
-def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, query, recommendationPath):
+@click.option("-w", "--window-bp", "windowBP", type=int, default=25000, show_default=True,
+              help="Window size (in BP) on which to perform similarity search")
+@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True,
+              help="Number of jobs to be used in nearest neighbor algorithm")
+@click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True,
+              help="Number of matches to be found by nearest neighbor algorithm"+
+                   "(note that first match is always the query region)")
+@click.option("-q", "--query", "query", type=str,
+              help="Query region formatted as chr:start-end or path to bed file containing query regions")
+@click.option("-m", "--matches-file", "simSearchPath", type=str,
+              help="Path to previously built simsearch.bed.gz file to be queried for matches")
+def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, query, simSearchPath):
     outputDir = Path(outputDir)
     if not outputDir.exists():
         outputDir.mkdir(parents=True)
@@ -66,12 +72,28 @@ def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, q
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
-        buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors)
+        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors)
     else:
-        queryRecommendations(query, recommendationPath, outputDir)
+        querySimSearch(query, simSearchPath, outputDir)
 
 
-def buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
+def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
+    """
+    Builds the similarity search files for a set of scores
+
+    Input:
+    scoresPath        -- Path to scores file to be used in similarity search
+    outputDir         -- pathlib Path to the output directory for similarity search files
+    windowBP          -- Size of the similarity search window in bp
+    nJobs             -- Number of jobs to be used in nearest neighbor algorithm
+    nDesiredNeighbors -- Number of matches to be found by nearest neighbor algorithm (first match is always the query region)
+
+    Output:
+    simsearch_cube.npz     -- NPZ file containing all the reduced regions and their coords (scores=scores, coords=coords)
+    simsearch_knn.npz      -- NPZ file containing the top nDesiredNeighbors matches for each region
+                              (arr=coords, idx=indices, dist=distances)
+    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors matches for each of regions
+    """
     # Bins are assumed to be 200bp or 20bp
     if determineBinSize(scoresPath) == 200:
         windowBins = windowBP / 200
@@ -91,17 +113,12 @@ def buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbo
     maxRegions = scores.shape[0] // windowBins
 
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
-    f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=windowBins, max_elements=maxRegions, preserve_cols=True, quiet=False)
-    f.read()
-    f.filter()
-    exemplars = f.output_df
+    rois, _ = maxMean(inputArr, windowBins, maxRegions)
 
-    # Build cube which represents reduced scores for the top X regions
-    exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
     # Seperates just the coordinates
-    coords = exemplars.iloc[:,:3]
+    coords = rois.iloc[:,:3]
     # Generate slices of reduced data for the cube
-    cube = exemplars["OriginalIdx"].apply(lambda x: makeSlice(scores, x, windowBins, blockSize))
+    cube = rois["OriginalIdx"].apply(lambda x: makeSlice(scores, x, windowBins, blockSize))
     cube = np.stack(cube.to_numpy())
 
     # Save the cube
@@ -109,48 +126,66 @@ def buildRecommendations(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbo
 
     print("Cube Time:", format(time() - cubeTime,'.0f'), "seconds\n", flush=True)
 
-    # for each region find the 101 nearest neighbors to be used as recommendations
+    # for each region find the 101 nearest neighbors to be used as matches
     knnTime = time()
     knn(outputDir, cube, pd.DataFrame(coords.values), nJobs, nDesiredNeighbors)
     print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
 
 def determineBinSize(scoresPath):
+    """
+    Determines the size of an individual bin using the first row of the scores file
+
+    Input:
+    scoresPath -- Path to scores file to be used in similarity search
+
+    Output:
+    int(row1.iloc[0, 2] - row1.iloc[0, 1]) -- size of an individual bin
+    """
     row1 = pd.read_table(scoresPath, sep="\t", header=None, usecols=[0,1,2], nrows=1)
     return int(row1.iloc[0, 2] - row1.iloc[0, 1])
 
 
-def queryRecommendations(query, recommendationPath, outputDir):
+def querySimSearch(query, simSearchPath, outputDir):
+    """
+    Queries the simsearch.bed.gz file a set of input regions and outputs each regions matches to an individual output file
+
+    Input:
+    query         -- A 2d numpy array containing the coordinates of user queried regions
+    simSearchPath -- The path to the simsearch.bed.gz file to be queried for matches
+    outputDir     -- The directory to output each regions matches
+    """
     # Parse query to generate array
     queryArr = generateRegionArr(query)
 
-    # Read in recommendations file
-    recommendationDF = pd.read_table(Path(recommendationPath), sep="\t", header=None)
+    # Read in matches file
+    matchesDF = pd.read_table(Path(simSearchPath), sep="\t", header=None)
 
-    # For each query output top 100 recommendations to a bed file
+    # For each query output top 100 matches to a bed file
     for chr, start, end in queryArr:
-        index = np.where((recommendationDF.iloc[:, 0] == chr) & (recommendationDF.iloc[:, 1] >= start) & (recommendationDF.iloc[:, 2] <= end))[0]
+        index = np.where((matchesDF.iloc[:, 0] == chr) & (matchesDF.iloc[:, 1] >= start) & (matchesDF.iloc[:, 2] <= end))[0]
         if index.size > 0:
             index = index[0]
 
-            # Find source coords for recommendations
-            regionChr, regionStart, regionEnd = recommendationDF.iloc[index, :3]
+            # Find source coords for matches
+            regionChr, regionStart, regionEnd = matchesDF.iloc[index, :3]
 
             # write to bed file
             outfile = outputDir / "similarity_search_region_{}_{}_{}_recs.bed".format(regionChr, regionStart, regionEnd)
             with open(outfile, "w+") as f:
-                recommendationStr = ""
+                matchesStr = ""
 
-                recs = recommendationDF.iloc[index,3][2:-2] # trim off brackets
-                recs = recs.split('", "')[1:] # split recommendations
+                recs = matchesDF.iloc[index,3][2:-2] # trim off brackets
+                recs = recs.split('", "')[1:] # split matches
                 for i in range(len(recs)):
                     # Append bed formatted coords to file
-                    recommendationStr += "{0[0]}\t{0[1]}\t{0[2]}\n".format(recs[i].split(":"))
+                    matchesStr += "{0[0]}\t{0[1]}\t{0[2]}\n".format(recs[i].split(":"))
 
-                f.write(recommendationStr)
+                f.write(matchesStr)
 
             # Print out information to user
-            print("Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd, chr, start, end))
+            print("Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd,
+                                                                            chr, start, end))
             print("\tSee {} for matches\n".format(outfile), flush=True)
         else:
             raise ValueError("ERROR: Could not find region in given range")
@@ -158,8 +193,9 @@ def queryRecommendations(query, recommendationPath, outputDir):
 
 def determineBlockSize20(windowBP):
     """
-    The similarity search reduces scores over search windows to mimic what the human eye might focus on.
+    Similarity search reduces scores over search windows to mimic what the human eye might focus on.
     This is meant to provide regions which contain similar characteristics/trends
+    This function determines the reduction factor for a input file which has bins of 20bp
 
     Input:
     windowBP - The size of the search window in BP
@@ -190,8 +226,9 @@ def determineBlockSize20(windowBP):
 
 def determineBlockSize200(windowBP):
     """
-    The similarity search reduces scores over search windows to mimic what the human eye might focus on.
+    Similarity search reduces scores over search windows to mimic what the human eye might focus on.
     This is meant to provide regions which contain similar characteristics/trends
+    This function determines the reduction factor for a input file which has bins of 200bp
 
     Input:
     windowBP - The size of the search window in BP
@@ -222,7 +259,7 @@ def determineBlockSize200(windowBP):
 
 def readScores(scoresPath):
     """
-    Reads in the scores file provided by the user
+    Reads in the scores file provided by the user and computes a per bin sum
 
     Input:
     scoresPath - The path to the scores file provided by the user
@@ -232,7 +269,7 @@ def readScores(scoresPath):
     inputArr - A numpy array to be read in by the filter-regions package (contains coords and summed scores)
     """
 
-    # Read in the scores file for exemplar generation
+    # Read in the scores file for regions of interest generation
     scores = pd.read_table(scoresPath, sep="\t", header=None)
 
     # Sum up the scores for all states for maxMean algorithm
@@ -253,15 +290,16 @@ def makeSlice(genome, idx, windowBins, blockSize):
     This will take a location and use it as a center point for each "slice" (region) of the cube
 
     Input:
-    genome - The scores across the whole genome
-    idx - The centerpoint of a similarity search window
-    windowBins - The number of bins to have in each window
-    blockSize - The reduction factor for the similiarty search
+    genome     -- The scores across the whole genome
+    idx        -- The centerpoint of a similarity search window
+    windowBins -- The number of bins to have in each window
+    blockSize  -- The reduction factor for the similiarty search
 
     Output:
-    genomeWindow.loc[reducedIndices[0].values].to_numpy() - A numpy array representing the reduced scores of a window
+    genomeWindow.loc[reducedIndices[0].values].to_numpy() -- A numpy array representing the reduced scores of a window
     """
-    genomeWindow = genome.iloc[idx - windowBins // 2:idx + windowBins // 2 + 1] if windowBins % 2 else genome.iloc[idx - windowBins // 2:idx + windowBins // 2]
+    genomeWindow = genome.iloc[idx - windowBins // 2:idx + windowBins // 2 + 1] if windowBins % 2\
+                   else genome.iloc[idx - windowBins // 2:idx + windowBins // 2]
     sumsOverWindow = genomeWindow.sum(axis=1).to_frame()
     reducedIndices = sumsOverWindow.groupby(np.arange(len(sumsOverWindow), dtype=np.float32)//blockSize,).idxmax()
     return genomeWindow.loc[reducedIndices[0].values].to_numpy()
@@ -269,18 +307,18 @@ def makeSlice(genome, idx, windowBins, blockSize):
 
 def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
     """
-    Finds KNearestNeighbors that will be used as recommendations
+    Finds KNearestNeighbors that will be used as matches
 
     Input:
-    outputDir - The output directory for the results
-    cube - The reduced scores over the mean max generated windows
-    locs - Pandas Dataframe of the coordinates for the mean max generated windows
-    nJobs - The number of jobs to use for the kNearestNeighbors algorithm
-    nDesiredNeighbors - Number of neighbors to be found by kNearestNeighbors (note the 1st neighbor is the query region itself)
+    outputDir         -- The output directory for the results
+    cube              -- The reduced scores over the mean max generated windows
+    locs              -- Pandas Dataframe of the coordinates for the mean max generated windows
+    nJobs             -- The number of jobs to use for the kNearestNeighbors algorithm
+    nDesiredNeighbors -- Number of neighbors to be found by kNearestNeighbors (note 1st neighbor is the query region itself)
 
     Output:
-    simsearch_knn.npz -- for each of regions, the top nDesiredNeighbors nearest neighbor regions
-    recommendations.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors nearest neighbors for each of regions
+    simsearch_knn.npz      -- for each of regions, the top nDesiredNeighbors matches (arr=coords, idx=indices, dist=distances)
+    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors matches for each of regions
     """
     np.set_printoptions(threshold=sys.maxsize)
 
@@ -297,7 +335,7 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
     # number of regions, number of nearest neighbors (should equal n_desired_neighbors)
     nRegions, nNearestNeighbors = idx.shape
 
-    # retrieves the locations for each recommendation from the original dataframe
+    # retrieves the locations for each match from the original dataframe
     res = locs.iloc[idx.reshape(nRegions * nNearestNeighbors), :3].values
 
     # reshapes results to be 3D array of k (101) [chr, start,end] coordinates
@@ -320,7 +358,8 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
             else:
                 recs = [query] + recs
                 query_added = True
-        # if the query region was not added to the beginning of the final list, we push it at the front here and remove a trailing element
+        # if the query region was not added to the beginning of the final list,
+        # we push it at the front here and remove a trailing element
         if not query_added:
             recs = [query] + recs[:-1]
         assert(len(recs) == nDesiredNeighbors)
@@ -329,14 +368,14 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
 
     tbx = pd.DataFrame(locs)
     tbx[3] = final
-    tbx.columns = ['chrom', 'start', 'stop', 'recommendations']
+    tbx.columns = ['chrom', 'start', 'stop', 'matches']
     tbx = tbx.sort_values(by=['chrom','start'])
 
-    recommendations_fn = os.path.join(outputDir, "recommendations.bed.gz")
-    recommendations_idx_fn = os.path.join(outputDir, "recommendations.bed.gz.tbi")
+    simsearch_fn = os.path.join(outputDir, "simsearch.bed.gz")
+    simsearch_idx_fn = os.path.join(outputDir, "simsearch.bed.gz.tbi")
 
-    if os.path.exists(recommendations_fn): os.remove(recommendations_fn)
-    if os.path.exists(recommendations_idx_fn): os.remove(recommendations_idx_fn)
+    if os.path.exists(simsearch_fn): os.remove(simsearch_fn)
+    if os.path.exists(simsearch_idx_fn): os.remove(simsearch_idx_fn)
 
     # save as tabix
     temp_csv_fn = None
@@ -345,13 +384,13 @@ def knn(outputDir, cube, locs, nJobs, nDesiredNeighbors):
         temp_fh.seek(0)
         temp_csv_fn = temp_fh.name
 
-    pysam.tabix_compress(temp_csv_fn, recommendations_fn, force=True)
-    if not os.path.exists(recommendations_fn) or os.stat(recommendations_fn).st_size == 0:
-        raise Exception("Error: Could not create bgzip archive [{}]".format(recommendations_fn))
+    pysam.tabix_compress(temp_csv_fn, simsearch_fn, force=True)
+    if not os.path.exists(simsearch_fn) or os.stat(simsearch_fn).st_size == 0:
+        raise Exception("Error: Could not create bgzip archive [{}]".format(simsearch_fn))
 
-    pysam.tabix_index(recommendations_fn, force=True, zerobased=True, preset="bed")
-    if not os.path.exists(recommendations_idx_fn) or os.stat(recommendations_idx_fn).st_size == 0:
-        raise Exception("Error: Could not create index of bgzip archive [{}]".format(recommendations_idx_fn))
+    pysam.tabix_index(simsearch_fn, force=True, zerobased=True, preset="bed")
+    if not os.path.exists(simsearch_idx_fn) or os.stat(simsearch_idx_fn).st_size == 0:
+        raise Exception("Error: Could not create index of bgzip archive [{}]".format(simsearch_idx_fn))
 
     if os.path.exists(temp_csv_fn): os.remove(temp_csv_fn)
 

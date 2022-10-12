@@ -112,21 +112,21 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     Reads the states from the relevant rows of the inputed data file(s)
 
     Input:
-    file1Path -- The path to the first file to read from (used in both single and paired epilogos) [default=Path("null")]
-    file2Path -- The path to the second file to read from (used only in paired epilogos) [default=Path("null")]
+    file1Path  -- The path to the first file to read from (used in both single and paired epilogos) [default=Path("null")]
+    file2Path  -- The path to the second file to read from (used only in paired epilogos) [default=Path("null")]
     rowsToCalc -- The first and last rows to read from the files [default=(0, 0)]
-    expBool -- Tells us if we are calculating the expected frequencies or the scores [default=True]
-    verbose -- If True, we print out updates [default=True]
-    groupSize -- When returning null output, return 2 evenly sized groups of this size
+    expBool    -- Tells us if we are calculating the expected frequencies or the scores [default=True]
+    verbose    -- If True, we print out updates [default=True]
+    groupSize  -- When returning null output, return 2 evenly sized groups of this size
 
     Output:
         Single Epilogos:
-            file1Arr -- 2d numpy array of the state info for each epigenome in the data file over the relevant rows
+            file1Arr    -- 2d numpy array of the state info for each epigenome in the data file over the relevant rows
         Paired Epilogos Expected Frequency:
             combinedArr -- 2d numpy array of the state info for each epigenome of both data files over the relevant rows
         Paired Epilogos Scores:
-            file1Arr -- 2d numpy array of the state info for each epigenome in the first data file over the relevant rows
-            file2Arr -- 2d numpy array of the state info for each epigenome in the second data file over the relevant rows
+            file1Arr    -- 2d numpy array of the state info for each epigenome in the first data file over the relevant rows
+            file2Arr    -- 2d numpy array of the state info for each epigenome in the second data file over the relevant rows
             shuffledCombinedArr[:, :file1Arr.shape[1]] -- 2d numpy array of the state info shuffled between first and second
                                                           data files, with the same width as file1Arr
             shuffledCombinedArr[:, file1Arr.shape[1]:] -- 2d numpy array of the state info shuffled between first and second
@@ -180,6 +180,18 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
 
 
 def generateRegionArr(query):
+    """
+    Takes in one or more query regions and builds an 2 numpy array containing their coordinates.
+    Used to handle both single queries and files containing multiple queries
+
+    Input:
+    query -- Query coordinates formatted chr:start-end OR
+             Path to bed file containing query coordinates on each line, formatted chr[tab]start[tab]end
+
+    Output:
+    2D Numpy array with the first dimension being query regions and the second dimension being coordinates
+    """
+
     # if its a single query build a one coord array
     if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
         chr = query.split(":")[0]
@@ -190,10 +202,22 @@ def generateRegionArr(query):
     elif Path(query).is_file():
         return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
     else:
-        raise ValueError("Please input valid query (region formatted as chr:start-end or path to bed file containing query regions)")
+        raise ValueError("Please input valid query (region formatted as chr:start-end" +
+                         "or path to bed file containing query regions)")
 
 
 def orderChromosomes(chromosomes):
+    """
+    Takes in an unordered iterable of chromosomes and orders them first by number then alphabetically
+    e.g. For humans: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y
+
+    Input:
+    chromosomes -- An iterable of strings containing chromosome names formatted chr[] (where [] is replaced with the name)
+
+    Output:
+    chrOrder -- The ordered list of chromosomes
+    """
+
     # Orders chromosomes so numbers count up, followed by alphabetical
     rawChrNamesInts = []
     rawChrNamesStrs = []
@@ -211,23 +235,63 @@ def orderChromosomes(chromosomes):
     return chrOrder
 
 
-def maxMean(inputArr, exemplarWidth):
-    f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=exemplarWidth, max_elements=100, preserve_cols=True, quiet=False)
+def maxMean(inputArr, roiWidth, maxRegions):
+    """
+    Wrapper function for the filter-regions maxmean function. Generates 100 results and sorts them in descending order
+
+    Input:
+    inputArr   -- A numpy array containing coordinates in the first 3 columns and score metric in the 4th column
+    roiWidth   -- The desired width of the regions of interest in bins
+    maxReginos -- The number of regions for the maxmean algorithm to find
+
+    Output:
+    rois      -- Pandas dataframe containing the regions chosen by maxmean
+    indices   -- The original indices within the inputArr for the center of each of the chosen regions
+    """
+    f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max',
+                  window_bins=roiWidth, max_elements=maxRegions, preserve_cols=True, quiet=False)
     f.read()
     f.filter()
-    exemplars = f.output_df
-    exemplars = exemplars.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
-    indices = exemplars["OriginalIdx"].to_numpy()
+    rois = f.output_df
+    rois = rois.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
+    indices = rois["OriginalIdx"].to_numpy()
 
-    return exemplars, indices
+    return rois, indices
 
 
-def generateExemplarIndicesArr(indices, exemplarWidth):
+def generateROIIndicesArr(indices, roiWidth):
+    """
+    Creates a 2d numpy array containing the full indices [start...end] for each region chosen by maxmean
+
+    Input:
+    indices  -- The index of the centerpoint for each region of interest
+    roiWidth -- The width of each region of interest in bins
+
+    Output:
+    np.array(upperLower, dtype=np.int32) -- 2D numpy array with the 1st dimension being regions
+                                            and the 2nd dimension being all the indices within each region
+    """
     upperLower = []
     for idx in indices:
-        # If the exemplar region is an odd number of bins we have to add 1 to the upper index
-        lowerIdx = idx - exemplarWidth // 2
-        upperIdx = idx + exemplarWidth // 2
-        if exemplarWidth % 2: upperIdx += 1
+        # If the region of interest is an odd number of bins we have to add 1 to the upper index
+        lowerIdx = idx - roiWidth // 2
+        upperIdx = idx + roiWidth // 2
+        if roiWidth % 2: upperIdx += 1
         upperLower.append(np.arange(lowerIdx, upperIdx, dtype=np.int32))
     return np.array(upperLower, dtype=np.int32)
+
+
+def findSign(x):
+    """
+    Returns a string containing the sign of the inputted number
+
+    Input:
+    x -- Any number
+
+    Output:
+    "+" or "-"
+    """
+    if (x >= 0):
+        return "+"
+    else:
+        return "-"

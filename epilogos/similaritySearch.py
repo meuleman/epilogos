@@ -15,6 +15,7 @@ import tempfile
 import json
 import csv
 import pysam
+import filter_regions as fr
 import click
 from epilogos.helpers import generateRegionArr, maxMean
 
@@ -96,10 +97,10 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     """
     # Bins are assumed to be 200bp or 20bp
     if determineBinSize(scoresPath) == 200:
-        windowBins = windowBP / 200
+        windowBins = int(windowBP / 200)
         blockSize = determineBlockSize200(windowBP)
     elif determineBinSize(scoresPath) == 20:
-        windowBins = windowBP / 20
+        windowBins = int(windowBP / 20)
         blockSize = determineBlockSize20(windowBP)
     else:
         raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
@@ -110,10 +111,19 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
 
     # The maximum number of regions chosen should depend on the window size
     # We want to allow for full coverage of the genome if possible (maxRegions is chosen accordingly)
-    maxRegions = scores.shape[0] // windowBins
+    maxRegions = int(scores.shape[0] // windowBins)
 
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
     rois, _ = maxMean(inputArr, windowBins, maxRegions)
+
+    # f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=windowBins,
+    #               max_elements=maxRegions, preserve_cols=True, quiet=False)
+    # f.read()
+    # f.filter()
+    # rois = f.output_df
+
+    # # Build cube which represents reduced scores for the top X regions
+    # rois = rois.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
 
     # Seperates just the coordinates
     coords = rois.iloc[:,:3]

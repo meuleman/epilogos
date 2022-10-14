@@ -35,7 +35,7 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
         888                                            "Y88P"
     """, flush=True)
 
-    print("\n\n\nReading in data...", flush=True)
+    print("\n\n\n        Reading in data...", flush=True)
     # Read in regions
     regionArr = generateRegionArr(regions)
 
@@ -48,7 +48,7 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     # Determine state colors
     stateColors = getStateColorsRGB(metadataPath)
 
-    print("Processing region scores...", flush=True)
+    print("        Processing region scores...", flush=True)
     # Process query scores for graphing
     processedScoresList = []
     processedColorsList = []
@@ -64,9 +64,9 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     if fileFormat.startswith('.'): fileFormat = fileFormat[1:]
 
     # Draw the query regions
-    "Drawing regions..."
+    print("        Drawing regions...", flush=True)
     for i, (chr, start, end) in enumerate(regionArr):
-        print("\tRegion {}...".format(i+1))
+        print("            Region {}...".format(i+1), flush=True)
         drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,\
                            stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
 

@@ -87,7 +87,7 @@ def unpackNPZ(file):
     npzFile['scoreArr']    -- Numpy array containing the kullback leibler scores
     npzFile['locationArr'] -- Numpy array containing the genomic locations for all the scores
     """
-    npzFile = np.load(Path(file))
+    npzFile = np.load(Path(file), allow_pickle=True)
     return npzFile['chrName'][0], npzFile['scoreArr'], npzFile['locationArr']
 
 

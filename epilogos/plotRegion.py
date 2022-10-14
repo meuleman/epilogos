@@ -18,7 +18,7 @@ from epilogos.helpers import getStateNames, getStateColorsRGB, generateRegionArr
 @click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired output directory")
 @click.option("-y", "--individual-ylims", "individualYlims", is_flag=True,
               help="If true each region is plotted on its own y-axis")
-@click.optino("-f", "--file-format", "fileFormat", type=str, default="pdf",
+@click.option("-f", "--file-format", "fileFormat", type=str, default="pdf",
               help="File format for the output images [default: pdf]")
 def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, fileFormat):
     # Read in regions

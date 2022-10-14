@@ -21,6 +21,21 @@ from epilogos.helpers import getStateNames, getStateColorsRGB, generateRegionArr
 @click.option("-f", "--file-format", "fileFormat", type=str, default="pdf",
               help="File format for the output images [default: pdf]")
 def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, fileFormat):
+    print("""\n
+                 888          888                              d8b
+                 888          888                              Y8P
+                 888          888
+        88888b.  888  .d88b.  888888  888d888 .d88b.   .d88b.  888  .d88b.  88888b.
+        888 "88b 888 d88""88b 888     888P"  d8P  Y8b d88P"88b 888 d88""88b 888 "88b
+        888  888 888 888  888 888     888    88888888 888  888 888 888  888 888  888
+        888 d88P 888 Y88..88P Y88b.   888    Y8b.     Y88b 888 888 Y88..88P 888  888
+        88888P"  888  "Y88P"   "Y888  888     "Y8888   "Y88888 888  "Y88P"  888  888
+        888                                                888
+        888                                           Y8b d88P
+        888                                            "Y88P"
+    """, flush=True)
+
+    print("\n\n\nReading in data...", flush=True)
     # Read in regions
     regionArr = generateRegionArr(regions)
 
@@ -33,6 +48,7 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     # Determine state colors
     stateColors = getStateColorsRGB(metadataPath)
 
+    print("Processing region scores...", flush=True)
     # Process query scores for graphing
     processedScoresList = []
     processedColorsList = []
@@ -48,7 +64,9 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     if fileFormat.startswith('.'): fileFormat = fileFormat[1:]
 
     # Draw the query regions
+    "Drawing regions..."
     for i, (chr, start, end) in enumerate(regionArr):
+        print("\tRegion {}...".format(i+1))
         drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,\
                            stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
 
@@ -111,7 +129,7 @@ def drawEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, 
     fig, axs = plt.subplots(1, 1, figsize=(24,5))
 
     # Calculate individual ylims if generic ylims haven't been calculated
-    if np.nan(ymin) and np.nan(ymax):
+    if np.isnan(ymin) and np.isnan(ymax):
         ymin, ymax = ylim([scores])
 
     # Formatting the graph

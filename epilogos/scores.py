@@ -170,12 +170,14 @@ def calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expF
             raise ValueError("Please ensure that saliency metric is either 1, 2, or 3")
     pool.join()
 
-    chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
-    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
+    # chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
+    # locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
+    locationArr = pd.read_table(file1Path, header=None, sep="\t", usecols=[0,1,2]).to_numpy()
 
     outputTxtPath = outputDirPath / "scores_{}_{}.txt.gz".format(fileTag, filename)
     writeScores(sharedToNumpy(sharedArr, totalRows, numStates), outputTxtPath, locationArr)
     # Temporary scores for regions of interest (np files are faster to read in)
+    chrName = pd.read_table(file1Path, nrows=1, header=None, usecols=[0], sep="\t").iloc[0, 0]
     tempScoresPath = outputDirPath / "temp_scores_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(tempScoresPath, chrName=np.array([chrName]), scoreArr=sharedToNumpy(sharedArr, totalRows, numStates),
                         locationArr=locationArr)
@@ -251,10 +253,16 @@ def calculateScoresPairwise(saliency, file1Path, file2Path, rowList, numStates, 
     # We also want to write the locations of any quiescent bins (where all states are in the quiescent state). This ensures
     # that our eventual fit on the null data is more accurate.
     if verbose: print("Writing output to disk...", flush=True); tWrite = time()
-    chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
-    locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
+
+    # chrName = pd.read_table(file1Path, nrows=1, header=None, sep="\t").iloc[0, 0]
+    # locationArr = np.array([[chrName, 200*i, 200*i+200] for i in range(totalRows)])
+    locationArr = pd.read_table(file1Path, header=None, sep="\t", usecols=[0,1,2]).to_numpy()
+
     realOutputPath = outputDirPath / "pairwiseDelta_{}_{}.txt.gz".format(fileTag, filename)
     writeScores(realDiffArr, realOutputPath, locationArr)
+
+    chrName = pd.read_table(file1Path, nrows=1, header=None, usecols=[0], sep="\t").iloc[0, 0]
+
     nullOutputPath = outputDirPath / "temp_nullDistances_{}_{}.npz".format(fileTag, filename)
     np.savez_compressed(nullOutputPath, chrName=np.array([chrName]), nullDistances=nullDistancesArr)
     quiescentOutputPath = outputDirPath / "temp_quiescence_{}_{}.npz".format(fileTag, filename)

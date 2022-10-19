@@ -4,18 +4,19 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from pathlib import Path
 import numpy.lib.recfunctions as nlr
+from time import time
 import click
 from epilogos.helpers import getStateNames, getStateColorsRGB, generateRegionArr
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.option("-r", "--regions", "regions", type=str,
+@click.option("-r", "--regions", "regions", type=str, required=True,
               help="Region formatted as chr:start-end or path to bed file containing regions to visualize")
-@click.option("-s", "--scores-file", "epilogosScoresPath", type=str,
+@click.option("-s", "--scores-file", "epilogosScoresPath", type=str, required=True,
               help="Path to epilogos scores file to be used for region visualization")
-@click.option("-j", "--state-info", "metadataPath", type=str,
+@click.option("-j", "--state-info", "metadataPath", type=str, required=True,
               help="Path to state metadata file to be used for region coloring")
-@click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired output directory")
+@click.option("-o", "--output-directory", "outputDir", type=str, required=True, help="Path to desired output directory")
 @click.option("-y", "--individual-ylims", "individualYlims", is_flag=True,
               help="If true each region is plotted on its own y-axis")
 @click.option("-f", "--file-format", "fileFormat", type=str, default="pdf",
@@ -35,7 +36,7 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
         888                                            "Y88P"
     """, flush=True)
 
-    print("\n\n\n        Reading in data...", flush=True)
+    print("\n\n\n        Reading in data...", flush=True); readTime = time()
     # Read in regions
     regionArr = generateRegionArr(regions)
 
@@ -48,7 +49,9 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     # Determine state colors
     stateColors = getStateColorsRGB(metadataPath)
 
-    print("        Processing region scores...", flush=True)
+    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("        Processing region scores...", flush=True); processTime = time()
+
     # Process query scores for graphing
     processedScoresList = []
     processedColorsList = []
@@ -60,15 +63,18 @@ def main(regions, epilogosScoresPath, metadataPath, outputDir, individualYlims, 
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = ylim(processedScoresList) if individualYlims else (np.nan, np.nan)
 
+    print("            Time:", format(time() - processTime,'.0f'), "seconds\n", flush=True)
+    print("        Drawing regions...", flush=True)
+
     # Strip period off file format
     if fileFormat.startswith('.'): fileFormat = fileFormat[1:]
 
     # Draw the query regions
-    print("        Drawing regions...", flush=True)
     for i, (chr, start, end) in enumerate(regionArr):
-        print("            Region {}...".format(i+1), flush=True)
+        print("            Region {}...".format(i+1), flush=True); regionTime = time()
         drawEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,\
                            stateColors, Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
+        print("                Time: ", format(time() - regionTime,'.0f'), "seconds\n", flush=True)
 
 
 def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors):

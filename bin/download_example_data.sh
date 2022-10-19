@@ -45,9 +45,33 @@ else
     echo ""
 fi
 
+if [[ ! -f data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz ]]
+then
+    echo "Downloading plot region data..."
+    mkdir -p data/simsearch/male/
+    curl -L https://github.com/meuleman/epilogos/raw/main/data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz --output data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz
+    echo
+else
+    echo "FILE NOT DOWNLOADED: data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz already exists"
+    echo ""
+fi
+
+if [[ ! -f data/plotregion/male/regionsOfInterest_male_s1_chr1.bed ]]
+then
+    echo "Downloading plot region data..."
+    mkdir -p data/simsearch/male/
+    curl -L https://github.com/meuleman/epilogos/raw/main/data/plotregion/male/regionsOfInterest_male_s1_chr1.bed --output data/plotregion/male/regionsOfInterest_male_s1_chr1.bed
+    echo
+else
+    echo "FILE NOT DOWNLOADED: data/plotregion/male/regionsOfInterest_male_s1_chr1.bed already exists"
+    echo ""
+fi
+
 echo ""
 echo "Find files at:"
 echo "data/pyData/male/epilogos_matrix_chr1.txt.gz"
 echo "data/pyData/female/epilogos_matrix_chr1.txt.gz"
 echo "data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv"
 echo "data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz"
+echo "data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz"
+echo "data/plotregion/male/regionsOfInterest_male_s1_chr1.bed"

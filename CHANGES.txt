@@ -19,5 +19,8 @@ v0.1.2, October 12, 2022 -- Output files are more consistent in formatting
                             Added flags for controlling SLURM memory requests
                             Moved findSign to helpers
                             Added orderChromosomes function to helpers to determine ordering of chromosomes
+                            Added memory control flags to epilogos
+                            Epilogos no longer defaults to using all memory and cores on a SLURM node
+                            Epilogos no longer only outputs 200bp bins in scores files
 v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
 v0.1.0, June 25 2021 -- Initial release

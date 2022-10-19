@@ -140,15 +140,6 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
     rois, _ = maxMean(inputArr, windowBins, maxRegions)
 
-    # f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max', window_bins=windowBins,
-    #               max_elements=maxRegions, preserve_cols=True, quiet=False)
-    # f.read()
-    # f.filter()
-    # rois = f.output_df
-
-    # # Build cube which represents reduced scores for the top X regions
-    # rois = rois.sort_values(by=["RollingMax", "RollingMean", "Score"], ascending=False).reset_index(drop=True)
-
     # Seperates just the coordinates
     coords = rois.iloc[:,:3]
     # Generate slices of reduced data for the cube

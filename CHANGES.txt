@@ -1,13 +1,23 @@
-v0.1.2, September 12, 2021 -- Output files are more consistent in formatting
-                              Fixed bug causing chromosomes to not print correctly in "pairwiseMetrics" file
-                              Fixed bug causing state numbers to be printed rather than names in "pairwiseMetrics" file
-                              Greatest hits now only shows significant loci if using null distribution
-                              Greatest hits merging no longer uses 1000 loci when there are < 1000 significant loci
-                              Fixed a bug where epilogos would throw an error if there were no significant loci
-                              Fixed a bug where one diagnostic figure was not showing
-                              Added option to control whether p-values are generated or not (null-distribution)
-                              Changed the exemplar generation approach to find the optimal region using a mean & max approach (see paper)
-                              Added option to control exemplar region width
-                              Added option to control group size in pairwise epilogos
+v0.1.2, October 12, 2022 -- Output files are more consistent in formatting
+                            Fixed bug causing chromosomes to not print correctly in "pairwiseMetrics" file
+                            Fixed bug causing state numbers to be printed rather than names in "pairwiseMetrics" file
+                            Greatest hits now only shows significant loci if using null distribution
+                            Greatest hits merging no longer uses 1000 loci when there are < 1000 significant loci
+                            Fixed a bug where epilogos would throw an error if there were no significant loci
+                            Fixed a bug where one diagnostic figure was not showing
+                            Added option to control whether p-values are generated or not (null-distribution)
+                            Changed the exemplar generation approach to find the optimal region using filter-regions maxmean algorithm (see paper)
+                            Added option to control exemplar region width
+                            Added option to control group size in pairwise epilogos
+                            Changed greatestHits/exemplars language to regions of interest/roi
+                            Changed pairwiseVisual.py to roiAndVisualPairwise.py
+                            Changed greatestHits.py to roiSingle.py
+                            Added similaritySearch.py (CL accessible with simsearch)
+                            Added plotRegion.py (Cl accessible with plotregion)
+                            Added -n/--null-distribution flag for controlling p-value generation
+                            Added -w/--roi-width flag for controlling size of generate regions of interest
+                            Added flags for controlling SLURM memory requests
+                            Moved findSign to helpers
+                            Added orderChromosomes function to helpers to determine ordering of chromosomes
 v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
 v0.1.0, June 25 2021 -- Initial release

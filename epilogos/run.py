@@ -57,13 +57,13 @@ from epilogos.helpers import getNumStates
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
 @click.option("-w", "--roi-width", "roiWidth", type=int, default=0,
               help="The number of bins in a region of interest [default: 50(single)/125(paired)]")
-@click.option("--exp-freq-memory", "expFreqMem", type=str, default="16000",
+@click.option("--exp-freq-mem", "expFreqMem", type=str, default="16000",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
-@click.option("--exp-comb-memory", "expCombMem", type=str, default="8000",
+@click.option("--exp-comb-mem", "expCombMem", type=str, default="8000",
               help="Memory (in MB) for the expected frequency combination job [default: 8000MB]")
-@click.option("--score-memory", "scoreMem", type=str, default="16000",
+@click.option("--score-mem", "scoreMem", type=str, default="16000",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
-@click.option("--roi-memory", "roiMem", type=str, default="-1",
+@click.option("--roi-mem", "roiMem", type=str, default="-1",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB (single) / 100000MB (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,

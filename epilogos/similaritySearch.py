@@ -3,7 +3,6 @@ Similarity Search For Epilogos
 
 Written by Jacob Quon, Nalu Tripician, Alex Reynolds, and Wouter Meuleman
 """
-
 import numpy as np
 import pandas as pd
 import sys
@@ -15,7 +14,6 @@ import tempfile
 import json
 import csv
 import pysam
-import filter_regions as fr
 import click
 from epilogos.helpers import generateRegionArr, maxMean
 
@@ -43,29 +41,49 @@ To Build Similarity Search Data:\n\
 \n\
 To Query Similarity Search Data:\n\
   -q, --query TEXT                Query region formatted as chr:start-end or\n\
-                                  path to bed file containing query regions\n\
+                                  path to tab-separated bed file containing\n\
+                                  query regions\n\
   -m, --matches-file TEXT\n\
                                   Path to previously built\n\
                                   simsearch.bed.gz file to be queried\n\
-                                  for matches")
+                                  for matches\n\
+  -o, --output-directory TEXT     Path to desired similarity search output\n\
+                                  directory")
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']), cls=CustomClickHelpFormat)
 @click.option("-b", "--build", "buildBool", is_flag=True,
               help="If true builds the similarity search files needed to query regions")
 @click.option("-s", "--scores", "scoresPath", type=str, help="Path to scores file to be used in similarity search")
-@click.option("-o", "--output-directory", "outputDir", type=str, help="Path to desired similarity search output directory")
-@click.option("-w", "--window-bp", "windowBP", type=int, default=25000, show_default=True,
+@click.option("-o", "--output-directory", "outputDir", required=True, type=str,
+              help="Path to desired similarity search output directory")
+@click.option("-w", "--window-bp", "windowBP", type=int, default=-1, show_default=True,
               help="Window size (in BP) on which to perform similarity search")
 @click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True,
               help="Number of jobs to be used in nearest neighbor algorithm")
 @click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True,
               help="Number of matches to be found by nearest neighbor algorithm"+
                    "(note that first match is always the query region)")
-@click.option("-q", "--query", "query", type=str,
-              help="Query region formatted as chr:start-end or path to bed file containing query regions")
+@click.option("-q", "--query", "query", type=str, default=""
+              help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")
 def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, query, simSearchPath):
+    print("""\n
+                 d8b                                                           888
+                 Y8P                                                           888
+                                                                               888
+        .d8888b  888 88888b.d88b.   .d8888b   .d88b.   8888b.  888d888 .d8888b 88888b.
+        88K      888 888 "888 "88b  88K      d8P  Y8b     "88b 888P"  d88P"    888 "88b
+        "Y8888b. 888 888  888  888  "Y8888b. 88888888 .d888888 888    888      888  888
+             X88 888 888  888  888       X88 Y8b.     888  888 888    Y88b.    888  888
+         88888P' 888 888  888  888   88888P'  "Y8888  "Y888888 888     "Y8888P 888  888
+    """, flush=True)
+
+    if not buildBool and query == "":
+        raise ValueError("Either -b or -q flag must be used to run simsearch")
+    elif buildBool and query != "":
+        raise ValueError("Both -b and -q flags cannot be used at the same time")
+
     outputDir = Path(outputDir)
     if not outputDir.exists():
         outputDir.mkdir(parents=True)
@@ -95,23 +113,29 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
                               (arr=coords, idx=indices, dist=distances)
     simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors matches for each of regions
     """
+
+    print("\n\n\n        Reading in data...", flush=True); readTime = time()
+
     # Bins are assumed to be 200bp or 20bp
     if determineBinSize(scoresPath) == 200:
+        if windowBP == -1: windowBP = 25000
         windowBins = int(windowBP / 200)
         blockSize = determineBlockSize200(windowBP)
     elif determineBinSize(scoresPath) == 20:
+        if windowBP == -1: windowBP = 2500
         windowBins = int(windowBP / 20)
         blockSize = determineBlockSize20(windowBP)
     else:
         raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
-
-    cubeTime = time()
 
     scores, inputArr = readScores(scoresPath)
 
     # The maximum number of regions chosen should depend on the window size
     # We want to allow for full coverage of the genome if possible (maxRegions is chosen accordingly)
     maxRegions = int(scores.shape[0] // windowBins)
+
+    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("        Finding regions of size {}kb...".format(windowBP // 1000), flush=True); cubeTime = time()
 
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
     rois, _ = maxMean(inputArr, windowBins, maxRegions)
@@ -134,12 +158,13 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     # Save the cube
     np.savez_compressed(file=outputDir / 'simsearch_cube', scores=cube, coords=coords.values)
 
-    print("Cube Time:", format(time() - cubeTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - cubeTime,'.0f'), "seconds\n", flush=True)
+    print("        Finding simsearch matches...", flush=True); knnTime = time()
 
     # for each region find the 101 nearest neighbors to be used as matches
-    knnTime = time()
     knn(outputDir, cube, pd.DataFrame(coords.values), nJobs, nDesiredNeighbors)
-    print("KNN time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
+
+    print("            Time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
 
 def determineBinSize(scoresPath):
@@ -165,11 +190,16 @@ def querySimSearch(query, simSearchPath, outputDir):
     simSearchPath -- The path to the simsearch.bed.gz file to be queried for matches
     outputDir     -- The directory to output each regions matches
     """
+    print("\n\n\n        Reading in data...", flush=True); readTime = time()
+
     # Parse query to generate array
     queryArr = generateRegionArr(query)
 
     # Read in matches file
     matchesDF = pd.read_table(Path(simSearchPath), sep="\t", header=None)
+
+    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("        Querying regions...", flush=True)
 
     # For each query output top 100 matches to a bed file
     for chr, start, end in queryArr:
@@ -194,11 +224,11 @@ def querySimSearch(query, simSearchPath, outputDir):
                 f.write(matchesStr)
 
             # Print out information to user
-            print("Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd,
-                                                                            chr, start, end))
-            print("\tSee {} for matches\n".format(outfile), flush=True)
+            print("            Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd,
+                                                                                        chr, start, end))
+            print("                See {} for matches\n".format(outfile), flush=True)
         else:
-            raise ValueError("ERROR: Could not find region in given range")
+            print("            ValueError: Could not find region in given query range: {}:{}-{}\n".format(chr, start, end))
 
 
 def determineBlockSize20(windowBP):

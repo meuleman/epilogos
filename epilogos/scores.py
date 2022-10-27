@@ -453,7 +453,7 @@ def rowObsS2(dataArr, row, permutations, numStates):
         for j, state2 in enumerate(uniqueStates):
             if state1 == state2:
                 # Equates to statecounts[i] permute 2 / permutations
-                rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[i] - 1) / permutations
+                rowObsArr[state1, state2] = stateCounts[i] * (stateCounts[j] - 1) / permutations
             else:  # state1 > state2 or state1 < state2
                 rowObsArr[state1, state2] = stateCounts[i] * stateCounts[j] / permutations
     return rowObsArr

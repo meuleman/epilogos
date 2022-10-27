@@ -130,7 +130,7 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, roiWidth):
 
         # Build pandas dataframe for writing
         locations = pd.DataFrame(rois.loc[:, ["Chromosome", "Start", "End", "Score"]])\
-                                .astype({"Chromosome": str, "Start": np.int32, "End": np.int32, "Score": np.float32})
+                                .astype({"Chromosome": str, "Start": np.int64, "End": np.int64, "Score": np.float32})
         locations["MaxScoreState"] = maxStates.astype(np.int32)
 
         # Write all the locations to the file

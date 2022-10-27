@@ -103,7 +103,7 @@ def s1Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
     """
     dataArr = readStates(file1Path=file1Path, file2Path=file2Path, rowsToCalc=rowsToCalc, verbose=verbose)
 
-    expFreqArr = np.zeros(numStates, dtype=np.int32)
+    expFreqArr = np.zeros(numStates, dtype=np.int64)
 
     if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time()
 
@@ -134,7 +134,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
 
     multiprocessRows = dataArr.shape[0]
 
-    expFreqArr = np.zeros((numStates, numStates), dtype=np.int32)
+    expFreqArr = np.zeros((numStates, numStates), dtype=np.int64)
 
     if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
     printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
@@ -152,7 +152,7 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
         for i, state1 in enumerate(uniqueStates):
             for j, state2 in enumerate(uniqueStates):
                 if state1 == state2:
-                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[i] - 1)
+                    expFreqArr[state1, state2] += stateCounts[i] * (stateCounts[j] - 1)
                 else:  # state1 > state2 or state1 < state2
                     expFreqArr[state1, state2] += stateCounts[i] * stateCounts[j]
 

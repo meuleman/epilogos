@@ -609,7 +609,7 @@ def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDif
                                              pvals[maxIndices].reshape(len(maxIndices), 1),
                                              mhPvals[maxIndices].reshape(len(maxIndices), 1)), axis=1),
                              columns=["Chromosome", "Start", "End", "Score", "MaxDiffLoc", "Pval", "MhPval"])\
-                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32, "Score": np.float32,
+                  .astype({"Chromosome": np.int32, "Start": np.int64, "End": np.int64, "Score": np.float32,
                            "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
                   .replace({"Chromosome": chrDict})
 
@@ -685,7 +685,7 @@ def createROITxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameAr
 
     # Build the actual dataframe
     locations = pd.DataFrame(rois.loc[:, ["Chromosome", "Start", "End"]])\
-                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32})\
+                  .astype({"Chromosome": np.int32, "Start": np.int64, "End": np.int64})\
                   .replace({"Chromosome": chrDict})
     locations["Score"] = distanceArr[maxIndices].astype(np.float32)
     locations["maxDiffLoc"] = maxDiffArr[maxIndices].astype(np.int32)
@@ -748,7 +748,7 @@ def createROINoSignificance(filePath, locationArr, chrDict, distanceArr, maxDiff
 
     # Build the actual dataframe
     locations = pd.DataFrame(rois.loc[:, ["Chromosome", "Start", "End"]])\
-                  .astype({"Chromosome": np.int32, "Start": np.int32, "End": np.int32})\
+                  .astype({"Chromosome": np.int32, "Start": np.int64, "End": np.int64})\
                   .replace({"Chromosome": chrDict})
     locations["Score"] = distanceArr[maxIndices].astype(np.float32)
     locations["maxDiffLoc"] = maxDiffArr[maxIndices].astype(np.int32)

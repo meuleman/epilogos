@@ -22,5 +22,7 @@ v0.1.2, October 12, 2022 -- Output files are more consistent in formatting
                             Added memory control flags to epilogos
                             Epilogos no longer defaults to using all memory and cores on a SLURM node
                             Epilogos no longer only outputs 200bp bins in scores files
+                            Fixed bug where S2 expected was containing negative values
+                            Added flag to control output filenames
 v0.1.1, July 13 2021 -- Fixed bug when not specifying partition
 v0.1.0, June 25 2021 -- Initial release

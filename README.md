@@ -422,6 +422,18 @@ e.g. $ epilogos -w 10
 ```
 </details>
 
+<a name="file-tag"></a>
+<details><summary><b> File Tag [-f, --file-tag]</b></summary>
+<p></p>
+<p>This flag controls the string appended to each of the output files</p>
+
+<p>The argument to this flag is string you want appended to each of the output files. Epilogos defaults to using <code>INPUT-DIR_SALIENCY</code> (where INPUT-DIR is replaced with the name of the directory containing the epilogos input files and SALIENCY is replaced with the chosen saliency metric</p>
+
+```bash
+e.g. $ epilogos -f male_s2
+```
+</details>
+
 <a name="exp-freq-mem"></a>
 <details><summary><b> Expected Frequency Calculation Memory Allocation [--exp-freq-mem]</b></summary>
 <p></p>

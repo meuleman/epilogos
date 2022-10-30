@@ -57,6 +57,8 @@ from epilogos.helpers import getNumStates
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
 @click.option("-w", "--roi-width", "roiWidth", type=int, default=0,
               help="The number of bins in a region of interest [default: 50(single)/125(paired)]")
+@click.option("-f", "--file-tag", "fileTag", type=str, default="null",
+              help="Tag to be appended in output filenames [default: input-directory_saliency]")
 @click.option("--exp-freq-mem", "expFreqMem", type=str, default="16000",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 16000MB]")
 @click.option("--exp-comb-mem", "expCombMem", type=str, default="8000",
@@ -67,7 +69,7 @@ from epilogos.helpers import getNumStates
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB (single) / 100000MB (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
-         pvalBool, roiWidth, expFreqMem, expCombMem, scoreMem, roiMem):
+         pvalBool, roiWidth, fileTag, expFreqMem, expCombMem, scoreMem, roiMem):
     """
     Information-theoretic navigation of multi-tissue functional genomic annotations
 
@@ -98,9 +100,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         sys.exit()
 
     # Make sure all flags are submitted as expected
-    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition, pvalBool,
-               roiWidth)
+    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, exitBool,
+               diagnosticBool, partition, pvalBool)
 
     verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
@@ -150,10 +151,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("Quiescent State =", quiescentState + 1)
 
     # For making sure all files are consistently named
-    if mode == "single":
-        fileTag = "{}_s{}".format(inputDirPath.name, saliency)
-    else:
-        fileTag = "{}_{}_s{}".format(inputDirPath.name, inputDirPath2.name, saliency)
+    if fileTag == "null":
+        if mode == "single":
+            fileTag = "{}_s{}".format(inputDirPath.name, saliency)
+        else:
+            fileTag = "{}_{}_s{}".format(inputDirPath.name, inputDirPath2.name, saliency)
 
     # Path for storing/retrieving the expected frequency array
     storedExpPath = outputDirPath / "exp_freq_{}.npy".format(fileTag)
@@ -315,9 +317,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
 
 
-def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
-               numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, partition,
-               pvalBool, roiWidth):
+def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, exitBool,
+               diagnosticBool, partition, pvalBool):
     """
     Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
     are not present together

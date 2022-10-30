@@ -188,6 +188,8 @@ def drawEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, 
 
     fig.savefig(file, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
 
+    plt.close()
+
 
 def ylim(regionScoresList):
     """

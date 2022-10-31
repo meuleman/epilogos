@@ -489,7 +489,7 @@ e.g. $ epilogos --roi-mem 10000
   <a href="https://github.com/meuleman/epilogos"><img src="https://raw.githubusercontent.com/meuleman/epilogos/main/data/plotregion_logo.png" width="840"></a>
 </h1>
 
-Though Epilogos reduces the dimensionality of datasets, its output can still present challenges with regards to exploration and interpretation. To this end, we recommend using higlass to visualize results. This can be an arduous process and thus we include the `plotregion` command-line utility. Plot Region provides a simple way to visualize small amounts of epilogos data in a style like the </a href="https://epilogos.altius.org/">Epilogos web browser</a>.
+Though Epilogos reduces the dimensionality of datasets, its output can still present challenges with regards to exploration and interpretation. To this end, we recommend using higlass to visualize results. This can be an arduous process and thus we include the `plotregion` command-line utility. Plot Region provides a simple way to visualize small amounts of epilogos data in a style like the <a href="https://epilogos.altius.org/">Epilogos web browser</a>.
 
 ---
 

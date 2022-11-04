@@ -30,8 +30,8 @@ To Build Similarity Search Data:\n\
                                   similarity search\n\
   -o, --output-directory TEXT     Path to desired similarity search output\n\
                                   directory\n\
-  -w, --window-KB INTEGER         Window size (in KB) on which to perform\n\
-                                  similarity search  [default: 25]\n\
+  -w, --window-bp INTEGER         Window size (in BP) on which to perform\n\
+                                  similarity search  [default: 25000]\n\
   -j, --num-jobs INTEGER          Number of jobs to be used in nearest\n\
                                   neighbor algorithm  [default: 8]\n\
   -n, --num-matches INTEGER       Number of neighbors to be found by nearest\n\
@@ -63,7 +63,7 @@ To Query Similarity Search Data:\n\
 @click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True,
               help="Number of matches to be found by nearest neighbor algorithm"+
                    "(note that first match is always the query region)")
-@click.option("-q", "--query", "query", type=str, default=""
+@click.option("-q", "--query", "query", type=str, default="",
               help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")

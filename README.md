@@ -534,19 +534,19 @@ Additionally, a tab-separated bed file of 5 regions has been provided as region 
 $ plotregion -r data/plotregion/male/regionsOfInterest_male_s1_chr1.bed -s data/plotregion/male/scores_male_s1_matrix_chr1.txt.gz -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see five files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region in <code>data/plotregion/male/</code>). These files contain the epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
+<p>Upon completion of the run, you should see five files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region in <code>data/plotregion/male/regionsOfInterest_male_s1_chr1.bed</code>). These files contain the epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
 
 </details>
 
 <details><summary><b> Running Plot Region with your own data</b></summary>
 <p></p>
 
-<p>Before you can run Plot Region on your own data, you will first need an epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+<p>Before you can run Plot Region on your own data, you will first need an epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file, if you want to run Plot Region across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
 
 <p><strong>Genomic:</strong></p>
 
 ```bash
-$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
 
@@ -568,6 +568,60 @@ $ plotregion -r CHR:START-END -s PATH/TO/EPILOGOS_SCORES_FILE -j PATH/TO/METADAT
 
 </details>
 
+<a name="plot-region-pairwise-examples"></a>
+
+## Pairwise Epilogos Plot Region Examples
+
+<details><summary><b> Minimal example on provided example data</b></summary>
+<p></p>
+<p>The Pairwise Epilogos Plot Region commandline interface requires as input four flags: <a href="regions-plot-region">[-r, --regions]</a>, <a href="scores-a-b-plot-region">[-a, --scores-a]</a>, <a href="scores-a-b-plot-region">[-b, --scores-b]</a>, <a href="scores-diff-plot-region">[-c, --scores-diff]</a>, <a href="state-info-plot-region">[-j, --state-info]</a>, and <a href="output-directory-plot-region">[-o, --output-directory]</a>.</p>
+
+<p>If you cloned this git repository, example data has been provided under <code>data/plotregion/male/</code> and  <code>data/plotregion/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
+The files, named <code>scores_male_s1_matrix_chrX.txt.gz</code> and <code>scores_female_s1_matrix_chrX.txt.gz</code>, contain epilogos scores for an 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+
+The data consist of epilogos scores calculated on chromosome X of the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.
+
+Additionally, a tab-separated bed file of 5 regions has been provided as region input at <code>data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed</code></p>
+
+<p>To compute Plot Region results for this sample data run the following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+
+```bash
+$ plotregion -r data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed -a data/plotregion/male/scores_male_s1_matrix_chrX.txt.gz -b data/plotregion/female/scores_female_s1_matrix_chrX.txt.gz -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+```
+
+<p>Upon completion of the run, you should see five files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region in <code>data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed</code>). These files contain the pairwise epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
+
+</details>
+
+<details><summary><b> Running Plot Region with your own data</b></summary>
+<p></p>
+
+<p>Before you can run Pairwise Plot Region on your own data, you will first need two epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file per group, if you want to run Plot Region across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+
+<p><strong>Genomic:</strong></p>
+
+```bash
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+```
+<p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
+
+<p><strong>Lexicographic (requires bedops):</strong></p>
+
+```bash
+$ zcat PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt; gzip PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt
+```
+
+<br>
+
+<p>Once you have your desired scores file you can generate Plot Region results with the following command:</p>
+
+```bash
+$ plotregion -r CHR:START-END -a PATH/TO/GROUP_A/EPILOGOS_SCORES_FILE -b PATH/TO/GROUP_B/EPILOGOS_SCORES_FILE -j PATH/TO/METADATA_FILE -o PATH/TO/BUILD_OUTPUT_DIR
+```
+
+<p>Upon completion of the run, you should see files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region input with -r). These files contain the epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
+
+</details>
 
 <a name="command-line-options-plot-region"></a>
 
@@ -592,12 +646,12 @@ e.g. $ plotregion -r /PATH/TO/input_regions.bed
 <a name="scores-plot-region"></a>
 <details><summary><b> Scores File [-s, --scores-fles]</b></summary>
 <p></p>
-<p>The Plot Region commandline interface requires as input an Epilogos scores file to read region information from.When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+<p>The Plot Region commandline interface requires as input an Epilogos scores file to read region information from. When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file, if you want to run Plot Region across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
 
 <p><strong>Genomic:</strong></p>
 
 ```bash
-$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
 
@@ -613,6 +667,62 @@ $ zcat PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH/TO/E
 
 ```bash
 e.g. $ plotregion -s EPILOGOS_OUTPUTDIR/scores.txt.gz
+```
+</details>
+
+<a name="scores-a-b-plot-region"></a>
+<details><summary><b> Scores Files Groups A & B [-a, --scores-a] & [-b, --scores-b]</b></summary>
+<p></p>
+<p>To plot Pairwise Epilogos results, the Plot Region commandline interface requires as input two Epilogos scores files to read region information from. When epilogos is run, it outputs scores split by chromosome. Because Plot Region can only read in one file per group, if you want to run Plot Region across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+
+<p><strong>Genomic:</strong></p>
+
+```bash
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+```
+<p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
+
+<p><strong>Lexicographic (requires bedops):</strong></p>
+
+```bash
+$ zcat PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt; gzip PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt
+```
+
+<br>
+
+<p>The argument to these flags should be the path to previously run Epilogos scores files (see <a href="#slurm-examples">Epilogos</a> for details).</p>
+
+```bash
+e.g. $ plotregion -a GROUP_A_EPILOGOS_OUTPUTDIR/scores.txt.gz -b GROUP_B_EPILOGOS_OUTPUTDIR/scores.txt.gz
+```
+</details>
+
+<a name="scores-c-plot-region"></a>
+<details><summary><b> Scores Diff File [-c, --scores-diff]</b></summary>
+<p></p>
+<p>When plotting Pairwise Epilogos results, the Plot Region commandline interface can optionally take a scores difference file as input. This file represents the per-state score difference between groups A and B, with a positive difference indicating a higher score in group A and a negative difference indicating a higher score in group B (if you ran pairwise Epilogos, the <code>pairwiseDelta*.txt.gz</code> files can be used). If this file is not provided, the per-state differences will be calculated within the Plot Region code.
+
+Because Plot Region can only read in one scores difference file, if you want to run Plot Region across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+
+<p><strong>Genomic:</strong></p>
+
+```bash
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/pairwiseDelta_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/pairwiseDelta.txt.gz
+```
+<p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
+
+<p><strong>Lexicographic (requires bedops):</strong></p>
+
+```bash
+$ zcat PATH/TO/EPILOGOS_OUTPUT_DIR/pairwiseDelta_*_chr*.txt.gz | sort-bed - > PATH/TO/EPILOGOS_OUTPUT_DIR/pairwiseDelta.txt; gzip PATH/TO/EPILOGOS_OUTPUT_DIR/pairwiseDelta.txt
+```
+
+<br>
+
+<p>The argument to this flag should be the path to the Epilogos scores difference file (see <a href="#slurm-examples">Epilogos</a> for details).</p>
+
+```bash
+e.g. $ plotregion -c PATH/TO/pairwiseDelta.txt.gz
 ```
 </details>
 
@@ -1159,7 +1269,7 @@ For further explanation of the contents of these outputs see <a href="#output-si
 <p><strong>Genomic:</strong></p>
 
 ```bash
-$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
 
@@ -1217,7 +1327,7 @@ e.g. $ simsearch -b
 <p><strong>Genomic:</strong></p>
 
 ```bash
-$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_matrix"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
+$ prefix="PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*"; suffix="txt.gz"; paths=""; for chr in GENOMIC_ORDER; do chr="chr${chr}"; path="${prefix}_${chr}.${suffix}"; paths="${paths} ${path}"; done; cat ${paths} > PATH/TO/EPILOGOS_OUTPUT_DIR/scores.txt.gz
 ```
 <p>Where is GENOMIC_ORDER is replaced with the names of the relevant chromosomes in order separated by spaces. (e.g. <code>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y</code> or <code>`seq 1 22` X Y</code> for humans)
 

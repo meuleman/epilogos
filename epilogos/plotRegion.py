@@ -312,11 +312,11 @@ def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, col
         ax.xaxis.set_ticks_position('none')
 
     axs[0].text(0.99, 0.99, "Group A", verticalalignment='top', horizontalalignment='right', transform=axs[0].transAxes,
-                fontsize=15)
+                color='w', fontsize=15)
     axs[1].text(0.99, 0.99, "Group B", verticalalignment='top', horizontalalignment='right', transform=axs[1].transAxes,
-                fontsize=15)
+                color='w', fontsize=15)
     axs[2].text(0.99, 0.99, "Group A vs. Group B", verticalalignment='top', horizontalalignment='right', transform=axs[2].transAxes,
-                fontsize=15)
+                color='w', fontsize=15)
 
     axs[2].set_xticks([0, scoresA.shape[1] / 2, scoresA.shape[1]])
     axs[2].set_xticklabels([start, chr, end])

@@ -576,20 +576,20 @@ $ plotregion -r CHR:START-END -s PATH/TO/EPILOGOS_SCORES_FILE -j PATH/TO/METADAT
 <p></p>
 <p>The Pairwise Epilogos Plot Region commandline interface requires as input four flags: <a href="regions-plot-region">[-r, --regions]</a>, <a href="scores-a-b-plot-region">[-a, --scores-a]</a>, <a href="scores-a-b-plot-region">[-b, --scores-b]</a>, <a href="scores-diff-plot-region">[-c, --scores-diff]</a>, <a href="state-info-plot-region">[-j, --state-info]</a>, and <a href="output-directory-plot-region">[-o, --output-directory]</a>.</p>
 
-<p>If you cloned this git repository, example data has been provided under <code>data/plotregion/male/</code> and  <code>data/plotregion/female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
-The files, named <code>scores_male_s1_matrix_chrX.txt.gz</code> and <code>scores_female_s1_matrix_chrX.txt.gz</code>, contain epilogos scores for an 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
+<p>If you cloned this git repository, example data has been provided under <code>data/plotregion/male_vs_female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
+The files, named <code>scores_Male_s1_matrix_chrX.txt.gz</code> and <code>scores_Female_s1_matrix_chrX.txt.gz</code>, contain epilogos scores for an 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
 
-The data consist of epilogos scores calculated on chromosome X of the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.
+The data consist of epilogos scores calculated on chromosome X of the Roadmap dataset and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively.
 
-Additionally, a tab-separated bed file of 5 regions has been provided as region input at <code>data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed</code></p>
+Additionally, a tab-separated bed file of 5 regions has been provided as region input at <code>data/plotregion/male_vs_female/regionsOfInterest_Male_vs_Female_s1.bed</code></p>
 
 <p>To compute Plot Region results for this sample data run the following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ plotregion -r data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed -a data/plotregion/male/scores_male_s1_matrix_chrX.txt.gz -b data/plotregion/female/scores_female_s1_matrix_chrX.txt.gz -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ plotregion -r data/plotregion/male_vs_female/regionsOfInterest_Male_vs_Female_s1.bed -a data/plotregion/male_vs_female/scores_Male_s1_matrix_chrX.txt.gz -b data/plotregion/male_vs_female/scores_Female_s1_matrix_chrX.txt.gz -j data/state_metadata/human/Roadmap_Consortium_127_sample/hg19/18/metadata.tsv -o OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see five files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region in <code>data/plotregion/male_vs_female/regionsOfInterest_male_female_s1_chrX.bed</code>). These files contain the pairwise epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
+<p>Upon completion of the run, you should see five files following the <code>epilogos_region_CHR_START_END.pdf</code> naming convention (one for each region in <code>data/plotregion/male_vs_female/regionsOfInterest_Male_vs_Female_s1.bed</code>). These files contain the pairwise epilogos scores plotted for each of the input regions. For further explanation of the contents of these outputs see <a href="#output-directory-plot-region">Output Directory [-o, --output-directory]</a></p>
 
 </details>
 

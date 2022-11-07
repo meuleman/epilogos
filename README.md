@@ -519,7 +519,7 @@ Plot Region runs locally in the command line. It is lightweight enough to not pr
 
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
-<p>The Plot Region commandline interface requires as input four flags: <a href="regions-plot-region">[-r, --regions]</a> <a href="scores-plot-region">[-s, --scores-file]</a>, <a href="state-info-plot-region">[-j, --state-info]</a>, and <a href="output-directory-plot-region">[-o, --output-directory]</a>.</p>
+<p>The Plot Region commandline interface requires as input four flags: <a href="#regions-plot-region">[-r, --regions]</a> <a href="#scores-plot-region">[-s, --scores-file]</a>, <a href="#state-info-plot-region">[-j, --state-info]</a>, and <a href="#output-directory-plot-region">[-o, --output-directory]</a>.</p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/plotregion/male/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The file, named <code>scores_male_s1_matrix_chr1.txt.gz</code>, contains epilogos scores for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
@@ -574,7 +574,7 @@ $ plotregion -r CHR:START-END -s PATH/TO/EPILOGOS_SCORES_FILE -j PATH/TO/METADAT
 
 <details><summary><b> Minimal example on provided example data</b></summary>
 <p></p>
-<p>The Pairwise Epilogos Plot Region commandline interface requires as input four flags: <a href="regions-plot-region">[-r, --regions]</a>, <a href="scores-a-b-plot-region">[-a, --scores-a]</a>, <a href="scores-a-b-plot-region">[-b, --scores-b]</a>, <a href="scores-diff-plot-region">[-c, --scores-diff]</a>, <a href="state-info-plot-region">[-j, --state-info]</a>, and <a href="output-directory-plot-region">[-o, --output-directory]</a>.</p>
+<p>The Pairwise Epilogos Plot Region commandline interface requires as input four flags: <a href="#regions-plot-region">[-r, --regions]</a>, <a href="#scores-a-b-plot-region">[-a, --scores-a]</a>, <a href="#scores-a-b-plot-region">[-b, --scores-b]</a>, <a href="#scores-diff-plot-region">[-c, --scores-diff]</a>, <a href="#state-info-plot-region">[-j, --state-info]</a>, and <a href="#output-directory-plot-region">[-o, --output-directory]</a>.</p>
 
 <p>If you cloned this git repository, example data has been provided under <code>data/plotregion/male_vs_female/</code>. Otherwise it is available for download using the script in <code>bin/download_example_data.sh</code>. The script uses <a href="https://curl.se/">cURL</a> to download neccessary files and places them in a file hierarchy generated within the current directory.
 The files, named <code>scores_Male_s1_matrix_chrX.txt.gz</code> and <code>scores_Female_s1_matrix_chrX.txt.gz</code>, contain epilogos scores for an 18-state chromatin model, across 200bp genomic bins spanning human chromosome X.
@@ -1310,7 +1310,7 @@ For further explanation of the contents of these outputs see <a href="#output-si
 <a name="build-similarity-search"></a>
 <details><summary><b> Build Similarity Search Results [-b, --build]</b></summary>
 <p></p>
-<p>The Similarity Search commandline interface has two modes: build and <a href="query-similarity-search">query</a>. Build mode takes in a single epilogos scores file, finds regions of a specified size, and finds the best matches for each of these regions.</p>
+<p>The Similarity Search commandline interface has two modes: build and <a href="#query-similarity-search">query</a>. Build mode takes in a single epilogos scores file, finds regions of a specified size, and finds the best matches for each of these regions.</p>
 
 <p>When <code>-b</code> is enabled, run Similarity Search in build mode</p>
 
@@ -1322,7 +1322,7 @@ e.g. $ simsearch -b
 <a name="scores-similarity-search"></a>
 <details><summary><b> Scores Path [-s, --scores-path]</b></summary>
 <p></p>
-<p>In <a href="build-similarity-search">[-b, --build]</a> mode, Similarity Search takes as input a single epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Similarity Search can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
+<p>In <a href="#build-similarity-search">[-b, --build]</a> mode, Similarity Search takes as input a single epilogos scores file. When epilogos is run, it outputs scores split by chromosome. Because Similarity Search can only read in one file, if you want to run similarity search across the whole genome, you will have to combine these files into one singular scores file. This file can have chromosomes sorted by genomic (i.e. chr9 before chr12) or lexicographic (i.e. chr12 before chr9) order. We recommend using the either of following commands:</p>
 
 <p><strong>Genomic:</strong></p>
 
@@ -1349,7 +1349,7 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz
 <a name="output-similarity-search-build"></a>
 <details><summary><b> Output Directory [-o, --output-directory]</b></summary>
 <p></p>
-<p>In <a href="build-similarity-search">[-b, --build]</a> mode, Similarity Search will output 4 files: <code>simsearch_cube.npz</code>, <code>simsearch_knn.npz</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code></p>
+<p>In <a href="#build-similarity-search">[-b, --build]</a> mode, Similarity Search will output 4 files: <code>simsearch_cube.npz</code>, <code>simsearch_knn.npz</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code></p>
 
 <p><code>simsearch_cube.npz</code> is a zipped archive of 2 numpy arrays: <code>scores</code> and <code>coords</code>. <code>scores</code> contains the epilogos scores across each region present in the similarity search output (regions are chosen by the mean-max algorithm as outlined in the <a href="https://github.com/alexpreynolds/filter-regions">filter-regions package</a>). Scores are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. <code>coords</code> contains the coordinates for each region, and is sorted in the same order as <code>scores</code>.</p>
 
@@ -1409,7 +1409,7 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o 
 <a name="query-similarity-search"></a>
 <details><summary><b> Query Similarity Search Results [-q, --query]</b></summary>
 <p></p>
-<p>The Similarity Search commandline interface has two modes: <a href="build-similarity-search">build</a> and query. Query mode takes in a region query(ies) and a previously calculated <code>simsearch.bed.gz</code> matches file and outputs the top 100 matches for the query(ies).</p>
+<p>The Similarity Search commandline interface has two modes: <a href="#build-similarity-search">build</a> and query. Query mode takes in a region query(ies) and a previously calculated <code>simsearch.bed.gz</code> matches file and outputs the top 100 matches for the query(ies).</p>
 
 <p>The <code>-q</code> flag can handle both single & multi region queries. If querying a single region, the argument to the flag should be the region coordinates formatted as chr:start-end. If querying multiple regions, the argument to the flag should be the path to a tab-separated bed file.</p>
 
@@ -1427,7 +1427,7 @@ e.g. $ simsearch -q /PATH/TO/query_regions.bed -m /PATH/TO/simsearch.bed.gz
 <a name="matches-similarity-search"></a>
 <details><summary><b> Matches File [-m, --matches-file]</b></summary>
 <p></p>
-<p>In <a href="query-similarity-search">[-q, --query]</a> mode, Similarity Search takes as argument a pre-built <code>simsearch.bed.gz</code> matches file (see <a href="output-similarity-search-build">build output</a> for details). This file is queried to find the top 100 matches for each of the query regions.</a>
+<p>In <a href="#query-similarity-search">[-q, --query]</a> mode, Similarity Search takes as argument a pre-built <code>simsearch.bed.gz</code> matches file (see <a href="#output-similarity-search-build">build output</a> for details). This file is queried to find the top 100 matches for each of the query regions.</a>
 
 ```bash
 e.g. $ simsearch -q chr4:93305800-93330800 -m BUILD_OUTPUTDIR/simsearch.bed.gz
@@ -1438,7 +1438,7 @@ e.g. $ simsearch -q chr4:93305800-93330800 -m BUILD_OUTPUTDIR/simsearch.bed.gz
 <details><summary><b> Output Directory [-o, --output-directory]</b></summary>
 <p></p>
 <p></p>
-<p>In <a href="query-similarity-search">[-q, --query]</a> mode, Similarity Search will output 1 file for each query region: <code>similarity_search_region_CHR_START_END_recs.bed</code> (where <code>CHR</code>, <code>START</code>, & <code>END</code> are replaced with the query coordinates</p>
+<p>In <a href="#query-similarity-search">[-q, --query]</a> mode, Similarity Search will output 1 file for each query region: <code>similarity_search_region_CHR_START_END_recs.bed</code> (where <code>CHR</code>, <code>START</code>, & <code>END</code> are replaced with the query coordinates</p>
 
 <p><code>similarity_search_region_CHR_START_END_recs.bed</code> is a tab-separated bed file containing the coordinates for each of the top 100 matches for the query region in sorted order.</p>
 

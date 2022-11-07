@@ -43,6 +43,12 @@ def main(regions, epilogosScoresPath, scoresPathGroupA, scoresPathGroupB, scores
         888                                            "Y88P"
     """, flush=True)
 
+    outputDir = Path(outputDir)
+    if not outputDir.exists():
+        outputDir.mkdir(parents=True)
+    if not outputDir.is_dir():
+        raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
+
     print("\n\n\n        Reading in data...", flush=True); readTime = time()
     # Read in regions
     regionArr = generateRegionArr(regions)
@@ -108,7 +114,7 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
         print("            Region {}...".format(i+1), flush=True); regionTime = time()
         drawOneTrackEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,
                                    stateColors,
-                                   Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
+                                   outputDir / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
         print("                Time: ", format(time() - regionTime,'.0f'), "seconds\n", flush=True)
 
 
@@ -136,7 +142,7 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
     # Read in epilogos scores
     epilogosScoresGroupA = pd.read_table(Path(scoresPathGroupA), sep="\t", header=None)
     epilogosScoresGroupB = pd.read_table(Path(scoresPathGroupB), sep="\t", header=None)
-    epilogosScoresDiff = pd.read_table(Path(scoresPathGroupB), sep="\t", header=None) if scoresDiffPath else \
+    epilogosScoresDiff = pd.read_table(Path(scoresDiffPath), sep="\t", header=None) if scoresDiffPath else \
                          pd.concat((epilogosScoresGroupA.iloc[:,:3],
                                     epilogosScoresGroupA.iloc[:,3:] - epilogosScoresGroupB.iloc[:,3:]), axis=1)
 
@@ -177,7 +183,7 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
         drawMultiTrackEpilogosScores(chr, start, end, processedScoresListA[i], processedColorsListA[i],
                                      processedScoresListB[i], processedColorsListB[i], processedScoresListDiff[i],
                                      processedColorsListDiff[i], ymin, ymax, stateNames, stateColors,
-                                     Path(outputDir) / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
+                                     outputDir / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
         print("                Time: ", format(time() - regionTime,'.0f'), "seconds\n", flush=True)
 
 
@@ -304,6 +310,13 @@ def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, col
         ax.set_xticks([])
         ax.set_xticklabels([])
         ax.xaxis.set_ticks_position('none')
+
+    axs[0].text(0.99, 0.99, "Group A", verticalalignment='top', horizontalalignment='right', transform=axs[0].transAxes,
+                fontsize=15)
+    axs[1].text(0.99, 0.99, "Group B", verticalalignment='top', horizontalalignment='right', transform=axs[1].transAxes,
+                fontsize=15)
+    axs[2].text(0.99, 0.99, "Group A vs. Group B", verticalalignment='top', horizontalalignment='right', transform=axs[2].transAxes,
+                fontsize=15)
 
     axs[2].set_xticks([0, scoresA.shape[1] / 2, scoresA.shape[1]])
     axs[2].set_xticklabels([start, chr, end])

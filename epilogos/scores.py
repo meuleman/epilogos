@@ -7,7 +7,7 @@ import numpy.ma as ma
 from multiprocessing import cpu_count, Pool, RawArray
 from itertools import repeat, permutations
 from contextlib import closing
-from epilogos.helpers import strToBool, splitRows, readStates
+from epilogos.helpers import strToBool, countRows, splitRows, readStates, sharedToNumpy
 import gzip
 
 
@@ -43,7 +43,7 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
         numProcesses = cpu_count()
 
     # Determine which rows to assign to each core
-    rowList = splitRows(file1Path, numProcesses)
+    rowList = splitRows(countRows(file1Path), numProcesses)
 
     if file2 == "null":
         calculateScores(saliency, file1Path, rowList, numStates, outputDirPath, expFreqPath, fileTag, filename, numProcesses,
@@ -53,21 +53,6 @@ def main(file1, file2, numStates, saliency, outputDir, expFreqPath, fileTag, num
                                 filename, numProcesses, quiescentState, groupSize, verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
-
-
-def sharedToNumpy(sharedArr, numRows, numStates):
-    """
-    Helper for unflattening a shared array into a 2d numpy array
-
-    Input:
-    sharedArr -- The shared array to shape
-    numRows   -- The number of rows for the numpy array
-    numStates -- The number of columns for the numpy array
-
-    Output:
-    numpy array generated from a buffered shared array
-    """
-    return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))
 
 
 def _init(sharedArr_, expFreqPath_, verbose_):

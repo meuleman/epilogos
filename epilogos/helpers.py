@@ -78,17 +78,17 @@ def blocks(file, size=65536):
         yield b
 
 
-def splitRows(dataFilePath, numProcesses):
+def countRows(dataFilePath):
     """
-    Determines what rows to assign to each core
+    Determines the number of rows in a file
 
     Input:
-    dataFilePath -- the data file which we want to chunk up and send to seperate cores
-    numProcesses -- the number of cores which we want to work over
+    dataFilePath -- the data file for which we want to count rows
 
     Output:
-    A list of tuples which contain the first and last rows for each core to use
+    totalRows -- the number of rows in in the datafile
     """
+
     # Calculate the number of rows in the input file
     if dataFilePath.name.endswith("gz"):
         with gzip.open(dataFilePath, "rb") as f:
@@ -97,6 +97,20 @@ def splitRows(dataFilePath, numProcesses):
         with open(dataFilePath, "rb") as f:
             totalRows = sum(bl.count(b'\n') for bl in blocks(f))
 
+    return totalRows
+
+
+def splitRows(totalRows, numProcesses):
+    """
+    Determines what rows of a datafile to assign to each core
+
+    Input:
+    totalRows    -- the number of rows we want to split between cores
+    numProcesses -- the number of cores which we want to work over
+
+    Output:
+    A list of tuples which contain the first and last rows for each core to use
+    """
     # Split the rows up according to the number of cores we have available
     # Row list contain tuples of the first and last rows to be assigned to each core
     rowList = []
@@ -295,3 +309,18 @@ def findSign(x):
         return "+"
     else:
         return "-"
+
+
+def sharedToNumpy(sharedArr, numRows, numStates):
+    """
+    Helper for unflattening a shared array into a 2d numpy array
+
+    Input:
+    sharedArr -- The shared array to shape
+    numRows   -- The number of rows for the numpy array
+    numStates -- The number of columns for the numpy array
+
+    Output:
+    numpy array generated from a buffered shared array
+    """
+    return np.frombuffer(sharedArr, dtype=np.float32).reshape((numRows, numStates))

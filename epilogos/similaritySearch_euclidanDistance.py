@@ -19,6 +19,8 @@ from multiprocessing import cpu_count, Pool, RawArray
 from contextlib import closing
 from epilogos.helpers import generateRegionArr, maxMean, sharedToNumpy, splitRows
 from scipy.signal import convolve2d
+from sklearn.metrics.pairwise import euclidean_distances
+
 
 # Custom help format for click to separate the build and query commands
 class CustomClickHelpFormat(click.Command):
@@ -164,7 +166,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     print("        Finding simsearch matches...", flush=True); knnTime = time()
 
     # for each region find the 101 nearest neighbors to be used as matches
-    findSimilarRegions(outputDir, pd.DataFrame(inputArr).iloc[:, :3], stateScores, roiCoords, roiCube, windowBins, blockSize, nJobs, nDesiredNeighbors)
+    findSimilarRegions(outputDir, pd.DataFrame(inputArr, columns=["Chromosome", "Start", "End"]).iloc[:, :3], stateScores, roiCoords, roiCube, windowBins, blockSize, nJobs, nDesiredNeighbors)
 
     print("            Time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
@@ -347,22 +349,96 @@ def makeSlice(genome, idx, windowBins, blockSize):
     return genomeWindow.loc[reducedIndices[0].values].to_numpy()
 
 
-def _initMultiprocessing(genomeCoords_, reducedGenomeNormalized_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
+# def _initMultiprocessing(genomeCoords_, reducedGenomeNormalized_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
+#     """
+#     Initializes global variables for multiprocessing the convolution calculation
+
+#     Input:
+#     genomeCoords_            -- chr, start, and end coordinates for the non-reduced genome
+#     reducedGenomeNormalized_ -- The (x-mean)/std normalization of the reduced state scores
+#     roiCoords_               -- chr, start, and end coordinates for the maxmean chosen regions of interest
+#     roiCube_                 -- Reduced scores for the regions of interest
+#     sharedArr_               -- A tuple containing relevant information about the shared array (stores simsearch results)
+#     windowBins_              -- The number of bins to have in each window
+#     blockSize_               -- The reduction factor for the similiarty search
+#     numDesiredHits_          -- The number of simsearch results to output for each region of interest
+#     """
+#     global genomeCoords
+#     global reducedGenomeNormalized
+#     global roiCoords
+#     global roiCube
+#     global sharedArr
+#     global windowBins
+#     global blockSize
+#     global numDesiredHits
+
+#     genomeCoords = genomeCoords_
+#     reducedGenomeNormalized = reducedGenomeNormalized_
+#     roiCoords = roiCoords_
+#     roiCube = roiCube_
+#     sharedArr = sharedArr_
+#     windowBins = windowBins_
+#     blockSize = blockSize_
+#     numDesiredHits = numDesiredHits_
+
+
+# def runConvolution(rowsToCalc):
+#     """
+#     Runs the convolution function for the rows in roiCube present in rowlist
+
+#     Input:
+#     rowsToCalc -- A tuple containing the first row (inclusive) and last row (exclusive) to investigate
+#     To see rest of input see _initMultiprocessing description
+
+#     Output:
+#     Writes indices of the similarity search results to the shared array for each of the rows in rowList
+#     """
+
+#     similarRegionArr = sharedToNumpy(*sharedArr)
+
+#     # Normalize rows we are working with
+#     roiCubeNormalized = np.swapaxes((np.swapaxes(roiCube[np.arange(*rowsToCalc)], 1, 2) - np.mean(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :]) / np.std(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :], 1, 2)
+
+#     # Run convolvultion on all regions
+#     for i, row in enumerate(range(*rowsToCalc)):
+#         convolutionScores = convolve2d(reducedGenomeNormalized, roiCubeNormalized[i][::-1, ::-1], mode='valid').flatten()
+
+#         # Only want to recommend non-overlapping regions
+#         overlap_arr = np.zeros(len(reducedGenomeNormalized))
+
+#         # Do not want to recommend region itself
+#         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0]) & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize # Genome coords is the coords for the whole unreduced genoem
+#         overlap_arr[regionStart:regionStart + windowBins // blockSize] = 1
+
+#         # Loop to find numDesiredHits similar regions
+#         numHits = 0
+#         for hitIndex in np.argsort(convolutionScores)[::-1]:
+#             # Don't want overlapping regions
+#             if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
+#                 continue
+#             else:
+#                 similarRegionArr[row, numHits] = hitIndex  # Store the indices of these similar regions (can convert later)
+#                 overlap_arr[hitIndex:hitIndex + windowBins // blockSize] = 1
+#                 numHits += 1
+#                 if numHits >= numDesiredHits:
+#                     break
+
+def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
     """
     Initializes global variables for multiprocessing the convolution calculation
 
     Input:
-    genomeCoords_            -- chr, start, and end coordinates for the non-reduced genome
-    reducedGenomeNormalized_ -- The (x-mean)/std normalization of the reduced state scores
-    roiCoords_               -- chr, start, and end coordinates for the maxmean chosen regions of interest
-    roiCube_                 -- Reduced scores for the regions of interest
-    sharedArr_               -- A tuple containing relevant information about the shared array (stores simsearch results)
-    windowBins_              -- The number of bins to have in each window
-    blockSize_               -- The reduction factor for the similiarty search
-    numDesiredHits_          -- The number of simsearch results to output for each region of interest
+    genomeCoords_   -- chr, start, and end coordinates for the non-reduced genome
+    reducedGenome_  -- The reduced state scores
+    roiCoords_      -- chr, start, and end coordinates for the maxmean chosen regions of interest
+    roiCube_        -- Reduced scores for the regions of interest
+    sharedArr_      -- A tuple containing relevant information about the shared array (stores simsearch results)
+    windowBins_     -- The number of bins to have in each window
+    blockSize_      -- The reduction factor for the similiarty search
+    numDesiredHits_ -- The number of simsearch results to output for each region of interest
     """
     global genomeCoords
-    global reducedGenomeNormalized
+    global reducedGenome
     global roiCoords
     global roiCube
     global sharedArr
@@ -371,7 +447,7 @@ def _initMultiprocessing(genomeCoords_, reducedGenomeNormalized_, roiCoords_, ro
     global numDesiredHits
 
     genomeCoords = genomeCoords_
-    reducedGenomeNormalized = reducedGenomeNormalized_
+    reducedGenome = reducedGenome_
     roiCoords = roiCoords_
     roiCube = roiCube_
     sharedArr = sharedArr_
@@ -380,9 +456,9 @@ def _initMultiprocessing(genomeCoords_, reducedGenomeNormalized_, roiCoords_, ro
     numDesiredHits = numDesiredHits_
 
 
-def runConvolution(rowsToCalc):
+def runEuclideanDistance(rowsToCalc):
     """
-    Runs the convolution function for the rows in roiCube present in rowlist
+    Runs the euclidean distance function for the rows in roiCube present in rowlist
 
     Input:
     rowsToCalc -- A tuple containing the first row (inclusive) and last row (exclusive) to investigate
@@ -394,15 +470,52 @@ def runConvolution(rowsToCalc):
 
     similarRegionArr = sharedToNumpy(*sharedArr)
 
-    # Normalize rows we are working with
-    roiCubeNormalized = np.swapaxes((np.swapaxes(roiCube[np.arange(*rowsToCalc)], 1, 2) - np.mean(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :]) / np.std(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :], 1, 2)
-
     # Run convolvultion on all regions
     for i, row in enumerate(range(*rowsToCalc)):
-        convolutionScores = convolve2d(reducedGenomeNormalized, roiCubeNormalized[i][::-1, ::-1], mode='valid').flatten()
+        """
+        euclidean_distances(reducedGenome, roiCube[i], squared=True)
+            Calculates the euclidean distances all of the single bin vectors in the the region and single bin positions in the
+            genome. This returns a len(reducedGenome)x(windowBins // blockSize) size array. The sum of each diagonal represents
+            the squared euclidean distance of that location in the genome.
+            i.e. assume a minimal case where the distance array is 30x4,
+            sum(distarr[5,0], distarr[6,1], distarr[7,2], distarr[8,3])
+            would represent the euclidean distance between the query and the window created by indexing reducedGenome[5,6,7,8]
+
+        np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1)))
+            Calculates the primary indices required to create a 2d array which summed across its secondary axis gives the
+            euclidean distance for each position
+
+            np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1))
+                Creates two arrays of size len(reducedGenome)-24x(windowBins // blockSize) and returns them in a list
+                The first of these arrays is simply len(reducedGenome)-24 rows containing the ints [0,24] inclusive
+                The second  is len(reducedGenome)-24 rows with each row containing its primary index repeated 25 times
+
+            np.add(*np.broadcast_arrays())
+                Takes the two generated arrays and adds them together so that each row counts up 25 ints from its start
+                i.e. [[0,1,2,3, ... 24],
+                      [1,2,3,4, ... 25]
+                      [2,3,4,5, ... 26],
+                      ...]
+                This represents the primary indices necessary to easily sum each diagonal
+
+            The reason we use this format as opposed to the inbuilt python broadcasting of
+                np.arange(25) + np.arange(len(reducedGenome_25kb) - 24).reshape(len(reducedGenome_25kb) - 24, 1)
+            is because this method is slightly faster which matters when we are running it so many times across the genome
+
+        np.broadcast_to(np.arange(25), (distanceSize, 25))
+            Calculates the secondary indices required to create a 2d array which summed across its secondary axis gives the
+            euclidean distance for each position. It generates a len(reducedGenome)-24x(windowBins // blockSize) size array
+            where each row simply contains the ints [0,24] inclusive
+
+        np.sum(euclidean_distances()[], axis=1)
+            Takes the results of the euclidean distance calculation and indexing and sums them so that we obtain the proper
+            euclidean distances
+        """
+        distanceSize = len(reducedGenome) - 24
+        euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[i], squared=True)[np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1))), np.broadcast_to(np.arange(25), (distanceSize, 25))], axis=1)
 
         # Only want to recommend non-overlapping regions
-        overlap_arr = np.zeros(len(reducedGenomeNormalized))
+        overlap_arr = np.zeros(len(reducedGenome))
 
         # Do not want to recommend region itself
         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0]) & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize # Genome coords is the coords for the whole unreduced genoem
@@ -410,7 +523,7 @@ def runConvolution(rowsToCalc):
 
         # Loop to find numDesiredHits similar regions
         numHits = 0
-        for hitIndex in np.argsort(convolutionScores)[::-1]:
+        for hitIndex in np.argsort(euclideanDistances):
             # Don't want overlapping regions
             if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
                 continue
@@ -451,7 +564,7 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     reducedGenome = stateScores.iloc[reducedIndices].to_numpy()
 
     # Normalize the genome using (x-mean)/std for each superbin
-    reducedGenomeNormalized  = ((reducedGenome.transpose() - np.mean(reducedGenome, axis=1)) / np.std(reducedGenome, axis=1)).transpose()
+    # reducedGenomeNormalized  = ((reducedGenome.transpose() - np.mean(reducedGenome, axis=1)) / np.std(reducedGenome, axis=1)).transpose()
 
     # Split into multiprocessing
     # Shared arrays across the multiple processes for storing the recommendations
@@ -469,9 +582,9 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
 
     # Start the processes
     with closing(Pool(numCores, initializer=_initMultiprocessing,
-                      initargs=(genomeCoords, reducedGenomeNormalized, roiCoords, roiCube,
+                      initargs=(genomeCoords, reducedGenome, roiCoords, roiCube,
                                 (sharedArr, numRegions, numDesiredHits), windowBins, blockSize, numDesiredHits))) as pool:
-        pool.starmap(runConvolution, rowList)
+        pool.map(runEuclideanDistance, rowList)
     pool.join()
 
     # Generate coords for the reduced genome

@@ -9,7 +9,6 @@ import sys
 from time import time
 from pathlib import Path
 import os
-from sklearn.neighbors import NearestNeighbors
 import tempfile
 import json
 import csv
@@ -18,7 +17,6 @@ import click
 from multiprocessing import cpu_count, Pool, RawArray
 from contextlib import closing
 from epilogos.helpers import generateRegionArr, maxMean, sharedToNumpy, splitRows
-from scipy.signal import convolve2d
 from sklearn.metrics.pairwise import euclidean_distances
 
 
@@ -37,11 +35,11 @@ To Build Similarity Search Data:\n\
                                   directory\n\
   -w, --window-bp INTEGER         Window size (in BP) on which to perform\n\
                                   similarity search  [default: 25000]\n\
-  -j, --num-jobs INTEGER          Number of jobs to be used in nearest\n\
-                                  neighbor algorithm  [default: 8]\n\
-  -n, --num-matches INTEGER       Number of neighbors to be found by nearest\n\
-                                  neighbor algorithm (note that first neighbor\n\
-                                  is always the query region)  [default: 101]\n\
+  -j, --num-jobs INTEGER          Number of cores to be used in simsearch\n\
+                                  calculation. If set to 0, uses all cores.\n\
+                                  [default: 0=All cores]\n\
+  -n, --num-matches INTEGER       Number of matches to be found by simsearch\n\
+                                  for each query region [default: 100]\n\
   -f, --filter-state INTEGER      If the max signal within a region is from the\n\
                                   filter state, it is removed from the region\n\
                                   list. The purpose of this is to be used to \n\
@@ -68,11 +66,10 @@ To Query Similarity Search Data:\n\
               help="Path to desired similarity search output directory")
 @click.option("-w", "--window-bp", "windowBP", type=int, default=-1, show_default=True,
               help="Window size (in BP) on which to perform similarity search")
-@click.option("-j", "--num-jobs", "nJobs", type=int, default=8, show_default=True,
-              help="Number of jobs to be used in nearest neighbor algorithm")
-@click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True,
-              help="Number of matches to be found by nearest neighbor algorithm"+
-                   "(note that first match is always the query region)")
+@click.option("-c", "--num-cores", "nCores", type=int, default=0, show_default=True,
+              help="Number of cores to be used in simsearch calculation. If set to 0, uses all cores. [default: 0=All cores]")
+@click.option("-n", "--num-matches", "nDesiredMatches", type=int, default=100, show_default=True,
+              help="Number of matches to be found by simsearch for each query region [default: 100]")
 @click.option("-f", "--filter-state", "filterState", type=int, default=-1,
               help="If the max signal within a region is from the filter state, it is removed from the region list. " +
                    "The purpose of this is to be used to filter out 'quiescent regions'." +
@@ -81,7 +78,7 @@ To Query Similarity Search Data:\n\
               help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")
-def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState, query, simSearchPath):
+def main(buildBool, scoresPath, outputDir, windowBP, nCores, nDesiredMatches, filterState, query, simSearchPath):
     print("""\n
                  d8b                                                           888
                  Y8P                                                           888
@@ -105,12 +102,13 @@ def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, f
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
-        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState)
+        if nCores == 0: nCores = cpu_count()
+        buildSimSearch(scoresPath, outputDir, windowBP, nCores, nDesiredMatches, filterState)
     else:
         querySimSearch(query, simSearchPath, outputDir)
 
 
-def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState):
+def buildSimSearch(scoresPath, outputDir, windowBP, nCores, nDesiredMatches, filterState):
     """
     Builds the similarity search files for a set of scores
 
@@ -118,14 +116,14 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, fi
     scoresPath        -- Path to scores file to be used in similarity search
     outputDir         -- pathlib Path to the output directory for similarity search files
     windowBP          -- Size of the similarity search window in bp
-    nJobs             -- Number of jobs to be used in nearest neighbor algorithm
-    nDesiredNeighbors -- Number of matches to be found by nearest neighbor algorithm (first match is always the query region)
+    nCores             -- Number of jobs to be used in nearest neighbor algorithm
+    nDesiredMatches -- Number of matches to be found by nearest neighbor algorithm (first match is always the query region)
 
     Output:
     simsearch_cube.npz     -- NPZ file containing all the reduced regions and their coords (scores=scores, coords=coords)
-    simsearch_knn.npz      -- NPZ file containing the top nDesiredNeighbors matches for each region
+    simsearch_knn.npz      -- NPZ file containing the top nDesiredMatches matches for each region
                               (arr=coords, idx=indices, dist=distances)
-    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors matches for each of regions
+    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredMatches matches for each of regions
     """
 
     print("\n\n\n        Reading in data...", flush=True); readTime = time()
@@ -181,7 +179,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, fi
     print("        Finding simsearch matches...", flush=True); knnTime = time()
 
     # for each region find the 101 nearest neighbors to be used as matches
-    findSimilarRegions(outputDir, pd.DataFrame(inputArr[:,:3], columns=["Chromosome", "Start", "End"]), stateScores, roiCoords, roiCube, windowBins, blockSize, nJobs, nDesiredNeighbors)
+    findSimilarRegions(outputDir, pd.DataFrame(inputArr[:,:3], columns=["Chromosome", "Start", "End"]), stateScores, roiCoords, roiCube, windowBins, blockSize, nCores, nDesiredMatches)
 
     print("            Time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
@@ -364,7 +362,7 @@ def makeSlice(genome, idx, windowBins, blockSize):
     return genomeWindow.loc[reducedIndices[0].values].to_numpy()
 
 
-def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
+def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, nDesiredMatches_):
     """
     Initializes global variables for multiprocessing the convolution calculation
 
@@ -376,7 +374,7 @@ def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sh
     sharedArr_      -- A tuple containing relevant information about the shared array (stores simsearch results)
     windowBins_     -- The number of bins to have in each window
     blockSize_      -- The reduction factor for the similiarty search
-    numDesiredHits_ -- The number of simsearch results to output for each region of interest
+    nDesiredMatches_ -- The number of simsearch results to output for each region of interest
     """
     global genomeCoords
     global reducedGenome
@@ -385,7 +383,7 @@ def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sh
     global sharedArr
     global windowBins
     global blockSize
-    global numDesiredHits
+    global nDesiredMatches
 
     genomeCoords = genomeCoords_
     reducedGenome = reducedGenome_
@@ -394,7 +392,7 @@ def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sh
     sharedArr = sharedArr_
     windowBins = windowBins_
     blockSize = blockSize_
-    numDesiredHits = numDesiredHits_
+    nDesiredMatches = nDesiredMatches_
 
 
 def runEuclideanDistance(rowsToCalc):
@@ -462,21 +460,21 @@ def runEuclideanDistance(rowsToCalc):
         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0]) & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize # Genome coords is the coords for the whole unreduced genoem
         overlap_arr[regionStart:regionStart + windowBins // blockSize] = 1
 
-        # Loop to find numDesiredHits similar regions
-        numHits = 0
+        # Loop to find nDesiredMatches similar regions
+        numMatches = 0
         for hitIndex in np.argsort(euclideanDistances):
             # Don't want overlapping regions
             if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
                 continue
             else:
-                similarRegionArr[row, numHits] = hitIndex  # Store the indices of these similar regions (can convert later)
+                similarRegionArr[row, numMatches] = hitIndex  # Store the indices of these similar regions (can convert later)
                 overlap_arr[hitIndex:hitIndex + windowBins // blockSize] = 1
-                numHits += 1
-                if numHits >= numDesiredHits:
+                numMatches += 1
+                if numMatches >= nDesiredMatches:
                     break
 
 
-def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube, windowBins, blockSize, numCores, numDesiredHits):
+def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube, windowBins, blockSize, nCores, nDesiredMatches):
     """
     Runs a convolution funnction on normalized data to determine the most similar regions for all ROIs across the genome
 
@@ -488,12 +486,12 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     roiCube        -- The reduced scores over the mean max generated windows
     windowBins     -- The number of bins to have in each window
     blockSize      -- The reduction factor for the similiarty search
-    numCores       -- The number of cores to use for the multiprocessing of the convolution calculation
-    numDesiredHits -- Number of similar regions to be returned for each roi
+    nCores         -- The number of cores to use for the multiprocessing of the convolution calculation
+    nDesiredMatches -- Number of similar regions to be returned for each roi
 
     Output:
-    simsearch_knn.npz      -- for each of regions, the top nDesiredNeighbors matches (arr=coords, idx=indices, dist=distances)
-    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredNeighbors matches for each of regions
+    simsearch_knn.npz      -- for each of regions, the top nDesiredMatches matches (arr=coords, idx=indices, dist=distances)
+    simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredMatches matches for each of regions
     """
 
     # Reduce the genome for the appropriate region size
@@ -511,7 +509,7 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     # Shared arrays across the multiple processes for storing the recommendations
     # We avoid race conditions by writing to separate parts of the array in each process
     numRegions = roiCube.shape[0]
-    sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.int32), numRegions * numDesiredHits)
+    sharedArr = RawArray(np.ctypeslib.as_ctypes_type(np.int32), numRegions * nDesiredMatches)
 
     #########################################################################################################################################################################################
     ##                                                                                                                                                                                     ##
@@ -519,12 +517,12 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     ##                                                                                                                                                                                     ##
     #########################################################################################################################################################################################
 
-    rowList = splitRows(numRegions, numCores)
+    rowList = splitRows(numRegions, nCores)
 
     # Start the processes
-    with closing(Pool(numCores, initializer=_initMultiprocessing,
+    with closing(Pool(nCores, initializer=_initMultiprocessing,
                       initargs=(genomeCoords, reducedGenome, roiCoords, roiCube,
-                                (sharedArr, numRegions, numDesiredHits), windowBins, blockSize, numDesiredHits))) as pool:
+                                (sharedArr, numRegions, nDesiredMatches), windowBins, blockSize, nDesiredMatches))) as pool:
         pool.map(runEuclideanDistance, rowList)
     pool.join()
 
@@ -534,10 +532,10 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     reducedGenomeCoords = pd.concat((genomeCoords.iloc[firstIndices, :2].reset_index(drop=True), genomeCoords.iloc[lastIndices, 2].reset_index(drop=True)), axis=1, names=["Chromsome", "Start", "End"])
 
     # take the shared array and convert all of the indices into locations
-    resultsChrAndStart = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, numDesiredHits).reshape(numRegions * numDesiredHits), :2].values
-    resultsEnd = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, numDesiredHits).reshape(numRegions * numDesiredHits) + windowBins // blockSize - 1, 2].values.reshape(numRegions * numDesiredHits, 1)
+    resultsChrAndStart = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, nDesiredMatches).reshape(numRegions * nDesiredMatches), :2].values
+    resultsEnd = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, nDesiredMatches).reshape(numRegions * nDesiredMatches) + windowBins // blockSize - 1, 2].values.reshape(numRegions * nDesiredMatches, 1)
 
-    searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(numRegions, numDesiredHits, 3)
+    searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(numRegions, nDesiredMatches, 3)
 
     # Store the lcoation of the query at the beginning of array
     searchResults = np.concatenate((roiCoords.values, searchResults), axis=1)
@@ -560,7 +558,7 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
         # we push it at the front here and remove a trailing element
         if not query_added:
             recs = [query] + recs[:-1]
-        assert(len(recs) == numDesiredHits)
+        assert(len(recs) == nDesiredMatches)
         final[i] = json.dumps(recs)
         i += 1
 

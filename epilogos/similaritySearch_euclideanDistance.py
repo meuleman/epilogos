@@ -42,6 +42,11 @@ To Build Similarity Search Data:\n\
   -n, --num-matches INTEGER       Number of neighbors to be found by nearest\n\
                                   neighbor algorithm (note that first neighbor\n\
                                   is always the query region)  [default: 101]\n\
+  -f, --filter-state INTEGER      If the max signal within a region is from the\n\
+                                  filter state, it is removed from the region\n\
+                                  list. The purpose of this is to be used to \n\
+                                  filter out 'quiescent regions'. If set to 0,\n\
+                                  filtering is not done. [default: last state]\
 \n\
 \n\
 To Query Similarity Search Data:\n\
@@ -68,11 +73,15 @@ To Query Similarity Search Data:\n\
 @click.option("-n", "--num-matches", "nDesiredNeighbors", type=int, default=101, show_default=True,
               help="Number of matches to be found by nearest neighbor algorithm"+
                    "(note that first match is always the query region)")
+@click.option("-f", "--filter-state", "filterState", type=int, default=-1,
+              help="If the max signal within a region is from the filter state, it is removed from the region list. " +
+                   "The purpose of this is to be used to filter out 'quiescent regions'." +
+                   "If set to 0, filtering is not done. [default: last state]")
 @click.option("-q", "--query", "query", type=str, default="",
               help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")
-def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, query, simSearchPath):
+def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState, query, simSearchPath):
     print("""\n
                  d8b                                                           888
                  Y8P                                                           888
@@ -96,12 +105,12 @@ def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, q
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
-        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors)
+        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState)
     else:
         querySimSearch(query, simSearchPath, outputDir)
 
 
-def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
+def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors, filterState):
     """
     Builds the similarity search files for a set of scores
 
@@ -146,18 +155,24 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     rois, _ = maxMean(inputArr, windowBins, maxRegions)
 
     # Seperates just the coordinates
-    roiCoords = rois.iloc[:,:3]
+    roiCoords = rois.iloc[:,:3].reset_index(drop=True, inplace=True)
     # Generate slices of reduced data for the cube
     roiCube = rois["OriginalIdx"].apply(lambda x: makeSlice(stateScores, x, windowBins, blockSize))
     roiCube = np.stack(roiCube.to_numpy())
 
-    #########################################################
-    ##                                                     ##
-    ## want to remove regions if they are mostly quiescent ##
-    ## this will reduce later computational time           ##
-    ## also remove regions which overlap chromosomes       ##
-    ##                                                     ##
-    #########################################################
+    # Dropping overlapping chromosomes
+    chrOverlapIndices = np.where(roiCoords["Start"] >= roiCoords["End"])[0]
+    roiCoords.drop(labels=chrOverlapIndices, inplace=True)
+    roiCoords.reset_index(drop=True, inplace=True)
+    roiCube = np.delete(roiCube, chrOverlapIndices, axis=0)
+
+    # Dropping regions where the quiescent state is the maximally contributing state
+    if filterState != 0:
+        filterState = roiCube.shape[2] - 1 if filterState == -1 else filterState - 1
+        quiescentIndices = np.where(np.argmax(np.max(roiCube, axis=1), axis=1) == filterState)[0]
+        roiCoords.drop(labels=quiescentIndices, inplace=True)
+        roiCoords.reset_index(drop=True, inplace=True)
+        roiCube = np.delete(roiCube, quiescentIndices, axis=0)
 
     # Save the cube
     np.savez_compressed(file=outputDir / 'simsearch_cube', scores=roiCube, coords=roiCoords.values)
@@ -166,7 +181,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nDesiredNeighbors):
     print("        Finding simsearch matches...", flush=True); knnTime = time()
 
     # for each region find the 101 nearest neighbors to be used as matches
-    findSimilarRegions(outputDir, pd.DataFrame(inputArr, columns=["Chromosome", "Start", "End"]).iloc[:, :3], stateScores, roiCoords, roiCube, windowBins, blockSize, nJobs, nDesiredNeighbors)
+    findSimilarRegions(outputDir, pd.DataFrame(inputArr[:,:3], columns=["Chromosome", "Start", "End"]), stateScores, roiCoords, roiCube, windowBins, blockSize, nJobs, nDesiredNeighbors)
 
     print("            Time:", format(time() - knnTime,'.0f'), "seconds\n", flush=True)
 
@@ -349,80 +364,6 @@ def makeSlice(genome, idx, windowBins, blockSize):
     return genomeWindow.loc[reducedIndices[0].values].to_numpy()
 
 
-# def _initMultiprocessing(genomeCoords_, reducedGenomeNormalized_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
-#     """
-#     Initializes global variables for multiprocessing the convolution calculation
-
-#     Input:
-#     genomeCoords_            -- chr, start, and end coordinates for the non-reduced genome
-#     reducedGenomeNormalized_ -- The (x-mean)/std normalization of the reduced state scores
-#     roiCoords_               -- chr, start, and end coordinates for the maxmean chosen regions of interest
-#     roiCube_                 -- Reduced scores for the regions of interest
-#     sharedArr_               -- A tuple containing relevant information about the shared array (stores simsearch results)
-#     windowBins_              -- The number of bins to have in each window
-#     blockSize_               -- The reduction factor for the similiarty search
-#     numDesiredHits_          -- The number of simsearch results to output for each region of interest
-#     """
-#     global genomeCoords
-#     global reducedGenomeNormalized
-#     global roiCoords
-#     global roiCube
-#     global sharedArr
-#     global windowBins
-#     global blockSize
-#     global numDesiredHits
-
-#     genomeCoords = genomeCoords_
-#     reducedGenomeNormalized = reducedGenomeNormalized_
-#     roiCoords = roiCoords_
-#     roiCube = roiCube_
-#     sharedArr = sharedArr_
-#     windowBins = windowBins_
-#     blockSize = blockSize_
-#     numDesiredHits = numDesiredHits_
-
-
-# def runConvolution(rowsToCalc):
-#     """
-#     Runs the convolution function for the rows in roiCube present in rowlist
-
-#     Input:
-#     rowsToCalc -- A tuple containing the first row (inclusive) and last row (exclusive) to investigate
-#     To see rest of input see _initMultiprocessing description
-
-#     Output:
-#     Writes indices of the similarity search results to the shared array for each of the rows in rowList
-#     """
-
-#     similarRegionArr = sharedToNumpy(*sharedArr)
-
-#     # Normalize rows we are working with
-#     roiCubeNormalized = np.swapaxes((np.swapaxes(roiCube[np.arange(*rowsToCalc)], 1, 2) - np.mean(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :]) / np.std(roiCube[np.arange(*rowsToCalc)], axis=2)[:, np.newaxis, :], 1, 2)
-
-#     # Run convolvultion on all regions
-#     for i, row in enumerate(range(*rowsToCalc)):
-#         convolutionScores = convolve2d(reducedGenomeNormalized, roiCubeNormalized[i][::-1, ::-1], mode='valid').flatten()
-
-#         # Only want to recommend non-overlapping regions
-#         overlap_arr = np.zeros(len(reducedGenomeNormalized))
-
-#         # Do not want to recommend region itself
-#         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0]) & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize # Genome coords is the coords for the whole unreduced genoem
-#         overlap_arr[regionStart:regionStart + windowBins // blockSize] = 1
-
-#         # Loop to find numDesiredHits similar regions
-#         numHits = 0
-#         for hitIndex in np.argsort(convolutionScores)[::-1]:
-#             # Don't want overlapping regions
-#             if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
-#                 continue
-#             else:
-#                 similarRegionArr[row, numHits] = hitIndex  # Store the indices of these similar regions (can convert later)
-#                 overlap_arr[hitIndex:hitIndex + windowBins // blockSize] = 1
-#                 numHits += 1
-#                 if numHits >= numDesiredHits:
-#                     break
-
 def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedArr_, windowBins_, blockSize_, numDesiredHits_):
     """
     Initializes global variables for multiprocessing the convolution calculation
@@ -471,9 +412,9 @@ def runEuclideanDistance(rowsToCalc):
     similarRegionArr = sharedToNumpy(*sharedArr)
 
     # Run convolvultion on all regions
-    for i, row in enumerate(range(*rowsToCalc)):
+    for row in range(*rowsToCalc):
         """
-        euclidean_distances(reducedGenome, roiCube[i], squared=True)
+        euclidean_distances(reducedGenome, roiCube[row], squared=True)
             Calculates the euclidean distances all of the single bin vectors in the the region and single bin positions in the
             genome. This returns a len(reducedGenome)x(windowBins // blockSize) size array. The sum of each diagonal represents
             the squared euclidean distance of that location in the genome.
@@ -512,7 +453,7 @@ def runEuclideanDistance(rowsToCalc):
             euclidean distances
         """
         distanceSize = len(reducedGenome) - 24
-        euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[i], squared=True)[np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1))), np.broadcast_to(np.arange(25), (distanceSize, 25))], axis=1)
+        euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[row], squared=True)[np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1))), np.broadcast_to(np.arange(25), (distanceSize, 25))], axis=1)
 
         # Only want to recommend non-overlapping regions
         overlap_arr = np.zeros(len(reducedGenome))
@@ -590,10 +531,10 @@ def findSimilarRegions(outputDir, genomeCoords, stateScores, roiCoords, roiCube,
     # Generate coords for the reduced genome
     firstIndices = np.array(sorted(sumsOverGenome.drop_duplicates(['blockIndices'], keep='first').index))
     lastIndices = np.array(sorted(sumsOverGenome.drop_duplicates(['blockIndices'], keep='last').index))
-    reducedGenomeCoords = pd.concat((roiCoords.iloc[firstIndices, :2].reset_index(drop=True), roiCoords.iloc[lastIndices, 2].reset_index(drop=True)), axis=1, names=["Chromsome", "Start", "End"])
+    reducedGenomeCoords = pd.concat((genomeCoords.iloc[firstIndices, :2].reset_index(drop=True), genomeCoords.iloc[lastIndices, 2].reset_index(drop=True)), axis=1, names=["Chromsome", "Start", "End"])
 
     # take the shared array and convert all of the indices into locations
-    resultsChrAndStart = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, 100).reshape(numRegions * 100), :2].values
+    resultsChrAndStart = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, numDesiredHits).reshape(numRegions * numDesiredHits), :2].values
     resultsEnd = reducedGenomeCoords.iloc[sharedToNumpy(sharedArr, numRegions, numDesiredHits).reshape(numRegions * numDesiredHits) + windowBins // blockSize - 1, 2].values.reshape(numRegions * numDesiredHits, 1)
 
     searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(numRegions, numDesiredHits, 3)

@@ -35,7 +35,7 @@ To Build Similarity Search Data:\n\
                                   directory\n\
   -w, --window-bp INTEGER         Window size (in BP) on which to perform\n\
                                   similarity search  [default: 25000]\n\
-  -j, --num-jobs INTEGER          Number of cores to be used in simsearch\n\
+  -c, --num-cores INTEGER         Number of cores to be used in simsearch\n\
                                   calculation. If set to 0, uses all cores.\n\
                                   [default: 0=All cores]\n\
   -n, --num-matches INTEGER       Number of matches to be found by simsearch\n\
@@ -152,8 +152,10 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nCores, nDesiredMatches, fil
     # Filter-regions package to perform maxmean algorithm & pull out top X regions
     rois, _ = maxMean(inputArr, windowBins, maxRegions)
 
+    # Make sure rois are sorted properly for indexing later
+    rois.reset_index(drop=True, inplace=True)
     # Seperates just the coordinates
-    roiCoords = rois.iloc[:,:3].reset_index(drop=True, inplace=True)
+    roiCoords = rois.iloc[:,:3]
     # Generate slices of reduced data for the cube
     roiCube = rois["OriginalIdx"].apply(lambda x: makeSlice(stateScores, x, windowBins, blockSize))
     roiCube = np.stack(roiCube.to_numpy())

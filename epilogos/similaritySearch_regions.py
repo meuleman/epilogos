@@ -33,7 +33,7 @@ def main(outputDir, scoresPath, windowBins, blockSize, windowBP, filterState):
     roiCube = np.stack(rois["OriginalIdx"].apply(lambda x: makeSlice(stateScores, x, windowBins, blockSize)).to_numpy())
 
     print("    Time:", format(time() - reductionTime,'.0f'), "seconds\n", flush=True)
-    print("Filtering out uninteresting regions...", flush=True); filterTime = ()
+    print("Filtering out uninteresting regions...", flush=True); filterTime = time()
 
     roiCoords, roiCube = removeRegions(roiCoords, roiCube, filterState)
 

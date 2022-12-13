@@ -152,20 +152,20 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
 
     print("\n        STEP 1: Salient Region Selection", flush=True)
     submitRegionSelectionCommand = "python {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_regions.py", outputDir, scoresPath, windowBins, blockSize, windowBP, filterState)
-    regionJob = submitSlurmJob("simsearch_region_selection", submitRegionSelectionCommand, outputDir, partition, memory)
+    regionJob = submitSlurmJob("simsearch_region_selection", submitRegionSelectionCommand, outputDir, partition, memory, "")
     print("            JobID:", regionJob, flush=True)
 
     print("\n        STEP 2: Similarity Search Calculation", flush=True)
     calcJobs = []
     for i in range(nJobs):
         simsearchCalculationCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_calc.py", outputDir, windowBins, blockSize, nCores, nDesiredMatches, nJobs, i)
-        calcJobs.append(submitSlurmJob("simsearch_calc_{}".format(i), simsearchCalculationCommand, outputDir, partition, memory))
+        calcJobs.append(submitSlurmJob("simsearch_calc_{}".format(i), simsearchCalculationCommand, outputDir, partition, memory, "--dependency=afterok:{}".format(regionJob)))
     calcJobsStr = str(calcJobs).strip('[]').replace(" ", "")
     print("            JobID:", calcJobsStr, flush=True)
 
     print("\n        STEP 3: Writing results", flush=True)
     submitWriteCommand = "python {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_write.py", outputDir, windowBins, blockSize, nJobs, nDesiredMatches)
-    writeJob = submitSlurmJob("simsearch_write", submitWriteCommand, outputDir, partition, memory)
+    writeJob = submitSlurmJob("simsearch_write", submitWriteCommand, outputDir, partition, memory, "--dependency=afterok:{}".format(calcJobsStr))
     print("            JobID:", writeJob, flush=True)
 
     allJobIDs = "{},{},{}".format(regionJob, calcJobsStr, writeJob)
@@ -322,7 +322,7 @@ def setUpSlurm(outputDir, partition, nCores, calcMem):
     return pythonFilesDir, partition, memory
 
 
-def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory):
+def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory, dependency):
     jobOutPath = outputDir / (".out/" + jobName + ".out")
     jobErrPath = outputDir / (".err/" + jobName + ".err")
 
@@ -339,7 +339,7 @@ def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory):
         print(err)
         return
 
-    command = "sbatch --job-name={}.job --output={} --error={} {} {} --wrap='{}'".format(jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
+    command = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'".format(dependency, jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
     sp = subprocess.run(command, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):

@@ -27,7 +27,7 @@ def main(outputDir, scoresPath, windowBins, blockSize, windowBP, filterState):
     roiCoords = rois.iloc[:,:3]
 
     print("    Time:", format(time() - maxmeanTime,'.0f'), "seconds\n", flush=True)
-    print("Reducing region scores by factor of {}...".format(blockSize), flush=True); reductionTime = ()
+    print("Reducing region scores by factor of {}...".format(blockSize), flush=True); reductionTime = time()
 
     # Generate slices of reduced data for the cube
     roiCube = np.stack(rois["OriginalIdx"].apply(lambda x: makeSlice(stateScores, x, windowBins, blockSize)).to_numpy())
@@ -40,11 +40,11 @@ def main(outputDir, scoresPath, windowBins, blockSize, windowBP, filterState):
     np.savez_compressed(file=outputDir / 'simsearch_cube', scores=roiCube, coords=roiCoords.values)
 
     print("    Time:", format(time() - filterTime,'.0f'), "seconds\n", flush=True)
-    print("Reducing genome scores by factor of {}...".format(blockSize), flush=True); reductionTime = ()
+    print("Reducing genome scores by factor of {}...".format(blockSize), flush=True); genomeTime = time()
 
     reduceGenome(outputDir, stateScores, blockSize)
 
-    print("    Time:", format(time() - reductionTime,'.0f'), "seconds\n", flush=True)
+    print("    Time:", format(time() - genomeTime,'.0f'), "seconds\n", flush=True)
     print("Total time:", format(time() - t,'.0f'), "seconds\n", flush=True)
 
 

@@ -20,7 +20,7 @@ def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
 
     simsearch_npz = np.load(outputDir / "simsearch_cube.npz", allow_pickle=True)
     nRegions = simsearch_npz["scores"].shape[0]
-    roiCoords = simsearch_npz["coords"]
+    roiCoords = pd.DataFrame(simsearch_npz["coords"], columns=["Chromosome", "Start", "End"])
 
     simsearch_arr = readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs)
 

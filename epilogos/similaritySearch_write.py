@@ -93,7 +93,7 @@ def writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches)
         # we push it at the front here and remove a trailing element
         if not query_added:
             recs = [query] + recs[:-1]
-        assert(len(recs) == nDesiredMatches)
+        assert(len(recs) == nDesiredMatches + 1)
         final[i] = json.dumps(recs)
         i += 1
 

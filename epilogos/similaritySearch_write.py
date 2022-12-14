@@ -13,7 +13,7 @@ from epilogos.helpers import splitRows
 
 def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
     print("Reducing genome coordinates...", flush=True); reductionTime = time(); t = time()
-    reducedGenomeCoords = reducedGenomeCoords(outputDir, blockSize)
+    reducedGenomeCoords = reduceGenomeCoords(outputDir, blockSize)
 
     print("    Time:", format(time() - reductionTime,'.0f'), "seconds\n", flush=True)
     print("Reading in search results...", flush=True); readTime = time()
@@ -40,7 +40,7 @@ def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
     print("Total time:", format(time() - t,'.0f'), "seconds\n", flush=True)
 
 
-def reduceGenomeCoords(outputDir, genomeCoords, blockSize):
+def reduceGenomeCoords(outputDir, blockSize):
     genome_stats = np.load(outputDir / "genome_stats.npz", allow_pickle=True)
     stateScores = genome_stats["scores"]
     genomeCoords = genome_stats["coords"]

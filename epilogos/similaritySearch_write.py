@@ -65,8 +65,8 @@ def readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs):
 
 def convertIndicesToCoords(simsearch_arr, reducedGenomeCoords, roiCoords, windowBins, blockSize, nRegions, nDesiredMatches):
     # take the shared array and convert all of the indices into locations
-    resultsChrAndStart = reducedGenomeCoords.iloc[simsearch_arr, :2].values
-    resultsEnd = reducedGenomeCoords.iloc[simsearch_arr + windowBins // blockSize - 1, 2].values.reshape(nRegions * nDesiredMatches, 1)
+    resultsChrAndStart = reducedGenomeCoords.iloc[simsearch_arr.flatten(), :2].values.reshape(nRegions * nDesiredMatches, 2)
+    resultsEnd = reducedGenomeCoords.iloc[simsearch_arr.flatten() + windowBins // blockSize - 1, 2].values.reshape(nRegions * nDesiredMatches, 1)
 
     searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(nRegions, nDesiredMatches, 3)
 

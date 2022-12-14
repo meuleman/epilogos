@@ -43,7 +43,7 @@ def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
 def reduceGenomeCoords(outputDir, blockSize):
     genome_stats = np.load(outputDir / "genome_stats.npz", allow_pickle=True)
     stateScores = genome_stats["scores"]
-    genomeCoords = genome_stats["coords"]
+    genomeCoords = pd.DataFrame(genome_stats["coords"], columns=["Chromosome", "Start", "End"])
     sumsOverGenome = pd.DataFrame(stateScores).sum(axis=1).to_frame(name="scores")
     sumsOverGenome["blockIndices"] = np.arange(len(sumsOverGenome), dtype=np.int32) // blockSize
 

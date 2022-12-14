@@ -71,7 +71,7 @@ def convertIndicesToCoords(simsearch_arr, reducedGenomeCoords, roiCoords, window
     searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(nRegions, nDesiredMatches, 3)
 
     # Store the lcoation of the query at the beginning of array
-    return np.concatenate((roiCoords.values.reshape((1,nRegions,3)), searchResults), axis=1)
+    return np.concatenate((roiCoords.values.reshape((nRegions,1,3)), searchResults), axis=1)
 
 
 def writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches):

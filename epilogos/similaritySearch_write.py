@@ -57,7 +57,7 @@ def readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs):
 
     rowList = splitRows(nRegions, nJobs)
     for file in outputDir.glob("simsearch_regions_*.npy"):
-        i = file.stem.split("_")[-1]
+        i = int(file.stem.split("_")[-1])
         simsearch_arr[rowList[i][0]:rowList[i][1]] = np.load(file, allow_pickle=True)
 
     return simsearch_arr

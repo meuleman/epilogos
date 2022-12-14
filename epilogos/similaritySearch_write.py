@@ -127,7 +127,7 @@ def writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches)
 
 
 def cleanUpTempFiles(outputDir):
-    os.remove(outputDir / "genome_coords.npy")
+    os.remove(outputDir / "genome_stats.npz")
     os.remove(outputDir / "reduced_genome.npy")
     for file in outputDir.glob("simsearch_regions_*.npy"):
         os.remove(file)

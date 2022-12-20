@@ -34,7 +34,7 @@ def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
     print("    Time:", format(time() - writeTime,'.0f'), "seconds\n", flush=True)
     print("Cleaning up temp files...", flush=True); cleanTime = time()
 
-    cleanUpTempFiles(outputDir)
+    # cleanUpTempFiles(outputDir)
 
     print("    Time:", format(time() - cleanTime,'.0f'), "seconds\n", flush=True)
     print("Total time:", format(time() - t,'.0f'), "seconds\n", flush=True)

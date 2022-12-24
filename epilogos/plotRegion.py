@@ -101,7 +101,7 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
         processedColorsList.append(processedRegion[1])
 
     # Precalculate ylims for drawing if using same axes
-    ymin, ymax = ylim(processedScoresList) if individualYlims else (np.nan, np.nan)
+    ymin, ymax = (np.nan, np.nan) if individualYlims else ylim(processedScoresList)
 
     print("            Time:", format(time() - processTime,'.0f'), "seconds\n", flush=True)
     print("        Drawing regions...", flush=True)

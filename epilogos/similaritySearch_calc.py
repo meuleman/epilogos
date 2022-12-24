@@ -94,7 +94,7 @@ def runEuclideanDistance(rowsToCalcMulti):
             if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
                 continue
             elif euclideanDistances[hitIndex] > halfMode:
-                similarRegionArr[row, numMatches] = -1
+                similarRegionArr[row, numMatches:] = -1
                 break
             else:
                 similarRegionArr[row, numMatches] = hitIndex  # Store the indices of these similar regions (can convert later)

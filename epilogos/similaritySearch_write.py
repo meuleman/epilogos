@@ -115,7 +115,7 @@ def writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions):
 
 
 def cleanUpFiles(outputDir, simsearch_arr):
-    os.remove(outputDir / "reduced_genome.npy")
+    os.remove(outputDir / "genome_stats.npy")
     for file in outputDir.glob("simsearch_regions_*.npy"):
         os.remove(file)
     np.save(outputDir / "simsearch_regions.npy", simsearch_arr, allow_pickle=True)

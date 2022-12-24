@@ -22,19 +22,19 @@ def main(outputDir, windowBins, blockSize, nJobs, nDesiredMatches):
     nRegions = simsearch_npz["scores"].shape[0]
     roiCoords = pd.DataFrame(simsearch_npz["coords"], columns=["Chromosome", "Start", "End"])
 
-    simsearch_arr = readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs)
+    simsearchArr = readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs)
 
-    searchResults = convertIndicesToCoords(simsearch_arr, reducedGenomeCoords, roiCoords, windowBins, blockSize, nRegions, nDesiredMatches)
+    searchResults = convertIndicesToCoords(simsearchArr, reducedGenomeCoords, roiCoords, windowBins, blockSize, nRegions, nDesiredMatches)
 
     print("    Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
     print("Writing search results...", flush=True); writeTime = time()
 
-    writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches)
+    writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions)
 
     print("    Time:", format(time() - writeTime,'.0f'), "seconds\n", flush=True)
     print("Cleaning up temp files...", flush=True); cleanTime = time()
 
-    # cleanUpTempFiles(outputDir)
+    cleanUpFiles(outputDir, simsearchArr)
 
     print("    Time:", format(time() - cleanTime,'.0f'), "seconds\n", flush=True)
     print("Total time:", format(time() - t,'.0f'), "seconds\n", flush=True)
@@ -53,20 +53,20 @@ def reduceGenomeCoords(outputDir, blockSize):
 
 
 def readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs):
-    simsearch_arr = np.zeros((nRegions, nDesiredMatches), dtype=np.int32)
+    simsearchArr = np.zeros((nRegions, nDesiredMatches), dtype=np.int32)
 
     rowList = splitRows(nRegions, nJobs)
     for file in outputDir.glob("simsearch_regions_*.npy"):
         i = int(file.stem.split("_")[-1])
-        simsearch_arr[rowList[i][0]:rowList[i][1]] = np.load(file, allow_pickle=True)
+        simsearchArr[rowList[i][0]:rowList[i][1]] = np.load(file, allow_pickle=True)
 
-    return simsearch_arr
+    return simsearchArr
 
 
-def convertIndicesToCoords(simsearch_arr, reducedGenomeCoords, roiCoords, windowBins, blockSize, nRegions, nDesiredMatches):
+def convertIndicesToCoords(simsearchArr, reducedGenomeCoords, roiCoords, windowBins, blockSize, nRegions, nDesiredMatches):
     # take the shared array and convert all of the indices into locations
-    resultsChrAndStart = reducedGenomeCoords.iloc[simsearch_arr.flatten(), :2].values.reshape(nRegions * nDesiredMatches, 2)
-    resultsEnd = reducedGenomeCoords.iloc[simsearch_arr.flatten() + windowBins // blockSize - 1, 2].values.reshape(nRegions * nDesiredMatches, 1)
+    resultsChrAndStart = reducedGenomeCoords.iloc[simsearchArr.flatten(), :2].values.reshape(nRegions * nDesiredMatches, 2)
+    resultsEnd = reducedGenomeCoords.iloc[simsearchArr.flatten() + windowBins // blockSize - 1, 2].values.reshape(nRegions * nDesiredMatches, 1)
 
     searchResults = np.concatenate((resultsChrAndStart, resultsEnd), axis=1).reshape(nRegions, nDesiredMatches, 3)
 
@@ -74,26 +74,14 @@ def convertIndicesToCoords(simsearch_arr, reducedGenomeCoords, roiCoords, window
     return np.concatenate((roiCoords.values.reshape((nRegions,1,3)), searchResults), axis=1)
 
 
-def writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches):
+def writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions):
     i = 0
     final = ['' for i in range(nRegions)]
-    for row in searchResults:
-        query_v = roiCoords.iloc[i,].values
-        query = '{}:{}:{}'.format(query_v[0], query_v[1], query_v[2])
+    for resultsRow, arrRow in zip(searchResults, simsearchArr):
         recs = []
-        query_added = False
-        for chrom, start, end in row:
+        for chrom, start, end in resultsRow[np.where(arrRow != -1)[0]]:
             hit = '{}:{}:{}'.format(chrom, start, end)
-            if query != hit:
-                recs.append(hit)
-            else:
-                recs = [query] + recs
-                query_added = True
-        # if the query region was not added to the beginning of the final list,
-        # we push it at the front here and remove a trailing element
-        if not query_added:
-            recs = [query] + recs[:-1]
-        assert(len(recs) == nDesiredMatches + 1)
+            recs.append(hit)
         final[i] = json.dumps(recs)
         i += 1
 
@@ -126,11 +114,11 @@ def writeResults(outputDir, searchResults, roiCoords, nRegions, nDesiredMatches)
     if os.path.exists(temp_csv_fn): os.remove(temp_csv_fn)
 
 
-def cleanUpTempFiles(outputDir):
-    os.remove(outputDir / "genome_stats.npz")
+def cleanUpFiles(outputDir, simsearch_arr):
     os.remove(outputDir / "reduced_genome.npy")
     for file in outputDir.glob("simsearch_regions_*.npy"):
         os.remove(file)
+    np.save(outputDir / "simsearch_regions.npy", simsearch_arr, allow_pickle=True)
 
 
 if __name__ == "__main__":

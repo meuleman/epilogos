@@ -29,7 +29,7 @@ setup(
     entry_points={
         "console_scripts": [
             "epilogos = epilogos.run:main",
-            "simsearch = epilogos.similaritySearch:main",
+            "simsearch = epilogos.similaritySearch_run:main",
             "plotregion = epilogos.plotRegion:main"
         ],
     }

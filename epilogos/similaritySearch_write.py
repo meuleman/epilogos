@@ -77,7 +77,7 @@ def convertIndicesToCoords(simsearchArr, reducedGenomeCoords, roiCoords, windowB
 def writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions):
     i = 0
     final = ['' for i in range(nRegions)]
-    for resultsRow, arrRow in zip(searchResults, simsearchArr):
+    for resultsRow, arrRow in zip(searchResults, np.concatenate((np.ones((len(simsearchArr), 1)), simsearchArr), axis=1)):
         recs = []
         for chrom, start, end in resultsRow[np.where(arrRow != -1)[0]]:
             hit = '{}:{}:{}'.format(chrom, start, end)

@@ -141,7 +141,7 @@ def euclideanDistanceMulti(outputDir, genomeCoords, roiCoords, roiCube, windowBi
         pool.map(runEuclideanDistance, rowList)
     pool.join()
 
-    np.save(outputDir / "simsearch_regions_{}.npy".format(processTag), sharedToNumpy(sharedSimilarRegionArr, nRegions, nDesiredMatches), allow_pickle=True)
+    np.save(outputDir / "simsearch_indices_{}.npy".format(processTag), sharedToNumpy(sharedSimilarRegionArr, nRegions, nDesiredMatches), allow_pickle=True)
 
 
 if __name__ == "__main__":

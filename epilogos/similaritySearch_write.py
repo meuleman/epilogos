@@ -56,7 +56,7 @@ def readSimsearchIndices(outputDir, nRegions, nDesiredMatches, nJobs):
     simsearchArr = np.zeros((nRegions, nDesiredMatches), dtype=np.int32)
 
     rowList = splitRows(nRegions, nJobs)
-    for file in outputDir.glob("simsearch_regions_*.npy"):
+    for file in outputDir.glob("simsearch_indices_*.npy"):
         i = int(file.stem.split("_")[-1])
         simsearchArr[rowList[i][0]:rowList[i][1]] = np.load(file, allow_pickle=True)
 
@@ -115,10 +115,10 @@ def writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions):
 
 
 def cleanUpFiles(outputDir, simsearch_arr):
-    os.remove(outputDir / "genome_stats.npy")
-    for file in outputDir.glob("simsearch_regions_*.npy"):
+    os.remove(outputDir / "genome_stats.npz")
+    for file in outputDir.glob("simsearch_indices_*.npy"):
         os.remove(file)
-    np.save(outputDir / "simsearch_regions.npy", simsearch_arr, allow_pickle=True)
+    np.save(outputDir / "simsearch_indices.npy", simsearch_arr, allow_pickle=True)
 
 
 if __name__ == "__main__":

@@ -99,11 +99,11 @@ To Query Similarity Search Data:\n\
 @click.option("-p", "--partition", "partition", type=str,
               help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default "
                    + "partition as designated by the system administrator")
-@click.option("--mm-mem", "mmMem", type=str, default="10000",
+@click.option("--mm-mem", "mmMem", type=str, default=10000,
               help="Memory (in MB) for the simsearch max mean region selection job [default: 10000]")
-@click.option("--calc-mem", "calcMem", type=int, default="50000",
+@click.option("--calc-mem", "calcMem", type=int, default=50000,
               help="Memory (in MB) for the simsearch calcuation jobs [default: 50000]")
-@click.option("--write-mem", "writeMem", type=int, default="5000",
+@click.option("--write-mem", "writeMem", type=int, default=5000,
               help="Memory (in MB) for the simsearch write job [default: 5000]")
 @click.option("-q", "--query", "query", type=str, default="",
               help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")

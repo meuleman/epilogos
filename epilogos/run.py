@@ -23,9 +23,11 @@ from epilogos.helpers import getNumStates
 @click.option("-i", "--input-directory", "inputDirectory", type=str,
               help="Path to directory that contains files to read from (ALL files in this directory will be read in)")
 @click.option("-a", "--directory-one", "inputDirectory1", type=str,
-              help="Path to first directory that contains files to read from (ALL files in this directory will be read in)")
+              help="Path to first directory that contains files to read from "
+                   + "(ALL files in this directory will be read in)")
 @click.option("-b", "--directory-two", "inputDirectory2", type=str,
-              help="Path to second directory that contains files to read from (ALL files in this directory will be read in)")
+              help="Path to second directory that contains files to read from "
+                   + "(ALL files in this directory will be read in)")
 @click.option("-o", "--output-directory", "outputDirectory", type=str,
               help="Output Directory (CANNOT be the same as input directory)\n")
 @click.option("-j", "--state-info", "stateInfo", type=str, help="State model info file")
@@ -34,25 +36,26 @@ from epilogos.helpers import getNumStates
 @click.option("-c", "--num-cores", "numProcesses", type=int, default=1,
               help="The number of cores to run on (0=Uses all cores) [default: 1]")
 @click.option("-x", "--exit", "exitBool", is_flag=True,
-              help="If flag is enabled program will exit upon submission of all SLURM processes rather than completion of " +
-                   "all processes")
+              help="If flag is enabled program will exit upon submission of all SLURM processes rather than "
+                   + "completion of all processes")
 @click.option("-d", "--diagnostic-figures", "diagnosticBool", is_flag=True,
-              help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null data and " +
-                   "comparisons between the null and real data")
+              help="If flag is enabled, program will output some diagnostic figures of the gennorm fit on the null "
+                   + "data and comparisons between the null and real data")
 @click.option("-t", "--num-trials", "numTrials", type=int, default=101, show_default=True,
               help="The number of times subsamples of the scores are fit when using a null distribution")
 @click.option("-z", "--sampling-size", "samplingSize", type=int, default=100000, show_default=True,
               help="The size of the subsamples on which the scores are fit when using a null distribution")
 @click.option("-q", "--quiescent-state", "quiescentState", type=int, default=-1,
-              help="If a bin contains only states of this value, it is treated as quiescent and not factored into fitting." +
-                   "If set to 0, filtering is not done. [default: last state]")
+              help="If a bin contains only states of this value, it is treated as quiescent and not factored into "
+                   + "fitting. If set to 0, filtering is not done. [default: last state]")
 @click.option("-g", "--group-size", "groupSize", type=int, default=-1, show_default=True,
-              help="In pairwise epilogos controls the sizes of the shuffled arrays. Default is sizes of the input groups")
+              help="In pairwise epilogos controls the sizes of the shuffled arrays. "
+                   + "Default is sizes of the input groups")
 @click.option("-v", "--version", "version", is_flag=True,
               help="If flag is enabled epilogos will print the installed version number and exit")
 @click.option("-p", "--partition", "partition", type=str,
-              help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
-                   "partition as designated by the system administrator")
+              help="Request a specific partition for the SLURM resource allocation. If not specified, uses the "
+                   + "default partition as designated by the system administrator")
 @click.option("-n", "--null-distribution", "pvalBool", is_flag=True,
               help="If flag is enabled, epilogos will calculate p-values for pairwise scores")
 @click.option("-w", "--roi-width", "roiWidth", type=int, default=0,
@@ -66,7 +69,8 @@ from epilogos.helpers import getNumStates
 @click.option("--score-mem", "scoreMem", type=str, default="20000",
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB]")
 @click.option("--roi-mem", "roiMem", type=str, default="-1",
-              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB (single) / 100000MB (paired)]")
+              help="Memory (in MB) for the expected frequency calcuation jobs "
+                   + "[default: 20000MB (single) / 100000MB (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
          pvalBool, roiWidth, fileTag, expFreqMem, expCombMem, scoreMem, roiMem):
@@ -100,8 +104,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         sys.exit()
 
     # Make sure all flags are submitted as expected
-    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, exitBool,
-               diagnosticBool, partition, pvalBool)
+    checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo,
+               exitBool, diagnosticBool, partition, pvalBool)
 
     verbose = False if commandLineBool else True
     numStates = getNumStates(stateInfo)
@@ -145,7 +149,7 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         print("Number of Cores = All available", flush=True)
     else:
         print("Number of Cores =", numProcesses, flush=True)
-    if mode == "paired" and quiescentState == -1: # If quiescentState was user input as 0 it is now -1
+    if mode == "paired" and quiescentState == -1:  # If quiescentState was user input as 0 it is now -1
         print("Quiescent State = No quiescent filtering")
     elif mode == "paired":
         print("Quiescent State =", quiescentState + 1)
@@ -162,8 +166,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     if not commandLineBool:
         # Variable for the sbatch submission in case we are using slurm
-        expFreqMem, expCombMem, scoreMem, roiMem = determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem, roiMem,
-                                                                     mode)
+        expFreqMem, expCombMem, scoreMem, roiMem = determineMemories(numProcesses, expFreqMem, expCombMem, scoreMem,
+                                                                     roiMem, mode)
 
         if partition:
             partition = "--partition=" + partition
@@ -189,20 +193,20 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
     for file in inputDirPath.glob("*"):
         if mode == "single":
             if commandLineBool:
-                # epilogos.expected.expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
                 expected(file, "null", numStates, saliency, outputDirPath, fileTag, numProcesses, verbose)
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
-                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates, saliency,
-                                                                             outputDirPath, fileTag, numProcesses, verbose)
+                pythonCommand = "python {} {} null {} {} {} {} {} {}".format(computeExpectedPy, file, numStates,
+                                                                             saliency, outputDirPath, fileTag,
+                                                                             numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
                                                   pythonCommand, saliency, partition, expFreqMem, ""))
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
-                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-                                        "Please ensure corresponding files within input directories directories 1 and 2 have" +
-                                        " the same name")
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name))
+                                        + "Please ensure corresponding files within input directories "
+                                        + "directories 1 and 2 have the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
@@ -211,8 +215,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             else:
                 computeExpectedPy = pythonFilesDir / "expected.py"
                 pythonCommand = "python {} {} {} {} {} {} {} {} {}".format(computeExpectedPy, file, file2, numStates,
-                                                                           saliency, outputDirPath, fileTag, numProcesses,
-                                                                           verbose)
+                                                                           saliency, outputDirPath, fileTag,
+                                                                           numProcesses, verbose)
                 expJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "exp_calc", fileTag, outputDirPath,
                                                   pythonCommand, saliency, partition, expFreqMem, ""))
 
@@ -227,8 +231,8 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         expectedCombination(outputDirPath, storedExpPath, fileTag, verbose)
     else:
         computeExpectedCombinationPy = pythonFilesDir / "expectedCombination.py"
-        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath, fileTag,
-                                                       verbose)
+        pythonCommand = "python {} {} {} {} {}".format(computeExpectedCombinationPy, outputDirPath, storedExpPath,
+                                                       fileTag, verbose)
         combinationJobID = submitSlurmJob("", "exp_comb", fileTag, outputDirPath, pythonCommand, saliency, partition,
                                           expCombMem, "--dependency=afterok:{}".format(expJobIDStr))
         print("    JobID:", combinationJobID, flush=True)
@@ -244,8 +248,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
                 pythonCommand = "python {} {} null {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, numStates,
-                                                                                      saliency, outputDirPath, storedExpPath,
-                                                                                      fileTag, numProcesses, quiescentState,
+                                                                                      saliency, outputDirPath,
+                                                                                      storedExpPath, fileTag,
+                                                                                      numProcesses, quiescentState,
                                                                                       groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, partition, scoreMem,
@@ -253,9 +258,9 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         else:
             # Find matching file in other directory
             if not list(inputDirPath2.glob(file.name)):
-                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name)) +
-                                        "Please ensure corresponding files within input directories directories 1 and 2 have" +
-                                        " the same name")
+                raise FileNotFoundError("File not found: {}".format(str(inputDirPath2 / file.name))
+                                        + "Please ensure corresponding files within input directories "
+                                        + "directories 1 and 2 have the same name")
             else:
                 file2 = next(inputDirPath2.glob(file.name))
 
@@ -264,9 +269,10 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
                        quiescentState, groupSize, verbose)
             else:
                 computeScorePy = pythonFilesDir / "scores.py"
-                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2, numStates,
-                                                                                    saliency, outputDirPath, storedExpPath,
-                                                                                    fileTag, numProcesses, quiescentState,
+                pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {}".format(computeScorePy, file, file2,
+                                                                                    numStates, saliency, outputDirPath,
+                                                                                    storedExpPath, fileTag,
+                                                                                    numProcesses, quiescentState,
                                                                                     groupSize, verbose)
                 scoreJobIDArr.append(submitSlurmJob("_" + file.name.split(".")[0], "score", fileTag, outputDirPath,
                                                     pythonCommand, saliency, partition, scoreMem,
@@ -293,18 +299,20 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         # Fitting, calculating p-values, and visualizing pairiwse differences
         print("\nSTEP 4: Generating p-values, rois, & figures", flush=True)
         if commandLineBool:
-            roiPairwise(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses, pvalBool,
-                           diagnosticBool, numTrials, samplingSize, storedExpPath, roiWidth, verbose)
+            roiPairwise(inputDirPath.name, inputDirPath2.name, stateInfo, outputDirPath, fileTag, numProcesses,
+                        pvalBool, diagnosticBool, numTrials, samplingSize, storedExpPath, roiWidth, verbose)
         else:
             computeROIPairwisePy = pythonFilesDir / "roiAndVisualPairwise.py"
-            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeROIPairwisePy, inputDirPath.name,
+            pythonCommand = "python {} {} {} {} {} {} {} {} {} {} {} {} {} {}".format(computeROIPairwisePy,
+                                                                                      inputDirPath.name,
                                                                                       inputDirPath2.name, stateInfo,
-                                                                                      outputDirPath, fileTag, numProcesses,
-                                                                                      pvalBool, diagnosticBool, numTrials,
-                                                                                      samplingSize, storedExpPath, roiWidth,
-                                                                                      verbose)
-            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition, roiMem,
-                                          "--dependency=afterok:{}".format(scoreJobIDStr))
+                                                                                      outputDirPath, fileTag,
+                                                                                      numProcesses, pvalBool,
+                                                                                      diagnosticBool, numTrials,
+                                                                                      samplingSize, storedExpPath,
+                                                                                      roiWidth, verbose)
+            summaryJobID = submitSlurmJob("", "visual", fileTag, outputDirPath, pythonCommand, saliency, partition,
+                                          roiMem, "--dependency=afterok:{}".format(scoreJobIDStr))
             print("    JobID:", summaryJobID, flush=True)
 
     if not commandLineBool:
@@ -317,11 +325,11 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
         checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, saliency)
 
 
-def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, exitBool,
-               diagnosticBool, partition, pvalBool):
+def checkFlags(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo,
+               exitBool, diagnosticBool, partition, pvalBool):
     """
-    Checks all the input flags are makes sure that there are not duplicates, required flags are present, and incompatible flags
-    are not present together
+    Checks all the input flags are makes sure that there are not duplicates, required flags are present, and
+    incompatible flags are not present together
 
     Input:
     See click options at top of script
@@ -375,7 +383,8 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     Input:
     mode           -- 'single' or 'paired'; tells us which version of epilogos we are running
     saliency       -- The saliency metric input by the user
-    inputDirPath   -- The path to the only input directory in single epilogos and the first input directory in paired epilogos
+    inputDirPath   -- The path to the only input directory in single epilogos and the first input directory in paired
+                      epilogos
     inputDirPath2  -- The path to the second input directory in the paired epilogos case
     outputDirPath  -- The path to the output directory for epilogos
     numProcesses   -- The number of cores the user would like to use
@@ -388,11 +397,12 @@ def checkArguments(mode, saliency, inputDirPath, inputDirPath2, outputDirPath, n
     """
     # Check validity of saliency
     if mode == "single" and saliency != 1 and saliency != 2 and saliency != 3:
-        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
-              "Please ensure that saliency metric is either 1, 2, or 3")
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency)
+                         + "Please ensure that saliency metric is either 1, 2, or 3")
     elif mode == "paired" and saliency != 1 and saliency != 2:
-        raise ValueError("Saliency Metric Invalid: {}".format(saliency) +
-              "Please ensure that saliency metric is either 1 or 2 (Saliency of 3 is unsupported for pairwise comparison")
+        raise ValueError("Saliency Metric Invalid: {}".format(saliency)
+                         + "Please ensure that saliency metric is either 1 or 2 "
+                         + "(Saliency of 3 is unsupported for pairwise comparison")
 
     # Check validity of directories
     if not inputDirPath.exists():
@@ -532,11 +542,12 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
             print("\n Step 3: Score calculation\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "score"
         elif mode == "single" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
-                              and calculationStep == "score":
-            print("\n Step 4: Finding regions of interest\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]), flush=True)
+                and calculationStep == "score":
+            print("\n Step 4: Finding regions of interest\n{}\n{}\n{}".format("-" * 80, spLines[0], spLines[1]),
+                  flush=True)
             calculationStep = "roi"
         elif mode == "paired" and len(completedJobs) >= (len(expJobIDArr) + 1 + len(scoreJobIDArr)) \
-                              and calculationStep == "score":
+                and calculationStep == "score":
             print("\n Step 4: Generating p-values and figures\n{}\n{}\n{}"
                   .format("-" * 80, spLines[0], spLines[1]), flush=True)
             calculationStep = "visual"
@@ -563,7 +574,7 @@ def checkExit(mode, allJobIDs, expJobIDArr, scoreJobIDArr, outputDirPath, salien
         # and if an "allocation" job is not in the output
         if spLines[2] and not ("RUNNING" in sp.stdout or "PENDING" in sp.stdout) and "allocation" not in sp.stdout:
             print("\nAll jobs finished successfully. Please find output in: {}".format(outputDirPath))
-            print("\nPlease find output and error logs in {} and {} respectively\n".format(outputDirPath / ".out", "/.err"))
+            print("\nPlease find output and error logs in {} and /.err respectively\n".format(outputDirPath / ".out"))
             break
 
         # Don't want to spam cluster with commands so sleep

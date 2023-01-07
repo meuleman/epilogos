@@ -60,11 +60,11 @@ def main(regions, epilogosScoresPath, scoresPathGroupA, scoresPathGroupB, scores
     stateColors = getStateColorsRGB(metadataPath)
 
     if epilogosScoresPath:
-        plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, stateNames, individualYlims, fileFormat,
-                           readTime)
+        plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, stateNames, individualYlims,
+                           fileFormat, readTime)
     elif scoresPathGroupA and scoresPathGroupB:
-        plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, regionArr, outputDir, stateColors, stateNames,
-                             individualYlims, fileFormat, readTime)
+        plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, regionArr, outputDir, stateColors,
+                             stateNames, individualYlims, fileFormat, readTime)
     else:
         raise ValueError("Missing scores file input")
 
@@ -90,7 +90,7 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
     # Read in epilogos scores
     epilogosScores = pd.read_table(Path(epilogosScoresPath), sep="\t", header=None)
 
-    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - readTime, '.0f'), "seconds\n", flush=True)
     print("        Processing region scores...", flush=True); processTime = time()
 
     # Process query scores for graphing
@@ -103,7 +103,7 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = (np.nan, np.nan) if individualYlims else ylim(processedScoresList)
 
-    print("            Time:", format(time() - processTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - processTime, '.0f'), "seconds\n", flush=True)
     print("        Drawing regions...", flush=True)
 
     # Strip period off file format
@@ -111,15 +111,15 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
 
     # Draw the query regions
     for i, (chr, start, end) in enumerate(regionArr):
-        print("            Region {}...".format(i+1), flush=True); regionTime = time()
-        drawOneTrackEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax, stateNames,
-                                   stateColors,
+        print("            Region {}...".format(i + 1), flush=True); regionTime = time()
+        drawOneTrackEpilogosScores(chr, start, end, processedScoresList[i], processedColorsList[i], ymin, ymax,
+                                   stateNames, stateColors,
                                    outputDir / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
-        print("                Time: ", format(time() - regionTime,'.0f'), "seconds\n", flush=True)
+        print("                Time: ", format(time() - regionTime, '.0f'), "seconds\n", flush=True)
 
 
-def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, regionArr, outputDir, stateColors, stateNames,
-                         individualYlims, fileFormat, readTime):
+def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, regionArr, outputDir, stateColors,
+                         stateNames, individualYlims, fileFormat, readTime):
     """
     Wrapper function for plotting single epilogos regions
 
@@ -142,11 +142,11 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
     # Read in epilogos scores
     epilogosScoresGroupA = pd.read_table(Path(scoresPathGroupA), sep="\t", header=None)
     epilogosScoresGroupB = pd.read_table(Path(scoresPathGroupB), sep="\t", header=None)
-    epilogosScoresDiff = pd.read_table(Path(scoresDiffPath), sep="\t", header=None) if scoresDiffPath else \
-                         pd.concat((epilogosScoresGroupA.iloc[:,:3],
-                                    epilogosScoresGroupA.iloc[:,3:] - epilogosScoresGroupB.iloc[:,3:]), axis=1)
+    epilogosScoresDiff = pd.read_table(Path(scoresDiffPath), sep="\t", header=None) if scoresDiffPath \
+        else pd.concat((epilogosScoresGroupA.iloc[:, :3],
+                        epilogosScoresGroupA.iloc[:, 3:] - epilogosScoresGroupB.iloc[:, 3:]), axis=1)
 
-    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - readTime, '.0f'), "seconds\n", flush=True)
     print("        Processing region scores...", flush=True); processTime = time()
 
     # Process query scores for graphing
@@ -166,12 +166,11 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
         processedColorsListB.append(processedRegionGroupB[1])
         processedColorsListDiff.append(processedRegionDiff[1])
 
-
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = ylim(processedScoresListA + processedScoresListB + processedScoresListDiff) if individualYlims \
-                                                                                             else (np.nan, np.nan)
+        else (np.nan, np.nan)
 
-    print("            Time:", format(time() - processTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - processTime, '.0f'), "seconds\n", flush=True)
     print("        Drawing regions...", flush=True)
 
     # Strip period off file format
@@ -179,12 +178,12 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
 
     # Draw the query regions
     for i, (chr, start, end) in enumerate(regionArr):
-        print("            Region {}...".format(i+1), flush=True); regionTime = time()
+        print("            Region {}...".format(i + 1), flush=True); regionTime = time()
         drawMultiTrackEpilogosScores(chr, start, end, processedScoresListA[i], processedColorsListA[i],
                                      processedScoresListB[i], processedColorsListB[i], processedScoresListDiff[i],
                                      processedColorsListDiff[i], ymin, ymax, stateNames, stateColors,
                                      outputDir / "epilogos_region_{}_{}_{}.{}".format(chr, start, end, fileFormat))
-        print("                Time: ", format(time() - regionTime,'.0f'), "seconds\n", flush=True)
+        print("                Time: ", format(time() - regionTime, '.0f'), "seconds\n", flush=True)
 
 
 def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors):
@@ -202,16 +201,17 @@ def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors
 
     Output:
     regionScoresSorted -- Numpy array containing scores across the region with each bin individually sorted by scores
-    regionColorsSorted -- Numpy array containing state colors across the region with each bin individually sorted by scores
+    regionColorsSorted -- Numpy array containing state colors across the region with each bin individually sorted by
+                          scores
     """
     # Find the epilogos scores for the region
-    scoresStartIndex = np.where((epilogosScores.iloc[:,0] == chr) & (epilogosScores.iloc[:,1] == start))[0][0]
-    scoresEndIndex = np.where((epilogosScores.iloc[:,0] == chr) & (epilogosScores.iloc[:,1] == end))[0][0]
+    scoresStartIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == start))[0][0]
+    scoresEndIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == end))[0][0]
     regionScores = epilogosScores.iloc[scoresStartIndex:scoresEndIndex, 3:].to_numpy(dtype=np.float64).T
 
     # Generate state color array for the region
-    state_colors_2d = nlr.unstructured_to_structured(\
-                          np.swapaxes(np.array([stateColors for i in range(regionScores.shape[1])]), 0, 1)).astype('O')
+    state_colors_2d = nlr.unstructured_to_structured(
+        np.swapaxes(np.array([stateColors for i in range(regionScores.shape[1])]), 0, 1)).astype('O')
 
     # Sort each bin by the scores
     sortedScoresIndices = np.argsort(regionScores, axis=0)
@@ -243,7 +243,7 @@ def drawOneTrackEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stat
     A image containing the epilogos scores drawn
     """
     # create the bar chart
-    fig, axs = plt.subplots(1, 1, figsize=(24,5))
+    fig, axs = plt.subplots(1, 1, figsize=(24, 5))
 
     # Calculate individual ylims if generic ylims haven't been calculated
     if np.isnan(ymin) and np.isnan(ymax):
@@ -271,22 +271,26 @@ def drawOneTrackEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stat
     plt.close()
 
 
-def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, colorsB, scoresDiff, colorsDiff, ymin, ymax,
-                                 stateNames, stateColors, file):
+def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, colorsB, scoresDiff, colorsDiff, ymin,
+                                 ymax, stateNames, stateColors, file):
     """
-    Draws the epilogos scores for a region. State scores are drawn with lowest scores at the bottom and highest at the top.
-    This sorting is done individually for each bin
+    Draws the epilogos scores for a region. State scores are drawn with lowest scores at the bottom and highest at the
+    top. This sorting is done individually for each bin
 
     Input:
     chr         -- The region's chromosome
     start       -- The region's start position on the chromosome (in bp)
     end         -- The region's end position on the chromosome (in bp)
     scoresA     -- Numpy array containing group A scores across the region with each bin individually sorted by scores
-    colorsA     -- Numpy array containing group A state colors across the region with each bin individually sorted by scores
+    colorsA     -- Numpy array containing group A state colors across the region with each bin individually sorted by
+                   scores
     scoresB     -- Numpy array containing group B scores across the region with each bin individually sorted by scores
-    colorsB     -- Numpy array containing group B state colors across the region with each bin individually sorted by scores
-    scoresDiff  -- Numpy array containing group A & B scores diff across the region with each bin individually sorted by scores
-    colorsDiff  -- Numpy array containing score diff state colors across the region with each bin individually sorted by scores
+    colorsB     -- Numpy array containing group B state colors across the region with each bin individually sorted by
+                   scores
+    scoresDiff  -- Numpy array containing group A & B scores diff across the region with each bin individually sorted by
+                   scores
+    colorsDiff  -- Numpy array containing score diff state colors across the region with each bin individually sorted by
+                   scores
     ymin        -- The minimum lower bound for the y-axis
     ymax        -- The minimum upper bound for the y-axis
     stateNames  -- Numpy array containing names of states
@@ -297,7 +301,7 @@ def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, col
     A image containing the epilogos scores drawn for group A, group B, and their difference stacked upon one another
     """
     # create the bar chart
-    fig, axs = plt.subplots(3, 1, figsize=(24,15))
+    fig, axs = plt.subplots(3, 1, figsize=(24, 15))
 
     # Calculate individual ylims if generic ylims haven't been calculated
     if np.isnan(ymin) and np.isnan(ymax):
@@ -315,8 +319,8 @@ def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, col
                 color='w', fontsize=15)
     axs[1].text(0.99, 0.99, "Group B", verticalalignment='top', horizontalalignment='right', transform=axs[1].transAxes,
                 color='w', fontsize=15)
-    axs[2].text(0.99, 0.99, "Group A vs. Group B", verticalalignment='top', horizontalalignment='right', transform=axs[2].transAxes,
-                color='w', fontsize=15)
+    axs[2].text(0.99, 0.99, "Group A vs. Group B", verticalalignment='top', horizontalalignment='right',
+                transform=axs[2].transAxes, color='w', fontsize=15)
 
     axs[2].set_xticks([0, scoresA.shape[1] / 2, scoresA.shape[1]])
     axs[2].set_xticklabels([start, chr, end])
@@ -344,7 +348,8 @@ def drawMultiTrackEpilogosScores(chr, start, end, scoresA, colorsA, scoresB, col
 
 def plotPosNeg(scores, colors, ax):
     """
-    Helper function to plot the positive & negative epilogos scores (must be done separately as we don't want to stack them)
+    Helper function to plot the positive & negative epilogos scores
+    (must be done separately as we don't want to stack them)
 
     Input:
     scores -- Numpy array containing scores across the region with each bin individually sorted by scores
@@ -414,6 +419,7 @@ def ylim(regionScoresList):
         maxScore = maxCandidate if maxCandidate > maxScore else maxScore
 
     return minScore, maxScore
+
 
 if __name__ == "__main__":
     main()

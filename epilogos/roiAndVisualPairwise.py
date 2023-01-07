@@ -13,15 +13,15 @@ from itertools import repeat
 from os import remove
 from statsmodels.stats.multitest import multipletests
 from epilogos.helpers import maxMean, generateROIIndicesArr, orderChromosomes, strToBool, getStateNames,\
-                             getStateColorsRGB, getNumStates, findSign
+    getStateColorsRGB, getNumStates, findSign
 
 
 def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pvalBool, diagnosticBool, numTrials,
          samplingSize, expFreqPath, roiWidth, verbose):
     """
-    Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to the
-    distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are written out,
-    used to generate txt file of most interesting loci, and used to create manhattan plots of the genome.
+    Takes in the scores for the 2 paired groups and finds the distance between them. Then fits a gennorm distribution to
+    the distances between the null scores and uses this to calculate the pvalues of the distances. These pvalues are
+    written out, used to generate txt file of most interesting loci, and used to create manhattan plots of the genome.
 
     Input:
     group1Name     -- String of the name of the first epilogos group
@@ -31,8 +31,8 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
     fileTag        -- A string which helps ensure outputed files are named similarly within an epilogos run
     numProcesses   -- The number of cores which to run on
     pvalBool       -- Boolean which if True tells epilogos to generate pvalues for pairwise scores
-    diagnosticBool -- Boolean which if True tells us to generate diagnostic plots of the gennorm fit on the null data and
-                      comparisons between the null and real data
+    diagnosticBool -- Boolean which if True tells us to generate diagnostic plots of the gennorm fit on the null data
+                      and comparisons between the null and real data
     numTrials      -- The number of gennorm fits to do
     samplingSize   -- The amount of null data to fit
     expFreqPath    -- The location of the stored expected frequency array
@@ -101,7 +101,7 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Calculating Z-Scores...", flush=True); tZS = time()
         else: print("    Z-Scores\t", end="", flush=True)
         zScores = np.abs(st.zscore(distanceArrReal))
-        if verbose:print("    Time:", time() - tZS, flush=True)
+        if verbose: print("    Time:", time() - tZS, flush=True)
         else: print("\t[Done]", flush=True)
 
     # Create an output file which summarizes the results
@@ -120,7 +120,8 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Regions of interest txt\t", end="", flush=True)
         roiPath = outputDirPath / "regionsOfInterest_{}.txt".format(fileTag)
-        createROITxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, mhPvals, roiWidth)
+        createROITxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, mhPvals,
+                     roiWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -128,14 +129,16 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
         if verbose: print("Creating .txt file of significant loci...", flush=True); tSig = time()
         else: print("    Significant loci txt\t", end="", flush=True)
         roiPath = outputDirPath / "significantLoci_{}.txt.gz".format(fileTag)
-        createSignificantLociTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals, mhPvals)
+        createSignificantLociTxt(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, pvals,
+                                 mhPvals)
         if verbose: print("    Time:", time() - tSig, flush=True)
         else: print("\t[Done]", flush=True)
     else:
         if verbose: print("Creating .txt file of top loci...", flush=True); tGreat = time()
         else: print("    Regions of interest txt\t", end="", flush=True)
         roiPath = outputDirPath / "regionsOfInterest_{}.txt".format(fileTag)
-        createROINoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores, roiWidth)
+        createROINoSignificance(roiPath, locationArr, chrDict, distanceArrReal, maxDiffArr, stateNameList, zScores,
+                                roiWidth)
         if verbose: print("    Time:", time() - tGreat, flush=True)
         else: print("\t[Done]", flush=True)
 
@@ -173,8 +176,8 @@ def main(group1Name, group2Name, stateInfo, outputDir, fileTag, numProcesses, pv
 
 def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     """
-    Filters out quiescent bins and deploys the processes which fits the null distances. Then calculates the median fit based
-    on the negative loglikelihood function
+    Filters out quiescent bins and deploys the processes which fits the null distances.
+    Then calculates the median fit based on the negative loglikelihood function
 
     Input:
     outputDirPath -- Path to the epilogos output directory (this contains the score files)
@@ -183,7 +186,7 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     samplingSize  -- The amount of data to fit each time
 
     Output:
-    (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]) -- Tuple with beta, loc, and scale
+    (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]) -- Tuple with beta, loc, scale
                                                                                             params of the median fit
     distanceArrNull -- Numpy array of the null distances
     nonQuiescentIdx -- indices of non-quiescent bins (specifically used for distance arrays)
@@ -215,7 +218,7 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
         index = quiescenceChunks[0].index(chrName)
         quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
 
-    nonQuiescentIdx = np.where(quiescenceArr == False)[0]
+    nonQuiescentIdx = np.where(not quiescenceArr)[0]
 
     with closing(Pool(numProcesses)) as pool:
         results = pool.starmap(fitOnSubSample, zip(repeat(distanceArrNull[nonQuiescentIdx], numTrials),
@@ -234,10 +237,9 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
     fitDF.sort_values(by=["nnlf"], inplace=True)
 
     # return params, dataReal, dataNull
-    medianIndex = int((numTrials-1)/2)
+    medianIndex = int((numTrials - 1) / 2)
     return (fitDF.iloc[medianIndex, 0], fitDF.iloc[medianIndex, 1], fitDF.iloc[medianIndex, 2]),\
-           distanceArrNull,\
-           nonQuiescentIdx
+        distanceArrNull, nonQuiescentIdx
 
 
 def readNull(nullFile, quiescenceFile):
@@ -249,10 +251,10 @@ def readNull(nullFile, quiescenceFile):
     quiescenceFile -- The path to the file containing T/F regarding quiescence for each bin
 
     Output:
-    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared euclidean
-                                                         distances
-    (npzFileQuiescence['chrName'][0], npzFileQuiescence['quiescenceArr']) -- Tuple with chromosome name and the T/F value of
-                                                                             quiescence for each bin
+    (npzFile['chrName'][0], npzFile['nullDistances']) -- Tuple with the chromosome name and the null signed squared
+                                                         euclidean distances
+    (npzFileQuiescence['chrName'][0], npzFileQuiescence['quiescenceArr']) -- Tuple with chromosome name and the T/F
+                                                                             value of quiescence for each bin
     """
     npzFileNull = np.load(Path(nullFile))
     npzFileQuiescence = np.load(Path(quiescenceFile))
@@ -369,7 +371,8 @@ def readTableMulti(realFile, realNames):
     return diffDFChunk
 
 
-def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath, fileTag):
+def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, beta, loc, scale, outputDirPath,
+                            fileTag):
     """
     Generate diagnostic plots of the gennorm fit on the null data and comparisons between the null and real data
 
@@ -428,10 +431,10 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     # Real Data Histogram vs. Null Data Histogram (Range=(-1, 1))
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
-    dataReal.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Real Data', legend=True,
-                  ax=ax)
-    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Null Data', legend=True,
-                  ax=ax)
+    dataReal.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Real Data',
+                  legend=True, ax=ax)
+    dataNull.plot(kind='hist', bins=400, range=(-1, 1), density=True, alpha=0.5, label='Distances in Null Data',
+                  legend=True, ax=ax)
     plt.title("Real Data vs. Null Data (range=(-1, 1))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_n1to1.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
@@ -442,10 +445,10 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     fig = plt.figure(figsize=(16, 9))
     ax = fig.add_subplot(111)
     rangeLim = np.amax(np.abs(dataReal))
-    dataReal.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Distances in Real Data',
-                  legend=True, ax=ax)
-    dataNull.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5, label='Distances in Null Data',
-                  legend=True, ax=ax)
+    dataReal.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5,
+                  label='Distances in Real Data', legend=True, ax=ax)
+    dataNull.plot(kind='hist', bins=400, range=(-rangeLim, rangeLim), density=True, alpha=0.5,
+                  label='Distances in Null Data', legend=True, ax=ax)
     plt.title("Real Data vs. Null Data (range=(-max(abs), max(abs)))")
     figPath = diagnosticDirPath / "real_vs_null_histogram_minToMax.pdf"
     fig.savefig(figPath, bbox_inches='tight', dpi=400, facecolor="#FFFFFF", edgecolor="#FFFFFF", transparent=False)
@@ -472,7 +475,7 @@ def createDiagnosticFigures(distanceArrReal, distanceArrNull, nonQuiescentIdx, b
     boxprops = dict(linewidth=2, color='black')
     whiskerprops = dict(linewidth=2, color='black')
     capprops = dict(linewidth=2, color='black')
-    fig = plt.figure(figsize=(12,8))
+    fig = plt.figure(figsize=(12, 8))
     bplot = plt.boxplot(data, patch_artist=True, medianprops=medianprops, boxprops=boxprops, whiskerprops=whiskerprops,
                         capprops=capprops, showfliers=False)
     plt.xticks([1, 2, 3], ['Null', 'Fit', 'Real'])
@@ -504,7 +507,8 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
     pvals -- Numpy array containing pvalues of the distances
     """
     pvalsBelowLoc = 2 * st.gennorm.cdf(distanceArrReal[np.where(distanceArrReal <= loc)[0]], beta, loc=loc, scale=scale)
-    pvalsAboveLoc = 2 * (1 - st.gennorm.cdf(distanceArrReal[np.where(distanceArrReal > loc)[0]], beta, loc=loc, scale=scale))
+    pvalsAboveLoc = 2 * (1 - st.gennorm.cdf(distanceArrReal[np.where(distanceArrReal > loc)[0]], beta, loc=loc,
+                         scale=scale))
 
     pvals = np.zeros(len(distanceArrReal))
     pvals[np.where(distanceArrReal <= loc)[0]] = pvalsBelowLoc
@@ -514,7 +518,7 @@ def calculatePVals(distanceArrReal, beta, loc, scale):
 
 
 def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, outputDirPath, fileTag, pvalBool,
-                 pvals = [], mhPvals = []):
+                 pvals=[], mhPvals=[]):
     """
     Writes metrics file to disk. Metrics file contains the following columns in order:
     chromosome, bin start, bin end, state with highest difference, signed squared euclidean distance, pvalue of distance
@@ -522,7 +526,8 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, out
     Input:
     locationArr     -- Numpy array containing the genomic locations of all the bins
     chrDict         -- Dictionary containing mappings between number values and chromosome names (helps use less memory)
-    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in each bin
+    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in
+                       each bin
     nameArr         -- Numpy array containing the names of all the states
     distanceArrReal -- Numpy array containing the real distances
     outputDirPath   -- The path of the output directory for epilogos
@@ -556,21 +561,22 @@ def writeMetrics(locationArr, chrDict, maxDiffArr, nameArr, distanceArrReal, out
         metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
                                                     nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
                                                     findSign(distanceArrReal[i]), pvals[i], mhPvals[i])
-                                                    for i in range(len(distanceArrReal)))
+                             for i in range(len(distanceArrReal)))
     else:
         metricsTemplate = "{0}\t{1[0]}\t{1[1]}\t{2}\t{3:.5f}\t{4}\n"
         metricsStr = "".join(metricsTemplate.format(chrDict[locationArr[i, 0]], locationArr[i, 1:3],
                                                     nameArr[maxDiffArr[i] - 1], abs(distanceArrReal[i]),
                                                     findSign(distanceArrReal[i]))
-                                                    for i in range(len(distanceArrReal)))
+                             for i in range(len(distanceArrReal)))
 
     metricsTxt.write(metricsStr)
     metricsTxt.close()
 
+
 def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, mhPvals):
     """
-    Finds all significant loci and outputs a txt containing these highest distances regions and some information about each
-    (chromosome, bin start, bin end, state name, absolute value of distance, sign of distance, pvalue of distance,
+    Finds all significant loci and outputs a txt containing these highest distances regions and some information about
+    each (chromosome, bin start, bin end, state name, absolute value of distance, sign of distance, pvalue of distance,
     stars repersenting significance)
 
     Input:
@@ -593,7 +599,8 @@ def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDif
         Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
         Column 7: P-Value of the distance
         Column 8: Benjamini–Hochberg adjusted P-Value of the distance
-        Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' at .01, '**' at .05, and '*' at .1)
+        Column 9: Stars indicating multiple hypothesis adjusted p-value of distance
+                  ('***' at .01, '**' at .05, and '*' at .1)
     """
     outfile = gzip.open(filePath, "wt")
 
@@ -613,7 +620,7 @@ def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDif
                            "MaxDiffLoc": np.int32, "Pval": np.float32, "MhPval": np.float32})\
                   .replace({"Chromosome": chrDict})
 
-    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
+    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if nonsignificant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
                       ("**" if float(locations.iloc[i, 6]) <= 0.05 else
                       ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
@@ -632,8 +639,8 @@ def createSignificantLociTxt(filePath, locationArr, chrDict, distanceArr, maxDif
 
 def createROITxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameArr, pvals, mhPvals, roiWidth):
     """
-    Finds the top 100 regions of interest using filter-regions maxmean algorithm. Of these, those which have at least one
-    significantly different bin are output into a .txt file
+    Finds the top 100 regions of interest using filter-regions maxmean algorithm. Of these, those which have at least
+    one significantly different bin are output into a .txt file
 
     Input:
     filePath    -- The path of the file to write to
@@ -656,9 +663,10 @@ def createROITxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameAr
         Column 6: Direction of the distance (sign determined by the higher signal between groups 1 and 2)
         Column 7: P-Value of the distance
         Column 8: Benjamini–Hochberg adjusted P-Value of the distance
-        Column 9: Stars indicating multiple hypothesis adjusted p-value of distance ('***' at .01, '**' at .05, and '*' at .1)
+        Column 9: Stars indicating multiple hypothesis adjusted p-value of distance
+                  ('***' at .01, '**' at .05, and '*' at .1)
     """
-    outfile =  open(filePath, 'w')
+    outfile = open(filePath, 'w')
 
     # Using the filter-regions package for the meanmax algorithm to choose regions
     rois, indices = maxMean(np.concatenate((locationArr, np.abs(distanceArr).reshape(len(distanceArr), 1)), axis=1),
@@ -670,9 +678,9 @@ def createROITxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameAr
     # Find the index of the maximally differential bin in the region
     maxIndices = np.argmax(np.abs(distanceArr)[roiIndicesArr], axis=1) + roiIndicesArr[:, 0]
 
-    # in the case of creating regions of interest indices should be a intersection of all significantLoci and regions generated
-    # by maxmean because indices will be sorted by the max, we can cut off loci on the first instance where the max isn't
-    # significant
+    # in the case of creating regions of interest indices should be a intersection of all significantLoci and regions
+    # generated by maxmean because indices will be sorted by the max, we can cut off loci on the first instance where
+    # the max isn't significant
     firstNonSigIdx = np.where(mhPvals[maxIndices] > 0.1)[0]
     if len(firstNonSigIdx) > 0:
         firstNonSigIdx = np.min(firstNonSigIdx)
@@ -692,17 +700,17 @@ def createROITxt(filePath, locationArr, chrDict, distanceArr, maxDiffArr, nameAr
     locations["Pval"] = pvals[maxIndices].astype(np.float32)
     locations["MhPval"] = mhPvals[maxIndices].astype(np.float32)
 
-    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if not significant
+    # Locations get 3 stars if they are significant at .01, 2 stars at .05, 1 star at .1, and a period if nonsignificant
     stars = np.array(["***" if float(locations.iloc[i, 6]) <= 0.01 else
-                    ("**" if float(locations.iloc[i, 6]) <= 0.05 else
-                    ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
-                    for i in range(locations.shape[0])])
+                     ("**" if float(locations.iloc[i, 6]) <= 0.05 else
+                     ("*" if float(locations.iloc[i, 6]) <= 0.1 else "."))
+                     for i in range(locations.shape[0])])
 
     # Write only top 100 loci to file for regionsOfInterest*.txt
     outTemplate = "{0[0]}\t{0[1]}\t{0[2]}\t{1}\t{2:.5f}\t{3}\t{4:.5e}\t{5:.5e}\t{6}\n"
     outString = "".join(outTemplate.format(locations.iloc[i], nameArr[int(float(locations.iloc[i, 4])) - 1],
-                                        abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
-                                        float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i])
+                                           abs(float(locations.iloc[i, 3])), findSign(float(locations.iloc[i, 3])),
+                                           float(locations.iloc[i, 5]), float(locations.iloc[i, 6]), stars[i])
                         for i in range(locations.shape[0]))
 
     outfile.write(outString)
@@ -770,6 +778,7 @@ def createROINoSignificance(filePath, locationArr, chrDict, distanceArr, maxDiff
     outfile.write(outString)
     outfile.close()
 
+
 def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, stateColorList,
                           outputDirPath, fileTag, pvalBool, beta=0, loc=0, scale=0, mhPvals=[], zScores=[]):
     """
@@ -781,7 +790,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     locationArr     -- Numpy array containing the genomic locations of all the bins
     chrDict         -- Dictionary containing mappings between number values and chromosome names (helps use less memory)
     distanceArrReal -- Numpy array containing the real distances
-    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in each bin
+    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in
+                       each bin
     stateColorList  -- Numpy array containing the colors of each of the states in the state model
     outputDirPath   -- The path of the output directory for epilogos
     fileTag         -- A string which helps ensure outputed files are named similarly within an epilogos run
@@ -811,13 +821,14 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     ax.set_ylabel("Distance")
     plt.xlabel("Chromosome")
     xticks = np.where(locationArr[:, 1] == 0)[0]
-    plt.xticks(ticks=xticks, labels=list(map(lambda x: x.split("chr")[-1], [chrDict[x] for x in locationArr[:, 0][xticks]])))
+    plt.xticks(ticks=xticks, labels=list(map(lambda x: x.split("chr")[-1],
+                                             [chrDict[x] for x in locationArr[:, 0][xticks]])))
 
     plt.margins(x=0)
     ylim = np.amax(np.abs(distanceArrReal)) * 1.1
     ax.set_ylim(-ylim, ylim)
-    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale) if pvalBool\
-                          else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
+    yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale) if pvalBool \
+        else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
 
     ax.set_yticks(yticks)
     ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
@@ -831,33 +842,38 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     axR.set_ylim(ax.get_ylim())
     axR.set_yticklabels(ytickLabels)
 
-    ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
+    ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes,
+            fontsize=15)
     ax.text(0.99, 0.01, group2Name, verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
             fontsize=15)
 
     locationOnGenome = np.arange(len(distanceArrReal))
 
     for i in range(len(xticks)):
-        if i == len(xticks)-1:
+        if i == len(xticks) - 1:
             points = np.where((locationOnGenome >= xticks[i]) & (mhPvals > 0.1))[0] if pvalBool\
-                     else np.where((locationOnGenome >= xticks[i]) & (zScores < 10))[0]
+                else np.where((locationOnGenome >= xticks[i]) & (zScores < 10))[0]
             color = "gray" if i % 2 == 0 else "black"
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color=color,
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         elif i % 2 == 0:
             if pvalBool:
-                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0]
+                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i + 1])
+                                  & (mhPvals > 0.1))[0]
             else:
-                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 10))[0]
+                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i + 1])
+                                  & (zScores < 10))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
         else:
             if pvalBool:
-                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (mhPvals > 0.1))[0]
+                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i + 1])
+                                  & (mhPvals > 0.1))[0]
             else:
-                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i+1]) & (zScores < 10))[0]
+                points = np.where((locationOnGenome >= xticks[i]) & (locationOnGenome < xticks[i + 1])
+                                  & (zScores < 10))[0]
             plt.scatter(locationOnGenome[points], distanceArrReal[points],
                         s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="black",
                         marker=".", alpha=0.1, edgecolors='none', rasterized=True)
@@ -867,8 +883,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     line3Indices = np.where(mhPvals <= 0.01)[0] if pvalBool else np.where(zScores >= 30)[0]
 
     colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
-    opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /
-                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
+    opacityArr = np.array((np.abs(distanceArrReal[line1Indices])
+                           / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[line1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
 
@@ -903,8 +919,8 @@ def createGenomeManhattan(group1Name, group2Name, locationArr, chrDict, distance
     plt.close(fig)
 
 
-def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, mhPvals_, zScores_,
-                             stateColorList_, manhattanDirPath_, pvalBool_):
+def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArrReal_, maxDiffArr_, params, mhPvals_,
+                             zScores_, stateColorList_, manhattanDirPath_, pvalBool_):
     """
     Initializes global variables for multiprocessing in the single epilogos case
 
@@ -913,7 +929,8 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
     group2Name_       -- The name of the second epilogos group
     locationArr_      -- Numpy array containing the genomic locations of all the bins
     distanceArrReal_  -- Numpy array containing the real distances
-    maxDiffArr_       -- Numpy array containing the states which had the largest difference between the two groups in each bin
+    maxDiffArr_       -- Numpy array containing the states which had the largest difference between the two groups in
+                         each bin
     params            -- gennorm fit parameters
     mhPvals_          -- Multiple hypothesis corrected pvals using the Benjamini-Hochberg procedure
     zScores_          -- Absolute values of the z-scores of the distances
@@ -949,7 +966,7 @@ def _initChromosomeManhattan(group1Name_, group2Name_, locationArr_, distanceArr
 
 
 def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, distanceArrReal, maxDiffArr, stateColorList,
-                              outputDirPath, fileTag, numProcesses, pvalBool, params=[0,0,0], mhPvals=[], zScores=[]):
+                              outputDirPath, fileTag, numProcesses, pvalBool, params=[0, 0, 0], mhPvals=[], zScores=[]):
     """
     Creates a manhattan plot based on the distances between the two groups for the each chromosome
 
@@ -959,7 +976,8 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     locationArr     -- Numpy array containing the genomic locations of all the bins
     chrDict         -- Dictionary containing mappings between number values and chromosome names (helps use less memory)
     distanceArrReal -- Numpy array containing the real distances
-    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in each bin
+    maxDiffArr      -- Numpy array containing the states which had the largest difference between the two groups in
+                       each bin
     stateColorList  -- Numpy array containing the colors of each of the states in the state model
     outputDirPath   -- The path of the output directory for epilogos
     fileTag         -- A string which helps ensure outputed files are named similarly within an epilogos run
@@ -980,17 +998,16 @@ def createChromosomeManhattan(group1Name, group2Name, locationArr, chrDict, dist
     startEnd = []
     for i in range(len(xticks)):
         if not i == len(xticks) - 1:
-            startEnd.append((xticks[i], xticks[i+1]))
+            startEnd.append((xticks[i], xticks[i + 1]))
         else:
             startEnd.append((xticks[i], -1))
 
     chrOrder = list(map(lambda x: x.split("chr")[-1], [chrDict[x] for x in locationArr[:, 0][xticks]]))
 
     # Multiprocess the reading
-    with closing(Pool(numProcesses, initializer=_initChromosomeManhattan, initargs=(group1Name, group2Name, locationArr,
-                                                                                    distanceArrReal, maxDiffArr, params,
-                                                                                    mhPvals, zScores, stateColorList,
-                                                                                    manhattanDirPath, pvalBool))) as pool:
+    with closing(Pool(numProcesses, initializer=_initChromosomeManhattan,
+                      initargs=(group1Name, group2Name, locationArr, distanceArrReal, maxDiffArr, params, mhPvals,
+                                zScores, stateColorList, manhattanDirPath, pvalBool))) as pool:
         pool.starmap(graphChromosomeManhattan, zip(chrOrder, startEnd))
     pool.join()
 
@@ -1026,7 +1043,7 @@ def graphChromosomeManhattan(chromosome, startEnd):
     ylim = np.amax(np.abs(distanceArrReal)) * 1.1
     ax.set_ylim(-ylim, ylim)
     yticks, ytickLabels = pvalAxisScaling(ylim, beta, loc, scale) if pvalBool\
-                          else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
+        else zScoreAxisScaling(ylim, np.mean(distanceArrReal), np.std(distanceArrReal))
 
     ax.set_yticks(yticks)
     ax.set_yticklabels([str(np.abs(np.round(val, 1))) for val in yticks])
@@ -1040,7 +1057,8 @@ def graphChromosomeManhattan(chromosome, startEnd):
     axR.set_ylim(ax.get_ylim())
     axR.set_yticklabels(ytickLabels)
 
-    ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes, fontsize=15)
+    ax.text(0.99, 0.99, group1Name, verticalalignment='top', horizontalalignment='right', transform=ax.transAxes,
+            fontsize=15)
     ax.text(0.99, 0.01, group2Name, verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
             fontsize=15)
 
@@ -1048,33 +1066,35 @@ def graphChromosomeManhattan(chromosome, startEnd):
 
     if startEnd[1] == -1:
         realxticks = np.where((locationOnGenome >= startEnd[0]) & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
-        plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
+        plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1]) / 1000000)) for tick in realxticks])
 
         points = np.where((locationOnGenome >= startEnd[0]) & (mhPvals > 0.1))[0] if pvalBool\
-                 else np.where((locationOnGenome >= startEnd[0]) & (zScores < 10))[0]
+            else np.where((locationOnGenome >= startEnd[0]) & (zScores < 10))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
-                    s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
-                    alpha=0.1, edgecolors='none', rasterized=True)
+                    s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
+                    marker=".", alpha=0.1, edgecolors='none', rasterized=True)
 
         line1Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.1))[0] if pvalBool\
-                       else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 10))[0]
+            else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 10))[0]
         line2Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.05))[0] if pvalBool\
-                       else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 20))[0]
+            else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 20))[0]
         line3Indices = np.where((locationOnGenome >= startEnd[0]) & (mhPvals <= 0.01))[0] if pvalBool\
-                       else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 30))[0]
+            else np.where((locationOnGenome >= startEnd[0]) & (zScores >= 30))[0]
 
     else:
         realxticks = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
                               & (locationArr[:, 1].astype(int) % 10000000 == 0))[0]
-        plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1])/1000000)) for tick in realxticks])
+        plt.xticks(ticks=realxticks, labels=[str(int(int(locationArr[tick, 1]) / 1000000)) for tick in realxticks])
 
         if pvalBool:
-            points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (mhPvals > 0.1))[0]
+            points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
+                              & (mhPvals > 0.1))[0]
         else:
-            points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1])) & (zScores < 10))[0]
+            points = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome < startEnd[1]))
+                              & (zScores < 10))[0]
         plt.scatter(locationOnGenome[points], distanceArrReal[points],
-                    s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray", marker=".",
-                    alpha=0.1, edgecolors='none', rasterized=True)
+                    s=(np.abs(distanceArrReal[points]) / np.amax(np.abs(distanceArrReal)) * 100), color="gray",
+                    marker=".", alpha=0.1, edgecolors='none', rasterized=True)
 
         if pvalBool:
             line1Indices = np.where(((locationOnGenome >= startEnd[0]) & (locationOnGenome <= startEnd[1]))
@@ -1092,8 +1112,8 @@ def graphChromosomeManhattan(chromosome, startEnd):
                                     & (zScores >= 30))[0]
 
     colorArr = stateColorList[maxDiffArr[line1Indices].astype(int) - 1]
-    opacityArr = np.array((np.abs(distanceArrReal[line1Indices]) /
-                           np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
+    opacityArr = np.array((np.abs(distanceArrReal[line1Indices])
+                           / np.amax(np.abs(distanceArrReal)))).reshape(len(distanceArrReal[line1Indices]), 1)
     rgbaColorArr = np.concatenate((colorArr, opacityArr), axis=1)
     sizeArr = np.abs(distanceArrReal[line1Indices]) / np.amax(np.abs(distanceArrReal)) * 100
 
@@ -1145,8 +1165,8 @@ def pvalAxisScaling(ylim, beta, loc, scale):
     ytickLabels = ["$10^{%d}$" % i for i in range(-16, -3)] + ["$1$"] + ["$10^{-%d}$" % i for i in range(4, 17)]
 
     for i in range(-16, -3):
-        yticks.append(-st.gennorm.isf(10**i/2, beta, loc=loc, scale=scale))
-        yticks.append(st.gennorm.isf(10**i/2, beta, loc=loc, scale=scale))
+        yticks.append(-st.gennorm.isf(10 ** i / 2, beta, loc=loc, scale=scale))
+        yticks.append(st.gennorm.isf(10 ** i / 2, beta, loc=loc, scale=scale))
     yticks.append(0)
     yticks.sort()
 
@@ -1159,6 +1179,7 @@ def pvalAxisScaling(ylim, beta, loc, scale):
             ytickLabelsFinal.append(ytickLabels[i])
 
     return (yticksFinal, ytickLabelsFinal)
+
 
 def zScoreAxisScaling(ylim, mean, stanDev):
     """
@@ -1185,5 +1206,5 @@ def zScoreAxisScaling(ylim, mean, stanDev):
 
 
 if __name__ == "__main__":
-    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), strToBool(argv[8]), int(argv[9]),
-         int(argv[10]), argv[11], int(argv[12]), strToBool(argv[13]))
+    main(argv[1], argv[2], argv[3], argv[4], argv[5], int(argv[6]), strToBool(argv[7]), strToBool(argv[8]),
+         int(argv[9]), int(argv[10]), argv[11], int(argv[12]), strToBool(argv[13]))

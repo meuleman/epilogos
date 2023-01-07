@@ -115,18 +115,19 @@ def splitRows(totalRows, numProcesses):
     # Row list contain tuples of the first and last rows to be assigned to each core
     rowList = []
     for i in range(numProcesses):
-        rowsToCalc = (i * totalRows // numProcesses, (i+1) * totalRows // numProcesses)
+        rowsToCalc = (i * totalRows // numProcesses, (i + 1) * totalRows // numProcesses)
         rowList.append(rowsToCalc)
 
     return rowList
 
 
-def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0), expBool=True, verbose=True, groupSize=-1):
+def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0), expBool=True, verbose=True,
+               groupSize=-1):
     """
     Reads the states from the relevant rows of the inputed data file(s)
 
     Input:
-    file1Path  -- The path to the first file to read from (used in both single and paired epilogos) [default=Path("null")]
+    file1Path  -- The path to the first file to read from (used in both single and paired) [default=Path("null")]
     file2Path  -- The path to the second file to read from (used only in paired epilogos) [default=Path("null")]
     rowsToCalc -- The first and last rows to read from the files [default=(0, 0)]
     expBool    -- Tells us if we are calculating the expected frequencies or the scores [default=True]
@@ -139,11 +140,11 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
         Paired Epilogos Expected Frequency:
             combinedArr -- 2d numpy array of the state info for each epigenome of both data files over the relevant rows
         Paired Epilogos Scores:
-            file1Arr    -- 2d numpy array of the state info for each epigenome in the first data file over the relevant rows
-            file2Arr    -- 2d numpy array of the state info for each epigenome in the second data file over the relevant rows
-            shuffledCombinedArr[:, :file1Arr.shape[1]] -- 2d numpy array of the state info shuffled between first and second
+            file1Arr    -- 2d numpy array of the state info for each epigenome in the 1st data file over relevant rows
+            file2Arr    -- 2d numpy array of the state info for each epigenome in the 2nd data file over relevant rows
+            shuffledCombinedArr[:, :file1Arr.shape[1]] -- 2d numpy array of the state info shuffled between 1st and 2nd
                                                           data files, with the same width as file1Arr
-            shuffledCombinedArr[:, file1Arr.shape[1]:] -- 2d numpy array of the state info shuffled between first and second
+            shuffledCombinedArr[:, file1Arr.shape[1]:] -- 2d numpy array of the state info shuffled between 1st and 2nd
                                                           data files, with the same width as file2Arr
     """
     # Read in the data from file 1
@@ -152,7 +153,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     cols = range(3, pd.read_table(file1Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file1Arr = pd.read_table(file1Path, usecols=cols, skiprows=rowsToCalc[0],
-                             nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+                             nrows=rowsToCalc[1] - rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if verbose and rowsToCalc[0] == 0: print("    Time: ", time() - tRead1, flush=True)
 
     # If we are doing single group epilogos, just return the data array, otherwise, we continute to the second file
@@ -165,7 +166,7 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     cols = range(3, pd.read_table(file2Path, nrows=1, header=None, sep="\t").shape[1])
     # Read using pd.read_table and convert to numpy array for faster calculation (faster than np.genfromtext())
     file2Arr = pd.read_table(file2Path, usecols=cols, skiprows=rowsToCalc[0],
-                             nrows=rowsToCalc[1]-rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
+                             nrows=rowsToCalc[1] - rowsToCalc[0], header=None, sep="\t").to_numpy(dtype=int) - 1
     if verbose and rowsToCalc[0] == 0: print("    Time: ", time() - tRead2, flush=True)
 
     # Combining the arrays for per row shuffling
@@ -188,9 +189,10 @@ def readStates(file1Path=Path("null"), file2Path=Path("null"), rowsToCalc=(0, 0)
     # we need the original file 1 and file 2 arrays as well as their shuffled counterparts
     # shuffledCombinedArr is split by size of the original arrays
     if groupSize == -1:
-        return file1Arr, file2Arr, shuffledCombinedArr[:, :file1Arr.shape[1]], shuffledCombinedArr[:, file1Arr.shape[1]:]
+        return file1Arr, file2Arr, shuffledCombinedArr[:, :file1Arr.shape[1]],\
+            shuffledCombinedArr[:, file1Arr.shape[1]:]
     else:
-        return file1Arr, file2Arr, shuffledCombinedArr[:, :groupSize], shuffledCombinedArr[:, groupSize:2*groupSize]
+        return file1Arr, file2Arr, shuffledCombinedArr[:, :groupSize], shuffledCombinedArr[:, groupSize:2 * groupSize]
 
 
 def generateRegionArr(query):
@@ -207,17 +209,17 @@ def generateRegionArr(query):
     """
 
     # if its a single query build a one coord array
-    if re.fullmatch("chr[a-zA-z\d]+:[\d]+-[\d]+", query):
+    if re.fullmatch("chr[a-zA-z\\d]+:[\\d]+-[\\d]+", query):
         chr = query.split(":")[0]
         start = query.split(":")[1].split("-")[0]
         end = query.split(":")[1].split("-")[1]
         return np.array([[chr, int(start), int(end)]], dtype=object)
     # if it is a path to a file, build a numpy array with all coords
     elif Path(query).is_file():
-        return pd.read_table(Path(query), sep="\t", header=None, usecols=[0,1,2]).to_numpy(dtype=object)
+        return pd.read_table(Path(query), sep="\t", header=None, usecols=[0, 1, 2]).to_numpy(dtype=object)
     else:
-        raise ValueError("Please input valid query (region formatted as chr:start-end" +
-                         "or path to bed file containing query regions)")
+        raise ValueError("Please input valid query (region formatted as chr:start-end"
+                         + "or path to bed file containing query regions)")
 
 
 def orderChromosomes(chromosomes):
@@ -226,7 +228,7 @@ def orderChromosomes(chromosomes):
     e.g. For humans: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y
 
     Input:
-    chromosomes -- An iterable of strings containing chromosome names formatted chr[] (where [] is replaced with the name)
+    chromosomes -- An iterable of strings containing chromosome names formatted chr[] ([] is replaced with the chr name)
 
     Output:
     chrOrder -- The ordered list of chromosomes

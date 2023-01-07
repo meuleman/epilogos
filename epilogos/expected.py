@@ -39,14 +39,14 @@ def main(file1, file2, numStates, saliency, outputDir, fileTag, numProcesses, ve
     # Determine which rows to assign to each core
     rowList = splitRows(countRows(file1Path), numProcesses)
 
-    calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
-                      verbose)
+    calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename,
+                      numProcesses, verbose)
 
     print("Total Time:", time() - tTotal, flush=True) if verbose else print("\t[Done]", flush=True)
 
 
-def calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename, numProcesses,
-                      verbose):
+def calculateExpected(saliency, file1Path, file2Path, rowList, numStates, outputDirPath, fileTag, filename,
+                      numProcesses, verbose):
     """
     Function responsible for deploying the processes used to calculate the expected frequencies
 
@@ -136,7 +136,8 @@ def s2Calc(file1Path, file2Path, rowsToCalc, numStates, verbose):
 
     expFreqArr = np.zeros((numStates, numStates), dtype=np.int64)
 
-    if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
+    if verbose and rowsToCalc[0] == 0:
+        print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
     printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
 
     # SumOverRows: Within a row, how many ways can you choose x and y to be together (will normalize later)
@@ -183,7 +184,8 @@ def s3Calc(file1Path, rowsToCalc, numStates, verbose):
 
     expFreqArr = np.zeros((numCols, numCols, numStates, numStates), dtype=np.int32)
 
-    if verbose and rowsToCalc[0] == 0: print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
+    if verbose and rowsToCalc[0] == 0:
+        print("Calculating expected frequencies...", flush=True); tExp = time(); percentDone = 0
     printCheckmarks = [int(multiprocessRows * float(i / 10)) for i in range(1, 10)]
 
     # We tally a one for all the state/column combinations we observe

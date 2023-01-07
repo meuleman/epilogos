@@ -6,6 +6,7 @@ from os import remove
 import pandas as pd
 from epilogos.helpers import maxMean, generateROIIndicesArr, orderChromosomes, strToBool, getStateNames, findSign
 
+
 def main(outputDir, stateInfo, fileTag, expFreqPath, roiWidth, verbose):
     """
     Finds the top scoring regions across all epilogos score files and puts them into a txt file
@@ -125,11 +126,11 @@ def createTopScoresTxt(filePath, locationArr, scoreArr, nameArr, roiWidth):
         # Flip makes it so tie leads to the higher number state
         # Calculate the maximum value for each state in and then from there the argmax for the max state
         # Subtract from the shape of the array to reverse the effect of flip and get the state number
-        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(scoreArr[roiIndicesArr], axis=2), axis=1), axis=1) # <---- got rid of np.abs which was used for pairwise, but is not relevant here
+        maxStates = scoreArr.shape[1] - np.argmax(np.max(np.flip(scoreArr[roiIndicesArr], axis=2), axis=1), axis=1)
 
         # Build pandas dataframe for writing
         locations = pd.DataFrame(rois.loc[:, ["Chromosome", "Start", "End", "Score"]])\
-                                .astype({"Chromosome": str, "Start": np.int64, "End": np.int64, "Score": np.float32})
+            .astype({"Chromosome": str, "Start": np.int64, "End": np.int64, "Score": np.float32})
         locations["MaxScoreState"] = maxStates.astype(np.int32)
 
         # Write all the locations to the file

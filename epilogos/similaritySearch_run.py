@@ -27,29 +27,50 @@ To Build Similarity Search Data:\n\
   -o, --output-directory TEXT     Path to desired similarity search output\n\
                                   directory\n\
   -w, --window-bp INTEGER         Window size (in BP) on which to perform\n\
-                                  similarity search  [default: 25000]\n\
+                                  similarity search [default: 25000]\n\
+  -j, --num-jobs INTEGER          Number of slurm jobs to be used in\n\
+                                  parallelization of sim search calculation\n\
+                                  [default: 10]\n\
   -c, --num-cores INTEGER         Number of cores to be used in simsearch\n\
                                   calculation. If set to 0, uses all cores.\n\
                                   [default: 0=All cores]\n\
   -n, --num-matches INTEGER       Number of matches to be found by simsearch\n\
                                   for each query region [default: 100]\n\
   -f, --filter-state INTEGER      If the max signal within a region is from the\n\
-                                  filter state, it is removed from the region\n\
-                                  list. The purpose of this is to be used to \n\
-                                  filter out 'quiescent regions'. If set to 0,\n\
-                                  filtering is not done. [default: last state]\
+                                  filter state, the region is removed from the\n\
+                                  region list. The purpose of this is to be\n\
+                                  used to filter out 'quiescent regions'. If\n\
+                                  set to 0, filtering is not done.\n\
+                                  [default: last state]\n\
+  --filter-score FLOAT            If the max signal within a region is less\n\
+                                  than the filter score, the region is removed\n\
+                                  from the region list. The purpose of this is\n\
+                                  to reduce computational complexity by\n\
+                                  eliminating potentially uninteresting\n\
+                                  regions. By default no filtering is done on\n\
+                                  score. [default: -1==no filtering]\n\
+  -p, --partition TEXT            Request a specific partition for the SLURM\n\
+                                  resource allocation. If not specified, uses\n\
+                                  the default partition as designated by the\n\
+                                  system administrator\n\
+  --mm-mem TEXT                   Memory (in MB) for the simsearch max mean\n\
+                                  region selection job [default: 10000]\n\
+  --calc-mem INTEGER              Memory (in MB) for the simsearch calcuation\n\
+                                  jobs [default: 50000]\n\
+  --write-mem INTEGER             Memory (in MB) for the simsearch write job\n\
+                                  [default: 5000]\
 \n\
 \n\
 To Query Similarity Search Data:\n\
   -q, --query TEXT                Query region formatted as chr:start-end or\n\
                                   path to tab-separated bed file containing\n\
                                   query regions\n\
-  -m, --matches-file TEXT\n\
-                                  Path to previously built\n\
+  -m, --matches-file TEXT         Path to previously built\n\
                                   simsearch.bed.gz file to be queried\n\
                                   for matches\n\
   -o, --output-directory TEXT     Path to desired similarity search output\n\
                                   directory")
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']), cls=CustomClickHelpFormat)
 @click.option("-b", "--build", "buildBool", is_flag=True,
@@ -58,27 +79,38 @@ To Query Similarity Search Data:\n\
 @click.option("-o", "--output-directory", "outputDir", required=True, type=str,
               help="Path to desired similarity search output directory")
 @click.option("-w", "--window-bp", "windowBP", type=int, default=-1, show_default=True,
-              help="Window size (in BP) on which to perform similarity search")
+              help="Window size (in BP) on which to perform similarity search [default: 25000]")
 @click.option("-j", "--num-jobs", "nJobs", type=int, default=10, show_default=True,
-              help="Number of slurm jobs to be used in simsearch calculation. [default: 10]")
+              help="Number of slurm jobs to be used in parallelization of simsearch calculation. [default: 10]")
 @click.option("-c", "--num-cores", "nCores", type=int, default=0, show_default=True,
-              help="Number of cores to be used in simsearch calculation. If set to 0, uses all cores. [default: 0=All cores]")
+              help="Number of cores to be used in simsearch calculation. If set to 0, uses all cores. "
+                    + "[default: 0=All cores]")
 @click.option("-n", "--num-matches", "nDesiredMatches", type=int, default=100, show_default=True,
               help="Number of matches to be found by simsearch for each query region [default: 100]")
 @click.option("-f", "--filter-state", "filterState", type=int, default=-1,
-              help="If the max signal within a region is from the filter state, it is removed from the region list. " +
-                   "The purpose of this is to be used to filter out 'quiescent regions'." +
-                   "If set to 0, filtering is not done. [default: last state]")
+              help="If the max signal within a region is from the filter state, the region is removed from the region "
+                   + "list. The purpose of this is to be used to filter out 'quiescent regions'."
+                   + "If set to 0, filtering is not done. [default: last state]")
+@click.option("--filter-score", "filterScore", type=float, default=-1,
+              help="If the max signal within a region is less than the filter score, the region is removed from the "
+                   + "region list. The purpose of this is to reduce computational complexity by eliminating "
+                   + "potentially uninteresting regions. By default no filtering is done on score. "
+                   + "[default: -1 == no filtering]")
 @click.option("-p", "--partition", "partition", type=str,
-              help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default " +
-                   "partition as designated by the system administrator")
-@click.option("--calc-mem", "calcMem", type=str, default="50000",
-              help="Memory (in MB) for the simsearch calcuation jobs [default: 50000MB]")
+              help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default "
+                   + "partition as designated by the system administrator")
+@click.option("--mm-mem", "mmMem", type=str, default="10000",
+              help="Memory (in MB) for the simsearch max mean region selection job [default: 10000]")
+@click.option("--calc-mem", "calcMem", type=int, default="50000",
+              help="Memory (in MB) for the simsearch calcuation jobs [default: 50000]")
+@click.option("--write-mem", "writeMem", type=int, default="5000",
+              help="Memory (in MB) for the simsearch write job [default: 5000]")
 @click.option("-q", "--query", "query", type=str, default="",
               help="Query region formatted as chr:start-end or path to tab-separated bed file containing query regions")
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")
-def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, partition, calcMem, query, simSearchPath):
+def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
+         partition, mmMem, calcMem, writeMem, query, simSearchPath):
     print("""\n
                  d8b                                                           888
                  Y8P                                                           888
@@ -102,26 +134,38 @@ def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatc
         raise NotADirectoryError("Given path is not a directory: {}".format(str(outputDir)))
 
     if buildBool:
-        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, partition, calcMem)
+        buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
+                       partition, mmMem, calcMem, writeMem)
     else:
         querySimSearch(query, simSearchPath, outputDir)
 
 
-def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, partition, calcMem):
+def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
+                   partition, mmMem, calcMem, writeMem):
     """
-    Builds the similarity search files for a set of scores
+    Deploys the slurm jobs to build the similarity search files for a set of scores
 
     Input:
-    scoresPath        -- Path to scores file to be used in similarity search
-    outputDir         -- pathlib Path to the output directory for similarity search files
-    windowBP          -- Size of the similarity search window in bp
-    nCores             -- Number of jobs to be used in nearest neighbor algorithm
-    nDesiredMatches -- Number of matches to be found by nearest neighbor algorithm (first match is always the query region)
+    scoresPath      -- Path to scores file to be used in similarity search
+    outputDir       -- pathlib Path to the output directory for similarity search files
+    windowBP        -- Size of the similarity search window in bp
+    nJobs           -- Number of slurm jobs to be use in parallelization of simsearch euclidean distance calculations
+    nCores          -- Number of cores to be used for multiprocessing calculation of simsearch euclidean distance
+    nDesiredMatches -- Number of matches to be found by simsearch algorithm
+    filterState     -- If the max signal of a region is in this state, the region is removed
+    filterScore     -- If the max signal of a region is less than filterScore, the region is removed
+    partition       -- Slurm partition to use
+    mmMem           -- Memory in MB to be allocated to the maxmean region selection job
+    calcMem         -- Memory in MB to be allocated to the simsearch euclidean distance calculations
+    writeMem        -- Memory in MB to be allocated to writing the results of the simsearch calculation
+
 
     Output:
-    simsearch_cube.npz     -- NPZ file containing all the reduced regions and their coords (scores=scores, coords=coords)
-    simsearch_knn.npz      -- NPZ file containing the top nDesiredMatches matches for each region
-                              (arr=coords, idx=indices, dist=distances)
+    simsearch_cube.npz     -- NPZ file containing all the reduced regions and their coords
+                              (scores=scores, coords=coords)
+    reduced_genome.npy     -- NPY file containing the reduced scores for the genome (used in simsearch eucl dist calc)
+    simsearch_indices.npy  -- NPY file containing the simsearch results as indices of the reduced_genome.npy array
+                              for each of the regions in simsearch_cube.npz
     simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredMatches matches for each of regions
     """
 
@@ -139,27 +183,35 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
     else:
         raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
 
-    pythonFilesDir, partition, memory = setUpSlurm(outputDir, partition, nCores, calcMem)
+    pythonFilesDir, partition, mmMemCLO, calcMemCLO, writeMemCLO = setUpSlurm(outputDir, partition, nCores, mmMem,
+                                                                              calcMem, writeMem)
 
     print("\n        STEP 1: Salient Region Selection", flush=True)
-    submitRegionSelectionCommand = "python {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_max_mean.py", outputDir, scoresPath, windowBins, blockSize, windowBP, filterState)
-    regionJob = submitSlurmJob("simsearch_region_selection", submitRegionSelectionCommand, outputDir, partition, memory, "")
-    print("            JobID:", regionJob, flush=True)
+    submitMaxMeanCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_max_mean.py",
+                                                                   outputDir, scoresPath, windowBins, blockSize,
+                                                                   windowBP, filterState, filterScore)
+    mmJob = submitSlurmJob("simsearch_max_mean", submitMaxMeanCommand, outputDir, partition, mmMemCLO, "")
+    print("            JobID:", mmJob, flush=True)
 
     print("\n        STEP 2: Similarity Search Calculation", flush=True)
     calcJobs = []
     for i in range(nJobs):
-        simsearchCalculationCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_calc.py", outputDir, windowBins, blockSize, nCores, nDesiredMatches, nJobs, i)
-        calcJobs.append(submitSlurmJob("simsearch_calc_{}".format(i), simsearchCalculationCommand, outputDir, partition, memory, "--dependency=afterok:{}".format(regionJob)))
+        submitCalcCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_calc.py",
+                                                                    outputDir, windowBins, blockSize, nCores,
+                                                                    nDesiredMatches, nJobs, i)
+        calcJobs.append(submitSlurmJob("simsearch_calc_{}".format(i), submitCalcCommand, outputDir, partition,
+                                       calcMemCLO, "--dependency=afterok:{}".format(mmJob)))
     calcJobsStr = str(calcJobs).strip('[]').replace(" ", "")
     print("            JobID:", calcJobsStr, flush=True)
 
     print("\n        STEP 3: Writing results", flush=True)
-    submitWriteCommand = "python {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_write.py", outputDir, windowBins, blockSize, nJobs, nDesiredMatches)
-    writeJob = submitSlurmJob("simsearch_write", submitWriteCommand, outputDir, partition, memory, "--dependency=afterok:{}".format(calcJobsStr))
+    submitWriteCommand = "python {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_write.py", outputDir,
+                                                           windowBins, blockSize, nJobs, nDesiredMatches)
+    writeJob = submitSlurmJob("simsearch_write", submitWriteCommand, outputDir, partition, writeMemCLO,
+                              "--dependency=afterok:{}".format(calcJobsStr))
     print("            JobID:", writeJob, flush=True)
 
-    allJobIDs = "{},{},{}".format(regionJob, calcJobsStr, writeJob)
+    allJobIDs = "{},{},{}".format(mmJob, calcJobsStr, writeJob)
     print("\nAll JobIDs:\n    ", allJobIDs, flush=True)
 
 
@@ -173,13 +225,14 @@ def determineBinSize(scoresPath):
     Output:
     int(row1.iloc[0, 2] - row1.iloc[0, 1]) -- size of an individual bin
     """
-    row1 = pd.read_table(scoresPath, sep="\t", header=None, usecols=[0,1,2], nrows=1)
+    row1 = pd.read_table(scoresPath, sep="\t", header=None, usecols=[0, 1, 2], nrows=1)
     return int(row1.iloc[0, 2] - row1.iloc[0, 1])
 
 
 def querySimSearch(query, simSearchPath, outputDir):
     """
-    Queries the simsearch.bed.gz file a set of input regions and outputs each regions matches to an individual output file
+    Queries the simsearch.bed.gz file a set of input regions and outputs each regions matches to an individual output
+    file
 
     Input:
     query         -- A 2d numpy array containing the coordinates of user queried regions
@@ -194,12 +247,13 @@ def querySimSearch(query, simSearchPath, outputDir):
     # Read in matches file
     matchesDF = pd.read_table(Path(simSearchPath), sep="\t", header=None)
 
-    print("            Time:", format(time() - readTime,'.0f'), "seconds\n", flush=True)
+    print("            Time:", format(time() - readTime, '.0f'), "seconds\n", flush=True)
     print("        Querying regions...", flush=True)
 
     # For each query output top 100 matches to a bed file
     for chr, start, end in queryArr:
-        index = np.where((matchesDF.iloc[:, 0] == chr) & (matchesDF.iloc[:, 1] >= start) & (matchesDF.iloc[:, 2] <= end))[0]
+        index = np.where((matchesDF.iloc[:, 0] == chr) & (matchesDF.iloc[:, 1] >= start)
+                         & (matchesDF.iloc[:, 2] <= end))[0]
         if index.size > 0:
             index = index[0]
 
@@ -211,8 +265,8 @@ def querySimSearch(query, simSearchPath, outputDir):
             with open(outfile, "w+") as f:
                 matchesStr = ""
 
-                recs = matchesDF.iloc[index,3][2:-2] # trim off brackets
-                recs = recs.split('", "')[1:] # split matches
+                recs = matchesDF.iloc[index, 3][2:-2]  # trim off brackets
+                recs = recs.split('", "')[1:]  # split matches
                 for i in range(len(recs)):
                     # Append bed formatted coords to file
                     matchesStr += "{0[0]}\t{0[1]}\t{0[2]}\n".format(recs[i].split(":"))
@@ -220,11 +274,12 @@ def querySimSearch(query, simSearchPath, outputDir):
                 f.write(matchesStr)
 
             # Print out information to user
-            print("            Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart, regionEnd,
-                                                                                        chr, start, end))
+            print("            Found region {}:{}-{} within user query {}:{}-{}".format(regionChr, regionStart,
+                                                                                        regionEnd, chr, start, end))
             print("                See {} for matches\n".format(outfile), flush=True)
         else:
-            print("            ValueError: Could not find region in given query range: {}:{}-{}\n".format(chr, start, end))
+            print("            ValueError: Could not find region in given query range: {}:{}-{}\n".format(chr, start,
+                                                                                                          end))
 
 
 def determineBlockSize20(windowBP):
@@ -293,7 +348,25 @@ def determineBlockSize200(windowBP):
     return blockSize
 
 
-def setUpSlurm(outputDir, partition, nCores, calcMem):
+def setUpSlurm(outputDir, partition, nCores, mmMem, calcMem, writeMem):
+    """
+    Generates strings which are used as flags in the slurm job deployment
+
+    Input:
+    outputDir -- pathlib Path to the output directory for similarity search files
+    partition -- Slurm partition to use
+    nCores    -- Number of cores to be used for multiprocessing calculation of simsearch euclidean distance
+    mmMem     -- Memory in MB to be allocated to the maxmean region selection job
+    calcMem   -- Memory in MB to be allocated to the simsearch euclidean distance calculations
+    writeMem  -- Memory in MB to be allocated to writing the results of the simsearch calculation
+
+    Output:
+    pythonFilesDir -- Path to the directory in which the python files to run are located
+    partition      -- Slurm partition to use reformatted with slurm flag
+    mmMemCLO       -- Memory to be allocated to the maxmean region selection job reformatted with slurm flag
+    calcMemCLO     -- Memory to be allocated to the euclidean distance jobs reformatted with slurm flag
+    writeMemCLO    -- Memory to be allocated to the writing job reformatted with slurm flag
+    """
     (outputDir / ".out/").mkdir(parents=True, exist_ok=True)
     (outputDir / ".err/").mkdir(parents=True, exist_ok=True)
     print("\nSlurm .out log files are located at: {}".format(outputDir / ".out/"))
@@ -308,12 +381,28 @@ def setUpSlurm(outputDir, partition, nCores, calcMem):
 
     partition = "--partition=" + partition if partition else ""
 
-    memory = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, calcMem)
+    mmMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, mmMem)
+    calcMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, calcMem)
+    writeMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, writeMem)
 
-    return pythonFilesDir, partition, memory
+    return pythonFilesDir, partition, mmMemCLO, calcMemCLO, writeMemCLO
 
 
 def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory, dependency):
+    """
+    Submits a slurm job to the cluster using the subprocess module
+
+    Input:
+    jobName       -- Name of the job to run
+    pythonCommand -- Command to be submitted using sbatch
+    outputDir     -- pathlib Path to the output directory for similarity search files
+    partition     -- Slurm partition to use as string formatted with slurm flag
+    memory        -- Memory to be allocated to the job as a string formatted with slurm flag
+    dependency    -- Job dependencies if any
+
+    Output:
+    int(sp.stdout.split()[-1]) -- Slurm jobID number
+    """
     jobOutPath = outputDir / (".out/" + jobName + ".out")
     jobErrPath = outputDir / (".err/" + jobName + ".err")
 
@@ -330,7 +419,10 @@ def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory, depende
         print(err)
         return
 
-    command = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'".format(dependency, jobName, jobOutPath, jobErrPath, partition, memory, pythonCommand)
+    command = "sbatch {} --job-name={}.job --output={} --error={} {} {} --wrap='{}'".format(dependency, jobName,
+                                                                                            jobOutPath, jobErrPath,
+                                                                                            partition, memory,
+                                                                                            pythonCommand)
     sp = subprocess.run(command, shell=True, check=True, universal_newlines=True, stdout=subprocess.PIPE)
 
     if not sp.stdout.startswith("Submitted batch"):

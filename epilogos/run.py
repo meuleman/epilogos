@@ -62,15 +62,15 @@ from epilogos.helpers import getNumStates
               help="The number of bins in a region of interest [default: 50(single)/125(paired)]")
 @click.option("-f", "--file-tag", "fileTag", type=str, default="null",
               help="Tag to be appended in output filenames [default: input-directory_saliency]")
-@click.option("--exp-freq-mem", "expFreqMem", type=str, default="20000",
-              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB]")
-@click.option("--exp-comb-mem", "expCombMem", type=str, default="8000",
-              help="Memory (in MB) for the expected frequency combination job [default: 8000MB]")
-@click.option("--score-mem", "scoreMem", type=str, default="20000",
-              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000MB]")
-@click.option("--roi-mem", "roiMem", type=str, default="-1",
+@click.option("--exp-freq-mem", "expFreqMem", type=int, default="20000",
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000]")
+@click.option("--exp-comb-mem", "expCombMem", type=int, default="8000",
+              help="Memory (in MB) for the expected frequency combination job [default: 8000]")
+@click.option("--score-mem", "scoreMem", type=int, default="20000",
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000]")
+@click.option("--roi-mem", "roiMem", type=int, default="-1",
               help="Memory (in MB) for the expected frequency calcuation jobs "
-                   + "[default: 20000MB (single) / 100000MB (paired)]")
+                   + "[default: 20000 (single) / 100000 (paired)]")
 def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2, outputDirectory, stateInfo, saliency,
          numProcesses, exitBool, diagnosticBool, numTrials, samplingSize, quiescentState, groupSize, version, partition,
          pvalBool, roiWidth, fileTag, expFreqMem, expCombMem, scoreMem, roiMem):

@@ -99,6 +99,7 @@ To Query Similarity Search Data:\n\
 @click.option("-p", "--partition", "partition", type=str,
               help="Request a specific partition for the SLURM resource allocation. If not specified, uses the default "
                    + "partition as designated by the system administrator")
+@click.option("-t", "--tag", "jobTag", type=str, default="", help="Tag to add to slurm job names [default: None]")
 @click.option("--mm-mem", "mmMem", type=str, default=10000,
               help="Memory (in MB) for the simsearch max mean region selection job [default: 10000]")
 @click.option("--calc-mem", "calcMem", type=int, default=50000,
@@ -110,7 +111,7 @@ To Query Similarity Search Data:\n\
 @click.option("-m", "--matches-file", "simSearchPath", type=str,
               help="Path to previously built simsearch.bed.gz file to be queried for matches")
 def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
-         partition, mmMem, calcMem, writeMem, query, simSearchPath):
+         partition, jobTag, mmMem, calcMem, writeMem, query, simSearchPath):
     print("""\n
                  d8b                                                           888
                  Y8P                                                           888
@@ -135,13 +136,13 @@ def main(buildBool, scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatc
 
     if buildBool:
         buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
-                       partition, mmMem, calcMem, writeMem)
+                       partition, jobTag, mmMem, calcMem, writeMem)
     else:
         querySimSearch(query, simSearchPath, outputDir)
 
 
 def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatches, filterState, filterScore,
-                   partition, mmMem, calcMem, writeMem):
+                   partition, jobTag, mmMem, calcMem, writeMem):
     """
     Deploys the slurm jobs to build the similarity search files for a set of scores
 
@@ -183,14 +184,14 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
     else:
         raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
 
-    pythonFilesDir, partition, mmMemCLO, calcMemCLO, writeMemCLO = setUpSlurm(outputDir, partition, nCores, mmMem,
+    pythonFilesDir, partition, jobTag, mmMemCLO, calcMemCLO, writeMemCLO = setUpSlurm(outputDir, partition, jobTag, nCores, mmMem,
                                                                               calcMem, writeMem)
 
     print("\n        STEP 1: Salient Region Selection", flush=True)
     submitMaxMeanCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_max_mean.py",
                                                                    outputDir, scoresPath, windowBins, blockSize,
                                                                    windowBP, filterState, filterScore)
-    mmJob = submitSlurmJob("simsearch_max_mean", submitMaxMeanCommand, outputDir, partition, mmMemCLO, "")
+    mmJob = submitSlurmJob("simsearch_max_mean{}".format(jobTag), submitMaxMeanCommand, outputDir, partition, mmMemCLO, "")
     print("            JobID:", mmJob, flush=True)
 
     print("\n        STEP 2: Similarity Search Calculation", flush=True)
@@ -199,7 +200,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
         submitCalcCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_calc.py",
                                                                     outputDir, windowBins, blockSize, nCores,
                                                                     nDesiredMatches, nJobs, i)
-        calcJobs.append(submitSlurmJob("simsearch_calc_{}".format(i), submitCalcCommand, outputDir, partition,
+        calcJobs.append(submitSlurmJob("simsearch_calc{}_{}".format(jobTag, i), submitCalcCommand, outputDir, partition,
                                        calcMemCLO, "--dependency=afterok:{}".format(mmJob)))
     calcJobsStr = str(calcJobs).strip('[]').replace(" ", "")
     print("            JobID:", calcJobsStr, flush=True)
@@ -207,7 +208,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
     print("\n        STEP 3: Writing results", flush=True)
     submitWriteCommand = "python {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_write.py", outputDir,
                                                            windowBins, blockSize, nJobs, nDesiredMatches)
-    writeJob = submitSlurmJob("simsearch_write", submitWriteCommand, outputDir, partition, writeMemCLO,
+    writeJob = submitSlurmJob("simsearch_write{}".format(jobTag), submitWriteCommand, outputDir, partition, writeMemCLO,
                               "--dependency=afterok:{}".format(calcJobsStr))
     print("            JobID:", writeJob, flush=True)
 
@@ -348,7 +349,7 @@ def determineBlockSize200(windowBP):
     return blockSize
 
 
-def setUpSlurm(outputDir, partition, nCores, mmMem, calcMem, writeMem):
+def setUpSlurm(outputDir, partition, jobTag, nCores, mmMem, calcMem, writeMem):
     """
     Generates strings which are used as flags in the slurm job deployment
 
@@ -381,11 +382,13 @@ def setUpSlurm(outputDir, partition, nCores, mmMem, calcMem, writeMem):
 
     partition = "--partition=" + partition if partition else ""
 
+    jobTag = "_" + jobTag if jobTag else jobTag
+
     mmMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, mmMem)
     calcMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, calcMem)
     writeMemCLO = "--exclusive --mem=0" if nCores == 0 else "--ntasks={} --mem={}".format(nCores, writeMem)
 
-    return pythonFilesDir, partition, mmMemCLO, calcMemCLO, writeMemCLO
+    return pythonFilesDir, partition, jobTag, mmMemCLO, calcMemCLO, writeMemCLO
 
 
 def submitSlurmJob(jobName, pythonCommand, outputDir, partition, memory, dependency):

@@ -12,13 +12,13 @@ import scipy.stats as st
 
 def main(outputDir, windowBins, blockSize, nCores, nDesiredMatches, nJobs, processTag):
     print("Calculating search results...", flush=True); t = time()
-    
-#    print("Reading in genome coords...", flush=True)
+
+    print("Reading in genome coords...", flush=True)
 
     genomeCoords = pd.DataFrame(np.load(outputDir / "genome_stats.npz", allow_pickle=True)["coords"],
                                 columns=["Chromosome", "Start", "End"])
 
-#    print("Reading in cube...", flush=True)
+    print("Reading in cube...", flush=True)
 
     simsearchCube = np.load(outputDir / "simsearch_cube.npz", allow_pickle=True)
     roiCube = simsearchCube["scores"]
@@ -26,11 +26,11 @@ def main(outputDir, windowBins, blockSize, nCores, nDesiredMatches, nJobs, proce
 
     if nCores == 0: nCores = cpu_count()
 
-#    print("Determining rowsToCalc...", flush=True)
+    print("Determining rowsToCalc...", flush=True)
 
     rowsToCalc = splitRows(roiCube.shape[0], nJobs)[processTag]
 
-#    print("Calling euclideanDistanceMulti...", flush=True)
+    print("Calling euclideanDistanceMulti...", flush=True)
 
     euclideanDistanceMulti(outputDir, genomeCoords, roiCoords, roiCube, windowBins, blockSize, nCores, nDesiredMatches,
                            rowsToCalc, processTag)
@@ -38,8 +38,8 @@ def main(outputDir, windowBins, blockSize, nCores, nDesiredMatches, nJobs, proce
     print("    Time:", format(time() - t, '.0f'), "seconds\n", flush=True)
 
 
-def _initMultiprocessing(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedSimilarRegionArr_, windowBins_,
-                         blockSize_, nDesiredMatches_):
+def _initEuclideanDistance(genomeCoords_, reducedGenome_, roiCoords_, roiCube_, sharedSimilarRegionArr_, windowBins_,
+                           blockSize_, nDesiredMatches_):
     """
     Initializes global variables for multiprocessing the convolution calculation
 
@@ -84,39 +84,42 @@ def runEuclideanDistance(rowsToCalcMulti):
     Writes indices of the similarity search results to the shared array for each of the rows in rowList
     """
 
-#    print("reading in shared array...", flush=True)
+    print("reading in shared array...", flush=True)
 
-    similarRegionArr = sharedToNumpy(*sharedSimilarRegionArr)
+    if type(sharedSimilarRegionArr) is tuple:
+        similarRegionArr = sharedToNumpy(*sharedSimilarRegionArr)
+    else:
+        similarRegionArr = sharedSimilarRegionArr
+
+    distanceSize = len(reducedGenome) - 24
 
     # Run convolvultion on all regions
     for row in range(*rowsToCalcMulti):
 
-#        print("Calculating {}".format(row), flush=True)
-#        print("  Calculating Euclidean Distances....", flush=True)
+        print("Calculating {}".format(row), flush=True)
+        print("  Calculating Euclidean Distances....", flush=True)
 
-        distanceSize = len(reducedGenome) - 24
         euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[row], squared=True)[
             np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1))),
             np.broadcast_to(np.arange(25), (distanceSize, 25))], axis=1)
 
-#        print("  Calculating halfmode...", flush=True)
-
+        print("  Calculating halfmode...", flush=True)
 
         halfMode = st.mode(euclideanDistances, keepdims=False)[0] / 2
 
-#        print("  Initializing overlap array...", flush=True)
+        print("  Initializing overlap array...", flush=True)
 
         # Only want to recommend non-overlapping regions
         overlap_arr = np.zeros(len(reducedGenome))
 
-#        print("  Adding identity region to overlap array...", flush=True)
+        print("  Adding identity region to overlap array...", flush=True)
 
         # Do not want to recommend region itself
         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0])
                                & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize
         overlap_arr[regionStart:regionStart + windowBins // blockSize] = 1
 
-#        print("  Looping over euclidean distances to get top...", flush=True)
+        print("  Looping over euclidean distances to get top...", flush=True)
 
         # Loop to find nDesiredMatches similar regions
         numMatches = 0
@@ -159,33 +162,47 @@ def euclideanDistanceMulti(outputDir, genomeCoords, roiCoords, roiCube, windowBi
     simsearch.bed.gz(.tbi) -- Tabix-formatted file with top nDesiredMatches matches for each of regions
     """
 
-#    print("Reading in reduced genome...", flush=True)
+    print("Reading in reduced genome...", flush=True)
 
     reducedGenome = np.load(outputDir / "reduced_genome.npy", allow_pickle=True)
 
-#    print("initializing for multiprocessing...", flush=True)
-
-    # Split into multiprocessing
-    # Shared arrays across the multiple processes for storing the recommendations
-    # We avoid race conditions by writing to separate parts of the array in each process
     nRegions = rowsToCalc[1] - rowsToCalc[0]
-    sharedSimilarRegionArr = RawArray(np.ctypeslib.as_ctypes_type(np.int32), nRegions * nDesiredMatches)
 
-    rowList = splitRows(nRegions, nCores)
+    if nCores > 1:
 
-    # Start the processes
-    with closing(Pool(nCores, initializer=_initMultiprocessing,
-                      initargs=(genomeCoords, reducedGenome, roiCoords.iloc[rowsToCalc[0]:rowsToCalc[1]],
-                                roiCube[rowsToCalc[0]:rowsToCalc[1]],
-                                (sharedSimilarRegionArr, nRegions, nDesiredMatches), windowBins, blockSize,
-                                nDesiredMatches))) as pool:
-        pool.map(runEuclideanDistance, rowList)
-    pool.join()
+        print("initializing for multiprocessing...", flush=True)
 
-#    print("multiprocessing done. Saving results...", flush=True)
+        # Split into multiprocessing
+        # Shared arrays across the multiple processes for storing the recommendations
+        # We avoid race conditions by writing to separate parts of the array in each process
+        sharedSimilarRegionArr = RawArray(np.ctypeslib.as_ctypes_type(np.int32), nRegions * nDesiredMatches)
 
-    np.save(outputDir / "simsearch_indices_{}.npy".format(processTag),
-            sharedToNumpy(sharedSimilarRegionArr, nRegions, nDesiredMatches), allow_pickle=True)
+        rowList = splitRows(nRegions, nCores)
+
+        # Start the processes
+        with closing(Pool(nCores, initializer=_initEuclideanDistance,
+                          initargs=(genomeCoords, reducedGenome, roiCoords.iloc[rowsToCalc[0]:rowsToCalc[1]],
+                                    roiCube[rowsToCalc[0]:rowsToCalc[1]],
+                                    (sharedSimilarRegionArr, nRegions, nDesiredMatches), windowBins, blockSize,
+                                    nDesiredMatches))) as pool:
+            pool.map(runEuclideanDistance, rowList)
+        pool.join()
+
+        print("multiprocessing done. Saving results...", flush=True)
+
+        np.save(outputDir / "simsearch_indices_{}.npy".format(processTag),
+                sharedToNumpy(sharedSimilarRegionArr, nRegions, nDesiredMatches), allow_pickle=True)
+    else:
+        print("initializing...", flush=True)
+        similarRegionArr = np.zeros((nRegions, nDesiredMatches), dtype=np.int32)
+
+        _initEuclideanDistance(genomeCoords, reducedGenome, roiCoords.iloc[rowsToCalc[0]:rowsToCalc[1]],
+                               roiCube[rowsToCalc[0]:rowsToCalc[1]], similarRegionArr, windowBins, blockSize,
+                               nDesiredMatches)
+
+        runEuclideanDistance((0, nRegions))
+
+        np.save(outputDir / "simsearch_indices_{}.npy".format(processTag), similarRegionArr, allow_pickle=True)
 
 
 if __name__ == "__main__":

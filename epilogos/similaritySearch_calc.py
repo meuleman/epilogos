@@ -69,7 +69,7 @@ def runEuclideanDistance(rowsToCalcMulti):
     Runs the euclidean distance function for the rows in roiCube present in rowlist
 
     Input:
-    rowsToCalc -- A tuple containing the first row (inclusive) and last row (exclusive) to investigate
+    rowsToCalcMulti -- A tuple containing the first row (inclusive) and last row (exclusive) to investigate
     To see rest of input see _initMultiprocessing description
 
     Output:
@@ -81,32 +81,35 @@ def runEuclideanDistance(rowsToCalcMulti):
     else:
         similarRegionArr = sharedSimilarRegionArr
 
-    distanceSize = len(reducedGenome) - 24
-    diagonal_indices_0 = np.add(*np.broadcast_arrays(np.arange(25), np.arange(distanceSize).reshape(distanceSize, 1)))
-    diagonal_indices_1 = np.broadcast_to(np.arange(25), (distanceSize, 25))
+    # Precalculate values for euclidean distance indexing
+    nSuperBins = windowBins // blockSize
+    distanceSize = len(reducedGenome) - (nSuperBins - 1)
+    diagonalIndices0 = np.add(*np.broadcast_arrays(np.arange(nSuperBins),
+                                                   np.arange(distanceSize).reshape(distanceSize, 1)))
+    diagonalIndices1 = np.broadcast_to(np.arange(nSuperBins), (distanceSize, nSuperBins))
 
     # Run convolvultion on all regions
     for row in range(*rowsToCalcMulti):
 
-        euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[row], squared=True)[diagonal_indices_0,
-                                                                                                   diagonal_indices_1],
+        euclideanDistances = np.sum(euclidean_distances(reducedGenome, roiCube[row], squared=True)[diagonalIndices0,
+                                                                                                   diagonalIndices1],
                                     axis=1)
 
         halfMode = st.mode(euclideanDistances, keepdims=False)[0] / 2
 
         # Only want to recommend non-overlapping regions
-        overlap_arr = np.zeros(len(reducedGenome))
+        overlapArr = np.zeros(len(reducedGenome))
 
         # Do not want to recommend region itself
         regionStart = np.where((genomeCoords["Chromosome"] == roiCoords.iloc[row, 0])
                                & (genomeCoords["Start"] == roiCoords.iloc[row, 1]))[0][0] // blockSize
-        overlap_arr[regionStart:regionStart + windowBins // blockSize] = 1
+        overlapArr[regionStart:regionStart + nSuperBins] = 1
 
         # Loop to find nDesiredMatches similar regions
         numMatches = 0
         for hitIndex in np.argsort(euclideanDistances):
             # Don't want overlapping regions
-            if np.any(overlap_arr[hitIndex:hitIndex + windowBins // blockSize]):
+            if np.any(overlapArr[hitIndex:hitIndex + nSuperBins]):
                 continue
             elif euclideanDistances[hitIndex] > halfMode:
                 similarRegionArr[row, numMatches:] = -1
@@ -114,7 +117,7 @@ def runEuclideanDistance(rowsToCalcMulti):
             else:
                 # Store the indices of these similar regions (can convert later)
                 similarRegionArr[row, numMatches] = hitIndex
-                overlap_arr[hitIndex:hitIndex + windowBins // blockSize] = 1
+                overlapArr[hitIndex:hitIndex + nSuperBins] = 1
                 numMatches += 1
                 if numMatches >= nDesiredMatches:
                     break

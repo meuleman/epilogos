@@ -119,6 +119,8 @@ def convertIndicesToCoords(simsearchArr, reducedGenomeCoords, roiCoords, windowB
 
 def writeResults(outputDir, searchResults, simsearchArr, roiCoords, nRegions):
     """
+    Written by Alex Reynolds - https://github.com/alexpreynolds
+
     Writes the similarity search results to gzipped bed and tabix files
 
     Input:

@@ -77,6 +77,8 @@ def readScores(scoresPath):
 
 def makeSlice(genome, idx, windowBins, blockSize):
     """
+    Written by Nalu Tripician - https://github.com/NaluTripician
+
     Creates a slice of a reduced scores track used for construction of the scores "cube"
     This will take a location and use it as a center point for each "slice" (region) of the cube
     Reduction works by retaining only the bin with the max sum of scores within each block (determined by blockSize)
@@ -159,4 +161,4 @@ def reduceGenome(outputDir, stateScores, blockSize):
 
 if __name__ == "__main__":
     main(Path(sys.argv[1]), Path(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]),
-    float(sys.argv[7]))
+         float(sys.argv[7]))

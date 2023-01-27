@@ -218,7 +218,7 @@ def fitDistances(outputDirPath, numProcesses, numTrials, samplingSize):
         index = quiescenceChunks[0].index(chrName)
         quiescenceArr = np.concatenate((quiescenceArr, quiescenceChunks[1][index]))
 
-    nonQuiescentIdx = np.where(not quiescenceArr)[0]
+    nonQuiescentIdx = np.where(np.invert(quiescenceArr))[0]
 
     with closing(Pool(numProcesses)) as pool:
         results = pool.starmap(fitOnSubSample, zip(repeat(distanceArrNull[nonQuiescentIdx], numTrials),

@@ -403,7 +403,7 @@ e.g. $ epilogos -v
 <p>By default <code>epilogos/run.py</code>, uses the default partition designated by the system administrator to submit SLURM jobs.
 Use this flag if you would like to specify the partition for SLURM resource allocation.</p>
 
-<p>The argument to the flag is the name of the partition you would like the SLURM jobs to run on</p>
+<p>The argument to the flag is the name of the partition on which you would like the SLURM jobs to run</p>
 
 ```bash
 e.g. $ epilogos -p queue1
@@ -1225,7 +1225,7 @@ Epilogos similarity search is a method to enhance the browsing experience of gen
 
 To be presented with minimal documentation of arguments needed to run similarity search, simply run the command `simsearch --help` or `python -m simsearch --help` (More in-depth explanation is given [below](#command-line-options-similarity-search))
 
-By default, similarity search runs locally in the command line. Should you desire to use a computational cluster managed by [SLURM](https://slurm.schedmd.com/) (as used in Epilogos score calculation), a example bash script has been provided in <code>epilogos/bin/sim_search_multizoom.sh</code>
+Due to its computationally intensive nature, calculating similarity search results requires a computational cluster managed by [SLURM](https://slurm.schedmd.com/) (as used in Epilogos score calculation). If you want to query previously calculated similarity search results, this can is done without a computational cluster, simply in the command line.
 
 <a name="similarity-search-example"></a>
 
@@ -1245,7 +1245,7 @@ The data consist of epilogos scores calculated on chromosome 1 of the <a href="h
 $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o BUILD_OUTPUTDIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>simsearch_cube.npz</code>, <code>simsearch_knn.npz</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code> in <code>BUILD_OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the files <code>simsearch_cube.npz</code>, <code>simsearch_indices.npy</code>, <code>reduced_genome.npy</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code> in <code>BUILD_OUTPUTDIR</code>.
 For further explanation of the contents of these outputs see <a href="#output-similarity-search-build">Build Output Directory [-o, --output-directory]</a></p>
 
 <p>To query the Similarity Search results for a given region run the following command (replacing <code>CHR, START, & END</code> with the region coordinates, <code>BUILD_OUTPUTDIR</code> with the build step output directory, and <code>QUERY_OUTPUTDIR</code> with the output directory of your choice).</p>
@@ -1287,7 +1287,7 @@ $ zcat PATH/TO/EPILOGOS_OUTPUT_DIR/scores_*_chr*.txt.gz | sort-bed - > PATH/TO/E
 $ simsearch -b -s PATH/TO/EPILOGOS_SCORES_FILE -o PATH/TO/BUILD_OUTPUT_DIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>simsearch_cube.npz</code>, <code>simsearch_knn.npz</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code> in <code>PATH/TO/BUILD_OUTPUT_DIR</code>.
+<p>Upon completion of the run, you should see the files <code>simsearch_cube.npz</code>, <code>simsearch_indices.npy</code>, <code>reduced_genome.npy</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code> in <code>PATH/TO/BUILD_OUTPUT_DIR</code>.
 For further explanation of the contents of these outputs see <a href="#output-similarity-search-build">Build Output Directory [-o, --output-directory]</a></p>
 
 <p>To query these Similarity Search results for a given region run the following command (replacing <code>CHR, START, & END</code> with the region coordinates, <code>PATH/TO/BUILD_OUTPUT_DIR</code> with the build step output directory, and <code>PATH/TO/BUILD_OUTPUT_DIR</code> with the output directory of your choice).</p>
@@ -1349,13 +1349,15 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz
 <a name="output-similarity-search-build"></a>
 <details><summary><b> Output Directory [-o, --output-directory]</b></summary>
 <p></p>
-<p>In <a href="#build-similarity-search">[-b, --build]</a> mode, Similarity Search will output 4 files: <code>simsearch_cube.npz</code>, <code>simsearch_knn.npz</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code></p>
+<p>In <a href="#build-similarity-search">[-b, --build]</a> mode, Similarity Search will output 5 files: <code>simsearch_cube.npz</code>, <code>simsearch_indices.npy</code>, <code>reduced_genome.npy</code>, <code>simsearch.bed.gz</code>, and <code>simsearch.bed.gz.tbi</code></p>
 
 <p><code>simsearch_cube.npz</code> is a zipped archive of 2 numpy arrays: <code>scores</code> and <code>coords</code>. <code>scores</code> contains the epilogos scores across each region present in the similarity search output (regions are chosen by the mean-max algorithm as outlined in the <a href="https://github.com/alexpreynolds/filter-regions">filter-regions package</a>). Scores are condensed into 25 blocks regardless of chosen window size. Scores in each of these blocks consist of the epilogos scores of the bin with the highest sum of scores in each block. <code>coords</code> contains the coordinates for each region, and is sorted in the same order as <code>scores</code>.</p>
 
-<p><code>simsearch_knn.npz</code> is a zipped archive of 3 numpy arrays: <code>arr</code>, <code>idx</code>, and <code>dist</code>. <code>arr</code> contains the coordinates of each region followed by its top 100 matches. <code>idx</code> contains the index of each region in the same order as <code>arr</code> followed by the the indices of its top 100 matches. <code>dist</code> contains the distance of each region to itself (0) followed by the distances to each of its top 100 matches.</p>
+<p><code>simsearch_indices.npy</code> is a numpy array file containing the similarity search results as indices of the <code>reduced_genome.npy</code> array (the index encodes the first of 25 superbins in the resulting region). Each line contains the results for the region of the same line in <code>simsearch_cube.npz</code>. If similarity search found less than <a href="#num-matches-similarity-search">[-n, --num-matches]</a> matches for a region remaining indices in the row will consist of -1.</p>
 
-<p><code>simsearch.bed.gz</code> is a gzipped bed file containing the coordinates of each region followed by the coordinates of its top 100 matches.</p>
+<p><code>reduced_genome.npy</code> is a numpy array file containing the reduced scores of the epilogos input file. Because similarity search always searches via regions consisting of 25 'superbin', scores are reduced by a factor dependent on the window size chosen.</p>
+
+<p><code>simsearch.bed.gz</code> is a gzipped bed file containing the coordinates of each region followed by the coordinates of its top <a href="#num-matches-similarity-search">[-n, --num-matches]</a> matches.</p>
 
 <p><code>simsearch.bed.gz.tbi</code> is a <a href="http://www.htslib.org/doc/tabix.html">tabix</a> equivalent of <code>simsearch.bed.gz</code>.
 
@@ -1373,7 +1375,7 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o 
 
 <p>Only a set number of window size options are available for Similarity Search. When run on a 200bp bin dataset, these are 5000, 10000, 25000, 50000, 75000, and 100000. When run on a 20bp bin dataset, these are 500, 1000, 2500, 5000, 7500, and 10000</p>
 
-<p>The argument to this flag is the desired window size in bp (default=25000(200bp dataset)/2500(20bp dataset)).</p>
+<p>The argument to this flag is the desired window size in bp (default = 25000 (200bp dataset) or 2500 (20bp dataset)).</p>
 
 ```bash
 e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -w 10000
@@ -1383,24 +1385,113 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o 
 <a name="jobs-similarity-search"></a>
 <details><summary><b> Number of Jobs [-j, --num-jobs]</b></summary>
 <p></p>
-<p>Similarity Search uses <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html">sklearn's nearest neighbors function</a> to determine the best recommendations for each region. This flag specifies the number of parallel jobs to run for this nearest neighbors search.</p>
+<p>Similarity Search submits <a href="https://slurm.schedmd.com/">SLURM</a> jobs to distribute the burden of the euclidean distance calculation across different nodes.</p>
 
-<p>The argument to this flag is the number of parallel jobs to run for the nearest neighbors search (default=8).</p>
+<p>The argument to this flag is the number of parallel slurm jobs to run for the euclidean distance calculation (default=10).</p>
 
 ```bash
 e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -j 4
 ```
 </details>
 
-<a name="num-neighbors-similarity-search"></a>
+<a name="cores-similarity-search"></a>
+<details><summary><b> Number of Cores [-c, --num-cores]</b></summary>
+<p></p>
+<p>Similarity Search will always try and parallelize the match calculation if it can. Computation done within each <a href="#jobs-similarity-search">slurm job</a> is parallelized using python's <a href="https://docs.python.org/3/library/multiprocessing.html">multiprocessing library</a></p>
+
+<p>The argument to this flag is an integer number of cores you would like to utilize to perform this multiprocessing. Should you like to use all available cores, input 0 to the option (i.e. <code>-c 0</code>). Epilogos defaults to using 1 core.</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -c 4
+```
+</details>
+
+<a name="num-matches-similarity-search"></a>
 <details><summary><b> Number of Matches [-n, --num-matches]</b></summary>
 <p></p>
-<p>Similarity Search uses <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestNeighbors.html">sklearn's nearest neighbors function</a> to determine the best matches for each region. This flag specifies the number of desired neighbors (i.e. matches) for this nearest neighbors search. NOTE that by definition of sklearn, the first neighbor is always the query region (i.e. if you want 100 matches, the argument must be 101).</p>
-
-<p>The argument to this flag is the number desired matches for each region (note the query region itself is counted as a matches) (default=101).</p>
+<p>Similarity Search uses a running euclidean distance calculation to determine the best matches for each region. The argument to this flag is the number desired matches for each region (default=100).</p>
 
 ```bash
 e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -n 51
+```
+</details>
+
+<a name="filter-state-similarity-search"></a>
+<details><summary><b> Filter State [-f, --filter-state]</b></summary>
+<p></p>
+<p>ChromHMM state models generally contain a 'quiescent state' which is not of functional interest. As such, to ease similarity search computation, we allow the user to set a filter state. When generating regions per the <a href="https://github.com/alexpreynolds/filter-regions">max-mean algorithm</a>, similarity search filters out regions in which the max signial is from the filter state.</p>
+
+<p>The argument to this flag is the integer representing the state you wish to filter upon. If set to 0, no filtering is done. By default similarity search filters upon the last state.</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -f 12
+```
+</details>
+
+<a name="filter-score-similarity-search"></a>
+<details><summary><b> Filter Score [--filter-score]</b></summary>
+<p></p>
+<p>To ease similarity search computation, we allow the user to set a filter score. When generating regions per the <a href="https://github.com/alexpreynolds/filter-regions">max-mean algorithm</a>, similarity search filters out regions in which the max signial is less than the filter score.</p>
+
+<p>The argument to this flag is a float representing scores below which you filter out. By default, no filtering is done on score (this is equivalent to setting the flag to -1)</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR --filter-score 1.3
+```
+</details>
+
+<a name="partition-similarity-search"></a>
+<details><summary><b> SLURM Partition [-p, --partition]</b></summary>
+<p></p>
+<p>By default, Similarity Search uses the default partition designated by the system administrator to submit SLURM jobs.
+Use this flag if you would like to specify the partition for SLURM resource allocation.</p>
+
+<p>The argument to this flag is the name of the partition on which you would like the SLURM jobs to run</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -p queue0
+```
+</details>
+
+<a name="tag-similarity-search"></a>
+<details><summary><b> SLURM Job Tag [-t, --tag]</b></summary>
+<p></p>
+<p>By default, Similarity Search jobs only contain the name of the python file they are running. Use this flag if you would like to add more information Similarity Search's job names.</p>
+
+<p>The argument to this flag is a string you wish to add to Similarity Search's <a href="https://slurm.schedmd.com/">SLURM</a> job names.</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR -t boix-hg38-18-s1
+```
+</details>
+
+<a name="mm-mem-similarity-search"></a>
+<details><summary><b> Region Calculation Memory Allocation [--mm-mem]</b></summary>
+<p></p>
+<p>This flag controls the amount of memory (in MB) assigned to the region calculation (max_mean) slurm job. Similarity search defaults to 10000</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR --mm-mem 8000
+```
+</details>
+
+<a name="calc-mem-similarity-search"></a>
+<details><summary><b> Euclidean Distance Calculation Memory Allocation [--calc-mem]</b></summary>
+<p></p>
+<p>This flag controls the amount of memory (in MB) assigned to each of the euclidean distance calculation (calc) slurm jobs. Similarity search defaults to 50000</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR --calc-mem 25000
+```
+</details>
+
+<a name="write-mem-similarity-search"></a>
+<details><summary><b> Writing Results Memory Allocation [--write-mem]</b></summary>
+<p></p>
+<p>This flag controls the amount of memory (in MB) assigned to the slurm job (write) responsible for writing similarity search results to disk. Similarity search defaults to 5000</p>
+
+```bash
+e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o OUTPUT_DIR --write-mem 10000
 ```
 </details>
 
@@ -1409,7 +1500,7 @@ e.g. $ simsearch -b -s data/simsearch/male/scores_male_s1_matrix_chr1.txt.gz -o 
 <a name="query-similarity-search"></a>
 <details><summary><b> Query Similarity Search Results [-q, --query]</b></summary>
 <p></p>
-<p>The Similarity Search commandline interface has two modes: <a href="#build-similarity-search">build</a> and query. Query mode takes in a region query(ies) and a previously calculated <code>simsearch.bed.gz</code> matches file and outputs the top 100 matches for the query(ies).</p>
+<p>The Similarity Search commandline interface has two modes: <a href="#build-similarity-search">build</a> and query. Query mode takes in a region query(ies) and a previously calculated <code>simsearch.bed.gz</code> matches file and outputs the top <a href="#num-matches-similarity-search">[-n, --num-matches]</a> matches for the query(ies).</p>
 
 <p>The <code>-q</code> flag can handle both single & multi region queries. If querying a single region, the argument to the flag should be the region coordinates formatted as chr:start-end. If querying multiple regions, the argument to the flag should be the path to a tab-separated bed file.</p>
 
@@ -1427,7 +1518,7 @@ e.g. $ simsearch -q /PATH/TO/query_regions.bed -m /PATH/TO/simsearch.bed.gz
 <a name="matches-similarity-search"></a>
 <details><summary><b> Matches File [-m, --matches-file]</b></summary>
 <p></p>
-<p>In <a href="#query-similarity-search">[-q, --query]</a> mode, Similarity Search takes as argument a pre-built <code>simsearch.bed.gz</code> matches file (see <a href="#output-similarity-search-build">build output</a> for details). This file is queried to find the top 100 matches for each of the query regions.</a>
+<p>In <a href="#query-similarity-search">[-q, --query]</a> mode, Similarity Search takes as argument a pre-built <code>simsearch.bed.gz</code> matches file (see <a href="#output-similarity-search-build">build output</a> for details). This file is queried to find the top <a href="#num-matches-similarity-search">[-n, --num-matches]</a> matches for each of the query regions.</a>
 
 ```bash
 e.g. $ simsearch -q chr4:93305800-93330800 -m BUILD_OUTPUTDIR/simsearch.bed.gz
@@ -1440,7 +1531,7 @@ e.g. $ simsearch -q chr4:93305800-93330800 -m BUILD_OUTPUTDIR/simsearch.bed.gz
 <p></p>
 <p>In <a href="#query-similarity-search">[-q, --query]</a> mode, Similarity Search will output 1 file for each query region: <code>similarity_search_region_CHR_START_END_recs.bed</code> (where <code>CHR</code>, <code>START</code>, & <code>END</code> are replaced with the query coordinates</p>
 
-<p><code>similarity_search_region_CHR_START_END_recs.bed</code> is a tab-separated bed file containing the coordinates for each of the top 100 matches for the query region in sorted order.</p>
+<p><code>similarity_search_region_CHR_START_END_recs.bed</code> is a tab-separated bed file containing the coordinates for each of the top <a href="#num-matches-similarity-search">[-n, --num-matches]</a> matches for the query region in sorted order.</p>
 
 <p>The argument to this flag is the path to the directory to which you would like to output.</p>
 

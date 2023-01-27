@@ -82,9 +82,9 @@ To Query Similarity Search Data:\n\
               help="Window size (in BP) on which to perform similarity search [default: 25000]")
 @click.option("-j", "--num-jobs", "nJobs", type=int, default=10, show_default=True,
               help="Number of slurm jobs to be used in parallelization of simsearch calculation. [default: 10]")
-@click.option("-c", "--num-cores", "nCores", type=int, default=0, show_default=True,
+@click.option("-c", "--num-cores", "nCores", type=int, default=1, show_default=True,
               help="Number of cores to be used in simsearch calculation. If set to 0, uses all cores. "
-                    + "[default: 0=All cores]")
+                    + "[default: 1]")
 @click.option("-n", "--num-matches", "nDesiredMatches", type=int, default=100, show_default=True,
               help="Number of matches to be found by simsearch for each query region [default: 100]")
 @click.option("-f", "--filter-state", "filterState", type=int, default=-1,
@@ -156,6 +156,7 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
     filterState     -- If the max signal of a region is in this state, the region is removed
     filterScore     -- If the max signal of a region is less than filterScore, the region is removed
     partition       -- Slurm partition to use
+    jobTag          -- Optional naming addition for slurm jobs
     mmMem           -- Memory in MB to be allocated to the maxmean region selection job
     calcMem         -- Memory in MB to be allocated to the simsearch euclidean distance calculations
     writeMem        -- Memory in MB to be allocated to writing the results of the simsearch calculation
@@ -184,14 +185,15 @@ def buildSimSearch(scoresPath, outputDir, windowBP, nJobs, nCores, nDesiredMatch
     else:
         raise ValueError("Similarity Search is only compatible with bins of size 200bp or 20bp")
 
-    pythonFilesDir, partition, jobTag, mmMemCLO, calcMemCLO, writeMemCLO = setUpSlurm(outputDir, partition, jobTag, nCores, mmMem,
-                                                                              calcMem, writeMem)
+    pythonFilesDir, partition, jobTag, mmMemCLO, calcMemCLO, writeMemCLO = setUpSlurm(outputDir, partition, jobTag,
+                                                                                      nCores, mmMem, calcMem, writeMem)
 
     print("\n        STEP 1: Salient Region Selection", flush=True)
     submitMaxMeanCommand = "python {} {} {} {} {} {} {} {}".format(pythonFilesDir / "similaritySearch_max_mean.py",
                                                                    outputDir, scoresPath, windowBins, blockSize,
                                                                    windowBP, filterState, filterScore)
-    mmJob = submitSlurmJob("simsearch_max_mean{}".format(jobTag), submitMaxMeanCommand, outputDir, partition, mmMemCLO, "")
+    mmJob = submitSlurmJob("simsearch_max_mean{}".format(jobTag), submitMaxMeanCommand, outputDir, partition, mmMemCLO,
+                           "")
     print("            JobID:", mmJob, flush=True)
 
     print("\n        STEP 2: Similarity Search Calculation", flush=True)
@@ -356,6 +358,7 @@ def setUpSlurm(outputDir, partition, jobTag, nCores, mmMem, calcMem, writeMem):
     Input:
     outputDir -- pathlib Path to the output directory for similarity search files
     partition -- Slurm partition to use
+    jobTag    -- Optional naming addition for slurm jobs
     nCores    -- Number of cores to be used for multiprocessing calculation of simsearch euclidean distance
     mmMem     -- Memory in MB to be allocated to the maxmean region selection job
     calcMem   -- Memory in MB to be allocated to the simsearch euclidean distance calculations

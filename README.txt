@@ -30,11 +30,12 @@ This can be done using ``conda``, for instance as such:
     $ conda create -n epilogos python=3.8
     $ conda activate epilogos
 
-To install Epilogos simply run the following command
+To install Epilogos simply run the following two commands
 
 .. code-block:: bash
 
     $ pip install epilogos
+    $ pip install git+https://github.com/alexpreynolds/filter-regions
 
 Alternatively, install Epilogos directly from the Git repositority using
 

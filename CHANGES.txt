@@ -1,4 +1,4 @@
-v0.1.2, October 12, 2022 -- Output files are more consistent in formatting
+v0.1.2, June 13, 2023 -- Output files are more consistent in formatting
                             Fixed bug causing chromosomes to not print correctly in "pairwiseMetrics" file
                             Fixed bug causing state numbers to be printed rather than names in "pairwiseMetrics" file
                             Greatest hits now only shows significant loci if using null distribution

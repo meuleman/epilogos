@@ -55,9 +55,10 @@ $ conda activate epilogos
 [comment]: <> ($ conda install -c anaconda libopenblas)
 
 
-To install Epilogos simply run the following command
+To install Epilogos simply run the following two commands
 ```bash
 $ pip install epilogos
+$ pip install git+https://github.com/alexpreynolds/filter-regions
 ```
 
 Alternatively, install Epilogos directly from this Git repository using

@@ -52,7 +52,7 @@ To compute epilogos, you will need to have the following python libraries instal
 
 .. code-block:: bash
 
-    $ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'filter-regions @ git+https://github.com/alexpreynolds/filter-regions@8c2ef14dec35b7a4b6092fb2afe2eac409d58275'
+    $ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'filter-regions @ git+https://github.com/alexpreynolds/filter-regions'
 
 or while in the epilogos directory
 

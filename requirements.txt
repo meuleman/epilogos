@@ -6,3 +6,4 @@ pysam==0.19.1
 scikit-learn==1.1.3
 scipy==1.9.3
 statsmodels==0.13.2
+filter-regions @ git+https://github.com/alexpreynolds/filter-regions@47d777892409d144fe55037954b0da694c974166

@@ -58,13 +58,11 @@ $ conda activate epilogos
 To install Epilogos simply run the following two commands
 ```bash
 $ pip install epilogos
-$ pip install git+https://github.com/alexpreynolds/filter-regions
 ```
 
 Alternatively, install Epilogos directly from this Git repository using
 ```bash
 $ pip install git+https://github.com/meuleman/epilogos
-$ pip install git+https://github.com/alexpreynolds/filter-regions
 ```
 
 <a name="prerequisites"></a>
@@ -74,12 +72,11 @@ $ pip install git+https://github.com/alexpreynolds/filter-regions
 To compute epilogos, you will need to have the following python libraries installed: [statsmodels](https://www.statsmodels.org/stable/index.html), [click](https://click.palletsprojects.com/en/7.x/), [numpy](https://numpy.org/), [scipy](https://www.scipy.org/), [matplotlib](https://matplotlib.org/stable/index.html), and [pandas](https://pandas.pydata.org/).
 In case the abovementioned commands not automatically and correctly take care of this, the libraries can be installed with one of the following commands.
 ```bash
-$ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'filter-regions @ git+https://github.com/alexpreynolds/filter-regions'
+$ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'filter-regions @ git+https://github.com/alexpreynolds/filter-regions@47d777892409d144fe55037954b0da694c974166'
 ```
 or while in the epilogos directory
 ```bash
 $ pip install -r requirements.txt
-$ pip install git+https://github.com/alexpreynolds/filter-regions
 ```
 
 Additionally, it is recommended that python is updated to version 3.9 or later.

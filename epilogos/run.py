@@ -14,6 +14,19 @@ from epilogos.roiSingle import main as roiSingle
 from epilogos.roiAndVisualPairwise import main as roiPairwise
 from epilogos.helpers import getNumStates
 
+print("""\n
+                d8b 888
+                Y8P 888
+                    888
+.d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
+d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
+88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
+Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
+"Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
+        888                            888
+        888                       Y8b d88P
+        888                        "Y88P"
+""", flush=True)
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option("-m", "--mode", "mode", type=click.Choice(["single", "paired"]), default="single", show_default=True,
@@ -79,20 +92,6 @@ def main(mode, commandLineBool, inputDirectory, inputDirectory1, inputDirectory2
 
     Written by Jacob Quon and Wouter Meuleman
     """
-
-    print("""\n
-                    d8b 888
-                    Y8P 888
-                        888
-   .d88b.  88888b.  888 888  .d88b.   .d88b.   .d88b.  .d8888b
-  d8P  Y8b 888 "88b 888 888 d88""88b d88P"88b d88""88b 88K
-  88888888 888  888 888 888 888  888 888  888 888  888 "Y8888b.
-  Y8b.     888 d88P 888 888 Y88..88P Y88b 888 Y88..88P      X88
-   "Y8888  88888P"  888 888  "Y88P"   "Y88888  "Y88P"   88888P'
-           888                            888
-           888                       Y8b d88P
-           888                        "Y88P"
-    """, flush=True)
 
     if len(sys.argv) == 1:
         print("Run 'epilogos -h' for help")

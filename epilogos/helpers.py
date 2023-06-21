@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import re
-import filter_regions as fr
-
+from epilogos.filter_regions import Filter
 
 def getNumStates(stateFile):
     """
@@ -264,7 +263,7 @@ def maxMean(inputArr, roiWidth, maxRegions):
     rois      -- Pandas dataframe containing the regions chosen by maxmean
     indices   -- The original indices within the inputArr for the center of each of the chosen regions
     """
-    f = fr.Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max',
+    f = Filter(method='maxmean', input=inputArr, input_type='bedgraph', aggregation_method='max',
                   window_bins=roiWidth, max_elements=maxRegions, preserve_cols=True, quiet=False)
     f.read()
     f.filter()

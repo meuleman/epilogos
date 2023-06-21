@@ -46,11 +46,12 @@ Alternatively, install Epilogos directly from the Git repositority using
 Prerequisites
 =============
 
-To compute epilogos, you will need to have the following python libraries installed: `statsmodels <https://www.statsmodels.org/stable/index.html>`_, `click <https://click.palletsprojects.com/en/7.x/>`_, `numpy <https://numpy.org/>`_, `scipy <https://www.scipy.org/>`_, `matplotlib <https://matplotlib.org/stable/index.html>`_, and `pandas <https://pandas.pydata.org/>`_. These can be installed with one of the following commands
+To compute epilogos, you will need to have the following python libraries installed: `statsmodels <https://www.statsmodels.org/stable/index.html>`_, `click <https://click.palletsprojects.com/en/7.x/>`_, `numpy <https://numpy.org/>`_, `scipy <https://www.scipy.org/>`_, `matplotlib <https://matplotlib.org/stable/index.html>`_, `pandas <https://pandas.pydata.org/>`_, `pysam <https://pysam.readthedocs.io/en/latest/api.html>`_, `scikit-learn <https://scikit-learn.org/stable/>`_, `natsort <https://natsort.readthedocs.io/en/stable/>`_, `pyranges <https://pyranges.readthedocs.io/en/latest/autoapi/pyranges/index.html>`_, and `rich <https://rich.readthedocs.io/en/stable/index.html>`_.
+These can be installed with one of the following commands
 
 .. code-block:: bash
 
-    $ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'filter-regions @ git+https://github.com/alexpreynolds/filter-regions@47d777892409d144fe55037954b0da694c974166'
+    $ pip install 'click==8.1.3' 'numpy==1.23.4' 'pandas==1.5.1' 'scipy==1.9.3' 'matplotlib==3.6.1' 'statsmodels==0.13.2' 'scikit-learn==1.1.3' 'pysam==0.19.1' 'natsort==8.2.0' 'pyranges==0.0.117' 'rich==12.6.0'
 
 or while in the epilogos directory
 

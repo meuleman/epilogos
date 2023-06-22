@@ -438,7 +438,7 @@ e.g. $ epilogos -f male_s2
 <p></p>
 <p>This flag controls the amount of memory (in MB) assigned to each of the expected frequency calculation slurm jobs. This flag has no effect when running Epilogos using the <a href="#command-line">[-l, --local]</a> flag.</p>
 
-<p>The argument to this flag is the MB of memory desired for each of the expected frequency calculation slurm jobs. Epilogos defaults to 16000</p>
+<p>The argument to this flag is the MB of memory desired for each of the expected frequency calculation slurm jobs. Epilogos defaults to 20000</p>
 
 ```bash
 e.g. $ epilogos --exp-freq-mem 8000
@@ -462,7 +462,7 @@ e.g. $ epilogos --exp-comb-mem 4000
 <p></p>
 <p>This flag controls the amount of memory (in MB) assigned to each of the score calculation slurm jobs. This flag has no effect when running Epilogos using the <a href="#command-line">[-l, --local]</a> flag.</p>
 
-<p>The argument to this flag is the MB of memory desired for each of the score calculation slurm jobs. Epilogos defaults to 16000</p>
+<p>The argument to this flag is the MB of memory desired for each of the score calculation slurm jobs. Epilogos defaults to 40000</p>
 
 ```bash
 e.g. $ epilogos --score-mem 8000

@@ -66,8 +66,8 @@ from epilogos.helpers import getNumStates
               help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000]")
 @click.option("--exp-comb-mem", "expCombMem", type=int, default=8000,
               help="Memory (in MB) for the expected frequency combination job [default: 8000]")
-@click.option("--score-mem", "scoreMem", type=int, default=20000,
-              help="Memory (in MB) for the expected frequency calcuation jobs [default: 20000]")
+@click.option("--score-mem", "scoreMem", type=int, default=40000,
+              help="Memory (in MB) for the expected frequency calcuation jobs [default: 40000]")
 @click.option("--roi-mem", "roiMem", type=int, default=-1,
               help="Memory (in MB) for the expected frequency calcuation jobs "
                    + "[default: 20000 (single) / 100000 (paired)]")

@@ -94,11 +94,14 @@ def plotOneTrackRegion(epilogosScoresPath, regionArr, outputDir, stateColors, st
     print("        Processing region scores...", flush=True); processTime = time()
 
     # Process query scores for graphing
+    candidateRegionArr = np.copy(regionArr)
     processedScoresList, processedColorsList = [], []
-    for chr, start, end in regionArr:
+    for i, (chr, start, end) in enumerate(regionArr):
         processedRegion = processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors)
         processedScoresList.append(processedRegion[0])
         processedColorsList.append(processedRegion[1])
+        candidateRegionArr[i] = np.array([chr, processedRegion[2], processedRegion[3]])
+    regionArr = candidateRegionArr
 
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = (np.nan, np.nan) if individualYlims else ylim(processedScoresList)
@@ -150,10 +153,11 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
     print("        Processing region scores...", flush=True); processTime = time()
 
     # Process query scores for graphing
+    candidateRegionArr = np.copy(regionArr)
     processedScoresListA, processedColorsListA = [], []
     processedScoresListB, processedColorsListB = [], []
     processedScoresListDiff, processedColorsListDiff = [], []
-    for chr, start, end in regionArr:
+    for i, (chr, start, end) in enumerate(regionArr):
         processedRegionGroupA = processEpilogosScoresForDrawing(chr, start, end, epilogosScoresGroupA, stateColors)
         processedRegionGroupB = processEpilogosScoresForDrawing(chr, start, end, epilogosScoresGroupB, stateColors)
         processedRegionDiff   = processEpilogosScoresForDrawing(chr, start, end, epilogosScoresDiff, stateColors)
@@ -165,6 +169,10 @@ def plotMultiTrackRegion(scoresPathGroupA, scoresPathGroupB, scoresDiffPath, reg
         processedColorsListA.append(processedRegionGroupA[1])
         processedColorsListB.append(processedRegionGroupB[1])
         processedColorsListDiff.append(processedRegionDiff[1])
+
+        candidateRegionArr[i] = np.array([chr, processedRegionDiff[2], processedRegionDiff[3]])
+
+    regionArr = candidateRegionArr
 
     # Precalculate ylims for drawing if using same axes
     ymin, ymax = ylim(processedScoresListA + processedScoresListB + processedScoresListDiff) if individualYlims \
@@ -203,10 +211,41 @@ def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors
     regionScoresSorted -- Numpy array containing scores across the region with each bin individually sorted by scores
     regionColorsSorted -- Numpy array containing state colors across the region with each bin individually sorted by
                           scores
+    candidateStart     -- Either the input start coordinate or nearest match, if needed and if available
+    candidateEnd       -- Either the input end coordinate or nearest match, if needed and if available
     """
     # Find the epilogos scores for the region
-    scoresStartIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == start))[0][0]
-    scoresEndIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == end))[0][0]
+    scoresStartIndex = None
+    scoresEndIndex = None
+    scoresStartIndexModified = False
+    scoresEndIndexModified = False
+    candidateStart = start
+    candidateEnd = end
+    try:
+        scoresStartIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == candidateStart))[0][0]
+    except IndexError as err:
+        perChromIndices = np.where((epilogosScores.iloc[:, 0] == chr))[0]
+        perChromStarts = np.asarray(epilogosScores.iloc[perChromIndices[0]:perChromIndices[-1] + 1, 1])
+        nearestStartIndex = (np.abs(perChromStarts - start)).argmin()
+        scoresStartIndex = perChromIndices[nearestStartIndex]
+        candidateStart = epilogosScores.iloc[scoresStartIndex:scoresStartIndex + 1, 1].to_numpy()[0]
+        scoresStartIndexModified = True
+    try:
+        scoresEndIndex = np.where((epilogosScores.iloc[:, 0] == chr) & (epilogosScores.iloc[:, 1] == candidateEnd))[0][0]
+    except IndexError as err:
+        perChromIndices = np.where((epilogosScores.iloc[:, 0] == chr))[0]
+        perChromEnds = np.asarray(epilogosScores.iloc[perChromIndices[0]:perChromIndices[-1] + 1, 1])
+        nearestEndIndex = (np.abs(perChromEnds - end)).argmin()
+        scoresEndIndex = perChromIndices[nearestEndIndex]
+        candidateEnd = epilogosScores.iloc[scoresEndIndex:scoresEndIndex + 1, 1].to_numpy()[0]
+        scoresEndIndexModified = True
+    
+    if not candidateStart or not candidateEnd:
+        raise ValueError("Region {}:{}-{} does not contain valid data - please modify input region(s)".format(chr, start, end))
+    
+    if scoresStartIndexModified or scoresEndIndexModified:
+        print("            Note: Query region {}:{}-{} was modified to nearest region {}:{}-{}".format(chr, start, end, chr, candidateStart, candidateEnd), flush=True)
+    
     regionScores = epilogosScores.iloc[scoresStartIndex:scoresEndIndex, 3:].to_numpy(dtype=np.float64).T
 
     # Generate state color array for the region
@@ -218,7 +257,7 @@ def processEpilogosScoresForDrawing(chr, start, end, epilogosScores, stateColors
     regionScoresSorted  = np.take_along_axis(regionScores, sortedScoresIndices, axis=0)
     regionColorsSorted  = np.take_along_axis(state_colors_2d, sortedScoresIndices, axis=0)
 
-    return regionScoresSorted, regionColorsSorted
+    return regionScoresSorted, regionColorsSorted, candidateStart, candidateEnd
 
 
 def drawOneTrackEpilogosScores(chr, start, end, scores, colors, ymin, ymax, stateNames, stateColors, file):

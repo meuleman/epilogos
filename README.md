@@ -144,13 +144,19 @@ For more information on the structure of these files see <code>data/state_metada
 $ epilogos -i PATH/TO/INPUT_DIR -j PATH/TO/STATE_INFO_TSV -o PATH/TO/OUTPUT_DIR
 ```
 
-<p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUT_DIR</code>.
 Each of these files will be named <code>scores_*.txt.gz</code>, where 'scores_' is followed by the input directory name, the saliency metric, and the corresponding input file name (extensions removed).
 Additionally, you will find a <code>regionsOfInterest_*.txt</code> file which follows the same naming convention minus the input file name.</p>
 
-<p>If you would like to visualize these results as seen on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, we recommend using higlass.</p>
-
 <p>To further customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
+
+### Note
+
+Ensure that your working `INPUT_DIR` contains only those files needed for scoring.
+
+### Visualization
+
+<p>If you would like to visualize these results as seen on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, conversion to the multivec format can be performed with the HiGlass-based [clodius](https://github.com/higlass/clodius) toolkit. Options for visualizing multivec-formatted files include the [epilogos-web](https://github.com/meuleman/epilogos-web?tab=readme-ov-file#dataset-overview) web front-end and the [resgen.io](https://resgen.io) site.</p>
 
 </details>
 
@@ -208,13 +214,19 @@ For more information on the structure of these files see <code>data/state_metada
 $ epilogos -l -i PATH/TO/INPUT_DIR -j PATH/TO/STATE_INFO_TSV -o PATH/TO/OUTPUT_DIR
 ```
 
-<p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the same number of scores files as in your input directory in <code>OUTPUT_DIR</code>.
 Each of these files will be named <code>scores_*.txt.gz</code>, where 'scores_' is followed by the input directory name, the saliency metric, and the corresponding input file name (extensions removed).
 Additionally, you will find a <code>regionsOfInterest_*.txt</code> file which follows the same naming convention except for the input file name.</p>
 
-<p>If you would like to visualize these results as seen on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, we recommend using higlass.</p>
-
 <p>To further customize your run of epilogos see the <a href="#command-line-options">Command Line Options</a> of the <code>README</code></p>
+
+### Note
+
+Ensure that your working `INPUT_DIR` contains only those files needed for scoring.
+
+### Visualization
+
+<p>If you would like to visualize these results as seen on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, conversion to the multivec format can be performed with the HiGlass-based [clodius](https://github.com/higlass/clodius) toolkit. Options for visualizing multivec-formatted files include the [epilogos-web](https://github.com/meuleman/epilogos-web?tab=readme-ov-file#dataset-overview) web front-end and the [resgen.io](https://resgen.io) site.</p>
 
 </details>
 
@@ -873,12 +885,18 @@ For more information on the structure of these files see <code>data/state_metada
 $ epilogos -m paired -a PATH/TO/FIRST_INPUT_DIR -b PATH/TO/SECOND_INPUT_DIR -j PATH/TO/STATE_INFO_TSV -o PATH/TO/OUTPUT_DIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_*.txt.gz</code>, <code>pairwiseMetrics_*.txt.gz</code>, <code>significantLoci_*.txt</code>, and <code>regionsOfInterest_*.txt</code> as well as the directory <code>manhattanPlots_*</code> in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_*.txt.gz</code>, <code>pairwiseMetrics_*.txt.gz</code>, <code>significantLoci_*.txt</code>, and <code>regionsOfInterest_*.txt</code> as well as the directory <code>manhattanPlots_*</code> in <code>OUTPUT_DIR</code>.
 Each of the wildcards will be replaced by a string containing the name of input directory one, the name of input directory two, the saliency metric, and the corresponding input file name when relevant (extensions removed)</p>
 
-<p>If you would like to visualize these results as on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, we recommend using higlass.</p>
-
 <p>To further customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
+
+### Note
+
+Ensure that your working `FIRST_INPUT_DIR` and `SECOND_INPUT_DIR` directories contain only those per-chromosome state files needed for scoring. Other files will not be ignored and can cause the overall task to stall or fail.
+
+### Visualization
+
+<p>If you would like to visualize paired results as seen on <a href="https://epilogos.altius.org">epilogos.altius.org</a>, conversion to the multivec format can be performed with the HiGlass-based [clodius](https://github.com/higlass/clodius) toolkit. Options for visualizing multivec-formatted files include the [epilogos-web](https://github.com/meuleman/epilogos-web?tab=readme-ov-file#dataset-overview) web front-end and the [resgen.io](https://resgen.io) site.</p>
 
 </details>
 
@@ -894,13 +912,13 @@ Each of the wildcards will be replaced by a string containing the name of input 
 The files, both named <code>epilogos_matrix_chr1.txt.gz</code>, contain chromatin state calls for a 18-state chromatin model, across 200bp genomic bins spanning human chromosome 1.
 The data was pulled from the <a href="https://docs.google.com/spreadsheets/d/103XbiwChp9sJhUXDJr9ztYEPL00_MqvJgYPG-KZ7WME/edit#gid=1813267486">EpiMap dataset</a> and contains only those epigenomes which are tagged <code>Male</code> or <code>Female</code> respectively under the <code>Sex</code> column.</p>
 
-<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUTDIR</code> with the output directory of your choice).</p>
+<p>To compute epilogos (using the S1 saliency metric) for this sample data run following command within the <code>epilogos/</code> directory (replacing <code>OUTPUT_DIR</code> with the output directory of your choice).</p>
 
 ```bash
-$ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUTDIR
+$ epilogos -m paired -l -a data/pyData/male/ -b data/pyData/female/ -j data/state_metadata/human/Boix_et_al_833_sample/hg19/18/metadata.tsv -o OUTPUT_DIR
 ```
 
-<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>regionsOfInterest_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUTDIR</code>.
+<p>Upon completion of the run, you should see the files <code>pairwiseDelta_male_female_s1_epilogos_matrix_chr1.txt.gz</code>, <code>pairwiseMetrics_male_female_s1.txt.gz</code>, <code>significantLoci_male_female_s1.txt</code>, and <code>regionsOfInterest_male_female_s1.txt</code> as well as the directory <code>manhattanPlots_male_female_s1</code> in <code>OUTPUT_DIR</code>.
 For further explanation of the contents of these outputs see <a href="#output-directory-pairwise">Output Directory [-o, --output-directory]</a></p>
 
 <p>To customize your run of epilogos see the <a href="#command-line-options-pairwise">Command Line Options</a> of the <code>README</code></p>
